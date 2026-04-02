@@ -60,7 +60,15 @@
     // "editor.wordWrap": "on",
     // "editor.renderWhitespace": "all",
     // "latex-workshop.linting.run": "onType",
-    // "latex-workshop.linting.chktex.enabled": false,
+    // "latex-workshop.linting.chktex.enabled": true,
+    // "latex-workshop.linting.chktex.exec.args": [
+    //     "-wall", "-n22", "-n30", "-e16", "-q",
+    //     "-n1",  // Command terminated with space (false positives at line ends)
+    //     "-n8",  // Wrong dash length (-- is correct Czech n-dash)
+    //     "-n9",  // Bracket mismatch (false positives in acro package macros)
+    //     "-n21", // \let assignments (\let\Author\@author etc.) flagged incorrectly
+    //     "-n24"  // Space before \label (label on its own line after list/bib commands)
+    // ],
     // "latex-workshop.synctex.afterBuild.enabled": true,
     // "latex-workshop.view.outline.sync.viewer": true,
     // "latex-workshop.view.pdf.scrollMode": 2,

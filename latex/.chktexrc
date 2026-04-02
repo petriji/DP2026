@@ -1,0 +1,25 @@
+## ChkTeX configuration for CTU thesis
+## Suppresses false-positive warnings specific to this project.
+##
+## Note: LaTeX Workshop invokes chktex with -wall, which re-enables every
+## warning.  The suppressions below therefore also appear as -nN flags in
+## .vscode/settings.json under latex-workshop.linting.chktex.exec.args.
+## This file is used when running chktex directly from the command line.
+
+Silent {
+    1   ## Command terminated with space
+        ## False positives: \tikzexternalize, \phantomsection, \acro*
+        ## macros, and \let chains at end of line.
+    8   ## Wrong dash length
+        ## Czech typography: -- (n-dash) is correct for separating items
+        ## and list entries; chktex incorrectly expects --- (em-dash).
+    9   ## Bracket mismatch
+        ## False positives inside acro package macros:
+        ## \acroifanyT{foreign,extra}{(} and {)}.
+    21  ## This command might not be intended
+        ## \let\Author\@author, \let\Title\@title, \let\Course\@course
+        ## are intentional macro aliases defined after \author/\title/\course.
+    24  ## Delete space to maintain correct pagereferences
+        ## \label appears on its own line after \printbibliography,
+        ## \input, and \listoffigures -- this is intentional and correct.
+}
