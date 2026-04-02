@@ -17,6 +17,7 @@
 *.vrb
 *.xdv
 *.md5
+*.bak
 
 -- LaTeX generated files --
 **/build/
@@ -37,3 +38,8 @@
 *.doc*
 *.ppt*
 *.xls*
+
+-- VS Code profile --
+*.code-profile
+
+-- 
