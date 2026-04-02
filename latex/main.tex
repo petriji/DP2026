@@ -1,5 +1,18 @@
 \documentclass[12pt,a4paper]{CTUthesis}
-\input{preamble.tex}
+% All packages, settings, and macros are in CTUthesis.cls.
+
+% Vector graphics (diagrams) build-behavior directive.
+\usetikzlibrary{external}
+\tikzexternalize
+
+% Acronym management configuration and definitions.
+\input{texparts/references/acro_setup.tex}
+\input{texparts/references/acro.tex}
+
+% Bibliography resources (biblatex).
+\addbibresource{socialnidialog.bib}
+\addbibresource{socialnidialog-zotero.bib}
+\addbibresource{socialnidialog-bibtexmanager.bib}
 
 % ==============================================================================
 % Thesis Metadata

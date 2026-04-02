@@ -711,6 +711,239 @@
 \else
   \onecolumn
 \fi
+% ==============================================================================
+% Packages: Encoding, Language, And Base Fonts
+% ==============================================================================
+% Czech/English hyphenation patterns and automatic captions driven by the
+%   active document language.
+\RequirePackage[english,czech]{babel}
+% 8-bit font encoding — enables correct rendering of Czech accented characters
+%   and proper PDF copy/paste behavior.
+\RequirePackage[T1]{fontenc}
+% UTF-8 encoded source files (á, č, ř etc.).
+\RequirePackage[utf8]{inputenc}
+% Latin Modern scalable fonts — required with T1 for sharp vector glyphs.
+\RequirePackage{lmodern}
+% Note: \baselinestretch{1.5} is already set in the class body above.
+
+% ==============================================================================
+% Packages: Page Layout And Typography
+% ==============================================================================
+% Page margins — 3.5 cm left (binding side), 2.5 cm on other sides.
+\RequirePackage[left=3.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+% Microtypography — character protrusion and font expansion. Reduces overfull
+%   hboxes without manual hyphenation. The "Unable to apply patch 'item'"
+%   warning is a known benign quirk of this package version.
+\RequirePackage{microtype}
+% Loose line-breaking: slightly wider word spacing to prevent overflow lines.
+%\hyphenpenalty=10000  % alternative: disable automatic hyphenation entirely
+\sloppy
+% Keep footnotes at the physical page bottom on short pages.
+\RequirePackage[bottom]{footmisc}
+%\raggedbottom
+
+% ==============================================================================
+% Packages: Headings And TOC Entry Spacing
+% ==============================================================================
+% titlesec[pagestyles]: chapter/part title layout AND \newpagestyle commands
+%   for the header/footer styles defined in the Page Styles section below.
+%   fancyhdr is the legacy alternative — not loaded.
+%\RequirePackage{fancyhdr}
+\RequirePackage[pagestyles]{titlesec}
+\titleformat{\part}[display]
+	{\normalfont\Huge\bfseries\filcenter}{}{0pt}{\MakeUppercase}[]
+\titlespacing*{\part}{0pt}{\fill}{\fill}
+\titleformat{\chapter}
+	{\normalfont\LARGE\bfseries}{\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+% tocloft[titles]: TOC/LOF/LOT layout — reduces vertical gap before chapters.
+\RequirePackage[titles]{tocloft}
+\setlength{\cftbeforechapskip}{5pt}
+% Align LOF and LOT entries with the chapter-level left margin.
+% (\l@figure and \l@table are defined by the class above; these override them.)
+\renewcommand*\l@figure{\@dottedtocline{1}{0pt}{2.3em}}
+\renewcommand*\l@table {\@dottedtocline{1}{0pt}{2.3em}}
+
+% ==============================================================================
+% Page Styles
+% (require titlesec[pagestyles]; reference \Author, \Course, \Title which are
+%  \let-bound in main.tex before \begin{document} — safe because these are
+%  expanded at page-output time, not at definition time)
+% ==============================================================================
+\newpagestyle{fancy}{
+	\headrule
+	\sethead{\Author}{}{\MakeUppercase{\chaptertitle}}
+	\setfoot{}{\thepage}{}
+}
+\renewpagestyle{plain}{
+	\headrule
+	\sethead{\Author}{}{\Course}
+	\setfoot{}{\thepage}{}
+}
+\newpagestyle{nonum}{
+	\headrule
+	\sethead{\Author}{}{\MakeUppercase{\Course}}
+	\footrule
+	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
+}
+\tocloftpagestyle{nonum}
+
+% ==============================================================================
+% Packages: Figures And Captions
+% ==============================================================================
+% graphicx[pdftex]: \includegraphics with the pdflatex driver. Also satisfies
+%   the class's own use of \includegraphics in \maketitle (CTU logo).
+\RequirePackage[pdftex]{graphicx}
+% float: H (here, exactly) placement specifier for figures and tables.
+\RequirePackage{float}
+% caption: styled captions — Czech names "Obr." / "Tab." with colon separator.
+\RequirePackage{caption}
+\captionsetup{labelfont=bf, labelsep=endash}
+\captionsetup[figure]{labelfont={normalfont}, name={Obr.}, labelsep=colon}
+\captionsetup[table] {labelfont={normalfont}, name={Tab.}, labelsep=colon}
+% subcaption: \begin{subfigure} for side-by-side figures with sub-captions.
+\RequirePackage{subcaption}
+% pdfpages: include external PDF pages (thesis assignment form, mandatory pages).
+\RequirePackage{pdfpages}
+
+% ==============================================================================
+% Packages: Tables
+% ==============================================================================
+% array: extended column type syntax — enables the >{\cmd} prefix used in the
+%   custom column type definitions below.
+\RequirePackage{array}
+% longtable: tables spanning multiple pages; left-aligned.
+\RequirePackage{longtable}
+\setlength\LTleft{0pt}
+% tabularx: auto-width X columns filling a fixed total table width.
+\RequirePackage{tabularx}
+% xltabular: longtable + tabularx combined — required by the acro list template.
+%   Also satisfies the class's own use of xltabular in \maketitle.
+\RequirePackage{xltabular}
+% multirow: cells spanning multiple rows via \multirow.  dormant.
+\RequirePackage{multirow}
+% multicol: multi-column text flow via the multicols environment.  dormant.
+\RequirePackage{multicol}
+% booktabs: professional horizontal rules — \toprule, \midrule, \bottomrule.
+\RequirePackage{booktabs}
+% Custom tabularx column types used in thesis tables and the acro list.
+\renewcommand{\tabularxcolumn}[1]{p{#1}}
+\newcolumntype{R}{>{\raggedleft}X}                               % right-aligned
+\newcolumntype{L}{>{\raggedright}X}                              % left-aligned
+\newcolumntype{C}{>{\centering\arraybackslash}X}                 % centered
+\newcolumntype{s}{>{\centering\arraybackslash\hsize=.4\hsize}X}  % narrow center
+
+% ==============================================================================
+% Packages: Mathematics And SI Units
+% ==============================================================================
+% amsmath: align, gather, cases, equation* etc. Provides \text{} for \xmcal.
+\RequirePackage{amsmath}
+% amsfonts: \mathbb (ℝ, ℕ), \mathfrak font commands.
+\RequirePackage{amsfonts}
+% amssymb: extended AMS symbol set — \square, \triangleright, \nexists etc.
+\RequirePackage{amssymb}
+% wasysym: miscellaneous symbols (\smiley, \diameter, \phone etc.).  dormant.
+\RequirePackage{wasysym}
+% makeidx: back-of-book index via \index{} calls and \makeindex.  dormant.
+\RequirePackage{makeidx}
+% siunitx: SI units — \SI{75}{\percent}, \SI{}{\watt\per\cubic\meter}.
+%   Czech locale: decimal comma separator, centered dot for products.
+\RequirePackage{siunitx}
+\sisetup{
+  output-decimal-marker = {,},
+  exponent-product       = \cdot,
+  product-units          = repeat,
+  product-symbol         = \cdot,
+}
+% Custom calligraphic font family for math mode: \xmcal{H}, \xmcal{L} etc.
+% (Integral/Laplace transform notation — @ is already a letter here.)
+\DeclareFontFamily{OT1}{mathc}{}
+\DeclareFontShape{OT1}{mathc}{m}{n}{ <-> mathc10 }{}
+\DeclareRobustCommand\xmcal[1]{\text{\usefont{OT1}{mathc}{m}{n}#1}}
+% Unity step function symbol (double-struck 1): \one
+\def\one{\mbox{1\hspace{-4.25pt}\fontsize{12}{14.4}\selectfont\textrm{1}}}
+
+% ==============================================================================
+% Packages: Colors, TikZ, PGFPlots, And Block Diagrams
+% ==============================================================================
+% xcolor: color definitions — also required internally by tikz and pgfplots.
+\RequirePackage{xcolor}
+% tikz: PGF/TikZ vector graphics engine.
+\RequirePackage{tikz}
+% pgfplots: data-driven plots (frequency responses, curves etc.).
+%   compat=newest: latest pgfplots features.
+%   math parser=false: coordinates are plain number pairs, not expressions.
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=newest}
+\pgfplotsset{plot coordinates/math parser=false}
+% Named lengths for consistent figure sizing across standalone TikZ files.
+\newlength\figureheight
+\newlength\figurewidth
+% blox: TikZ block-diagram library — summing junctions, transfer-function blocks.
+\RequirePackage{blox}
+% standalone: lets TikZ files compile as independent documents.
+%   \usetikzlibrary{external} and \tikzexternalize are in main.tex because
+%   tikzexternalize is a build-behavior directive, not boilerplate.
+\RequirePackage{standalone}
+
+% ==============================================================================
+% Packages: Lists, Quotation Marks, And Inline Helpers
+% ==============================================================================
+% enumitem: list customization — [leftmargin=*] in software list, [nosep] etc.
+\RequirePackage{enumitem}
+% csquotes: context-sensitive quotation marks; mandatory biblatex companion.
+%   \MakeOuterQuote{"}: straight " in source auto-converts to „…" in Czech.
+\RequirePackage{csquotes}
+\MakeOuterQuote{"}
+% \juv: inline mark-up for footnote-style quotes.
+\newcommand{\juv}[1]{,#1`}
+
+% ==============================================================================
+% Packages: Acronyms
+% ==============================================================================
+% ocg-p: PDF Optional Content Groups — PDF-only "back to text" navigation link
+%   in the acro list (printocg=never). Must be loaded before acro.
+\RequirePackage{ocg-p}
+% acro: \ac{}, \acs{}, \acl{}, \acp{} acronym commands.
+%   \acsetup and \DeclareAcronym entries are \input in main.tex
+%   (project-specific content).
+\RequirePackage{acro}
+
+% ==============================================================================
+% Packages: Hyperlinks (after most packages, before biblatex)
+% ==============================================================================
+% hyperref: PDF metadata, cross-reference targets, clickable links.
+%   hidelinks: suppress colored boxes; links remain clickable in PDF viewers.
+%   Requires 3 full compilations after any cross-reference change to stabilize.
+\RequirePackage[hidelinks]{hyperref}
+
+% ==============================================================================
+% Packages: Bibliography
+% ==============================================================================
+% biblatex + biber: ISO 690 numeric citation style, Czech locale (cs_CZ)
+%   sorting, per-entry language for multilingual bibliographies.
+%   \addbibresource calls are in main.tex (thesis-specific .bib filenames).
+\RequirePackage[
+  backend     = biber,
+  style       = iso-numeric,
+  sortlocale  = cs_CZ,
+  autolang    = other,
+  bibencoding = UTF8,
+]{biblatex}
+
+% ==============================================================================
+% Utility Macro: Concatenate External TeX Files
+% ==============================================================================
+% \inputAllFiles{dir}: shell-escapes to cat all *.tex files in a directory into
+%   a temporary file that is then \input. For the optional Citace appendix.
+%   Requires the -shell-escape compiler flag.
+%   (No \makeatletter needed — @ is already a letter in class context.)
+\def\app@exe{\immediate\write18}
+\def\inputAllFiles#1{%
+  \app@exe{ls #1/*.tex | xargs cat >> \jobname.tmp}%
+  \InputIfFileExists{\jobname.tmp}{}
+  \AtEndDocument{\app@exe{rm -f #1/\jobname.tmp}}}
+
 \endinput
 %%
-%% End of file `CTUreport.cls'.
+%% End of file `CTUthesis.cls'.
