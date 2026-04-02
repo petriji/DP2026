@@ -14,13 +14,31 @@
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 \ProvidesClass{CTUthesis}
               [2026/04/03]
+%
+% Usage reference — \documentclass[<options>]{CTUthesis}
+%
+%   Paper size : a4paper (default)  a5paper
+%   Font size  : 10pt               11pt              12pt (default)
+%   Binding    : oneside (default)  twoside
+%   Columns    : onecolumn (default) twocolumn
+%   Mode       : final (default)    draft  (marks overfull boxes)
+%   Page order : openany (default)  openright
+%   Cover page : titlepage (default)  notitlepage (suppresses \maketitle)
+%   Math layout: leqno (left eq. numbers)    fleqn (flush-left equations)
+%                 default: right-side numbers, centered display equations
+%
+% Default: \documentclass[a4paper,12pt,oneside,onecolumn,final,openany]{CTUthesis}
+%
+
 % \@ptsize: set to 0/1/2 by the 10pt/11pt/12pt option; selects size1X.clo below.
 \newcommand\@ptsize{}
 % \if@restonecol: scratch flag for temporarily switching twocolumn → onecolumn.
 \newif\if@restonecol
-\newif\if@titlepage
-\@titlepagetrue              % default: use the bespoke CTU title page
 \newif\if@openright
+% \if@titlepage: controls \maketitle; true by default so omitting the option
+%   produces the CTU cover page as before.
+\newif\if@titlepage
+\@titlepagetrue
 % × “\if@compatibility” guards from report.cls have been removed: this class
 %   requires LaTeX2e (see \NeedsTeXFormat above), so the 2.09 compat branches
 %   were always dead code.
@@ -35,29 +53,24 @@
 \DeclareOption{12pt}{\renewcommand\@ptsize{2}}
 \DeclareOption{oneside}{\@twosidefalse \@mparswitchfalse}
 \DeclareOption{twoside}{\@twosidetrue  \@mparswitchtrue}
-\DeclareOption{draft}{\setlength\overfullrule{5pt}}
-\DeclareOption{final}{\setlength\overfullrule{0pt}}
+% titlepage: \maketitle produces the CTU cover page (default).
+% notitlepage: \maketitle is suppressed — use when the cover is supplied
+%   externally (e.g. via \includepdf of the official assignment sheet).
 \DeclareOption{titlepage}{\@titlepagetrue}
 \DeclareOption{notitlepage}{\@titlepagefalse}
+\DeclareOption{draft}{\setlength\overfullrule{5pt}}
+\DeclareOption{final}{\setlength\overfullrule{0pt}}
 \DeclareOption{openright}{\@openrighttrue}
 \DeclareOption{openany}{\@openrightfalse}
 \DeclareOption{onecolumn}{\@twocolumnfalse}
 \DeclareOption{twocolumn}{\@twocolumntrue}
 \DeclareOption{leqno}{\input{leqno.clo}}
 \DeclareOption{fleqn}{\input{fleqn.clo}}
-\DeclareOption{openbib}{%
-  \AtEndOfPackage{%
-   \renewcommand\@openbib@code{%
-      \advance\leftmargin\bibindent
-      \itemindent -\bibindent
-      \listparindent \itemindent
-      \parsep \z@
-      }%
-   \renewcommand\newblock{\par}}%
-}
+% (openbib option purged: referenced \@openbib@code and \newblock which were
+%  removed with thebibliography; biblatex is used instead.)
 % letterpaper is overridden by the a4paper DeclareOption above.
 % 12pt → \@ptsize=2; oneside → no mirrored even/odd margins.
-\ExecuteOptions{letterpaper,12pt,oneside,onecolumn,final,openany}
+\ExecuteOptions{a4paper,12pt,oneside,onecolumn,final,openany}
 \ProcessOptions
 % size10.clo / size11.clo / size12.clo: defines \normalsize, \small, \large,
 %   \footnotesize etc. for the selected base point size.
@@ -86,54 +99,8 @@
 \setcounter{dbltopnumber}{2}
 \renewcommand\dbltopfraction{.7}
 \renewcommand\dblfloatpagefraction{.5}
-% ==============================================================================
-% Low-Level Page Styles (report.cls \ps@headings And \ps@myheadings)
-% ==============================================================================
-% Inherited verbatim from report.cls.  Superseded at runtime by the titlesec
-% \newpagestyle commands in the Page Styles section further below.  Retained
-% for compatibility with any code selecting \pagestyle{headings} directly.
-% \markboth/\markright: store the left-mark and right-mark tokens read by
-%   \@evenhead/\@oddhead at page-output time.
-% TODO (backwards-compat): \pagestyle{headings} is never called in this document;
-%   consider purging \ps@headings and \ps@myheadings entirely.
-\if@twoside
-  \def\ps@headings{%
-      \let\@oddfoot\@empty\let\@evenfoot\@empty
-      \def\@evenhead{\thepage\hfil\slshape\leftmark}%
-      \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
-      \let\@mkboth\markboth
-    \def\chaptermark##1{%
-      \markboth {\MakeUppercase{%
-        \ifnum \c@secnumdepth >\m@ne
-            \@chapapp\ \thechapter. \ %
-        \fi
-        ##1}}{}}%
-    \def\sectionmark##1{%
-      \markright {\MakeUppercase{%
-        \ifnum \c@secnumdepth >\z@
-          \thesection. \ %
-        \fi
-        ##1}}}}
-\else
-  \def\ps@headings{%
-    \let\@oddfoot\@empty
-    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
-    \let\@mkboth\markboth
-    \def\chaptermark##1{%
-      \markright {\MakeUppercase{%
-        \ifnum \c@secnumdepth >\m@ne
-            \@chapapp\ \thechapter. \ %
-        \fi
-        ##1}}}}
-\fi
-\def\ps@myheadings{%
-    \let\@oddfoot\@empty\let\@evenfoot\@empty
-    \def\@evenhead{\thepage\hfil\slshape\leftmark}%
-    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
-    \let\@mkboth\@gobbletwo
-    \let\chaptermark\@gobble
-    \let\sectionmark\@gobble
-    }
+% (\ps@headings and \ps@myheadings purged: titlesec [pagestyles] defines all
+%  active page styles; \pagestyle{headings} is never used in this document.)
 % ==============================================================================
 % Thesis Metadata Commands
 % ==============================================================================
@@ -152,17 +119,12 @@
 % ==============================================================================
 % Title Page
 % ==============================================================================
-% Two \maketitle variants, selected by \if@titlepage (default: true):
-%   true  → bespoke CTU cover page — logo, faculty/dept/course header, and an
-%             xltabular two-column author table.  Clears \author/\title after use.
-%   false → compact standard-report title block from report.cls (rarely used).
+% Bespoke CTU cover page: logo, faculty/dept/course header, and an
+% xltabular two-column author table.  Clears \author/\title after use.
+\newcommand\maketitle{%
   \if@titlepage
-  \newcommand\maketitle{\begin{titlepage}%
-  \thispagestyle{empty}  
-%  \let\footnotesize\small
-%  \let\footnoterule\relax
-%  \let\footnote\date
-%   \let\footnote\thanks
+  \begin{titlepage}%
+\thispagestyle{empty}
 
   \begin{flushright}
 	{\large
@@ -204,60 +166,8 @@
   \global\let\author\relax
   \global\let\date\relax
   \global\let\and\relax
+  \fi
 }
-\else
-\newcommand\maketitle{\par
-  \begingroup
-    \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
-    \def\@makefnmark{\rlap{\@textsuperscript{\normalfont\@thefnmark}}}%
-    \long\def\@makefntext##1{\parindent 1em\noindent
-            \hb@xt@1.8em{%
-                \hss\@textsuperscript{\normalfont\@thefnmark}}##1}%
-    \if@twocolumn
-      \ifnum \col@number=\@ne
-        \@maketitle
-      \else
-        \twocolumn[\@maketitle]%
-      \fi
-    \else
-      \newpage
-      \global\@topnum\z@   % Prevents figures from going at top of page.
-      \@maketitle
-    \fi
-    \thispagestyle{plain}\@thanks
-  \endgroup
-  \setcounter{footnote}{0}%
-  \global\let\thanks\relax
-  \global\let\maketitle\relax
-  \global\let\@maketitle\relax
-  \global\let\@thanks\@empty
-  \global\let\@author\@empty
-  \global\let\@date\@empty
-  \global\let\@title\@empty
-  \global\let\title\relax
-  \global\let\author\relax
-  \global\let\date\relax
-  \global\let\and\relax
-}
-\def\@maketitle{%
-  \newpage
-  \null
-  \vskip 2em%
-  \begin{center}%
-  \let \footnote \thanks
-    {\LARGE \@title \par}%
-    \vskip 1.5em%
-    {\large
-      \lineskip .5em%
-      \begin{tabular}[t]{c}%
-        \@author
-      \end{tabular}\par}%
-    \vskip 1em%
-    {\large \@date}%
-  \end{center}%
-  \par
-  \vskip 1.5em}
-\fi
 % ==============================================================================
 % Document Structure, Counters, And Sectioning
 % ==============================================================================
@@ -278,68 +188,22 @@
 \renewcommand\theparagraph    {\thesubsubsection.\@arabic\c@paragraph}
 \renewcommand\thesubparagraph {\theparagraph.\@arabic\c@subparagraph}
 \newcommand\@chapapp{\chaptername}
-\newcommand\part{%
-  \if@openright
-    \cleardoublepage
-  \else
-    \clearpage
-  \fi
-  \thispagestyle{plain}%
-  \if@twocolumn
-    \onecolumn
-    \@tempswatrue
-  \else
-    \@tempswafalse
-  \fi
-  \null\vfil
-  \secdef\@part\@spart}
-
-% TODO (backwards-compat): \@part, \@spart, \@endpart are never called
-%   directly — titlesec's \titleformat{\part} intercepts \part and produces
-%   output via its own renderer.  Consider purging these three definitions.
-\def\@part[#1]#2{%
-    \ifnum \c@secnumdepth >-2\relax
-      \refstepcounter{part}%
-      \addcontentsline{toc}{part}{\thepart\hspace{1em}#1}%
-    \else
-      \addcontentsline{toc}{part}{#1}%
-    \fi
-    \markboth{}{}%
-    {\centering
-     \interlinepenalty \@M
-     \normalfont
-     \ifnum \c@secnumdepth >-2\relax
-       \huge\bfseries \partname\nobreakspace\thepart
-       \par
-       \vskip 20\p@
-     \fi
-     \Huge \bfseries #2\par}%
-    \@endpart}
-\def\@spart#1{%
-    {\centering
-     \interlinepenalty \@M
-     \normalfont
-     \Huge \bfseries #1\par}%
-    \@endpart}
-\def\@endpart{\vfil\newpage
-              \if@twoside
-               \if@openright
-                \null
-                \thispagestyle{empty}%
-                \newpage
-               \fi
-              \fi
-              \if@tempswa
-                \twocolumn
-              \fi}
+% (\part body purged: titlesec's \titleclass{\part}{page} completely replaces
+%  \part via \ttl@pageclass at load time; only the empty stub is needed.)
+\newcommand\part{}
+% \chapter: titlesec uses a COMPATIBILITY mechanism for chapter-level sections.
+%   It does NOT replace \chapter; instead, \ttl@compatchapter patches
+%   \@makechapterhead and \@makeschapterhead.  The dispatch chain must remain:
+%     \chapter{T} → \secdef\@chapter\@schapter
+%               → \@chapter → \@makechapterhead (patched by titlesec)
+%   Without this, \chapter* (used in \tableofcontents etc.) is also broken.
 \newcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
                     \thispagestyle{plain}%
-                    \global\@topnum\z@   % no floats at top of chapter-open page
-                    \@afterindentfalse   % suppress indent on first post-heading para
+                    \global\@topnum\z@
+                    \@afterindentfalse
                     \secdef\@chapter\@schapter}
-% \secdef: \chapter{Title}  → \@chapter  (numbered, adds TOC line);
-%           \chapter*{Title} → \@schapter (unnumbered, no TOC line).
-% In \@chapter: #1 = short title (for TOC/running heads); #2 = full display title.
+% \@chapter: increments counter, writes TOC/LOF/LOT entries, calls
+%   \@makechapterhead (which titlesec replaces via \ttl@compatchapter).
 \def\@chapter[#1]#2{\ifnum \c@secnumdepth >\m@ne
                          \refstepcounter{chapter}%
                          \typeout{\@chapapp\space\thechapter.}%
@@ -357,35 +221,16 @@
                       \@makechapterhead{#2}%
                       \@afterheading
                     \fi}
+% \@schapter: starred form — no TOC entry; calls \@makeschapterhead
+%   (also patched by titlesec).
 \def\@schapter#1{\if@twocolumn
                    \@topnewpage[\@makeschapterhead{#1}]%
                  \else
                    \@makeschapterhead{#1}%
                    \@afterheading
                  \fi}
-% \@makechapterhead / \@makeschapterhead: replaced entirely by titlesec when
-%   \titleformat{\chapter} is active (see Packages: Headings section below).
-% TODO (backwards-compat): consider purging both definitions; titlesec always
-%   overrides them.  \@chapter still calls \@makechapterhead by name but
-%   titlesec patches \@chapter to skip this call.
-\def\@makechapterhead#1{%
-  \vspace*{22\p@}%
-  {\parindent \z@ \raggedright \normalfont
-  \ifnum \c@secnumdepth >\m@ne
-       \LARGE\bfseries \thechapter\hspace*{20pt}  
-       \bfseries #1
-       \par\nobreak
-    \fi
-    \vskip 15\p@
-  }}
-\def\@makeschapterhead#1{%
-  \vspace*{22\p@}%
-  {\parindent \z@ \raggedright \normalfont
-    \interlinepenalty\@M
-    \Large \bfseries  #1\par\nobreak
-    \vskip 15\p@
-  }}
-  %
+% (\@makechapterhead and \@makeschapterhead NOT defined here: titlesec's
+%  \ttl@compatchapter creates them when \titleformat{\chapter} is processed.)
 \newcommand\section{\@startsection {section}{1}{\z@}%
                                    {-3.5ex \@plus -1ex \@minus -.2ex}%
                                    {2.3ex \@plus.2ex}%
@@ -467,49 +312,16 @@
 % ==============================================================================
 % Standard Text Environments
 % ==============================================================================
-\if@titlepage
-  \newenvironment{abstract}{%
-      \titlepage
-      \null\vfil
-      \@beginparpenalty\@lowpenalty
-      \begin{center}%
-        \bfseries \abstractname
-        \@endparpenalty\@M
-      \end{center}}%
-     {\par\vfil\null\endtitlepage}
-\else
-  \newenvironment{abstract}{%
-      \if@twocolumn
-        \section*{\abstractname}%
-      \else
-        \small
-        \begin{center}%
-          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
-        \end{center}%
-        \quotation
-      \fi}
-      {\if@twocolumn\else\endquotation\fi}
-\fi
-\newenvironment{verse}
-               {\let\\\@centercr
-                \list{}{\itemsep      \z@
-                        \itemindent   -1.5em%
-                        \listparindent\itemindent
-                        \rightmargin  \leftmargin
-                        \advance\leftmargin 1.5em}%
-                \item\relax}
-               {\endlist}
-\newenvironment{quotation}
-               {\list{}{\listparindent 1.5em%
-                        \itemindent    \listparindent
-                        \rightmargin   \leftmargin
-                        \parsep        \z@ \@plus\p@}%
-                \item\relax}
-               {\endlist}
-\newenvironment{quote}
-               {\list{}{\rightmargin\leftmargin}%
-                \item\relax}
-               {\endlist}
+\newenvironment{abstract}{%
+    \titlepage
+    \null\vfil
+    \@beginparpenalty\@lowpenalty
+    \begin{center}%
+      \bfseries \abstractname
+      \@endparpenalty\@M
+    \end{center}}%
+   {\par\vfil\null\endtitlepage}
+% (verse, quotation, quote purged: unused in all CTUthesis projects.)
 % LaTeX2e titlepage: page counter starts at 1; twoside restores it after.
 \newenvironment{titlepage}
     {%
@@ -665,65 +477,12 @@
     }
 \let\l@table\l@figure
 % ==============================================================================
-% Bibliography And Index Environments
+% Footnote Layout
 % ==============================================================================
-% thebibliography: fallback hand-coded bibliography environment from report.cls.
-%   Superseded in practice by biblatex (loaded in the Packages section below),
-%   which replaces the output routine entirely.  Retained as class infrastructure.
-% TODO (backwards-compat): biblatex is always loaded; thebibliography is never
-%   invoked.  Consider purging this environment and the bibindent dimen.
-\newdimen\bibindent
-\setlength\bibindent{1.5em}
-\newenvironment{thebibliography}[1]
-     {\chapter*{\bibname}%
-      \@mkboth{\MakeUppercase\bibname}{\MakeUppercase\bibname}%
-      \list{\@biblabel{\@arabic\c@enumiv}}%
-           {\settowidth\labelwidth{\@biblabel{#1}}%
-            \leftmargin\labelwidth
-            \advance\leftmargin\labelsep
-            \@openbib@code
-            \usecounter{enumiv}%
-            \let\p@enumiv\@empty
-            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
-      \sloppy
-      \clubpenalty4000
-      \@clubpenalty \clubpenalty
-      \widowpenalty4000%
-      \sfcode`\.\@m}
-% \sfcode`\.\@m: set "." space factor to 1000 so TeX does not insert extra
-%   intersentence space after a period at the end of a bibliography entry.
-     {\def\@noitemerr
-       {\@latex@warning{Empty `thebibliography' environment}}%
-      \endlist}
-% \newblock: elastic glue between author/title/publication in a hand-coded
-%   bibliography.  biblatex does not use this.
-\newcommand\newblock{\hskip .11em\@plus.33em\@minus.07em}
-\let\@openbib@code\@empty
-% theindex: fallback two-column index environment from report.cls.
-%   Superseded when makeidx is active (currently dormant in the Packages section).
-% TODO (backwards-compat): makeidx is always \RequirePackage'd and redefines
-%   theindex; the class body definition is therefore always overridden.
-%   Consider purging it (along with @idxitem, subitem, subsubitem, indexspace)
-%   once the makeidx dormancy situation is resolved.
-\newenvironment{theindex}
-               {\if@twocolumn
-                  \@restonecolfalse
-                \else
-                  \@restonecoltrue
-                \fi
-                \twocolumn[\@makeschapterhead{\indexname}]%
-                \@mkboth{\MakeUppercase\indexname}%
-                        {\MakeUppercase\indexname}%
-                \thispagestyle{plain}\parindent\z@
-                \parskip\z@ \@plus .3\p@\relax
-                \columnseprule \z@
-                \columnsep 35\p@
-                \let\item\@idxitem}
-               {\if@restonecol\onecolumn\else\clearpage\fi}
-\newcommand\@idxitem{\par\hangindent 40\p@}
-\newcommand\subitem{\@idxitem \hspace*{20\p@}}
-\newcommand\subsubitem{\@idxitem \hspace*{30\p@}}
-\newcommand\indexspace{\par \vskip 10\p@ \@plus5\p@ \@minus3\p@\relax}
+% (thebibliography, bibindent, \newblock, \@openbib@code purged: biblatex
+%  replaces the bibliography output entirely.)
+% (theindex, \@idxitem, \subitem, \subsubitem, \indexspace purged: makeidx
+%  redefines theindex when loaded; these helpers are only used inside it.)
 \renewcommand\footnoterule{%
   \kern-3\p@
   \hrule\@width.4\columnwidth
