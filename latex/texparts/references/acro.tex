@@ -1,65 +1,10 @@
-%-----------------------------------------------------nastaveni------------------------------------------------
-\acsetup{
-	make-links = true,
-	list/display = used,
-	list/template = xltabular,
-	list/heading = chapter*,
-	list/preamble = {\Acrobatmenu{GoBack}{\begin{ocg}[printocg=never]{name}{id1}{1}
-		\texttt{ZPĚT DO TEXTU}\end{ocg}}}
-	}
-\RenewAcroTemplate[list]{xltabular}{
-	\AcroNeedPackage{xltabular}
-	\acronymsmapF{%
-		\AcroAddRow{
-		\textbf{\acrowrite{short}}%
-		\acroifT{alt}{/\acrowrite{alt}}
-		&
-		\acrowrite{list}%
-		\acroifanyT{foreign,extra}{ (}%
-		\acroifT{foreign}{\acrowrite{foreign}\acroifT{extra}{,}}%
-		\acroifT{extra}{\acrowrite{extra}}%
-		\acroifanyT{foreign,extra}{)}%
-		\acropagefill
-		\acropages
-		{\acrotranslate{page}\nobreakspace}
-		{\acrotranslate{pages}\nobreakspace}%
-		\\}}
-	{\AcroRerun}%
-	\acroheading
-	\acropreamble
-	\par%\noindent
-	\begin{flushleft}
-	\begin{xltabular}[l]{\linewidth}{@{} lX @{}}
-	\AcronymTable
-	\end{xltabular}
-	\end{flushleft}
-	}
-\AddAcroTranslations{Czech}{
-	list-name = Seznam použitých zkratek,
-	page = s\abbrdot,
-	pages = s\abbrdot,
-	sequens = a~dále,
-	sequentes = a~dále,
-	also = také,
-	and = a,
-	or = nebo
-	}
-
-\RenewAcroTemplate{long-short}{%
-	\acroiffirstTF{%
-	\acrowrite{long}%
-	\acspace(%
-	\acrowrite{short}%
-	\acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
-	\acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
-	\acrogroupcite)%
-	}%
-	{\acrowrite{short}}%
-	}
-
-% \DeclareAcroEnding{plural}{}{} % už je definováno v balíčku acro
-
-%----------------------------------------------------definice------------------------------------------------	
+% ==============================================================================
+% Acronym Definitions
+% ==============================================================================
+% All \DeclareAcronym entries for the thesis.
+% Package setup (\acsetup, templates, translations) is in acro_setup.tex,
+% which is \input before this file in preamble.tex.
+% ==============================================================================
 \DeclareAcronym{OS}{
 	short 	= OS,
 	long 	= obráběcí stroj,
