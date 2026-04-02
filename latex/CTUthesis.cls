@@ -1,58 +1,47 @@
 %%
-%% This is file `CTUthesis.cls',
+%% CTUthesis.cls — Custom LaTeX class for CTU (Prague) theses.
 %%
-%% The original source files were:
+%% Based on report.cls (classes.dtx, LaTeX2e standard distribution).
+%% Extended with full package setup, page styles, custom macros, and
+%% table/figure formatting for a pdflatex + biber workflow.
 %%
-%% classes.dtx  (with options: `report')
-%% report.cls
+%% Jiří Petříček 2019–2026
+%% Refactored with Claude Sonnet 4.6, April 2026
 %%
-%% This is a customized default style file.
-%% 
-%% Jiří Petříček 2019
-%% 
+% ==============================================================================
+% Class Declaration, Options, And Setup
+% ==============================================================================
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 \ProvidesClass{CTUthesis}
-              [2019/07/16]
+              [2026/04/03]
+% \@ptsize: set to 0/1/2 by the 10pt/11pt/12pt option; selects size1X.clo below.
 \newcommand\@ptsize{}
+% \if@restonecol: scratch flag for temporarily switching twocolumn → onecolumn.
 \newif\if@restonecol
 \newif\if@titlepage
-\@titlepagetrue
+\@titlepagetrue              % default: use the bespoke CTU title page
 \newif\if@openright
-\if@compatibility\else
+% × “\if@compatibility” guards from report.cls have been removed: this class
+%   requires LaTeX2e (see \NeedsTeXFormat above), so the 2.09 compat branches
+%   were always dead code.
 \DeclareOption{a4paper}
    {\setlength\paperheight {297mm}%
     \setlength\paperwidth  {210mm}}
 \DeclareOption{a5paper}
    {\setlength\paperheight {210mm}%
     \setlength\paperwidth  {148mm}}
-\fi
-\if@compatibility
-  \renewcommand\@ptsize{0}
-\else
 \DeclareOption{10pt}{\renewcommand\@ptsize{0}}
-\fi
 \DeclareOption{11pt}{\renewcommand\@ptsize{1}}
 \DeclareOption{12pt}{\renewcommand\@ptsize{2}}
-\if@compatibility\else
 \DeclareOption{oneside}{\@twosidefalse \@mparswitchfalse}
-\fi
 \DeclareOption{twoside}{\@twosidetrue  \@mparswitchtrue}
 \DeclareOption{draft}{\setlength\overfullrule{5pt}}
-\if@compatibility\else
 \DeclareOption{final}{\setlength\overfullrule{0pt}}
-\fi
 \DeclareOption{titlepage}{\@titlepagetrue}
-\if@compatibility\else
 \DeclareOption{notitlepage}{\@titlepagefalse}
-\fi
-\if@compatibility
-\else
 \DeclareOption{openright}{\@openrighttrue}
 \DeclareOption{openany}{\@openrightfalse}
-\fi
-\if@compatibility\else
 \DeclareOption{onecolumn}{\@twocolumnfalse}
-\fi
 \DeclareOption{twocolumn}{\@twocolumntrue}
 \DeclareOption{leqno}{\input{leqno.clo}}
 \DeclareOption{fleqn}{\input{fleqn.clo}}
@@ -66,16 +55,27 @@
       }%
    \renewcommand\newblock{\par}}%
 }
+% letterpaper is overridden by the a4paper DeclareOption above.
+% 12pt → \@ptsize=2; oneside → no mirrored even/odd margins.
 \ExecuteOptions{letterpaper,12pt,oneside,onecolumn,final,openany}
 \ProcessOptions
+% size10.clo / size11.clo / size12.clo: defines \normalsize, \small, \large,
+%   \footnotesize etc. for the selected base point size.
 \input{size1\@ptsize.clo}
+% ==============================================================================
+% Layout Primitives
+% ==============================================================================
 \setlength\lineskip{1\p@}
 \setlength\normallineskip{1\p@}
 \renewcommand\baselinestretch{1.5}
 \setlength\parskip{0\p@ \@plus \p@}
+% Break-penalty thresholds used at list boundaries and by sectioning commands.
+%   Lower value = break less strongly discouraged (51 < 151 < 301).
 \@lowpenalty   51
 \@medpenalty  151
 \@highpenalty 301
+% Float placement fractions — TeX respects these before falling back to a
+%   dedicated float page.  dbltop*/dblfloatpage* variants apply in twocolumn mode.
 \setcounter{topnumber}{2}
 \renewcommand\topfraction{.7}
 \setcounter{bottomnumber}{1}
@@ -86,6 +86,16 @@
 \setcounter{dbltopnumber}{2}
 \renewcommand\dbltopfraction{.7}
 \renewcommand\dblfloatpagefraction{.5}
+% ==============================================================================
+% Low-Level Page Styles (report.cls \ps@headings And \ps@myheadings)
+% ==============================================================================
+% Inherited verbatim from report.cls.  Superseded at runtime by the titlesec
+% \newpagestyle commands in the Page Styles section further below.  Retained
+% for compatibility with any code selecting \pagestyle{headings} directly.
+% \markboth/\markright: store the left-mark and right-mark tokens read by
+%   \@evenhead/\@oddhead at page-output time.
+% TODO (backwards-compat): \pagestyle{headings} is never called in this document;
+%   consider purging \ps@headings and \ps@myheadings entirely.
 \if@twoside
   \def\ps@headings{%
       \let\@oddfoot\@empty\let\@evenfoot\@empty
@@ -124,7 +134,12 @@
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble
     }
-    %%%%
+% ==============================================================================
+% Thesis Metadata Commands
+% ==============================================================================
+% \faculty, \department, \course: user-level setters that store their argument
+%   globally via \gdef so the value survives group boundaries.  Used in
+%   \maketitle and the page styles (fancy/plain/nonum) via \@faculty etc.
 \def\@faculty{\relax}
 	\newcommand{\faculty}[1]{\gdef\@faculty{#1}
 	}
@@ -134,7 +149,13 @@
 \def\@course{\relax}
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
-	%%%%
+% ==============================================================================
+% Title Page
+% ==============================================================================
+% Two \maketitle variants, selected by \if@titlepage (default: true):
+%   true  → bespoke CTU cover page — logo, faculty/dept/course header, and an
+%             xltabular two-column author table.  Clears \author/\title after use.
+%   false → compact standard-report title block from report.cls (rarely used).
   \if@titlepage
   \newcommand\maketitle{\begin{titlepage}%
   \thispagestyle{empty}  
@@ -168,7 +189,7 @@
      \end{minipage}
 %      \vskip 0.8cm%
   \vfill
-  {\normalsize \@date \par}%       % Set date in \large size.
+  {\normalsize \@date \par}%
   \end{center}\par
 %  \@thanks
   \end{titlepage}%
@@ -237,6 +258,9 @@
   \par
   \vskip 1.5em}
 \fi
+% ==============================================================================
+% Document Structure, Counters, And Sectioning
+% ==============================================================================
 \newcommand*\chaptermark[1]{}
 \setcounter{secnumdepth}{2}
 \newcounter {part}
@@ -270,6 +294,9 @@
   \null\vfil
   \secdef\@part\@spart}
 
+% TODO (backwards-compat): \@part, \@spart, \@endpart are never called
+%   directly — titlesec's \titleformat{\part} intercepts \part and produces
+%   output via its own renderer.  Consider purging these three definitions.
 \def\@part[#1]#2{%
     \ifnum \c@secnumdepth >-2\relax
       \refstepcounter{part}%
@@ -307,9 +334,12 @@
               \fi}
 \newcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
                     \thispagestyle{plain}%
-                    \global\@topnum\z@
-                    \@afterindentfalse
+                    \global\@topnum\z@   % no floats at top of chapter-open page
+                    \@afterindentfalse   % suppress indent on first post-heading para
                     \secdef\@chapter\@schapter}
+% \secdef: \chapter{Title}  → \@chapter  (numbered, adds TOC line);
+%           \chapter*{Title} → \@schapter (unnumbered, no TOC line).
+% In \@chapter: #1 = short title (for TOC/running heads); #2 = full display title.
 \def\@chapter[#1]#2{\ifnum \c@secnumdepth >\m@ne
                          \refstepcounter{chapter}%
                          \typeout{\@chapapp\space\thechapter.}%
@@ -333,6 +363,11 @@
                    \@makeschapterhead{#1}%
                    \@afterheading
                  \fi}
+% \@makechapterhead / \@makeschapterhead: replaced entirely by titlesec when
+%   \titleformat{\chapter} is active (see Packages: Headings section below).
+% TODO (backwards-compat): consider purging both definitions; titlesec always
+%   overrides them.  \@chapter still calls \@makechapterhead by name but
+%   titlesec patches \@chapter to skip this call.
 \def\@makechapterhead#1{%
   \vspace*{22\p@}%
   {\parindent \z@ \raggedright \normalfont
@@ -371,6 +406,17 @@
                                        {3.25ex \@plus1ex \@minus .2ex}%
                                        {-1em}%
                                       {\normalfont\normalsize\bfseries}}
+% \appendix: resets chapter/section counters and switches \thechapter to
+%   uppercase alpha (A, B, C …). \@chapapp becomes "Appendix" (or the
+%   babel equivalent) so chapter headings and TOC entries read "Appendix A".
+\newcommand\appendix{\par
+  \setcounter{chapter}{0}%
+  \setcounter{section}{0}%
+  \gdef\@chapapp{\appendixname}%
+  \gdef\thechapter{\@Alph\c@chapter}}
+% ==============================================================================
+% List Layout
+% ==============================================================================
 \if@twocolumn
   \setlength\leftmargini  {2em}
 \else
@@ -393,17 +439,21 @@
 \@beginparpenalty -\@lowpenalty
 \@endparpenalty   -\@lowpenalty
 \@itempenalty     -\@lowpenalty
+% enumerate counter representation: arabic, alpha, roman, ALPHA (levels 1–4).
 \renewcommand\theenumi{\@arabic\c@enumi}
 \renewcommand\theenumii{\@alph\c@enumii}
 \renewcommand\theenumiii{\@roman\c@enumiii}
 \renewcommand\theenumiv{\@Alph\c@enumiv}
+% enumerate label format per nesting level: 1.  (a)  i.  A.
 \newcommand\labelenumi{\theenumi.}
 \newcommand\labelenumii{(\theenumii)}
 \newcommand\labelenumiii{\theenumiii.}
 \newcommand\labelenumiv{\theenumiv.}
+% reference prefix: \ref inside enumerate prepends parent labels.
 \renewcommand\p@enumii{\theenumi}
 \renewcommand\p@enumiii{\theenumi(\theenumii)}
 \renewcommand\p@enumiv{\p@enumiii\theenumiii}
+% itemize label symbols: •  –  *  ·  (levels 1–4).
 \newcommand\labelitemi{\textbullet}
 \newcommand\labelitemii{\normalfont\bfseries \textendash}
 \newcommand\labelitemiii{\textasteriskcentered}
@@ -414,6 +464,9 @@
                {\endlist}
 \newcommand*\descriptionlabel[1]{\hspace\labelsep
                                 \normalfont\bfseries #1}
+% ==============================================================================
+% Standard Text Environments
+% ==============================================================================
 \if@titlepage
   \newenvironment{abstract}{%
       \titlepage
@@ -457,20 +510,7 @@
                {\list{}{\rightmargin\leftmargin}%
                 \item\relax}
                {\endlist}
-\if@compatibility
-\newenvironment{titlepage}
-    {%
-      \if@twocolumn
-        \@restonecoltrue\onecolumn
-      \else
-        \@restonecolfalse\newpage
-      \fi
-      \thispagestyle{empty}%
-      \setcounter{page}\z@
-    }%
-    {\if@restonecol\twocolumn \else \newpage \fi
-    }
-\else
+% LaTeX2e titlepage: page counter starts at 1; twoside restores it after.
 \newenvironment{titlepage}
     {%
       \if@twocolumn
@@ -486,26 +526,31 @@
         \setcounter{page}\@ne
      \fi
     }
-\fi
-\newcommand\appendix{\par
-  \setcounter{chapter}{0}%
-  \setcounter{section}{0}%
-  \gdef\@chapapp{\appendixname}%
-  \gdef\thechapter{\@Alph\c@chapter}}
+% ==============================================================================
+% Primitive Spacing And Box Parameters
+% ==============================================================================
 \setlength\arraycolsep{5\p@}
 \setlength\tabcolsep{6\p@}
 \setlength\arrayrulewidth{.4\p@}
 \setlength\doublerulesep{2\p@}
 \setlength\tabbingsep{\labelsep}
-\skip\@mpfootins = \skip\footins
+\skip\@mpfootins = \skip\footins  % sync minipage footnote gap with body text
 \setlength\fboxsep{3\p@}
 \setlength\fboxrule{.4\p@}
+% ==============================================================================
+% Floats, Captions, And Equation Counter
+% ==============================================================================
 \@addtoreset {equation}{chapter}
 \renewcommand\theequation
   {\ifnum \c@chapter>\z@ \thechapter.\fi \@arabic\c@equation}
 \newcounter{figure}[chapter]
 \renewcommand \thefigure
      {\ifnum \c@chapter>\z@ \thechapter.\fi \@arabic\c@figure}
+% Float hook registers for the figure environment:
+%   \fps@figure  — default placement specifiers (top / bottom / float-page).
+%   \ftype@figure — type bit-mask: figures=1, tables=2 (controls \suppressfloats).
+%   \ext@figure  — auxiliary file extension for the list of figures (.lof).
+%   \fnum@figure — caption label string, e.g. "Figure\nobreakspace 1.3".
 \def\fps@figure{tbp}
 \def\ftype@figure{1}
 \def\ext@figure{lof}
@@ -533,25 +578,12 @@
 \newlength\belowcaptionskip
 \setlength\abovecaptionskip{10\p@}
 \setlength\belowcaptionskip{0\p@}
-\long\def\@makecaption#1#2{%
-  \vskip\abovecaptionskip
-  \sbox\@tempboxa{#1: #2}%
-  \ifdim \wd\@tempboxa >\hsize
-    #1: #2\par
-  \else
-    \global \@minipagefalse
-    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
-  \fi
-  \vskip\belowcaptionskip}
-\DeclareOldFontCommand{\rm}{\normalfont\rmfamily}{\mathrm}
-\DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf}
-\DeclareOldFontCommand{\tt}{\normalfont\ttfamily}{\mathtt}
-\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
-\DeclareOldFontCommand{\it}{\normalfont\itshape}{\mathit}
-\DeclareOldFontCommand{\sl}{\normalfont\slshape}{\@nomath\sl}
-\DeclareOldFontCommand{\sc}{\normalfont\scshape}{\@nomath\sc}
-\DeclareRobustCommand*\cal{\@fontswitch\relax\mathcal}
-\DeclareRobustCommand*\mit{\@fontswitch\relax\mathnormal}
+% abovecaptionskip / belowcaptionskip: consumed by the caption package.
+% \@makecaption (purged): the caption package always replaces this renderer
+%   entirely, so the class body definition was dead code.
+% ==============================================================================
+% Contents, Figures, And Tables Lists (TOC, LOF, LOT)
+% ==============================================================================
 \newcommand\@pnumwidth{1.55em}
 \newcommand\@tocrmarg{2.55em}
 \newcommand\@dotsep{4.5}
@@ -598,6 +630,8 @@
       \penalty\@highpenalty
     \endgroup
   \fi}
+% \@dottedtocline{level}{indent}{numwidth}: TOC entry with a dotted leader.
+%   indent = left offset from the page margin; numwidth = width for the label.
 \newcommand*\l@section{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand*\l@subsection{\@dottedtocline{2}{3.8em}{3.2em}}
 \newcommand*\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
@@ -630,6 +664,14 @@
     \if@restonecol\twocolumn\fi
     }
 \let\l@table\l@figure
+% ==============================================================================
+% Bibliography And Index Environments
+% ==============================================================================
+% thebibliography: fallback hand-coded bibliography environment from report.cls.
+%   Superseded in practice by biblatex (loaded in the Packages section below),
+%   which replaces the output routine entirely.  Retained as class infrastructure.
+% TODO (backwards-compat): biblatex is always loaded; thebibliography is never
+%   invoked.  Consider purging this environment and the bibindent dimen.
 \newdimen\bibindent
 \setlength\bibindent{1.5em}
 \newenvironment{thebibliography}[1]
@@ -648,11 +690,21 @@
       \@clubpenalty \clubpenalty
       \widowpenalty4000%
       \sfcode`\.\@m}
+% \sfcode`\.\@m: set "." space factor to 1000 so TeX does not insert extra
+%   intersentence space after a period at the end of a bibliography entry.
      {\def\@noitemerr
        {\@latex@warning{Empty `thebibliography' environment}}%
       \endlist}
+% \newblock: elastic glue between author/title/publication in a hand-coded
+%   bibliography.  biblatex does not use this.
 \newcommand\newblock{\hskip .11em\@plus.33em\@minus.07em}
 \let\@openbib@code\@empty
+% theindex: fallback two-column index environment from report.cls.
+%   Superseded when makeidx is active (currently dormant in the Packages section).
+% TODO (backwards-compat): makeidx is always \RequirePackage'd and redefines
+%   theindex; the class body definition is therefore always overridden.
+%   Consider purging it (along with @idxitem, subitem, subsubitem, indexspace)
+%   once the makeidx dormancy situation is resolved.
 \newenvironment{theindex}
                {\if@twocolumn
                   \@restonecolfalse
@@ -681,6 +733,11 @@
     \parindent 1em%
     \noindent
     \hb@xt@1.8em{\hss\@makefnmark}#1}
+% ==============================================================================
+% String Names And Date
+% ==============================================================================
+% English defaults; babel overrides these with Czech equivalents (Obsah,
+%   Seznam obrázků, …) when \selectlanguage{czech} is active.
 \newcommand\contentsname{Contents}
 \newcommand\listfigurename{List of Figures}
 \newcommand\listtablename{List of Tables}
@@ -696,17 +753,23 @@
   January\or February\or March\or April\or May\or June\or
   July\or August\or September\or October\or November\or December\fi
   \space\number\day, \number\year}
+% ==============================================================================
+% Final Layout Switches
+% ==============================================================================
 \setlength\columnsep{10\p@}
 \setlength\columnseprule{0\p@}
 \pagestyle{plain}
 \pagenumbering{arabic}
+% Vertical page filling: oneside → \raggedbottom (short pages not padded);
+%   twoside gets \flushbottom by default.  twocolumn forces \flushbottom
+%   so that both columns bottom-align on every page.
 \if@twoside
 \else
   \raggedbottom
 \fi
 \if@twocolumn
   \twocolumn
-  \sloppy
+  \sloppy        % redundant: overridden by the unconditional \sloppy in Page Layout
   \flushbottom
 \else
   \onecolumn
