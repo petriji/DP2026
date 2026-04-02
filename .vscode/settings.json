@@ -53,6 +53,8 @@
 
     // Auxiliary analysis related to this project output
     "latex-workshop.texcount.autorun": "onSave",
+    "latex-utilities.countWord.format": "${charsBody} Characters in body",
+
 
     // Recommended settings (user-scope)
     // "editor.wordWrap": "on",
