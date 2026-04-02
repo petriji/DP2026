@@ -1,0 +1,356 @@
+%-----------------------------------------------------nastaveni------------------------------------------------
+\acsetup{
+	make-links = true,
+	list/display = used,
+	list/template = xltabular,
+	list/heading = chapter*,
+	list/preamble = {\Acrobatmenu{GoBack}{\begin{ocg}[printocg=never]{name}{id1}{1}
+		\texttt{ZPĚT DO TEXTU}\end{ocg}}}
+	}
+\RenewAcroTemplate[list]{xltabular}{
+	\AcroNeedPackage{xltabular}
+	\acronymsmapF{%
+		\AcroAddRow{
+		\textbf{\acrowrite{short}}%
+		\acroifT{alt}{/\acrowrite{alt}}
+		&
+		\acrowrite{list}%
+		\acroifanyT{foreign,extra}{ (}%
+		\acroifT{foreign}{\acrowrite{foreign}\acroifT{extra}{,}}%
+		\acroifT{extra}{\acrowrite{extra}}%
+		\acroifanyT{foreign,extra}{)}%
+		\acropagefill
+		\acropages
+		{\acrotranslate{page}\nobreakspace}
+		{\acrotranslate{pages}\nobreakspace}%
+		\\}}
+	{\AcroRerun}%
+	\acroheading
+	\acropreamble
+	\par%\noindent
+	\begin{flushleft}
+	\begin{xltabular}[l]{\linewidth}{@{} lX @{}}
+	\AcronymTable
+	\end{xltabular}
+	\end{flushleft}
+	}
+\AddAcroTranslations{Czech}{
+	list-name = Seznam použitých zkratek,
+	page = s\abbrdot,
+	pages = s\abbrdot,
+	sequens = a~dále,
+	sequentes = a~dále,
+	also = také,
+	and = a,
+	or = nebo
+	}
+
+\RenewAcroTemplate{long-short}{%
+	\acroiffirstTF{%
+	\acrowrite{long}%
+	\acspace(%
+	\acrowrite{short}%
+	\acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
+	\acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
+	\acrogroupcite)%
+	}%
+	{\acrowrite{short}}%
+	}
+
+% \DeclareAcroEnding{plural}{}{} % už je definováno v balíčku acro
+
+%----------------------------------------------------definice------------------------------------------------	
+\DeclareAcronym{OS}{
+	short 	= OS,
+	long 	= obráběcí stroj,
+	tag		= zkr
+	}
+\DeclareAcronym{AAF}{
+	short		= AAF,
+	long 		= antialiasingový filtr,
+	foreign 	= Anti-Aliasing Filter,
+	single = false,
+	single-style = long-short,
+	tag = zkr
+	}
+\DeclareAcronym{ANN}{
+	short		= ANN,
+	long 		= umělá neuronová síť,
+	long-plural-form = umělé neuronové sítě,
+	foreign 	= Artificial Neural Network,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{AR}{
+	short		= AR,
+	long 		= autoregresní,
+	foreign 	= Auto Regressive,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{ARX}{
+	short		= ARX,
+	long 		= antialiasingový filtr,
+	foreign 	= Auto Regressive with eXogenous Input,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{ARMAX}{
+	short		= ARMAX,
+	long 		= autoregresní klouzavý průměr s~vnějším vstupem,
+	foreign 	= Auto Regressive Moving Average with eXogenous Input,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{A/D}{
+	short		= A/D,
+	long 		= analogově digitální převodník,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{BIBO}{
+	short		= BIBO,
+	long 		= Bounded Input Bounded Output,
+	single = false,
+	single-style = footnote,
+	first-style = footnote,
+	tag			= zkr
+	}	
+\DeclareAcronym{BJ}{
+	short		= BJ,
+	long 		= Box-Jenkins,
+	tag			= zkr
+	}
+\DeclareAcronym{BN}{
+	short		= BN,
+	long 		= Bayesovská síť,
+	long-plural-form = Bayesovské sítě,
+	foreign 	= Bayesian Network,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}	
+\DeclareAcronym{CFD}{
+	short		= CFD,
+	long 		= počítačová dynamika tekutin,
+	long-plural-form		= počítačové dynamiky tekutin,
+	foreign 	= Computational Fluid Dynamics,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{DFT}{
+	short		= DFT,
+	long 		= diskrétní Fourierova transformace,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{ETVE}{
+	short		= ETVE,
+	long 		= chyba v~důsledku kolísání teploty okolí,
+	foreign 	= Environmental Temperature Variation Error,
+	tag			= zkr
+	}
+\DeclareAcronym{ESD}{
+	short		= ESD,
+	long 		= energetická spektrální hustota,
+	foreign 	= Energy Spectral Density,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{FDEM}{
+	short		= FDEM,
+	long 		= metoda konečných prvků s~konečnými diferencemi pro šíření tepla,
+	foreign 	= Finite Difference Element Method,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}	
+\DeclareAcronym{FEM}{
+	short		= FEM,
+	alt			= MKP,
+	long 		= metoda konečných prvků,
+	foreign 	= Finite Element Method,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{FFT}{
+	short		= FFT,
+	long 		= rychlá Fourierova transformace,
+	foreign 	= Fast Fourier Transform,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{FIR}{
+	short		= FIR,
+	long 		= konečná impulní odezva,
+	foreign 	= Finite Impulse Response,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{FS~ČVUT}{
+	short		= FS~ČVUT,
+	first-style = short,
+	long 		= {České vysoké učení technické v~Praze, Fakulta strojní},
+	tag			= zkr
+	}
+\DeclareAcronym{FT}{
+	short		= FT,
+	long 		= Fourierova transformace,
+	single = false,
+	tag			= zkr
+	}
+\DeclareAcronym{IIR}{
+	short		= IIR,
+	long 		= nekonečná impulní odezva,
+	foreign 	= Infinite Impulse Response,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{LT}{
+	short		= LT,
+	long 		= Laplaceova transformace,
+	single = false,
+	tag			= zkr
+	}
+\DeclareAcronym{LTI}{
+	short		= LTI,
+	long 		= {lineární, časově invariantní},
+	foreign 	= Linear Time Invariant,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{MA}{
+	short		= MA,
+	long 		= klouzavý průměr,
+	foreign 	= Moving Average,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{MIMO}{
+	short		= MIMO,
+	long 		= {více vstupů, více výstupů},
+	foreign 	= Multiple Input Multiple Output,
+	single = false,
+	single-style = footnote,
+	tag			= zkr
+	}
+\DeclareAcronym{ML}{
+	short		= ML,
+	long 		= strojové učení,
+	foreign 	= Machine Learning,
+	tag			= zkr
+	}
+\DeclareAcronym{MLR}{
+	short		= MLR,
+	long 		= vícenásobná lineární regrese,
+	plural-form		= vícenásobné lineární regrese,
+	foreign 	= Multiple Linear Regression,
+	tag			= zkr
+	}
+\DeclareAcronym{NC}{
+	short		= NC,
+	long 		= číslicové řízení,
+	long-plural-form = číslicovým řízením, %instrumental
+	foreign 	= Numerical Control,
+	tag			= zkr
+	}
+\DeclareAcronym{NDF}{
+	short		= NDF,
+	long 		= není definováno,
+	tag			= zkr
+	}
+\DeclareAcronym{OE}{
+	short		= OE,
+	long 		= výstupní chyba,
+	foreign 	= Output Error,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{PF}{
+	short		= TF,
+	alt			= PF,
+	long 		= {přenosová funkce, přenos},
+	foreign 	= Transfer Function,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{PSD}{
+	short		= PSD,
+	long 		= výkonová spektrální hustota,
+	foreign 	= Power Spectral Density,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{RBF}{
+	short		= RBF,
+	long 		= radiální bázová funkce,
+	long-plural-form = radiální bázové funkce,
+	foreign 	= Radial Basis Function,
+	tag			= zkr
+	}
+\DeclareAcronym{RCMT}{
+	short		= RCMT,
+	long 		= Ústav výrobních strojů a zařízení,
+	foreign 	= Research Center of Manufacturing Technology,
+	tag			= zkr
+	}
+\DeclareAcronym{SISO}{
+	short		= SISO,
+	long 		= {jediný vstup, jediný výstup},
+	foreign 	= Single Input Single Output,
+	single = false,
+	single-style = footnote,
+	tag			= zkr
+	}
+\DeclareAcronym{STFT}{
+	short		= STFT,
+	long 		= Krátkodobá Fourierova transformace,
+	foreign 	= Short-Time Fourier Transform,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}
+\DeclareAcronym{SVM}{
+	short		= SVM,
+	long 		= metoda podpůrných vektorů,
+	foreign 	= Support Vector Machines,
+	tag			= zkr
+	}
+\DeclareAcronym{TCP}{
+	short		= TCP,
+	long 		= špičce nástroje, %lokál špička nástroje
+	long-plural-form = špičky nástroje,
+	foreign 	= Tool Center Point,
+	tag			= zkr
+	}
+\DeclareAcronym{TDF}{
+	short		= TDF,
+	long 		= teplotně-deformační chování,
+	foreign	= teplotně-deformační funkcionál,
+	tag			= zkr
+	}
+\DeclareAcronym{WH}{
+	short		= WH,
+	long 		= upnutí,
+	foreign 	= Workpiece Holder,
+	single = false,
+	single-style = long-short,
+	tag			= zkr
+	}

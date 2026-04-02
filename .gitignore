@@ -1,0 +1,39 @@
+-- LaTeX intermediate files --
+*.aux
+*.auxlock
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.xdv
+*.md5
+
+-- LaTeX generated files --
+**/build/
+
+-- External (not licensed) input files --
+/sources/*
+
+-- User-made input files --
+!/sources/AI/
+!/sources/AI/**
+!/sources/PETRICEK*
+!/sources/Petricek*
+
+-- User-made LaTeX templates --
+/templates
+
+-- MS Office files --
+*.doc*
+*.ppt*
+*.xls*

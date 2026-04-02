@@ -1,0 +1,241 @@
+%--------------------------------------hlavicka-----------------------------------
+\documentclass[12pt,a4paper]{CTUthesis}
+\usepackage[english,czech]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{wasysym}
+\usepackage{makeidx}
+
+\linespread{1.5} %radkovani
+
+\DeclareFontFamily{OT1}{mathc}{}
+\DeclareFontShape{OT1}{mathc}{m}{n}{ <-> mathc10 }{}
+\DeclareRobustCommand\xmcal[1]{\text{\usefont{OT1}{mathc}{m}{n}#1}}
+\def\one{\mbox{1\hspace{-4.25pt}\fontsize{12}{14.4}\selectfont\textrm{1}}}
+%bashinput
+\def\app@exe{\immediate\write18}
+\def\inputAllFiles#1{%
+  \app@exe{ls #1/*.tex | xargs cat >> \jobname.tmp}%
+  \InputIfFileExists{\jobname.tmp}{}
+  \AtEndDocument{\app@exe{rm -f #1/\jobname.tmp}}}
+\makeatother
+%ocg
+\usepackage{ocg-p}
+%acronyms
+\usepackage{acro}
+\input{texparts/references/acro.tex}
+%toclessskip
+\usepackage[titles]{tocloft}
+\setlength{\cftbeforechapskip}{5pt}
+%csquotes
+\usepackage{csquotes}
+\MakeOuterQuote{"}
+\newcommand{\juv}[1]{,#1`}
+%zalamovani
+%\hyphenpenalty=10000
+\sloppy
+\usepackage[pdftex]{graphicx}
+\usepackage{lmodern}
+\usepackage{array}
+\usepackage{float}
+%caption
+\usepackage{caption}
+\usepackage{subcaption}
+\captionsetup{labelfont=bf,labelsep=endash}
+\captionsetup[figure]{labelfont={normalfont},name={Obr.},labelsep=colon}
+\captionsetup[table]{labelfont={normalfont},name={Tab.},labelsep=colon}
+%tabular
+\usepackage{longtable}
+\setlength\LTleft{0pt}
+\usepackage{xltabular}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{multicol}
+\renewcommand{\tabularxcolumn}[1]{p{#1}}
+\newcolumntype{R}{>{\raggedleft}X}
+\newcolumntype{L}{>{\raggedright}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{s}{>{\centering\arraybackslash\hsize=.4\hsize}X}
+\usepackage{booktabs}%
+\usepackage[left=3.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[bottom]{footmisc}
+%\raggedbottom
+%fancyheader
+%\usepackage{fancyhdr}
+%titlesec
+\usepackage[pagestyles]{titlesec}
+\titleformat{\part}[display]
+	{\normalfont\Huge\bfseries\filcenter}{}{0pt}{\MakeUppercase}[]
+\titlespacing*{\part}{0pt}{\fill}{\fill}
+
+\titleformat{\chapter}
+	{\normalfont\LARGE\bfseries}{\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+%jednotky
+\usepackage{siunitx}
+\sisetup{output-decimal-marker = {,}, exponent-product = \cdot, product-units = repeat, product-symbol = \cdot}
+%noindent lof & lot
+\makeatletter
+\renewcommand*\l@figure{\@dottedtocline{1}{0pt}{2.3em}}
+\renewcommand*\l@table{\@dottedtocline{1}{0pt}{2.3em}}
+\makeatother
+%colour
+\usepackage{xcolor}
+%odkazy
+\usepackage[hidelinks]{hyperref} %black %!!!musi se 3x prelozit beze zmeny!!! %colorlinks=false
+%includepdf
+\usepackage{pdfpages}
+%tikz
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\pgfplotsset{plot coordinates/math parser=false}
+\newlength\figureheight
+\newlength\figurewidth
+\usepackage{blox}
+\usepackage{standalone}
+\usetikzlibrary{external}
+	\tikzexternalize
+%biblatex
+\usepackage[
+backend=biber
+,style=iso-numeric
+,sortlocale=cs_CZ
+,autolang=other
+,bibencoding=UTF8]{biblatex}
+\addbibresource{socialnidialog.bib}
+\addbibresource{socialnidialog-zotero.bib}
+%--------------------------------------hlavicka-----------------------------------
+
+%nastaveni titulni strany
+\makeatletter
+\author{Jiří Petříček\\
+%\texttt{jiri.petricek@fs.cvut.cz}
+} \let\Author\@author
+\title{Aproximace teplotních chyb OS zohledňující fáze ohřevu a~chladnutí během aktivity hlavního zdroje tepla} \let\Title\@title
+\faculty{Fakulta strojní}
+\department{12135 -- Ústav výrobních strojů a zařízení}
+\course{REŠERŠE K~DIPLOMOVÉ PRÁCI} \let\Course\@course
+\makeatother
+
+%nastaveni zahlavi
+\newpagestyle{fancy}{
+	\headrule
+	\sethead{\Author}{}{\MakeUppercase{\chaptertitle}}
+	\setfoot{}{\thepage}{}
+}
+\renewpagestyle{plain}{
+	\headrule
+	\sethead{\Author}{}{\Course}
+	\setfoot{}{\thepage}{}
+}
+\newpagestyle{nonum}{
+	\headrule
+	\sethead{\Author}{}{\MakeUppercase{\Course}}
+	\footrule
+	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
+}
+\tocloftpagestyle{nonum}
+
+%-------------------------------------dokument------------------------------------
+\begin{document}
+\maketitle
+
+%--povinne strany
+%{\mbox{}
+%\thispagestyle{plain}
+%\newpage
+%}%prazdna strana na zadani
+
+%\declaration{
+%}
+%\newpage %prohlaseni
+%
+%\thanks{
+%\noindent
+%Děkujeme Správě železniční dopravní cesty, s. o., za poskytnutí výkresové dokumentace.
+%}
+%
+\begin{abstract}
+\thispagestyle{nonum}
+%\setcounter{page}{7}
+\input{texparts/abstrakt.tex}
+%\vfill
+%\hrule
+%\begin{center}
+%Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
+%\end{center}
+\end{abstract}
+%
+\newpage
+%\includepdf[pages={1}]{povinnestranky.pdf}
+%\includepdf[pages={2}]{povinnestranky.pdf}
+%\includepdf[pages={3}]{povinnestranky.pdf}
+%\includepdf[pages={4}]{povinnestranky.pdf}
+%\includepdf[pages={5}]{povinnestranky.pdf}
+%\includepdf[pages={6}]{povinnestranky.pdf}
+%--povinne strany
+
+\pagestyle{nonum}
+\setcounter{page}{2}
+\tableofcontents
+\thispagestyle{nonum}
+% Seznam zkratek a pouzitych velicin
+%\printacronyms[include=zkr,name=Seznam použitých zkratek]\label{ch:zkratky}
+\thispagestyle{nonum}
+%\printacronyms[include-classes=vel,name=Seznam použitých proměnných a indexů]\label{ch:veliciny}
+%\input{texparts/references/seznamzkratek.tex}\label{ch:Seznam použitých zkratek}
+%\input{texparts/references/seznamvelicin.tex}\label{ch:Seznam použitých veličin}
+
+\chapter{Úvod}\label{ch:uvod}
+\pagestyle{fancy}
+ 	\input{texparts/uvod.tex}
+\part{Teoretická část}\label{p:teorie}
+\chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
+% 	\input{texparts/dialog.tex}
+	\section{Pojmy a vztahy, legislativa}\label{sec:pojmy}
+	\section{Historický vývoj}\label{sec:historie}
+% 	\input{texparts/cil_prace.tex}
+\part{Praktická část}\label{p:prakticka}
+\chapter{Stav na trhu práce}\label{ch:stav}
+	\section{Výhled}\label{sec:vyhled}
+	\section{Evropský kontext}\label{sec:evropsky_kontext}
+	\section{Případová studie Penny Market}\label{sec:penny}
+	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
+\chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
+\chapter{Závěr}\label{ch:zaver}
+
+\clearpage
+\phantomsection
+%\addcontentsline{toc}{chapter}{Seznam použité literatury}	 	 
+%Seznam literatury, pouziteho softwaru, obrazku a tabulek
+\printbibliography[title=Seznam použité literatury]
+\label{ch:Seznam použité literatury} 
+\input{texparts/references/seznamsoftwaru.tex}
+\label{ch:Seznam použitého softwaru}
+%\setlength{\cftfigindent}{0pt}
+\listoffigures
+%Seznam priloh
+%\input{texparts/references/seznampriloh.tex}
+%\label{ch:Seznam příloh}
+%\addcontentsline{toc}{chapter}{Seznam obrázků}
+\label{ch:Seznam obrázků} 
+%\setlength{\cfttabindent}{0pt}
+%\listoftables
+%\addcontentsline{toc}{chapter}{Seznam tabulek} 
+%\label{ch:Seznam tabulek}
+
+%Seznam priloh
+%\input{texparts/seznampriloh.tex}
+%\label{ch:Seznam příloh}
+
+%%seznam citaci
+%\chapter*{Citace}
+%\inputAllFiles{texparts/citace}
+
+\end{document}

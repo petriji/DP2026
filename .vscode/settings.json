@@ -1,0 +1,67 @@
+{
+    // Spell-checking for this project content
+    "cSpell.language": "en,cs",
+
+    // BibTeX Manager integration used for bibliography key generation
+    "libraryFilePath": "latex/%DOCFILE%-bibtexmanager",
+    "useBibKeyPattern": true,
+    "bibKeyPattern": "\\a(1)\\Y",
+    "latex-workshop.bibtex-format.case.field": "UPPERCASE",
+
+    // LaTeX build layout
+    "latex-workshop.latex.outDir": "%DIR%/build",
+    "latex-workshop.latex.texDirs": [
+        "%DIR%/texparts"
+    ],
+    "latex-workshop.latex.build.fromWorkspaceFolder": false,
+    "latex-workshop.latex.autoBuild.run": "onSave",
+    "latex-workshop.latex.autoClean.run": "onSucceeded",
+    "latex-workshop.latex.recipe.default": "lastUsed",
+
+    // LaTeX build tools
+    "latex-workshop.latex.tools": [
+        {
+            "name": "pdflatex",
+            "command": "pdflatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-output-directory=%DIR%/build",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "biber",
+            "command": "biber",
+            "args": [
+                "build/%DOCFILE%"
+            ]
+        }
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "pdflatex -> biber -> pdflatex*2",
+            "tools": [
+                "pdflatex",
+                "biber",
+                "pdflatex",
+                "pdflatex"
+            ]
+        }
+    ],
+
+    // Auxiliary analysis related to this project output
+    "latex-workshop.texcount.autorun": "onSave",
+
+    // Recommended settings (user-scope)
+    // "editor.wordWrap": "on",
+    // "editor.renderWhitespace": "all",
+    // "latex-workshop.linting.run": "onType",
+    // "latex-workshop.linting.chktex.enabled": false,
+    // "latex-workshop.synctex.afterBuild.enabled": true,
+    // "latex-workshop.view.outline.sync.viewer": true,
+    // "latex-workshop.view.pdf.scrollMode": 2,
+    // "latex-workshop.view.pdf.zoom": "0.7",
+    // "git.autofetch": true
+}
