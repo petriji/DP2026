@@ -198,7 +198,7 @@
 \if@draftmode
   \ifCTUenglish
     \def\@course{RESEARCH FOR MASTER'S THESIS}%
-\else
+  \else
     \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}%
   \fi
 \else
@@ -206,7 +206,7 @@
     \def\@course{MASTER'S THESIS}%
   \else
     \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
-\fi
+  \fi
 \fi
 % \CTU@softwarename: chapter heading for the list of software — localised.
 %   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTU@softwarename}.
@@ -293,8 +293,8 @@
   % Email address on cover: printed below author table in draft mode only.
   \ifCTUemail\ifx\@email\@empty\else
     \if@draftmode
-    \vskip 0.3cm
-    {\small\href{mailto:\@email}{\texttt{\@email}}\par}%
+      \vskip 0.3cm
+      {\small\href{mailto:\@email}{\texttt{\@email}}\par}%
     \fi
   \fi\fi
 %      \vskip 0.8cm%
