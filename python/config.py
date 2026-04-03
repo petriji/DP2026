@@ -1,0 +1,90 @@
+r"""
+Central configuration for paths and figure output settings.
+
+Adjust FIGURES_DIR to point at your LaTeX pics/ folder so figures are
+immediately available to \includegraphics{} after running any script.
+"""
+
+from pathlib import Path
+
+# ── Directories ──────────────────────────────────────────────────────────────
+
+# Root of the python/ subtree (this file lives there)
+PYTHON_DIR = Path(__file__).parent.resolve()
+
+# Downloaded raw data – excluded from git (listed in .gitignore)
+DATA_DIR = PYTHON_DIR / "data"
+
+# Output figures consumed by the LaTeX project
+# Change to an absolute path or override per-script if needed, e.g.:
+#   FIGURES_DIR = PYTHON_DIR.parent / "latex" / "pics"
+FIGURES_DIR = PYTHON_DIR / "figures"
+
+# LaTeX integration
+# Figures saved here are directly referenceable as '../pics/python/<name>' from latex/
+LATEX_PICS_DIR = PYTHON_DIR.parent / "pics" / "python"
+# Generated .tex snippets (figure/table environments) land here
+LATEX_TEXPARTS_DIR = PYTHON_DIR.parent / "latex" / "texparts" / "python"
+
+# Create dirs on import so scripts never have to think about it
+DATA_DIR.mkdir(exist_ok=True)
+FIGURES_DIR.mkdir(exist_ok=True)
+LATEX_PICS_DIR.mkdir(parents=True, exist_ok=True)
+LATEX_TEXPARTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# ── Figure output format ─────────────────────────────────────────────────────
+# "pdf"  – vector, best for pdflatex / lualatex  (\includegraphics{fig.pdf})
+# "pgf"  – native LaTeX rendering (fonts match document), more fragile
+# "svg"  – vector, needs \usepackage{svg} in LaTeX
+# "png"  – raster fallback (set DPI below)
+FIGURE_FORMAT: str = "pdf"
+FIGURE_DPI: int = 300          # used only for raster formats
+
+# ── Matplotlib style defaults ────────────────────────────────────────────────
+# CTUthesis textwidth: 210mm − 35mm (left) − 25mm (right) = 150mm
+FIGURE_WIDTH_CM: float = 15.0
+FIGURE_HEIGHT_CM: float = 9.0
+# Body font size: matches LaTeX footnotesize at 12 pt base (CTUthesis default).
+# Minimum 10 pt – anything smaller is illegible at print scale.
+FONT_SIZE: int = 10
+
+# Colour palette – qualitative, colour-blind safe (based on Wong 2011).
+# Excluded: yellow (#F0E442, #E69F00) – near-invisible on white.
+PALETTE = [
+    "#0072B2",  # deep blue
+    "#009E73",  # teal / green
+    "#CC79A7",  # rose / pink
+    "#56B4E9",  # sky blue
+    "#D55E00",  # vermillion
+    "#7B2D8B",  # purple
+    "#000000",  # black
+]
+
+# Fixed high-visibility colours for the six key country codes.
+# Order: CZ, DE, AT, DK, PL, SK
+COUNTRY_COLORS: dict[str, str] = {
+    "CZ": "#D62728",  # full red
+    "DE": "#17376E",  # dark navy blue
+    "AT": "#2CA02C",  # full green
+    "DK": "#FF7F0E",  # orange
+    "PL": "#4393C3",  # medium blue
+    "SK": "#C71585",  # dark pink / magenta
+}
+
+# Eurostat aggregate codes used for EU-average computations
+EU_AVERAGE_CODE: str = "EU27_2020"  # geo code for EU-27 aggregate in SDMX data
+
+# Countries in the European geographic area that have NO regular data in
+# Eurostat SDMX datasets (as of 2025).  They appear as missing-colour on maps.
+# Source: manual verification against ilc_peps01n, earn_nt_taxwedge, nama_10_pc.
+GEO_NOT_IN_EUROSTAT: frozenset[str] = frozenset([
+    "UA",  # Ukraine – EU candidate; Eurostat does not publish regular SDMX data
+    "BY",  # Belarus – not an EU member or candidate
+    "RU",  # Russia  – not an EU member or candidate
+    "MD",  # Moldova – EU candidate; limited Eurostat coverage
+])
+
+# Diverging colourmap for choropleth maps
+CMAP_DIVERGING = "RdYlBu_r"
+# Sequential colourmap for single-variable maps
+CMAP_SEQUENTIAL = "YlOrRd"

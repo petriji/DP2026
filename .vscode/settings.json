@@ -11,7 +11,8 @@
     // LaTeX build layout
     "latex-workshop.latex.outDir": "%DIR%/build",
     "latex-workshop.latex.texDirs": [
-        "%DIR%/texparts"
+        "%DIR%/texparts",
+        "%DIR%/texparts/python"
     ],
     "latex-workshop.latex.build.fromWorkspaceFolder": false,
     "latex-workshop.latex.autoBuild.run": "onSave",
