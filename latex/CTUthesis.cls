@@ -698,6 +698,8 @@
     \else
       \@restonecolfalse
     \fi
+    % Stable anchor for header links that navigate to the TOC.
+    \hypertarget{CTU@toc}{}%
     \chapter*{\contentsname
         \@mkboth{%
            \MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
@@ -898,18 +900,13 @@
 %   plain  — chapter-opening pages: left: Author  right: Title
 %   nonum  — front/back matter:     left: Author  right: COURSE   footer: Title
 % ==============================================================================
-% \CTU@rhead{text}: output text for the right header slot, right-aligned by
-%   titlesec's slot mechanism (natural-width content sticks to the right margin).
-%
-%   Strategy — three fallback levels to maximise legibility:
-%   1. UPPERCASE fits (\@tempdima <= \CTUrheadmax): emit \MakeUppercase{text}. ✓
-%   2. Mixed case fits (\@tempdima <= \CTUrheadmax): emit text as-is. ✓
-%   3. Nothing fits: truncate mixed-case text at \CTUrheadmax.
-%      \truncate (unstarred) left-pads the box; we patch \@Trunc@Rebox locally
-%      (same as the [fit] package option) to get natural-width output so
-%      titlesec's right-slot alignment still works. ✓
+% \CTU@rtext{text}: right-header text cascade (no hyperlink).
+%   1. UPPERCASE fits (\@tempdima <= \CTUrheadmax): emit \MakeUppercase{text}.
+%   2. Mixed case fits: emit text as-is.
+%   3. Nothing fits: truncate mixed-case text at \CTUrheadmax with natural-width
+%      output (local \@Trunc@Rebox patch, same as [fit] package option).
 %   \@tempdima is a TeX scratch register; safe for sequential reuse here.
-\newcommand\CTU@rhead[1]{%
+\newcommand\CTU@rtext[1]{%
   \settowidth\@tempdima{\MakeUppercase{#1}}%
   \ifdim\@tempdima>\CTUrheadmax
     % uppercase overflows — try mixed case
@@ -928,6 +925,15 @@
   \else
     \MakeUppercase{#1}%
   \fi}
+% \CTU@rhead{anchor}{text}: right-header slot with hyperlink to heading.
+%   Wraps \CTU@rtext output in \hyperlink{anchor}{...}.  The anchor names
+%   follow hyperref's standard format:
+%     chapter — chapter.\theHchapter  (= chapter.\thechapter by default)
+%     section — section.\theHsection  (= chapter.\thesection)
+%     subsec  — subsection.\theHsubsection
+%     TOC     — CTU@toc  (placed by \tableofcontents above)
+%   \hyperlink is always available here because hyperref is \RequirePackage'd.
+\newcommand\CTU@rhead[2]{\hyperlink{#1}{\CTU@rtext{#2}}}
 % \CTU@authorhead: left header slot.
 %   The actual content is decided ONCE at \AtBeginDocument (see the snapshot
 %   block above) and \gdef'd there. This \let just ensures the macro exists as
@@ -942,12 +948,12 @@
   \edef\CTU@tmp@ss{\subsectiontitle}%
   \ifx\CTU@tmp@ss\@empty
     \ifx\CTU@tmp@se\@empty
-      \CTU@rhead{\chaptertitle}%
+      \CTU@rhead{chapter.\theHchapter}{\chaptertitle}%
     \else
-      \CTU@rhead{\CTU@tmp@se}%
+      \CTU@rhead{section.\theHsection}{\CTU@tmp@se}%
     \fi
   \else
-    \CTU@rhead{\CTU@tmp@ss}%
+    \CTU@rhead{subsection.\theHsubsection}{\CTU@tmp@ss}%
   \fi}
 \newpagestyle{fancy}{
 	\ifCTUheader\headrule\fi
@@ -956,12 +962,12 @@
 }
 \renewpagestyle{plain}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{\Title}\fi}
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi}
 	\setfoot{}{\thepage}{}
 }
 \newpagestyle{nonum}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{\Course}\fi}
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Course}\fi}
 	\footrule
 	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
 }
