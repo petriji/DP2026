@@ -1,38 +1,64 @@
-\documentclass[12pt,a4paper]{CTUthesis}
-% All packages, settings, and macros are in CTUthesis.cls.
+% ==============================================================================
+% Class Options — Edit Here
+% ==============================================================================
+% All packages and settings are provided by CTUthesis.cls.
+% Toggle options to match the current stage of your work.
+%
+%   Submission (final thesis) : remove draft            — cover: "DIPLOMOVÁ PRÁCE"
+%   Research / draft phase    : keep draft              — cover: "REŠERŠE K DIPLOMOVÉ PRÁCI"
+%   Layout / link debugging   : add debug               — overfull marks + colored link boxes
+%   Quick section compile     : add any of nofrontmatter, noacro,
+%                                              nobibliography, nosoftware, nobackmatter
+%
+% Full option reference is in CTUthesis.cls.
+\documentclass[
+  a4paper, 12pt,             % fixed for CTU thesis — do not change
+  draft,                     % research mode: "REŠERŠE" cover + full date
+  debug,                     % visible link boxes + overfull marks
+% nofrontmatter,             % suppress abstract and mandatory pages
+  noacro,                    % suppress acronym and variable lists
+% nobibliography,            % suppress bibliography
+% nosoftware,                % suppress list of software
+% nobackmatter,              % suppress LOF, LOT, and appendices
+]{CTUthesis}
 
-% Vector graphics (diagrams) build-behavior directive.
+% ==============================================================================
+% Preamble — Do Not Edit
+% ==============================================================================
 \usetikzlibrary{external}
 \tikzexternalize
 
-% Acronym management configuration and definitions.
 \input{texparts/references/acro_setup.tex}
 \input{texparts/references/acro.tex}
 
-% Bibliography resources (biblatex).
 \addbibresource{socialnidialog.bib}
 \addbibresource{socialnidialog-zotero.bib}
 \addbibresource{socialnidialog-bibtexmanager.bib}
 
 % ==============================================================================
-% Thesis Metadata
+% Thesis Metadata — Edit Here
 % ==============================================================================
+% \let-bindings must stay AFTER all metadata setters; they snapshot the values
+%   for use in page styles and running headers at page-output time.
+% \course{} is optional: the draft/final option sets cover text automatically.
+%   Uncomment \course{} only to override the mode default.
 \makeatletter
-\author{Jiří Petříček\\
-%\texttt{jiri.petricek@fs.cvut.cz}
-} \let\Author\@author
+\author{Jiří Petříček} \let\Author\@author
+\email{jiri.petricek@fs.cvut.cz} \let\Email\@email
 \title{Aproximace teplotních chyb OS zohledňující fáze ohřevu a~chladnutí během aktivity hlavního zdroje tepla} \let\Title\@title
 \faculty{Fakulta strojní}
 \department{12135 -- Ústav výrobních strojů a zařízení}
-\course{REŠERŠE K~DIPLOMOVÉ PRÁCI} \let\Course\@course
+%\course{SEMESTRÁLNÍ PRÁCE}  % override cover text (set by draft/final option)
+\let\Course\@course
 \makeatother
 
 % ==============================================================================
-% Document Body
+% Document Body — Edit Below
 % ==============================================================================
 \begin{document}
 \maketitle
 
+\ifCTUfrontmatter
 % Mandatory pages (currently disabled).
 %{\mbox{}
 %\thispagestyle{plain}
@@ -58,7 +84,6 @@
 %Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
 %\end{center}
 \end{abstract}
-%
 \newpage
 %\includepdf[pages={1}]{povinnestranky.pdf}
 %\includepdf[pages={2}]{povinnestranky.pdf}
@@ -67,17 +92,20 @@
 %\includepdf[pages={5}]{povinnestranky.pdf}
 %\includepdf[pages={6}]{povinnestranky.pdf}
 % End of optional mandatory pages block.
+\fi
 
 \pagestyle{nonum}
 \setcounter{page}{2}
 \tableofcontents
 \thispagestyle{nonum}
-% Acronyms and symbols lists (currently disabled).
-%\printacronyms[include=zkr,name=Seznam použitých zkratek]\label{ch:zkratky}
+% Acronyms and symbols lists.
+\ifCTUacro
+\printacronyms[include=zkr,name=Seznam použitých zkratek]\label{ch:zkratky}
 \thispagestyle{nonum}
-%\printacronyms[include-classes=vel,name=Seznam použitých proměnných a indexů]\label{ch:veliciny}
+\printacronyms[include-classes=vel,name=Seznam použitých proměnných a indexů]\label{ch:veliciny}
 %\input{texparts/references/seznamzkratek.tex}\label{ch:Seznam použitých zkratek}
 %\input{texparts/references/seznamvelicin.tex}\label{ch:Seznam použitých veličin}
+\fi
 
 \chapter{Úvod}\label{ch:uvod}
 \pagestyle{fancy}
@@ -92,6 +120,13 @@
 \chapter{Stav na trhu práce}\label{ch:stav}
 	\section{Výhled}\label{sec:vyhled}
 	\section{Evropský kontext}\label{sec:evropsky_kontext}
+		\input{texparts/python/gdp_ppp_timeline}
+		\input{texparts/python/tax_wedge_map}
+		\input{texparts/python/flexicurity_table}
+		\input{texparts/python/arope_map_2025}
+		\subsection{Flexicurity}\label{ssec:flexicurity}
+			\input{texparts/python/arope_timeline_CE}
+			\input{texparts/python/arope_groups}
 	\section{Případová studie Penny Market}\label{sec:penny}
 	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
@@ -102,27 +137,32 @@
 % ==============================================================================
 \clearpage
 \phantomsection
-%\addcontentsline{toc}{chapter}{Seznam použité literatury}	 	 
+%\addcontentsline{toc}{chapter}{Seznam použité literatury}
 % Bibliography, software list, figures, and tables.
+\ifCTUbiblio
 \printbibliography[title=Seznam použité literatury]
-\label{ch:Seznam použité literatury} 
+\label{ch:Seznam použité literatury}
+\fi
+\ifCTUsoftware
 \input{texparts/references/seznamsoftwaru.tex}
 \label{ch:Seznam použitého softwaru}
+\fi
+\ifCTUbackmatter
 %\setlength{\cftfigindent}{0pt}
 \listoffigures
+\label{ch:Seznam obrázků}
 % Appendices list (currently disabled).
 %\input{texparts/references/seznampriloh.tex}
 %\label{ch:Seznam příloh}
 %\addcontentsline{toc}{chapter}{Seznam obrázků}
-\label{ch:Seznam obrázků} 
 %\setlength{\cfttabindent}{0pt}
 %\listoftables
-%\addcontentsline{toc}{chapter}{Seznam tabulek} 
+%\addcontentsline{toc}{chapter}{Seznam tabulek}
 %\label{ch:Seznam tabulek}
-
 % Optional attachments list (currently disabled).
 %\input{texparts/seznampriloh.tex}
 %\label{ch:Seznam příloh}
+\fi
 
 % Optional aggregated quotations chapter (currently disabled).
 %\chapter*{Citace}
