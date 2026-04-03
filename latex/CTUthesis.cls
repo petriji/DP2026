@@ -301,6 +301,14 @@
 %   latexmkrc has pre-generated main-gitauthor.tmp / main-gitemail.tmp from
 %   git config (see latexmkrc).  Override in preamble with \author{} / \email{}.
 \gdef\@author{Name Surname}
+% \@authortitlebefore / \@authortitleafter: academic titles printed ONLY on the
+%   cover page, flanking the author name.  Leave empty (default) to suppress.
+%   Examples: \titlebefore{Ing.}  \titleafter{Ph.D.}
+%   These intentionally do NOT affect \Author (used in running headers).
+\gdef\@authortitlebefore{}
+\gdef\@authortitleafter{}
+	\newcommand{\titlebefore}[1]{\gdef\@authortitlebefore{#1}}
+	\newcommand{\titleafter}[1]{\gdef\@authortitleafter{#1}}
 % \@email: contact address; used in the page header mailto: link and below the
 %   author table on the cover page when CTUemail is active.
 \gdef\@email{address@e-mail.xy}
@@ -337,6 +345,13 @@
 %   current email address.  \CTU@headlink is \let to this at \AtBeginDocument
 %   when CTUemail is active and \@email is non-empty.
 \newcommand\CTU@headlink@mailto[1]{\href{mailto:\@email}{#1}}
+% \CTU@coverfullauthor: author name with optional academic titles, for the
+%   cover page only.  \@authortitlebefore / \@authortitleafter are empty by
+%   default; non-empty values are separated from the name by a thin space (~).
+\newcommand\CTU@coverfullauthor{%
+  \ifx\@authortitlebefore\@empty\else\@authortitlebefore~\fi
+  \@author
+  \ifx\@authortitleafter\@empty\else~\@authortitleafter\fi}
 % Snapshot metadata into shorthand macros used by page styles and headers.
 %   \AtBeginDocument ensures any \author{}, \email{}, \title{}, \course{}
 %   override in the preamble has already executed before the snapshot is taken.
@@ -431,7 +446,10 @@
     \begin{minipage}[b]{\textwidth}
     {\large
       \begin{xltabular}{\linewidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X}%
-        \ifCTUemail\ifx\@email\@empty\@author\else\href{mailto:\@email}{\@author}\fi\else\@author\fi
+        \ifCTUemail\ifx\@email\@empty
+          \CTU@coverfullauthor
+        \else\href{mailto:\@email}{\CTU@coverfullauthor}\fi
+        \else\CTU@coverfullauthor\fi
       \end{xltabular}\par}%
      \end{minipage}
   % Email address on cover: printed below author table in draft mode only.

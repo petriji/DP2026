@@ -44,12 +44,14 @@
 % ==============================================================================
 % Thesis Metadata — Edit Here
 % ==============================================================================
-\title{Aproximace teplotních chyb OS zohledňující fáze ohřevu a~chladnutí během aktivity hlavního zdroje tepla}
-\faculty{Fakulta strojní}
-\department{12135 -- Ústav výrobních strojů a zařízení}
+\title{Sociální dialog a kolektivní vyjednávání}
+\faculty{Masarykův ústav vyšších studií}
+\department{Projektové řízení inovací}
+%\titlebefore{Ing.}         % prepended: "Ing. Name Surname"
+%\titleafter{, Ph.D.}       % appended:  "Name Surname Ph.D., MBA"
 %\author{Name Surname}      % override git user.name
 %\email{address@e-mail.xy}  % override git user.email
-%\course{SEMESTRÁLNÍ PRÁCE}  % override cover text (set by draft/final option)
+%\course{}  % override cover text (set by draft/final option)
 % \author and \email are auto-detected from git user.name / user.email.
 %   uncomment to override — e.g. when compiling on a machine with a different
 %   git config, or if the name contains special LaTeX characters (%, &, \, ~).
@@ -65,29 +67,29 @@
 
 \ifCTUfrontmatter
 % Mandatory pages (currently disabled).
-%{\mbox{}
-%\thispagestyle{plain}
-%\newpage
-%}% empty assignment page
+{\mbox{}
+\thispagestyle{plain}
+\newpage
+}% empty assignment page
 
-%\declaration{
+%\declaration{prohlaseni
 %}
-%\newpage %prohlaseni
-%
-%\thanks{
-%\noindent
-%Děkujeme Správě železniční dopravní cesty, s. o., za poskytnutí výkresové dokumentace.
-%}
-%
+\newpage %prohlaseni
+
+\thanks{
+\noindent
+Děkujeme Správě železniční dopravní cesty, s. o., za poskytnutí výkresové dokumentace.
+}
+
 \begin{abstract}
 \thispagestyle{nonum}
-%\setcounter{page}{7}
+\setcounter{page}{7}
 \input{texparts/abstrakt.tex}
-%\vfill
-%\hrule
-%\begin{center}
-%Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
-%\end{center}
+\vfill
+\hrule
+\begin{center}
+Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
+\end{center}
 \end{abstract}
 \newpage
 %\includepdf[pages={1}]{povinnestranky.pdf}
@@ -108,8 +110,8 @@
 \printacronyms[include=zkr,name=Seznam použitých zkratek]\label{ch:zkratky}
 \thispagestyle{nonum}
 \printacronyms[include-classes=vel,name=Seznam použitých proměnných a indexů]\label{ch:veliciny}
-%\input{texparts/references/seznamzkratek.tex}\label{ch:Seznam použitých zkratek}
-%\input{texparts/references/seznamvelicin.tex}\label{ch:Seznam použitých veličin}
+\input{texparts/references/seznamzkratek.tex}\label{ch:Seznam použitých zkratek}
+\input{texparts/references/seznamvelicin.tex}\label{ch:Seznam použitých veličin}
 \fi
 
 \chapter{Úvod}\label{ch:uvod}
@@ -125,6 +127,13 @@
 \chapter{Stav na trhu práce}\label{ch:stav}
 	\section{Výhled}\label{sec:vyhled}
 	\section{Evropský kontext}\label{sec:evropsky_kontext}
+		\input{texparts/python/gdp_ppp_timeline}
+		\input{texparts/python/tax_wedge_map}
+		\input{texparts/python/flexicurity_table}
+		\input{texparts/python/arope_map_2025}
+		\subsection{Flexicurity}\label{ssec:flexicurity}
+			\input{texparts/python/arope_timeline_CE}
+			\input{texparts/python/arope_groups}
 	\section{Případová studie Penny Market}\label{sec:penny}
 	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
