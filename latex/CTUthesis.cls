@@ -1118,7 +1118,14 @@
 % acro: \ac{}, \acs{}, \acl{}, \acp{} acronym commands.
 %   \acsetup and \DeclareAcronym entries are \input in main.tex
 %   (project-specific content).
-\RequirePackage{acro}
+%   When noacro is active the list is suppressed, so in-text \ac{} uses are
+%   orphaned — their back-links to the list go nowhere.  Disable all acro
+%   hyperlinks in that case via make-links=false.
+\ifCTUacro
+  \RequirePackage{acro}
+\else
+  \RequirePackage[make-links=false]{acro}
+\fi
 
 % ==============================================================================
 % Packages: Hyperlinks (after most packages, before biblatex)
