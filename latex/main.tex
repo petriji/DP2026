@@ -7,27 +7,28 @@
 %   Submission (final thesis) : remove draft            — cover: "DIPLOMOVÁ PRÁCE"
 %   Research / draft phase    : keep draft              — cover: "REŠERŠE K DIPLOMOVÉ PRÁCI"
 %   Layout / link debugging   : add debug               — overfull marks + colored link boxes
-%   Quick section compile     : add any of nofrontmatter, noacro,
-%                                              nobibliography, nosoftware, nobackmatter
 %
 % Full option reference is in CTUthesis.cls.
 \documentclass[
   a4paper, 12pt,             % fixed for CTU thesis — do not change
-  draft,                     % research mode: "REŠERŠE" cover + full date
+% english,                   % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
+  master,                    % thesis type: diplomová / master's (bachelor is default)
+% doctoral,                  % thesis type: disertační / doctoral
+  draft,                     % research mode: "REŠERŠE" + full date on cover
   debug,                     % visible link boxes + overfull marks
+% twoside,                   % mirror margins: wider binding side on every other page
+% openright,                 % new chapters always start on an odd (right-hand) page
+% leqno,                     % equation numbers on the left margin (default: right)
+% fleqn,                     % flush-left display equations   (default: centered)
 % noheader,                  % suppress running head rule and author/chapter text
 % noemail,                   % suppress mailto: link in header and cover page
 % notitlepage,               % suppress cover page (use \includepdf of assignment sheet)
-% openright,                 % new chapters always start on an odd (right-hand) page
-% twoside,                   % mirror margins: wider binding side on every other page
-% leqno,                     % equation numbers on the left margin (default: right)
-% fleqn,                     % flush-left display equations   (default: centered)
 % nofrontmatter,             % suppress abstract and mandatory pages
   noacro,                    % suppress acronym and variable lists
 % nobibliography,            % suppress bibliography
 % nosoftware,                % suppress list of software
 % nobackmatter,              % suppress LOF, LOT, and appendices
-% english,                  % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
+  CTUend                     % sentinel — keep last; allows trailing commas on all options above
 ]{CTUthesis}
 
 % ==============================================================================
