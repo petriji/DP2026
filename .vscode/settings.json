@@ -22,6 +22,14 @@
     // LaTeX build tools
     "latex-workshop.latex.tools": [
         {
+            "name": "stats-analytics",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cd '%DIR%/..' && python/run.sh stats_analytics.py"
+            ]
+        },
+        {
             "name": "pdflatex",
             "command": "pdflatex",
             "args": [
@@ -41,6 +49,16 @@
         }
     ],
     "latex-workshop.latex.recipes": [
+        {
+            "name": "stats_analytics -> pdflatex -> biber -> pdflatex*2",
+            "tools": [
+                "stats-analytics",
+                "pdflatex",
+                "biber",
+                "pdflatex",
+                "pdflatex"
+            ]
+        },
         {
             "name": "pdflatex -> biber -> pdflatex*2",
             "tools": [
