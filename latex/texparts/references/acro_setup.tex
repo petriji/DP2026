@@ -13,16 +13,13 @@
 % list/display=used: \printacronyms omits acronyms that never appeared in text.
 % list/template=xltabular: use the custom two-column xltabular template below.
 % list/heading=chapter*: the printed list gets an unnumbered chapter heading.
-% list/preamble: the ocg-p trick places a clickable "ZPĚT DO TEXTU" label at
-%   the top of the printed list that is visible on screen but hidden when
-%   printing (printocg=never).
+% list/preamble: the ocg-p back-link is applied by CTUthesis.cls in
+%   \AtBeginDocument via \CTU@acrobacklink (Czech/English localised).
 \acsetup{
 	make-links     = true,
 	list/display   = used,
 	list/template  = xltabular,
-	list/heading   = chapter*,
-	list/preamble  = {\Acrobatmenu{GoBack}{\begin{ocg}[printocg=never]{name}{id1}{1}%
-		\texttt{ZPĚT DO TEXTU}\end{ocg}}}
+	list/heading   = chapter*
 }
 
 % ------------------------------------------------------------------------------
