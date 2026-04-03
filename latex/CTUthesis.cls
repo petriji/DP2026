@@ -34,7 +34,9 @@
 %   Bibliography   : bibliography (def.)  nobibliography
 %   Software list  : software (default)   nosoftware
 %   Back matter    : backmatter (default)  nobackmatter     — LOF, LOT, appendices
-%   Author email   : email (default)      noemail           — mailto link in header; on cover (draft)
+%   Author email   : email (default)      noemail           — mailto link on author name on cover (always);
+%                                                            email address printed below name on cover (draft only);
+%                                                            mailto link in running header (if not disabled by noheader)
 %   TikZ caching   : tikzextern                             — externalize TikZ figures (faster rebuilds)
 %                    OFF by default; requires -shell-escape in the pdflatex recipe when active
 %   Math layout    : leqno                fleqn             — left eq. numbers; flush-left display
@@ -238,13 +240,16 @@
     \begin{minipage}[b]{\textwidth}
     {\large
       \begin{xltabular}{\linewidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X}%
-        \@author
+        \ifCTUemail\ifx\@email\@empty\@author\else\href{mailto:\@email}{\@author}\fi\else\@author\fi
       \end{xltabular}\par}%
      \end{minipage}
-  \if@draftmode\ifCTUemail\ifx\@email\@empty\else
+  % Email address on cover: printed below author table in draft mode only.
+  \ifCTUemail\ifx\@email\@empty\else
+    \if@draftmode
     \vskip 0.3cm
     {\small\href{mailto:\@email}{\texttt{\@email}}\par}%
-  \fi\fi\fi
+    \fi
+  \fi\fi
 %      \vskip 0.8cm%
   \vfill
   {\normalsize \if@draftmode\@date\else\number\year\fi \par}%
