@@ -179,6 +179,33 @@
 %   \footnotesize etc. for the selected base point size.
 \input{size1\@ptsize.clo}
 % ==============================================================================
+% Tunable Header Parameters
+%   These lengths control how much of \textwidth each header slot may use before
+%   falling back to a shorter form.  They are set to sensible defaults here and
+%   can be overridden in the preamble with \setlength (after \documentclass but
+%   before \begin{document}).
+%
+%   \CTUrheadmax  — right header slot budget.  Right-heading text is first tried
+%                   in UPPERCASE; if that overflows the budget, mixed case is
+%                   tried; if still over, the text is truncated at this width.
+%                   Default: 0.75\textwidth (set at \begin{document}).
+%
+%   \CTUlheadmax  — left header slot budget for the full author name.
+%                   Default: 0.25\textwidth.
+%
+%   \CTUlheadshortmax — left header slot budget for abbreviated author forms
+%                   ("Surname, F.~M." / "Surname, F.").  Slightly wider than
+%                   \CTUlheadmax to avoid suppressing marginally-long surnames.
+%                   Default: 0.30\textwidth.
+%
+%   All three are initialised as fractions of \textwidth inside \AtBeginDocument
+%   (where \textwidth is final) ONLY when the user has not assigned them a
+%   positive value already — this way a preamble \setlength takes precedence.
+% ==============================================================================
+\newlength\CTUrheadmax
+\newlength\CTUlheadmax
+\newlength\CTUlheadshortmax
+% ==============================================================================
 % Layout Primitives
 % ==============================================================================
 \setlength\lineskip{1\p@}
@@ -279,6 +306,37 @@
 \gdef\@email{address@e-mail.xy}
 	\newcommand{\email}[1]{\gdef\@email{#1}
 	}
+% Short-author helpers — two variants:
+%   \CTU@shortauthorall  "Surname, F.~M.~..." — initial of EVERY forename.
+%   \CTU@shortauthorone  "Surname, F."         — initial of first forename only.
+%
+% \CTU@shortauthorall: walk forenames left-to-right, collecting each initial,
+%   then emit "Surname, F.~M.~..."  (non-breaking spaces between initials).
+\def\CTU@shortauthorall{\expandafter\CTU@sa@allgo\Author\@@ }
+\def\CTU@sa@allgo#1 #2\@@{%
+  \CTU@sa@alltail{\expandafter\@car#1\@nil}{#2}}
+\def\CTU@sa@alltail#1#2{%
+  \in@{ }{#2}%
+  \ifin@ \CTU@sa@alladd{#1}#2\@@
+  \else  #2,~#1.\fi}
+\def\CTU@sa@alladd#1#2 #3\@@{%
+  \CTU@sa@alltail{#1.~\@car#2\@nil}{#3}}
+%
+% \CTU@shortauthorone: same walk, but ignore all but the first forename initial.
+%   Implemented by capturing the first initial in \CTU@sa@init and discarding
+%   subsequent forenames while still finding the surname (last word).
+\def\CTU@shortauthorone{\expandafter\CTU@sa@go\Author\@@ }
+\def\CTU@sa@go#1 #2\@@{\def\CTU@sa@init{#1}\CTU@sa@tail{#2}}
+\def\CTU@sa@tail#1{%
+  \in@{ }{#1}%
+  \ifin@\expandafter\CTU@sa@tails#1\@@
+  \else #1,~\expandafter\@car\CTU@sa@init\@nil.\fi}
+\def\CTU@sa@tails#1 #2\@@{\CTU@sa@tail{#2}}
+% \CTU@headlink@mailto{text}: the mailto-link form of \CTU@headlink.
+%   Reads \@email at expansion time (not baked-in), so it always uses the
+%   current email address.  \CTU@headlink is \let to this at \AtBeginDocument
+%   when CTUemail is active and \@email is non-empty.
+\newcommand\CTU@headlink@mailto[1]{\href{mailto:\@email}{#1}}
 % Snapshot metadata into shorthand macros used by page styles and headers.
 %   \AtBeginDocument ensures any \author{}, \email{}, \title{}, \course{}
 %   override in the preamble has already executed before the snapshot is taken.
@@ -289,6 +347,11 @@
   \let\Email\@email
   \let\Title\@title
   \let\Course\@course
+  % Initialise tunable header lengths from \textwidth (now finalised).
+  %   Only set a length if the user has not already given it a positive value.
+  \ifdim\CTUrheadmax=\z@      \setlength\CTUrheadmax{.75\textwidth}\fi
+  \ifdim\CTUlheadmax=\z@      \setlength\CTUlheadmax{.25\textwidth}\fi
+  \ifdim\CTUlheadshortmax=\z@ \setlength\CTUlheadshortmax{.30\textwidth}\fi
   % Language switch: if english option is active, override the babel main
   %   language (loaded as [english,czech] with czech as default) to English.
   %   This auto-translates \contentsname, \listfigurename, \listtablename,
@@ -306,6 +369,36 @@
       \begin{ocg}[printocg=never]{name}{id1}{1}%
         \texttt{\CTUacrobacklink}%
       \end{ocg}}}}
+  % \CTU@headlink{text}: wraps text in a mailto link when CTUemail is active
+  %   and \@email is non-empty; otherwise passes text through.
+  %   The macro reads \@email lazily at each shipout, so late \email{} calls
+  %   in the preamble still take effect.
+  \ifCTUemail
+    \ifx\@email\@empty
+      \global\let\CTU@headlink\@firstofone
+    \else
+      \global\let\CTU@headlink\CTU@headlink@mailto
+    \fi
+  \else
+    \global\let\CTU@headlink\@firstofone
+  \fi
+  \settowidth\@tempdima{\Author}%
+  \ifdim\@tempdima>\CTUlheadmax
+    \settowidth\@tempdima{\CTU@shortauthorall}%
+    \ifdim\@tempdima>\CTUlheadshortmax
+      % all-initials overflows — try first-initial only
+      \settowidth\@tempdima{\CTU@shortauthorone}%
+      \ifdim\@tempdima>\CTUlheadshortmax
+        \gdef\CTU@authorhead{}%  % suppress
+      \else
+        \gdef\CTU@authorhead{\CTU@headlink{\CTU@shortauthorone}}%
+      \fi
+    \else
+      \gdef\CTU@authorhead{\CTU@headlink{\CTU@shortauthorall}}%
+    \fi
+  \else
+    \gdef\CTU@authorhead{\CTU@headlink{\Author}}%
+  \fi
 }
 % ==============================================================================
 % Title Page
@@ -769,6 +862,9 @@
 \sloppy
 % Keep footnotes at the physical page bottom on short pages.
 \RequirePackage[bottom]{footmisc}
+% truncate: trims overlong text at a word boundary and appends \ldots.
+%   Used in page headers so the right-head content stays within \CTUrheadmax.
+\RequirePackage{truncate}
 %\raggedbottom
 
 % ==============================================================================
@@ -796,28 +892,76 @@
 % ==============================================================================
 % Page Styles
 % (require titlesec[pagestyles]; reference \Author, \Course, \Title which are
-%  \let-bound in main.tex before \begin{document} — safe because these are
-%  expanded at page-output time, not at definition time)
+%  \let-bound in \AtBeginDocument — safe because these are expanded at page-output
+%  time, not at definition time)
+%   fancy  — body pages:            left: Author  right: deepest heading (SUBSECTION › SECTION › CHAPTER)
+%   plain  — chapter-opening pages: left: Author  right: Title
+%   nonum  — front/back matter:     left: Author  right: COURSE   footer: Title
 % ==============================================================================
-% \CTU@authorhead: expands to \Author with a mailto: hyperlink when CTUemail is
-%   set and \@email is non-empty; plain \Author otherwise.
-%   \href is resolved at page-output time, so hyperref need not be loaded yet.
-\newcommand\CTU@authorhead{%
-  \ifCTUemail\ifx\@email\@empty\Author\else\href{mailto:\@email}{\Author}\fi
-  \else\Author\fi}
+% \CTU@rhead{text}: output text for the right header slot, right-aligned by
+%   titlesec's slot mechanism (natural-width content sticks to the right margin).
+%
+%   Strategy — three fallback levels to maximise legibility:
+%   1. UPPERCASE fits (\@tempdima <= \CTUrheadmax): emit \MakeUppercase{text}. ✓
+%   2. Mixed case fits (\@tempdima <= \CTUrheadmax): emit text as-is. ✓
+%   3. Nothing fits: truncate mixed-case text at \CTUrheadmax.
+%      \truncate (unstarred) left-pads the box; we patch \@Trunc@Rebox locally
+%      (same as the [fit] package option) to get natural-width output so
+%      titlesec's right-slot alignment still works. ✓
+%   \@tempdima is a TeX scratch register; safe for sequential reuse here.
+\newcommand\CTU@rhead[1]{%
+  \settowidth\@tempdima{\MakeUppercase{#1}}%
+  \ifdim\@tempdima>\CTUrheadmax
+    % uppercase overflows — try mixed case
+    \settowidth\@tempdima{#1}%
+    \ifdim\@tempdima>\CTUrheadmax
+      % mixed case also overflows — truncate
+      \begingroup
+        \def\@Trunc@Rebox{%
+          \setbox\z@\hbox{\unhbox\z@\unskip\unskip\@tempa}%
+          \ifdim\wd\z@>\hsize \hbox to\hsize{\unhbox\z@}\else \box\z@ \fi}%
+        \truncate{\CTUrheadmax}{#1}%
+      \endgroup
+    \else
+      #1%
+    \fi
+  \else
+    \MakeUppercase{#1}%
+  \fi}
+% \CTU@authorhead: left header slot.
+%   The actual content is decided ONCE at \AtBeginDocument (see the snapshot
+%   block above) and \gdef'd there. This \let just ensures the macro exists as
+%   a no-op before \begin{document} so page-style definitions don't error.
+\let\CTU@authorhead\@empty
+% \CTU@rightheader: breadcrumb header for body pages (fancy pagestyle).
+%   Shows the deepest active heading level only: SUBSECTION when inside one,
+%   otherwise SECTION, otherwise CHAPTER. Right-aligned via \CTU@rhead.
+%   \edef expands titlesec's mark macros so \ifx can test against \@empty.
+\newcommand\CTU@rightheader{%
+  \edef\CTU@tmp@se{\sectiontitle}%
+  \edef\CTU@tmp@ss{\subsectiontitle}%
+  \ifx\CTU@tmp@ss\@empty
+    \ifx\CTU@tmp@se\@empty
+      \CTU@rhead{\chaptertitle}%
+    \else
+      \CTU@rhead{\CTU@tmp@se}%
+    \fi
+  \else
+    \CTU@rhead{\CTU@tmp@ss}%
+  \fi}
 \newpagestyle{fancy}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\MakeUppercase{\chaptertitle}\fi}
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rightheader\fi}
 	\setfoot{}{\thepage}{}
 }
 \renewpagestyle{plain}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\Course\fi}
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{\Title}\fi}
 	\setfoot{}{\thepage}{}
 }
 \newpagestyle{nonum}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\MakeUppercase{\Course}\fi}
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{\Course}\fi}
 	\footrule
 	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
 }
