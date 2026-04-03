@@ -1,1 +1,20 @@
 $out_dir = 'build';
+
+# Generate git author/email metadata files before each compilation.
+# CTUthesis.cls reads these via \InputIfFileExists after inputenc is loaded.
+# Written to $out_dir so they stay out of the source tree.
+# Fallback placeholder text is used when git is unavailable or unconfigured.
+{
+    my $author = `git config user.name  2>/dev/null` // '';
+    my $email  = `git config user.email 2>/dev/null` // '';
+    chomp $author;  chomp $email;
+    $author ||= 'Name Surname';
+    $email  ||= 'address@e-mail.xy';
+    mkdir $out_dir unless -d $out_dir;
+    if (open my $fh, '>', "$out_dir/main-gitauthor.tmp") {
+        print $fh '\gdef\@author{' . $author . "}\n";
+    }
+    if (open my $fh2, '>', "$out_dir/main-gitemail.tmp") {
+        print $fh2 '\gdef\@email{' . $email . "}\n";
+    }
+}

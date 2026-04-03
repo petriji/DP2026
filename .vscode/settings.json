@@ -21,6 +21,14 @@
     // LaTeX build tools
     "latex-workshop.latex.tools": [
         {
+            "name": "git-metadata",
+            "command": "perl",
+            "args": [
+                "%DIR%/git-metadata.pl",
+                "%DIR%/build"
+            ]
+        },
+        {
             "name": "pdflatex",
             "command": "pdflatex",
             "args": [
@@ -43,6 +51,7 @@
         {
             "name": "pdflatex -> biber -> pdflatex*2",
             "tools": [
+                "git-metadata",
                 "pdflatex",
                 "biber",
                 "pdflatex",

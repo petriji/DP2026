@@ -38,19 +38,18 @@
 % ==============================================================================
 % Thesis Metadata — Edit Here
 % ==============================================================================
-% \let-bindings must stay AFTER all metadata setters; they snapshot the values
-%   for use in page styles and running headers at page-output time.
-% \course{} is optional: the draft/final option sets cover text automatically.
-%   Uncomment \course{} only to override the mode default.
-\makeatletter
-\author{Jiří Petříček} \let\Author\@author
-\email{jiri.petricek@fs.cvut.cz} \let\Email\@email
-\title{Aproximace teplotních chyb OS zohledňující fáze ohřevu a~chladnutí během aktivity hlavního zdroje tepla} \let\Title\@title
+\title{Aproximace teplotních chyb OS zohledňující fáze ohřevu a~chladnutí během aktivity hlavního zdroje tepla}
 \faculty{Fakulta strojní}
 \department{12135 -- Ústav výrobních strojů a zařízení}
+% \author and \email are auto-detected from git user.name / user.email.
+%   Uncomment to override — e.g. when compiling on a machine with a different
+%   git config, or if the name contains special LaTeX characters (%, &, \, ~).
+%\author{Name Surname}      % override git user.name
+%\email{address@e-mail.xy}  % override git user.email
+% \course is optional: draft/final option sets cover text automatically;
+%   uncomment only to override.
 %\course{SEMESTRÁLNÍ PRÁCE}  % override cover text (set by draft/final option)
-\let\Course\@course
-\makeatother
+
 
 % ==============================================================================
 % Document Body — Edit Below

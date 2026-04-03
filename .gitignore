@@ -42,4 +42,5 @@
 -- VS Code profile --
 *.code-profile
 
--- 
+-- Temporary files --
+*.tmp

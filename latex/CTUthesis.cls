@@ -177,12 +177,26 @@
 \fi
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
-% \@email: contact address; used in page header (mailto link) and below the
-%   author table on the cover page in draft mode (\ifCTUemail must be set).
-%   Defaults to empty — call \email{addr} in preamble to set.
-\def\@email{}
+% \@author / \@email: placeholder defaults; overwritten at load time when
+%   latexmkrc has pre-generated main-gitauthor.tmp / main-gitemail.tmp from
+%   git config (see latexmkrc).  Override in preamble with \author{} / \email{}.
+\gdef\@author{Name Surname}
+% \@email: contact address; used in the page header mailto: link and below the
+%   author table on the cover page when CTUemail is active.
+\gdef\@email{address@e-mail.xy}
 	\newcommand{\email}[1]{\gdef\@email{#1}
 	}
+% Snapshot metadata into shorthand macros used by page styles and headers.
+%   \AtBeginDocument ensures any \author{}, \email{}, \title{}, \course{}
+%   override in the preamble has already executed before the snapshot is taken.
+%   These macros (\Author, \Email, \Title, \Course) do NOT need to be set
+%   manually in main.tex — they are maintained entirely by the class.
+\AtBeginDocument{%
+  \let\Author\@author
+  \let\Email\@email
+  \let\Title\@title
+  \let\Course\@course
+}
 % ==============================================================================
 % Title Page
 % ==============================================================================
@@ -617,6 +631,14 @@
 \RequirePackage[utf8]{inputenc}
 % Latin Modern scalable fonts — required with T1 for sharp vector glyphs.
 \RequirePackage{lmodern}
+% Read git metadata files now that inputenc is active so UTF-8 names decode
+%   correctly.  Files are written by latexmkrc / git-metadata.pl before
+%   compilation starts and are kept in the build/ output directory.
+%   Absent files are silently ignored (placeholder defaults remain in effect).
+%   User's \author{}/\email{} in the preamble execute after the class and
+%   override whatever was read here.
+\InputIfFileExists{build/\jobname-gitauthor.tmp}{}{}%
+\InputIfFileExists{build/\jobname-gitemail.tmp}{}{}%
 % Note: \baselinestretch{1.5} is already set in the class body above.
 
 % ==============================================================================
