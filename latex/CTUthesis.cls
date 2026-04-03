@@ -21,8 +21,9 @@
 %   Font size  : 10pt               11pt              12pt (default)
 %   Binding    : oneside (default)  twoside
 %   Columns    : onecolumn (default) twocolumn
-%   Mode       : final (default)    draft  (marks overfull boxes)
-%   Page order : openany (default)  openright
+%   Mode       : final (default)    draft        — modifies title and prints full date
+%   Debug aids : debug                           — overfull box marks + visible hyperlink targets
+%   Page order : openany (default)   openright
 %   Cover page : titlepage (default)  notitlepage (suppresses \maketitle)
 %   Math layout: leqno (left eq. numbers)    fleqn (flush-left equations)
 %                 default: right-side numbers, centered display equations
@@ -39,7 +40,12 @@
 %   produces the CTU cover page as before.
 \newif\if@titlepage
 \@titlepagetrue
-% × “\if@compatibility” guards from report.cls have been removed: this class
+% \if@draftmode: true when draft option is given — controls cover text and date.
+\newif\if@draftmode
+% \if@debug: true when debug option is given — marks overfull boxes and shows
+%   hyperlink targets as colored boxes (via hyperref without hidelinks).
+\newif\if@debug
+% × "\if@compatibility" guards from report.cls have been removed: this class
 %   requires LaTeX2e (see \NeedsTeXFormat above), so the 2.09 compat branches
 %   were always dead code.
 \DeclareOption{a4paper}
@@ -58,8 +64,14 @@
 %   externally (e.g. via \includepdf of the official assignment sheet).
 \DeclareOption{titlepage}{\@titlepagetrue}
 \DeclareOption{notitlepage}{\@titlepagefalse}
-\DeclareOption{draft}{\setlength\overfullrule{5pt}}
-\DeclareOption{final}{\setlength\overfullrule{0pt}}
+% draft: cover page shows "REŠERŠE K DIPLOMOVÉ PRÁCI" + full date.
+%   Overfull marks and link visibility are NOT changed — use debug for those.
+\DeclareOption{draft}{\@draftmodetrue}
+% final: cover page shows "DIPLOMOVÁ PRÁCE" + year-only date (default).
+\DeclareOption{final}{\@draftmodefalse}
+% debug: visual debugging aids — black rule on overfull lines + colored
+%   hyperlink boxes (hyperref loaded WITHOUT hidelinks).
+\DeclareOption{debug}{\@debugtrue\setlength\overfullrule{5pt}}
 \DeclareOption{openright}{\@openrighttrue}
 \DeclareOption{openany}{\@openrightfalse}
 \DeclareOption{onecolumn}{\@twocolumnfalse}
@@ -113,7 +125,13 @@
 \def\@department{\relax}
 	\newcommand{\department}[1]{\gdef\@department{#1}
 	}
-\def\@course{\relax}
+% \@course: default set by draft/final mode; overridable via \course{} in preamble.
+%   Accent commands used because inputenc is loaded later in this class file.
+\if@draftmode
+  \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}
+\else
+  \def\@course{DIPLOMOV\'{A} PR\'{A}CE}
+\fi
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
 % ==============================================================================
@@ -151,7 +169,7 @@
      \end{minipage}
 %      \vskip 0.8cm%
   \vfill
-  {\normalsize \@date \par}%
+  {\normalsize \if@draftmode\@date\else\number\year\fi \par}%
   \end{center}\par
 %  \@thanks
   \end{titlepage}%
@@ -613,9 +631,11 @@
 % ==============================================================================
 % Packages: Figures And Captions
 % ==============================================================================
-% graphicx[pdftex]: \includegraphics with the pdflatex driver. Also satisfies
+% graphicx[pdftex,final]: \includegraphics with the pdflatex driver. Also satisfies
 %   the class's own use of \includegraphics in \maketitle (CTU logo).
-\RequirePackage[pdftex]{graphicx}
+%   'final' overrides the global draft class option: images are ALWAYS rendered
+%   regardless of draft/debug mode (graphicx draft = empty boxes instead of images).
+\RequirePackage[pdftex,final]{graphicx}
 % float: H (here, exactly) placement specifier for figures and tables.
 \RequirePackage{float}
 % caption: styled captions — Czech names "Obr." / "Tab." with colon separator.
@@ -626,7 +646,8 @@
 % subcaption: \begin{subfigure} for side-by-side figures with sub-captions.
 \RequirePackage{subcaption}
 % pdfpages: include external PDF pages (thesis assignment form, mandatory pages).
-\RequirePackage{pdfpages}
+%   'final' overrides global draft class option (without it pdfpages shows empty boxes).
+\RequirePackage[final]{pdfpages}
 
 % ==============================================================================
 % Packages: Tables
@@ -735,9 +756,16 @@
 % Packages: Hyperlinks (after most packages, before biblatex)
 % ==============================================================================
 % hyperref: PDF metadata, cross-reference targets, clickable links.
-%   hidelinks: suppress colored boxes; links remain clickable in PDF viewers.
+%   draft=false: always create real PDF links even when draft class option is active
+%   (hyperref draft mode disables all link annotations — not what we want).
+%   In debug mode, hidelinks is omitted — each link target becomes a colored
+%   box, making missing or unexpected links easy to spot.
 %   Requires 3 full compilations after any cross-reference change to stabilize.
-\RequirePackage[hidelinks]{hyperref}
+\if@debug
+  \RequirePackage[draft=false]{hyperref}
+\else
+  \RequirePackage[draft=false,hidelinks]{hyperref}
+\fi
 
 % ==============================================================================
 % Packages: Bibliography
