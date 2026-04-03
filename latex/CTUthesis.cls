@@ -208,14 +208,14 @@
     \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
   \fi
 \fi
-% \CTU@softwarename: chapter heading for the list of software — localised.
-%   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTU@softwarename}.
-\newcommand\CTU@softwarename{%
+% \CTUsoftwarename: chapter heading for the list of software — localised.
+%   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTUsoftwarename}.
+\newcommand\CTUsoftwarename{%
   \ifCTUenglish List of Software Used\else
     Seznam pou\v{z}it\'{e}ho softwaru\fi}
-% \CTU@acrobacklink: PDF "back to text" label shown above the acronym list
+% \CTUacrobacklink: PDF "back to text" label shown above the acronym list
 %   (via ocg-p; screen-only, hidden when printing). Localised.
-\newcommand\CTU@acrobacklink{%
+\newcommand\CTUacrobacklink{%
   \ifCTUenglish BACK TO TEXT\else ZP\v{E}T DO TEXTU\fi}
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
@@ -253,7 +253,7 @@
   \acsetup{list/preamble={%
     \Acrobatmenu{GoBack}{%
       \begin{ocg}[printocg=never]{name}{id1}{1}%
-        \texttt{\CTU@acrobacklink}%
+        \texttt{\CTUacrobacklink}%
       \end{ocg}}}}
 }
 % ==============================================================================
