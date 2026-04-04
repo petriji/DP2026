@@ -1,48 +1,78 @@
-\chapter*{\CTUsoftwarename}
-\addcontentsline{toc}{chapter}{\CTUsoftwarename}
-\begin{itemize}[leftmargin=*]
+% Inner-list style shared by every software entry:
+%   - en-dash label, indented 1.5em
+%   - 1.5× linespacing between sub-items (itemsep = 0.5\baselineskip)
+%   - after= removes the outer itemsep so the last sub-item sits tight
+%     against the next top-level entry (no extra gap at group boundary)
+\newcommand*{\swsubitems}[1]{%
+  \begin{itemize}[%
+    label={\textendash},%
+    leftmargin=1.5em,%
+    itemsep=0.5\baselineskip,%
+    parsep=0pt,%
+    topsep=3pt,%
+    partopsep=0pt,%
+    after=\vspace{-0.5\baselineskip}]%
+  #1%
+  \end{itemize}}
+
+\begin{itemize}[%
+  label={},%
+  leftmargin=0pt,%
+  labelsep=0pt,%
+  itemsep=0.5\baselineskip,%
+  parsep=0pt,%
+  topsep=0pt,%
+  partopsep=0pt]
 
   % --- Editor a správa projektu ---
-  \item \textbf{Visual Studio Code}
-        \textit{(rozšíření: LaTeX Workshop, Remote~--~WSL)}
-        -- editor zdrojového kódu a správa projektu
+  \item \textbf{Visual Studio Code} -- editor zdrojového kódu a správa projektu
+  \swsubitems{%
+    \item \textbf{LaTeX Workshop} -- podpora LaTeX v~editoru
+    \item \textbf{Remote~-- WSL} -- vzdálená práce v~prostředí WSL
+  }
 
-  % --- LaTeX distribuce ---
-  \item \textbf{TeX Live 2023}
-        \textit{(pdflatex, latexmk, biber)}
-        -- sazba dokumentu
-
-  % --- LaTeX balíčky (součást TeX Live) ---
-  \item \textbf{babel} \textit{(czech, english)} -- jazyková podpora
-  \item \textbf{biblatex} \textit{(styl: iso-numeric, backend: biber)} -- citace dle ISO~690
-  \item \textbf{TikZ} \textit{(knihovna: external)} -- vektorová grafika a diagramy
-  \item \textbf{pgfplots} -- grafy
-  \item \textbf{siunitx} -- sazba fyzikálních jednotek
-  \item \textbf{acro} -- správa zkratek
-  \item \textbf{hyperref} -- hypertextové odkazy v~PDF
-  \item \textbf{csquotes} -- typograficky správné uvozovky
-  \item \textbf{geometry} -- nastavení stránkových okrajů
-  \item \textbf{titlesec} \textit{(pagestyles)} -- formátování nadpisů a záhlaví
-  \item \textbf{tocloft} -- formátování obsahu
-  \item \textbf{xltabular} -- tabulky přes více stran
-  \item \textbf{booktabs} -- profesionální linky tabulek
-  \item \textbf{caption}, \textbf{subcaption} -- formátování popisků obrázků
-  \item \textbf{pdfpages} -- vkládání stránek PDF
-  \item \textbf{microtype} -- mikrotypografické optimalizace
-  \item \textbf{ocg-p} -- volitelné vrstvy v~PDF
-  \item \textbf{amsmath}, \textbf{amsfonts}, \textbf{amssymb} -- matematická sazba
-  \item \textbf{lmodern} -- Latin Modern fonty
-  \item \textbf{xcolor} -- definice barev
-  \item \textbf{blox} -- bloková schémata (nadstavba TikZ)
-  \item \textbf{standalone} -- kompilace dílčích TikZ souborů
-  \item \textbf{enumitem}, \textbf{multicol}, \textbf{multirow} -- rozšíření prostředí výčtů a tabulek
+  % --- LaTeX distribuce (nástroje a balíčky) ---
+  \item \textbf{TeX Live 2023} -- sazba dokumentu
+  \swsubitems{%
+    \item \textbf{pdflatex} -- kompilátor PDF
+    \item \textbf{latexmk} -- automatizace překladu
+    \item \textbf{biber} -- backend pro zpracování bibliografie
+    \item \textbf{babel} \textit{(czech, english)} -- jazyková podpora
+    \item \textbf{biblatex} \textit{(styl: iso-numeric, backend: biber)} -- citace dle ISO~690
+    \item \textbf{TikZ} \textit{(knihovna: external)} -- vektorová grafika a diagramy
+    \item \textbf{pgfplots} -- grafy
+    \item \textbf{siunitx} -- sazba fyzikálních jednotek
+    \item \textbf{acro} -- správa zkratek
+    \item \textbf{hyperref} -- hypertextové odkazy v~PDF
+    \item \textbf{csquotes} -- typograficky správné uvozovky
+    \item \textbf{geometry} -- nastavení stránkových okrajů
+    \item \textbf{titlesec} \textit{(pagestyles)} -- formátování nadpisů a záhlaví
+    \item \textbf{tocloft} -- formátování obsahu
+    \item \textbf{xltabular} -- tabulky přes více stran
+    \item \textbf{booktabs} -- profesionální linky tabulek
+    \item \textbf{caption}, \textbf{subcaption} -- formátování popisků obrázků
+    \item \textbf{pdfpages} -- vkládání stránek PDF
+    \item \textbf{microtype} -- mikrotypografické optimalizace
+    \item \textbf{ocg-p} -- volitelné vrstvy v~PDF
+    \item \textbf{amsmath}, \textbf{amsfonts}, \textbf{amssymb} -- matematická sazba
+    \item \textbf{lmodern} -- Latin Modern fonty
+    \item \textbf{xcolor} -- definice barev
+    \item \textbf{blox} -- bloková schémata (nadstavba TikZ)
+    \item \textbf{standalone} -- kompilace dílčích TikZ souborů
+    \item \textbf{enumitem}, \textbf{multicol}, \textbf{multirow} -- rozšíření prostředí výčtů a tabulek
+  }
 
   % --- Správa bibliografie ---
   \item \textbf{Zotero} -- správa bibliografických záznamů
+  \swsubitems{%
+    \item \textbf{Better BibTeX for Zotero} -- automatická synchronizace a generování klíčů citací
+  }
 
   % --- Operační prostředí ---
   \item \textbf{WSL~2 / Ubuntu~22.04} -- prostředí pro překlad v~systému Windows
+
   \item \textbf{Git} -- správa verzí
 
   % Python -- doplnit po dokončení sub-projektu python/
+
 \end{itemize}
