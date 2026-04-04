@@ -514,6 +514,23 @@
     \def\CTU@scf@nxt##1 ##2\@@{\CTU@scf@tail{##1}{##2}}%
     \expandafter\CTU@scf@go\Author\@@ 
   \endgroup}
+% \CTU@addstop{text}: typeset text and append a period only when the expanded
+%   text does not already end with one.  Uses expl3 string inspection so it is
+%   unconditionally reliable — unlike \@addpunct it does not depend on the TeX
+%   spacefactor being correctly propagated out of font groups or macro calls.
+%   Used for the supervisor field which often ends with "Ph.D.".
+\ExplSyntaxOn
+\str_new:N \l__CTU_addstop_str
+\newcommand \CTU@addstop [1] {%
+  #1%
+  \str_set:Nx \l__CTU_addstop_str {#1}%
+  \str_if_eq:eeTF
+    { \str_item:Nn \l__CTU_addstop_str { -1 } }
+    { . }
+    {}%         % already ends with a period — suppress
+    { . }%      % no trailing period — add one
+}
+\ExplSyntaxOff
 % \CTU@selfcite: full ISO-690 citation for this thesis.
 %   Format mirrors the Czech standard example:
 %   SURNAME, Firstname. Title. City, Year. Thesis type. University,
@@ -542,7 +559,7 @@
   \ifx\@department\relax\else, \@department\fi\@addpunct{.}
   \ifx\@supervisor\@empty\else
     \ifCTUenglish Thesis supervisor\else Vedouc\'{i} pr\'{a}ce\fi:
-    \@supervisor\@addpunct{.}%
+    \CTU@addstop{\@supervisor}%
   \fi}
 % Snapshot metadata into shorthand macros used by page styles and headers.
 %   \AtBeginDocument ensures any \author{}, \email{}, \title{}, \course{}
