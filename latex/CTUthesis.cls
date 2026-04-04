@@ -895,8 +895,8 @@
 %   fancyhdr is the legacy alternative — not loaded.
 %\RequirePackage{fancyhdr}
 \RequirePackage[pagestyles]{titlesec}
-\titleformat{\part}[display]
-	{\normalfont\Huge\bfseries\filcenter}{}{0pt}{\MakeUppercase}[]
+\titleformat{\part}[block]
+	{\normalfont\Huge\bfseries\sffamily\filcenter}{}{0pt}{\MakeUppercase}[\thispagestyle{empty}]
 \titlespacing*{\part}{0pt}{\fill}{\fill}
 \titleformat{\chapter}
 	{\normalfont\LARGE\bfseries}{\thechapter}{1em}{}
