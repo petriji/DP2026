@@ -30,6 +30,7 @@
 % nobibliography,            % suppress bibliography
 % nosoftware,                % suppress list of software
 % nobackmatter,              % suppress LOF, LOT, and appendices
+ backmattertoc,             % include LOF, LOT, and appendices in TOC with dotted leaders
   CTUend                     % sentinel — keep last; allows trailing commas on all options above
 ]{CTUthesis}
 
@@ -127,7 +128,7 @@
 
 % 4. Optional remarks page — AI usage, image credits (shares alignment with 3. and 5.)
 \begin{remarkspage}
-	\input{texparts/remarks.tex}
+	\input{texparts/mandatory/remarks.tex}
 \end{remarkspage}
 
 % 5. Acknowledgements
@@ -138,7 +139,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 
 % 6. Abstract — class sets \thispagestyle{nonum} automatically;
 %    abstract content block is vertically centered by the class layout.
-\CTUabstract{texparts/abstract}{texparts/keywords}{texparts/abstract_en}{texparts/keywords_en}
+\CTUabstract{texparts/mandatory/abstract}{texparts/mandatory/keywords}{texparts/mandatory/abstract_en}{texparts/mandatory/keywords_en}
 
 \fi % \ifCTUfrontmatter
 
