@@ -43,7 +43,7 @@
 %   Author email   : email (default)      noemail           — mailto link on author name on cover (always);
 %                                                            email address printed below name on cover (draft only);
 %                                                            mailto link in running header (if not disabled by noheader)
-%   Language       : czech (default)      english           — switches babel; translates cover texts, TOC/LOF/LOT
+%   Language       : czech (default)      english           — switches babel hyphenation; translates cover texts and csquotes style
 %                                                            headings, date, software list and acronym list headings
 %   TikZ caching   : tikzextern                             — externalize TikZ figures (faster rebuilds)
 %                    OFF by default; requires -shell-escape in the pdflatex recipe when active
@@ -148,8 +148,11 @@
 %   also display the email below the author table on the cover page (draft only).
 \DeclareOption{email}{\CTUemailtrue}
 \DeclareOption{noemail}{\CTUemailfalse}
-% english: produce an English-language thesis — switches babel to English
-%   (auto-translating TOC, LOF, LOT, chapter/appendix names, \today) and
+% english: produce an English-language thesis — switches babel hyphenation to
+%   English and translates all class-controlled UI strings (cover, chapter/appendix
+%   names, self-citation, abstract headings, back matter list headings, \today).
+%   All headings are hardcoded via \ifCTUenglish rather than relying on babel
+%   caption strings, which are unreliable due to babel \AtBeginDocument ordering.
 %   translates class-controlled headings: cover text, university name,
 %   software list chapter, and acronym list heading.
 \DeclareOption{english}{\CTUenglishtrue}
@@ -377,11 +380,36 @@
   \else\ifx\CTU@thesistype\CTU@type@doctoral diserta\v{c}n\'{i}%
   \else diplomovou%
   \fi\fi}
-% \CTUsoftwarename: chapter heading for the list of software — localised.
-%   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTUsoftwarename}.
+% Localised chapter/section headings for all back-matter lists.
+%   Use these macros in main.tex instead of hardcoded Czech strings so the
+%   correct heading is emitted automatically in both CZ and EN builds.
 \newcommand\CTUsoftwarename{%
-  \ifCTUenglish List of Software Used\else
+  \ifCTUenglish List of Software\else
     Seznam pou\v{z}it\'{e}ho softwaru\fi}
+\newcommand\CTUacroname{%
+  \ifCTUenglish List of Abbreviations\else
+    Seznam pou\v{z}it\'ych zkratek\fi}
+\newcommand\CTUvelname{%
+  \ifCTUenglish List of Variables and Indices\else
+    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych a\nobreakspace{}index\r{u}\fi}
+\newcommand\CTUbibname{%
+  \ifCTUenglish Bibliography\else
+    Seznam pou\v{z}it\'e literatury\fi}
+\newcommand\CTUprilohaname{%
+  \ifCTUenglish List of Attachments\else
+    Seznam p\v{r}\'{{\i}}loh\fi}
+\newcommand\CTUcitacename{%
+  \ifCTUenglish Quotes\else
+    Citace\fi}
+\newcommand\CTUlofname{%
+  \ifCTUenglish List of Figures\else
+    Seznam obr\'{a}zk\r{u}\fi}
+\newcommand\CTUlotname{%
+  \ifCTUenglish List of Tables\else
+    Seznam tabulek\fi}
+\newcommand\CTUtocname{%
+  \ifCTUenglish Table of Contents\else
+    Obsah\fi}
 % \CTUacrobacklink: PDF "back to text" label shown above the acronym list
 %   (via ocg-p; screen-only, hidden when printing). Localised.
 \newcommand\CTUacrobacklink{%
@@ -657,18 +685,9 @@
     \gdef\CTU@pdfpagelayout{SinglePage}%
   \fi
   \hypersetup{pdfdisplaydoctitle=true,pdfpagelayout=\CTU@pdfpagelayout}%
-  % Language switch: if english option is active, override the babel main
-  %   language (loaded as [english,czech] with czech as default) to English.
-  %   This auto-translates \contentsname, \listfigurename, \listtablename,
-  %   \chaptername, \appendixname, and \today via babel.
-  %   Also set the acro list heading to the English equivalent.
-  \ifCTUenglish
-    \selectlanguage{english}%
-    \acsetup{list/name={List of Abbreviations}}%
-  \fi
   % Apply the localised back-link preamble to the acronym list.
-  %   Done here (not in acro_setup.tex) so \CTU@acrobacklink reflects the
-  %   final language choice after any \selectlanguage call above.
+  % (Language switch lives in the post-babel \AtBeginDocument below; the
+  %  \CTUacrobacklink macro already uses \ifCTUenglish so it is safe here.)
   \acsetup{list/preamble={%
     \Acrobatmenu{GoBack}{%
       \begin{ocg}[printocg=never]{name}{id1}{1}%
@@ -933,17 +952,35 @@
   \CatchFileDef\CTU@pdfkeywordsen{#4}{}%
   \CTU@setpdfmetadata
   \begin{abstract}%
-    \input{#1}%
-    \CTU@abshead{\ifCTUenglish Keywords\else Kl\'{\i}\v{c}ov\'{a} slova\fi}%
-    \begin{center}%
-      \input{#2}%
-    \end{center}%
-    \CTU@abshead{\ifCTUenglish Abstrakt\else Abstract\fi}%
-    \input{#3}%
-    \CTU@abshead{\ifCTUenglish Kl\'{\i}\v{c}ov\'{a} slova\else Keywords\fi}%
-    \begin{center}%
-      \input{#4}%
-    \end{center}%
+    \ifCTUenglish
+      % English thesis: EN block first (matches \abstractname = "Abstract"),
+      %   then CZ block with Czech headings.
+      \input{#3}%
+      \CTU@abshead{Keywords}%
+      \begin{center}%
+        \input{#4}%
+      \end{center}%
+      \CTU@abshead{Abstrakt}%
+      \input{#1}%
+      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
+      \begin{center}%
+        \input{#2}%
+      \end{center}%
+    \else
+      % Czech thesis: CZ block first (matches \abstractname = "Abstrakt"),
+      %   then EN block with English headings.
+      \input{#1}%
+      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
+      \begin{center}%
+        \input{#2}%
+      \end{center}%
+      \CTU@abshead{Abstract}%
+      \input{#3}%
+      \CTU@abshead{Keywords}%
+      \begin{center}%
+        \input{#4}%
+      \end{center}%
+    \fi
   \end{abstract}}
 \newenvironment{abstract}{%
     \clearpage
@@ -951,7 +988,7 @@
     \null\vfil
     \@beginparpenalty\@lowpenalty
     \begin{center}%
-      \bfseries \abstractname
+      \bfseries \ifCTUenglish Abstract\else Abstrakt\fi
       \@endparpenalty\@M
     \end{center}}%
    {\par\vfil\null\clearpage}
@@ -1228,9 +1265,9 @@
     \hypertarget{CTU@toc}{}%
     % Make the PDF open at the TOC anchor rather than the title page.
     \pdfcatalog{/OpenAction << /S /GoTo /D (CTU@toc) >>}%
-    \chapter*{\contentsname
+    \chapter*{\CTUtocname
         \@mkboth{%
-           \MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
+           \MakeUppercase\CTUtocname}{\MakeUppercase\CTUtocname}}%
     \@starttoc{toc}%
     \if@restonecol\twocolumn\fi
     }
@@ -1277,9 +1314,9 @@
     \else
       \@restonecolfalse
     \fi
-    \chapter*{\listfigurename}%
-      \@mkboth{\MakeUppercase\listfigurename}%
-              {\MakeUppercase\listfigurename}%
+    \chapter*{\CTUlofname}%
+      \@mkboth{\MakeUppercase\CTUlofname}%
+              {\MakeUppercase\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
     }
@@ -1290,10 +1327,10 @@
     \else
       \@restonecolfalse
     \fi
-    \chapter*{\listtablename}%
+    \chapter*{\CTUlotname}%
       \@mkboth{%
-          \MakeUppercase\listtablename}%
-         {\MakeUppercase\listtablename}%
+          \MakeUppercase\CTUlotname}%
+         {\MakeUppercase\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
     }
@@ -1317,8 +1354,11 @@
 % ==============================================================================
 % String Names And Date
 % ==============================================================================
-% English defaults; babel overrides these with Czech equivalents (Obsah,
-%   Seznam obrázků, …) when \selectlanguage{czech} is active.
+% English defaults; these are used for \chaptername/\appendixname (via \@chapapp)
+%   and may also be overridden by babel when Czech is active.
+%   Note: TOC, LOF, LOT, and abstract headings are NOT taken from these babel
+%   strings — they use \ifCTUenglish directly to avoid AtBeginDocument ordering
+%   issues with babel.
 \newcommand\contentsname{Contents}
 \newcommand\listfigurename{List of Figures}
 \newcommand\listtablename{List of Tables}
@@ -1358,9 +1398,27 @@
 % ==============================================================================
 % Packages: Encoding, Language, And Base Fonts
 % ==============================================================================
-% Czech/English hyphenation patterns and automatic captions driven by the
-%   active document language.
+% Czech/English hyphenation patterns and csquotes quotation-mark styles.
+%   All UI string translations are handled via \ifCTUenglish in the class;
+%   babel is retained here solely for hyphenation and csquotes integration.
 \RequirePackage[english,czech]{babel}
+% Language switch hook registered HERE — after babel — so it fires after
+% babel's own \AtBeginDocument hook that activates the main (Czech) language.
+% This ensures \selectlanguage{english} wins and all caption names are English.
+\AtBeginDocument{%
+  \ifCTUenglish
+    \selectlanguage{english}%
+    \renewcommand\contentsname{Table of Contents}%
+    \renewcommand\listfigurename{List of Figures}%
+    \renewcommand\listtablename{List of Tables}%
+    \acsetup{list/name={List of Abbreviations}}%
+    \captionsetup[figure]{name={Fig.}}%
+    \captionsetup[table] {name={Tab.}}%
+  \else
+    \captionsetup[figure]{name={Obr.}}%
+    \captionsetup[table] {name={Tab.}}%
+  \fi
+}
 % 8-bit font encoding — enables correct rendering of Czech accented characters
 %   and proper PDF copy/paste behavior.
 \RequirePackage[T1]{fontenc}
@@ -1513,11 +1571,13 @@
 \RequirePackage[pdftex,final]{graphicx}
 % float: H (here, exactly) placement specifier for figures and tables.
 \RequirePackage{float}
-% caption: styled captions — Czech names "Obr." / "Tab." with colon separator.
+% caption: styled captions with colon separator.
+%   Language-neutral settings applied at load time; label names (Obr./Fig.,
+%   Tab./Tab.) applied at \AtBeginDocument once \ifCTUenglish is known.
 \RequirePackage{caption}
 \captionsetup{labelfont=bf, labelsep=endash}
-\captionsetup[figure]{labelfont={normalfont}, name={Obr.}, labelsep=colon}
-\captionsetup[table] {labelfont={normalfont}, name={Tab.}, labelsep=colon}
+\captionsetup[figure]{labelfont={normalfont}, labelsep=colon}
+\captionsetup[table] {labelfont={normalfont}, labelsep=colon}
 % subcaption: \begin{subfigure} for side-by-side figures with sub-captions.
 \RequirePackage{subcaption}
 % pdfpages: include external PDF pages (thesis assignment form, mandatory pages).

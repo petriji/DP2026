@@ -149,10 +149,10 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 %   - Pagereferences to all first-use locations shown in the list
 \ifCTUacro
 	\pagestyle{plain}%
-	\printacronyms[include=zkr,name=Seznam použitých zkratek,preamble={}]\label{ch:zkratky}
+	\printacronyms[include=zkr,name=\CTUacroname,preamble={}]\label{ch:zkratky}
 	\thispagestyle{plain}%
 	\CTUifVariableListNonemptyTF{% print variables list only if at least one used variable exists
-		\printacronyms[include=vel,name=Seznam použitých proměnných a indexů,preamble={}]\label{ch:Seznam použitých veličin}
+		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:Seznam použitých veličin}
 		\thispagestyle{plain}%
 	}{}
 \fi
@@ -208,35 +208,37 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % ==============================================================================
 \clearpage
 \phantomsection
-%\addcontentsline{toc}{chapter}{Seznam použité literatury}
 % Bibliography, software list, figures, and tables.
 \ifCTUbiblio
-\printbibliography[title=Seznam použité literatury]
-\label{ch:Seznam použité literatury}
+\printbibliography[title=\CTUbibname]
+\label{ch:bibliography}
 \fi
 \ifCTUsoftware
+\chapter*{\CTUsoftwarename}
+\addcontentsline{toc}{chapter}{\CTUsoftwarename}
 \input{texparts/references/seznamsoftwaru.tex}
 \label{ch:Seznam použitého softwaru}
 \fi
 \ifCTUbackmatter
 %\setlength{\cftfigindent}{0pt}
 \listoffigures
-\label{ch:Seznam obrázků}
-% Appendices list (currently disabled).
-%\input{texparts/references/seznampriloh.tex}
-%\label{ch:Seznam příloh}
-%\addcontentsline{toc}{chapter}{Seznam obrázků}
-%\setlength{\cfttabindent}{0pt}
-%\listoftables
-%\addcontentsline{toc}{chapter}{Seznam tabulek}
-%\label{ch:Seznam tabulek}
-% Optional attachments list (currently disabled).
-%\input{texparts/seznampriloh.tex}
-%\label{ch:Seznam příloh}
+\addcontentsline{toc}{chapter}{\CTUlofname}
+\label{ch:figures}
+% Appendices list.
+\listoftables
+\addcontentsline{toc}{chapter}{\CTUlotname}
+\label{ch:tables}
+% Optional attachments list.
+\chapter*{\CTUprilohaname}
+\addcontentsline{toc}{chapter}{\CTUprilohaname}
+\input{texparts/references/seznampriloh.tex}
+\label{ch:attachments}
 \fi
 
-% Optional aggregated quotations chapter (currently disabled).
-%\chapter*{Citace}
-%\inputAllFiles{texparts/citace}
+% Optional aggregated quotations chapter.
+% Uncomment when quote files exist in texparts/quotes/.
+%\chapter*{\CTUcitacename}
+%\addcontentsline{toc}{chapter}{\CTUcitacename}
+%\input{texparts/quotes/...}
 
 \end{document}
