@@ -18,7 +18,7 @@
 % doctoral,                  % thesis type: disertační / doctoral
 % draft,                     % research mode: "REŠERŠE" + full date on cover
 % debug,                     % visible link boxes + overfull marks
- twoside,                   % mirror margins: wider binding side on every other page
+% twoside,                   % mirror margins: wider binding side on every other page
 % openright,                 % new chapters always start on an odd (right-hand) page
 % leqno,                     % equation numbers on the left margin (default: right)
 % fleqn,                     % flush-left display equations   (default: centered)
@@ -231,6 +231,9 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % ==============================================================================
 % Back Matter: Bibliography, Software, Figures, And Optional Lists
 % ==============================================================================
+% Reset bookmark root so back-matter entries are siblings of body chapters,
+% not children of Závěr.
+\bookmarksetup{startatroot}
 \clearpage
 \renewcommand{\thepage}{\Roman{page}}
 \phantomsection
