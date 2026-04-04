@@ -535,7 +535,7 @@
   \number\year,
   % \ (backslash-space) is an explicit inter-word space; required here because
   % \fi is a control word and TeX eats the subsequent whitespace in state S.
-  \pageref*{LastPage}~\ifCTUenglish p.\else s.\fi\ \CTU@selfcite@type.
+  \zref@extractdefault{LastPage}{abspage}{0}~\ifCTUenglish p.\else s.\fi\ \CTU@selfcite@type.
   \ifCTUenglish Czech Technical University in Prague%
   \else \v{C}esk\'{e} vysok\'{e} u\v{c}en\'{i} technick\'{e} v~Praze\fi,
   \@faculty%
@@ -1745,8 +1745,14 @@
   \def\emph#1{#1}%
   \def\textbf#1{#1}%
 }
-% lastpage: provides \pageref*{LastPage} for the page count on the citation page.
+% lastpage: sets the LastPage label at the end of the document.
+% zref-abspage: patches \label so that LastPage also records the absolute
+%   physical page number (a plain integer, independent of \thepage formatting).
+%   Required because the back matter prints \Roman{page}, which would make
+%   \pageref*{LastPage} return a Roman numeral in the self-citation entry.
+%   \zref@extractdefault{LastPage}{abspage}{0} retrieves the Arabic integer.
 \RequirePackage{lastpage}
+\RequirePackage{zref-abspage}
 
 % ==============================================================================
 % Packages: Bibliography
