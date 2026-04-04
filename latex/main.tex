@@ -185,6 +185,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % ==============================================================================
 \chapter{Úvod}\label{ch:uvod}
  	\input{texparts/uvod.tex} % uvest cil prace
+
 \part{Teoretická část}\label{p:teorie}
 \chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
 % 	\input{texparts/dialog.tex}
@@ -220,6 +221,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 		%\input{texparts/hodnoceni.tex} % SWOT analýza, diskuze, podarilo se vyvratit hypotezu?
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
 	% \input{texparts/navrh}
+
 % Break Závěr out of the enclosing \part in the PDF bookmark panel so it
 % appears at the root level, parallel to Úvod.
 \bookmarksetup{startatroot}
@@ -231,38 +233,10 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % ==============================================================================
 % Back Matter: Bibliography, Software, Figures, And Optional Lists
 % ==============================================================================
-% Reset bookmark root so back-matter entries are siblings of body chapters,
-% not children of Závěr.
-\bookmarksetup{startatroot}
-\clearpage
-\renewcommand{\thepage}{\Roman{page}}
-\phantomsection
-% Bibliography, software list, figures, and tables.
-\ifCTUbiblio
-\printbibliography[heading=CTUbib]
-\label{ch:bibliography}
-\fi
-\ifCTUsoftware
-\chapter*{\CTUsoftwarename}
-\CTUaddtotoc{\CTUsoftwarename}
-\input{texparts/references/seznamsoftwaru.tex}
-\label{ch:Seznam použitého softwaru}
-\fi
-\ifCTUbackmatter
-%\setlength{\cftfigindent}{0pt}
-\listoffigures
-\CTUaddtotoc{\CTUlofname}
-\label{ch:figures}
-% Appendices list.
-\listoftables
-\CTUaddtotoc{\CTUlotname}
-\label{ch:tables}
-% Optional attachments list.
-\chapter*{\CTUprilohaname}
-\CTUaddtotoc{\CTUprilohaname}
-\input{texparts/references/seznampriloh.tex}
-\label{ch:attachments}
-\fi
+% \CTUbackmatter (from CTUthesis.cls) handles: bookmark root reset, page-number
+% switch to Roman, per-page back-to-text links on bibliography/LOF/LOT, and all
+% conditional guards (\ifCTUbiblio, \ifCTUsoftware, \ifCTUbackmatter).
+\CTUbackmatter
 
 % Optional aggregated quotations chapter.
 % Uncomment when quote files exist in texparts/quotes/.

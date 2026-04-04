@@ -1587,15 +1587,15 @@
 	\ifCTUheader\headrule\fi
 	\sethead[\ifCTUheader\CTU@rightheader\fi][][\ifCTUheader\CTU@authorhead\fi]
 	        {\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rightheader\fi}
-	\setfoot[\thepage][][]
-	        {}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
+	\setfoot[\thepage][\CTU@pagebacklink][]
+	        {\CTU@pagebacklink}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
 }
 \renewpagestyle{plain}{
 	\ifCTUheader\headrule\fi
 	\sethead[\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi][][\ifCTUheader\CTU@authorhead\fi]
 	        {\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi}
-	\setfoot[\thepage][][]
-	        {}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
+	\setfoot[\thepage][\CTU@pagebacklink][]
+	        {\CTU@pagebacklink}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
 }
 \newpagestyle{nonum}{
 	\ifCTUheader\headrule\fi
@@ -1730,19 +1730,35 @@
 
 % ==============================================================================
 % Packages: Acronyms
-% ocg-p: PDF Optional Content Groups — PDF-only "back to text" navigation link
-%   in the acro list (printocg=never). Must be loaded before acro.
-%   Skipped entirely in noacro mode (the list is suppressed, so OCG targets
-%   are never rendered and the package is not needed).
+% ocg-p: PDF Optional Content Groups — screen-only "back to text" navigation
+%   links (printocg=never).  Always loaded: used in the acro xltabular template
+%   (via \CTUacrolistbacklink in acro_setup.tex) AND in the per-page back-link
+%   of bibliography, LOF, and LOT (via \CTU@pagebacklink in the page style).
+%   Must be loaded before acro.
+\RequirePackage{ocg-p}
+% \CTU@pagebacklink: per-page "back to text" button for back-matter chapters
+%   (bibliography, LOF, LOT).  Activated by \CTU@backlinktrue; rendered on
+%   every page via the center header slot of both 'plain' and 'fancy' styles.
+%   Screen-only (OCG, printocg=never).  Each call advances \CTU@backlinkpagectr
+%   to guarantee a unique OCG id even when the counter is not numeric.
+\newcounter{CTU@backlinkpagectr}
+\newif\ifCTU@backlink
+\newcommand\CTU@pagebacklink{%
+  \ifCTU@backlink
+    \stepcounter{CTU@backlinkpagectr}%
+    \Acrobatmenu{GoBack}{%
+      \begin{ocg}[printocg=never]{CTU back link}{ctu-back-\arabic{CTU@backlinkpagectr}}{1}%
+        \texttt{\CTUacrobacklink}%
+      \end{ocg}}%
+  \fi}
 % acro: \ac{}, \acs{}, \acl{}, \acp{} acronym commands.
 %   \acsetup and \DeclareAcronym entries are \input in main.tex only when
 %   acro is active (guarded by \ifCTUacro there).
-%   In noacro mode both packages are skipped and lightweight stubs are
-%   defined so \acs{}, \ac{} etc. in body text typeset the key (= short form)
-%   without errors.  The two \acsetup{} calls in \AtBeginDocument hooks below
-%   are harmlessly gobbled by the stub.
+%   In noacro mode the package is skipped and lightweight stubs are defined
+%   so \acs{}, \ac{} etc. in body text typeset the key (= short form) without
+%   errors.  The two \acsetup{} calls in \AtBeginDocument hooks below are
+%   harmlessly gobbled by the stub.
 \ifCTUacro
-  \RequirePackage{ocg-p}
   \RequirePackage{acro}
 \else
   % --- noacro stubs -----------------------------------------------------------
@@ -1824,12 +1840,60 @@
   \fi}
 
 % Custom biblatex heading for back-matter TOC integration.
-%   \printbibliography[heading=CTUbib] in main.tex uses this heading, which
-%   calls \CTUaddtotoc internally so the TOC entry obeys the toggle.
+%   \printbibliography[heading=CTUbib] uses this heading, which calls
+%   \CTUaddtotoc internally so the TOC entry obeys the toggle.
 \defbibheading{CTUbib}[\CTUbibname]{%
   \chapter*{#1}%
   \CTUaddtotoc{#1}%
   \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}}
+
+% ==============================================================================
+% Back Matter Command
+% ==============================================================================
+% Default content-file paths (without .tex extension, resolved at call time).
+%   Override in preamble with \softwarefile{path} / \attachmentsfile{path}.
+\gdef\CTU@softwarefile{texparts/references/seznamsoftwaru}
+\gdef\CTU@attachmentsfile{texparts/references/seznampriloh}
+\newcommand\softwarefile[1]{\gdef\CTU@softwarefile{#1}}
+\newcommand\attachmentsfile[1]{\gdef\CTU@attachmentsfile{#1}}
+% \CTUbackmatter: typeset all toggled back-matter sections in the standard order:
+%   bibliography \u2192 software list \u2192 LOF \u2192 LOT \u2192 attachments list.
+%   Responsibilities:
+%     - \bookmarksetup{startatroot}: back-matter bookmarks are root siblings, not
+%       children of the preceding body chapter or \part.
+%     - page-number reset to Roman (back matter convention); first \clearpage.
+%     - per-page back-to-text links on bibliography, LOF, and LOT pages (\CTU@backlinktrue).
+%     - conditional guards (\ifCTUbiblio, \ifCTUsoftware, \ifCTUbackmatter).
+%     - \CTUaddtotoc and \label for each section.
+%   Call once, after the last body chapter (replaces manual back-matter code in main.tex).
+\newcommand\CTUbackmatter{%
+  \bookmarksetup{startatroot}%
+  \clearpage
+  \CTU@backlinktrue
+  \renewcommand{\thepage}{\Roman{page}}%
+  \phantomsection
+  \ifCTUbiblio
+    \printbibliography[heading=CTUbib]%
+    \label{ch:bibliography}%
+  \fi
+  \ifCTUsoftware
+    \chapter*{\CTUsoftwarename}%
+    \CTUaddtotoc{\CTUsoftwarename}%
+    \InputIfFileExists{\CTU@softwarefile.tex}{}{}%
+    \label{ch:software}%
+  \fi
+  \ifCTUbackmatter
+    \listoffigures
+    \CTUaddtotoc{\CTUlofname}%
+    \label{ch:figures}%
+    \listoftables
+    \CTUaddtotoc{\CTUlotname}%
+    \label{ch:tables}%
+    \chapter*{\CTUprilohaname}%
+    \CTUaddtotoc{\CTUprilohaname}%
+    \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
+    \label{ch:attachments}%
+  \fi}
 
 \endinput
 %%
