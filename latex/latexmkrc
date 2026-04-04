@@ -131,4 +131,4 @@ sub ctu_update_citcount {
         print $out "\\makeatother\n";
     }
 }
-$pre_pdf_code = 'ctu_update_citcount();';
+add_hook('before_xlatex', \&ctu_update_citcount);
