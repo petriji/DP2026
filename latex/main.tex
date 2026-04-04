@@ -98,7 +98,7 @@
 % is suppressed, but the counter still advances there.
 % Front matter, acronym/variable lists, and the TOC stay in roman numbering.
 % The body switches to Arabic display after the TOC without resetting the page counter.
-\pagenumbering{roman}
+\pagenumbering{Roman}
 \maketitle
 
 \ifCTUfrontmatter
@@ -207,6 +207,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % Back Matter: Bibliography, Software, Figures, And Optional Lists
 % ==============================================================================
 \clearpage
+\renewcommand{\thepage}{\Roman{page}}
 \phantomsection
 % Bibliography, software list, figures, and tables.
 \ifCTUbiblio
