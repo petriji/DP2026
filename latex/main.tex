@@ -13,12 +13,12 @@
 % Full option reference is in CTUthesis.cls.
 \documentclass[
   a4paper, 12pt,             % fixed for CTU thesis — do not change
-% english,                   % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
-  master,                    % thesis type: diplomová / master's (bachelor is default)
+ english,                   % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
+%  master,                    % thesis type: diplomová / master's (bachelor is default)
 % doctoral,                  % thesis type: disertační / doctoral
-  draft,                     % research mode: "REŠERŠE" + full date on cover
-  debug,                     % visible link boxes + overfull marks
-% twoside,                   % mirror margins: wider binding side on every other page
+% draft,                     % research mode: "REŠERŠE" + full date on cover
+% debug,                     % visible link boxes + overfull marks
+ twoside,                   % mirror margins: wider binding side on every other page
 % openright,                 % new chapters always start on an odd (right-hand) page
 % leqno,                     % equation numbers on the left margin (default: right)
 % fleqn,                     % flush-left display equations   (default: centered)
@@ -26,7 +26,7 @@
 % noemail,                   % suppress mailto: link in header and cover page
 % notitlepage,               % suppress cover page (use \includepdf of assignment sheet)
 % nofrontmatter,             % suppress abstract and mandatory pages
-  noacro,                    % suppress acronym and variable lists
+ noacro,                    % suppress acronym and variable lists
 % nobibliography,            % suppress bibliography
 % nosoftware,                % suppress list of software
 % nobackmatter,              % suppress LOF, LOT, and appendices
@@ -89,8 +89,7 @@
 %   \department{}     — PDF subject entry
 %   \faculty{}        — displayed on citation page
 %   keywords files    — language-dependent (CZ/EN) PDF keywords metadata
-%
-==============================================================================
+% ==============================================================================
 
 \begin{document}
 %TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
@@ -121,12 +120,12 @@
 %    \begin{declaration}…\end{declaration} for a fully custom layout.
 \CTUdeclaration
 
-% 4. Optional remarks page — top-aligned (AI usage, image credits, …).
+% 4. Optional remarks page — AI usage, image credits (shares alignment with 3. and 5.)
 \begin{remarkspage}
 	\input{texparts/remarks.tex}
 \end{remarkspage}
 
-% 5. Acknowledgements — top-aligned, no signature space.
+% 5. Acknowledgements
 \begin{thankspage}
 \noindent
 Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkresové dokumentace.
@@ -184,12 +183,18 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 \chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
 % 	\input{texparts/dialog.tex}
 	\section{Pojmy a vztahy, legislativa}\label{sec:pojmy}
+	% \input{texparts/pojmy.tex} % ceske pravo
 	\section{Historický vývoj}\label{sec:historie}
-% 	\input{texparts/cil_prace.tex}
 \part{Praktická část}\label{p:prakticka}
-\chapter{Stav na trhu práce}\label{ch:stav}
+\chapter{Postup výzkumu}\label{ch:vyzkum}
+	% \input{texparts/vyzkum.tex} % zopakovat cil prace, metody, vysloveni hypotezy
+	\section{Zpracování dat}\label{sec:datova_analyza}
+	% \input{texparts/datova_analyza.tex} % odkud data, jak zpracována (vzorce počítaných veličin), jak analyzována (python)
+\chapter{Stav trhu práce}\label{ch:stav}
+	% \input{texparts/stav.tex} % stav trhu prace v ČR, PESTLE analýza
 	\section{Výhled}\label{sec:vyhled}
 	\section{Evropský kontext}\label{sec:evropsky_kontext}
+		% komparativní analýza s~dalšími zeměmi EU, grafy, mapy, tabulky - uvést proč byly vybrány CZ, AT, DE, DK, PL, SK k porovnání (společná historie s CZ - odbory (AT)/východní blok, flexicurity DK, ekonomické vztahy DE)
 		\input{texparts/python/gdp_ppp_timeline}
 		\input{texparts/python/tax_wedge_map}
 		\input{texparts/python/flexicurity_table}
@@ -197,10 +202,21 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 		\subsection{Flexicurity}\label{ssec:flexicurity}
 			\input{texparts/python/arope_timeline_CE}
 			\input{texparts/python/arope_groups}
-	\section{Případová studie Penny Market}\label{sec:penny}
+		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
+		% fungování, výhody a nevýhody - k tomuto zatím chybí zdroje
+			% \input{texparts/rakousko.tex}
+			% \input{texparts/nemecko.tex}
+			% \input{texparts/polsko.tex}
+			% \input{texparts/slovensko.tex}
+	\section{Případová studie KS~Penny Market 2026}\label{sec:penny}
+		% analýza KS 2026 v~Penny Marketu
 	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
+		%\input{texparts/hodnoceni.tex} % SWOT analýza, diskuze, podarilo se vyvratit hypotezu?
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
+	% \input{texparts/navrh}
 \chapter{Závěr}\label{ch:zaver}
+	\input{texparts/zaver.tex} % povedlo se dosahnout cile prace?
+
 %TC:ignore  — texcount: exclude back matter (bibliography, lists) from count
 
 % ==============================================================================
@@ -211,27 +227,27 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 \phantomsection
 % Bibliography, software list, figures, and tables.
 \ifCTUbiblio
-\printbibliography[title=\CTUbibname]
+\printbibliography[heading=CTUbib]
 \label{ch:bibliography}
 \fi
 \ifCTUsoftware
 \chapter*{\CTUsoftwarename}
-\addcontentsline{toc}{chapter}{\CTUsoftwarename}
+\CTUaddtotoc{\CTUsoftwarename}
 \input{texparts/references/seznamsoftwaru.tex}
 \label{ch:Seznam použitého softwaru}
 \fi
 \ifCTUbackmatter
 %\setlength{\cftfigindent}{0pt}
 \listoffigures
-\addcontentsline{toc}{chapter}{\CTUlofname}
+\CTUaddtotoc{\CTUlofname}
 \label{ch:figures}
 % Appendices list.
 \listoftables
-\addcontentsline{toc}{chapter}{\CTUlotname}
+\CTUaddtotoc{\CTUlotname}
 \label{ch:tables}
 % Optional attachments list.
 \chapter*{\CTUprilohaname}
-\addcontentsline{toc}{chapter}{\CTUprilohaname}
+\CTUaddtotoc{\CTUprilohaname}
 \input{texparts/references/seznampriloh.tex}
 \label{ch:attachments}
 \fi
