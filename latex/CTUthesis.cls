@@ -1491,9 +1491,25 @@
 % (require titlesec[pagestyles]; reference \Author, \Course, \Title which are
 %  \let-bound in \AtBeginDocument — safe because these are expanded at page-output
 %  time, not at definition time)
-%   fancy  — body pages:            left: Author  right: deepest heading (SUBSECTION › SECTION › CHAPTER)
-%   plain  — chapter-opening pages: left: Author  right: Title
-%   nonum  — front/back matter:     left: Author  right: COURSE   footer: Title
+%
+%   Slot layout — oneside:
+%     fancy/plain : left: Author          center: —   right: heading/Title
+%                   footer center: page number
+%   Slot layout — twoside:
+%     fancy/plain : odd  (recto): left: Author  center: —  right: heading/Title
+%                                 footer right:  page number (outer margin)
+%                   even (verso): left: heading/Title  center: —  right: Author
+%                                 footer left:   page number (outer margin)
+%     Author is always adjacent to the spine (inner margin) on both sides.
+%
+%   nonum — front/back matter: as above for header; footer: centered Title.
+%
+%  titlesec \sethead/\setfoot signature:
+%    \sethead[EL][EC][ER]{OL}{OC}{OR}
+%    [brackets] = even-page slots (twoside only; silently ignored in oneside).
+%    {braces}   = odd-page slots (and ALL pages in oneside).
+%  \setfoot odd-page center carries \thepage in oneside (via \if@twoside guard);
+%  in twoside mode the page number moves to the outer margin slot instead.
 % ==============================================================================
 % \CTU@rtext{text}: right-header text cascade (no hyperlink).
 %   1. UPPERCASE fits (\@tempdima <= \CTUrheadmax): emit \MakeUppercase{text}.
@@ -1552,17 +1568,22 @@
   \fi}
 \newpagestyle{fancy}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rightheader\fi}
-	\setfoot{}{\thepage}{}
+	\sethead[\ifCTUheader\CTU@rightheader\fi][][\ifCTUheader\CTU@authorhead\fi]
+	        {\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rightheader\fi}
+	\setfoot[\thepage][][]
+	        {}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
 }
 \renewpagestyle{plain}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi}
-	\setfoot{}{\thepage}{}
+	\sethead[\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi][][\ifCTUheader\CTU@authorhead\fi]
+	        {\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Title}\fi}
+	\setfoot[\thepage][][]
+	        {}{\if@twoside\else\thepage\fi}{\if@twoside\thepage\fi}
 }
 \newpagestyle{nonum}{
 	\ifCTUheader\headrule\fi
-	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Course}\fi}
+	\sethead[\ifCTUheader\CTU@rhead{CTU@toc}{\Course}\fi][][\ifCTUheader\CTU@authorhead\fi]
+	        {\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\CTU@rhead{CTU@toc}{\Course}\fi}
 	\footrule
 	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
 }
