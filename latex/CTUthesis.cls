@@ -1778,6 +1778,10 @@
 \else
   \RequirePackage[draft=false,hidelinks]{hyperref}
 \fi
+% bookmark: extended PDF bookmark control, loaded after hyperref.
+%   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
+%   such as Závěr out of their enclosing \part in the bookmark panel.
+\RequirePackage{bookmark}
 \pdfstringdefDisableCommands{%
   \def\textit#1{#1}%
   \def\emph#1{#1}%
