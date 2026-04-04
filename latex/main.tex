@@ -48,11 +48,16 @@
 %   make-links=true      — \ac{} calls become clickable links to list entries
 %   list/display=used    — only print acronyms/variables that are explicitly used in the text
 %   long-form sorting    — both lists sorted alphabetically by the long form (not short form)
-\input{texparts/references/acro_setup.tex}
-\input{texparts/references/acro.tex}
-\input{texparts/references/acro_variables.tex}
-% Sort the lists alphabetically by the long form instead of the short form (default).
-\CTUuseLongSortForAcronyms
+% All three acro input files and the sort command are skipped when noacro is
+% active — the stubs in CTUthesis.cls keep \ac{} and friends working without
+% loading the package or parsing the declaration files.
+\ifCTUacro
+  \input{texparts/references/acro_setup.tex}
+  \input{texparts/references/acro.tex}
+  \input{texparts/references/acro_variables.tex}
+  % Sort the lists alphabetically by the long form instead of the short form (default).
+  \CTUuseLongSortForAcronyms
+\fi
 
 % Bibliography files (BibLaTeX) — edit to match your sources.
 \addbibresource{socialnidialog.bib}

@@ -1692,20 +1692,35 @@
 
 % ==============================================================================
 % Packages: Acronyms
-% ==============================================================================
 % ocg-p: PDF Optional Content Groups — PDF-only "back to text" navigation link
 %   in the acro list (printocg=never). Must be loaded before acro.
-\RequirePackage{ocg-p}
+%   Skipped entirely in noacro mode (the list is suppressed, so OCG targets
+%   are never rendered and the package is not needed).
 % acro: \ac{}, \acs{}, \acl{}, \acp{} acronym commands.
-%   \acsetup and \DeclareAcronym entries are \input in main.tex
-%   (project-specific content).
-%   When noacro is active the list is suppressed, so in-text \ac{} uses are
-%   orphaned — their back-links to the list go nowhere.  Disable all acro
-%   hyperlinks in that case via make-links=false.
+%   \acsetup and \DeclareAcronym entries are \input in main.tex only when
+%   acro is active (guarded by \ifCTUacro there).
+%   In noacro mode both packages are skipped and lightweight stubs are
+%   defined so \acs{}, \ac{} etc. in body text typeset the key (= short form)
+%   without errors.  The two \acsetup{} calls in \AtBeginDocument hooks below
+%   are harmlessly gobbled by the stub.
 \ifCTUacro
+  \RequirePackage{ocg-p}
   \RequirePackage{acro}
 \else
-  \RequirePackage[make-links=false]{acro}
+  % --- noacro stubs -----------------------------------------------------------
+  % In-text commands: emit the key, which equals the short form for every
+  %   entry in this project (OS, NC, TCP, …).  Acceptable for fast drafts.
+  \newcommand\ac   [1]{#1}%
+  \newcommand\acs  [1]{#1}%
+  \newcommand\acl  [1]{#1}%
+  \newcommand\acp  [1]{#1}%
+  \newcommand\acsp [1]{#1}%
+  \newcommand\aclp [1]{#1}%
+  \newcommand\acuse[1]{}%    % mark-as-used, no output
+  \newcommand\acused[1]{}%
+  % \acsetup is called from two \AtBeginDocument hooks in this class;
+  %   the stub gobbles the argument so those calls are no-ops.
+  \newcommand\acsetup[1]{}%
 \fi
 % catchfile: read external keyword files so their contents can populate PDF
 %   metadata without duplicating them in the preamble.
