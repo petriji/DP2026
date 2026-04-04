@@ -40,6 +40,7 @@
 %   Bibliography   : bibliography (def.)  nobibliography
 %   Software list  : software (default)   nosoftware
 %   Back matter    : backmatter (default)  nobackmatter     — LOF, LOT, appendices
+%   Back matter TOC: backmattertoc          nobackmattertoc (def.) — dotted TOC entries for back matter
 %   Author email   : email (default)      noemail           — mailto link on author name on cover (always);
 %                                                            email address printed below name on cover (draft only);
 %                                                            mailto link in running header (if not disabled by noheader)
@@ -1173,7 +1174,7 @@
       % Count pages in the PDF so we can loop page-by-page.
       \pdfximage{#1}%
       \@tempcnta=1\relax
-      \@whilenum\@tempcnta<\pdflastximagepages\advance\@tempcnta\@ne\do{%
+      \@whilenum\@tempcnta<\pdflastximagepages\do{%
         % Force current page to start on an odd (recto) page.
         \cleardoublepage
         \includepdf[pages={\the\@tempcnta},pagecommand={\thispagestyle{empty}}]{#1}%
