@@ -34,9 +34,14 @@
 % ==============================================================================
 % Preamble — Edit External Lists
 % ==============================================================================
+% Acronym and variable definitions are in separate files in texparts/references/ for better organization and to avoid cluttering the main.tex preamble.  Edit those files to add or modify entries, and use the provided commands in the body of the thesis to mark them as used (e.g. \acs{myacro} or \acuse{var-myvar}).
 \input{texparts/references/acro_setup.tex}
 \input{texparts/references/acro.tex}
+\input{texparts/references/acro_variables.tex}
+% Sort the lists alphabetically by the long form instead of the short form (default).
+\CTUuseLongSortForAcronyms
 
+% Bibliography files (BibLaTeX) — edit to match your sources.
 \addbibresource{socialnidialog.bib}
 \addbibresource{socialnidialog-zotero.bib}
 \addbibresource{socialnidialog-bibtexmanager.bib}
@@ -45,8 +50,11 @@
 % Thesis Metadata — Edit Here
 % ==============================================================================
 \title{Sociální dialog a kolektivní vyjednávání}
+\titlesecond{Druhá řádka názvu práce (volitelná)} % optional second line of the title
 \faculty{Masarykův ústav vyšších studií}
+\facultylogo{logo/logo_MUVS_cb.pdf}  % faculty logo shown at bottom-left of citation page
 \department{Projektové řízení inovací}
+\supervisor{doc. Ing. Jan Novák, Ph.D.}  % thesis supervisor for citation page
 %\titlebefore{Ing.}         % prepended: "Ing. Name Surname"
 %\titleafter{, Ph.D.}       % appended:  "Name Surname Ph.D., MBA"
 %\author{Name Surname}      % override git user.name
@@ -57,66 +65,89 @@
 %   git config, or if the name contains special LaTeX characters (%, &, \, ~).
 % \course is optional: draft/final option sets cover text automatically;
 %   uncomment to override.
-
-
 % ==============================================================================
-% Document Body — Edit Below
-% ==============================================================================
+
 \begin{document}
+%TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
+% Page numbering: roman numerals start at the title page; the title page number
+% is suppressed, but the counter still advances there.
+% Front matter, acronym/variable lists, and the TOC stay in roman numbering.
+% The body switches to Arabic display after the TOC without resetting the page counter.
+\pagenumbering{roman}
 \maketitle
 
 \ifCTUfrontmatter
-% Mandatory pages (currently disabled).
-{\mbox{}
-\thispagestyle{plain}
-\newpage
-}% empty assignment page
+% ==============================================================================
+% Front Matter Pages (no header, no footer; roman numbering continues)
+% ==============================================================================
 
-%\declaration{prohlaseni
-%}
-\newpage %prohlaseni
+% 1. Thesis assignment form (A4 PDF, full page, may span multiple pages).
+%    Uncomment and set the correct filename when the signed form is available.
+\CTUassignment{../Petricek_DP2026_zadani.pdf}
 
-\thanks{
+% 2. Thesis self-citation — top-aligned, no header/footer.
+%    Faculty logo (\facultylogo) and normostrana count (\normostrana) appear
+%    at bottom-left when set.  Without argument: auto-generated (ISO 690).
+%    With argument: \CTUcitationpage[mybibkey]  uses \fullcite{mybibkey}.
+\CTUcitationpage
+
+% 3. Ethical declaration — statutory Czech text, auto-generated from thesis type.
+%    Use \CTUdeclaration[custom text] to override just the body text, or
+%    \begin{declaration}…\end{declaration} for a fully custom layout.
+\CTUdeclaration
+
+% 4. Optional remarks page — top-aligned (AI usage, image credits, …).
+\begin{remarkspage}
+	\input{texparts/remarks.tex}
+\end{remarkspage}
+
+% 5. Acknowledgements — top-aligned, no signature space.
+\begin{thankspage}
 \noindent
-Děkujeme Správě železniční dopravní cesty, s. o., za poskytnutí výkresové dokumentace.
-}
+Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkresové dokumentace.
+\end{thankspage}
 
-\begin{abstract}
-\thispagestyle{nonum}
-\setcounter{page}{7}
-\input{texparts/abstrakt.tex}
-\vfill
-\hrule
-\begin{center}
-Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
-\end{center}
-\end{abstract}
-\newpage
-%\includepdf[pages={1}]{povinnestranky.pdf}
-%\includepdf[pages={2}]{povinnestranky.pdf}
-%\includepdf[pages={3}]{povinnestranky.pdf}
-%\includepdf[pages={4}]{povinnestranky.pdf}
-%\includepdf[pages={5}]{povinnestranky.pdf}
-%\includepdf[pages={6}]{povinnestranky.pdf}
-% End of optional mandatory pages block.
-\fi
+% 6. Abstract — class sets \thispagestyle{nonum} automatically;
+%    abstract content block is vertically centered by the class layout.
+\CTUabstract{texparts/abstract}{texparts/keywords}{texparts/abstract_en}{texparts/keywords_en}
 
-\pagestyle{nonum}
-\setcounter{page}{2}
-\tableofcontents
-\thispagestyle{nonum}
+\fi % \ifCTUfrontmatter
+
 % Acronyms and symbols lists.
+% \pagestyle{plain} ensures continuation pages of long lists also show roman
+% page numbers.  \thispagestyle{plain} after each \printacronyms overrides the
+% \thispagestyle{empty} that titlesec applies on every \chapter* opening page.
+% Both lists share the same acro template; variables are a second acro group
+% and only appear after they are marked as used via an acro command (typically
+% \acs{...}) or explicitly with \acuse{...} near a raw math symbol.
 \ifCTUacro
-\printacronyms[include=zkr,name=Seznam použitých zkratek]\label{ch:zkratky}
-\thispagestyle{nonum}
-\printacronyms[include-classes=vel,name=Seznam použitých proměnných a indexů]\label{ch:veliciny}
-\input{texparts/references/seznamzkratek.tex}\label{ch:Seznam použitých zkratek}
-\input{texparts/references/seznamvelicin.tex}\label{ch:Seznam použitých veličin}
+	\pagestyle{plain}%
+	\printacronyms[include=zkr,name=Seznam použitých zkratek,preamble={}]\label{ch:zkratky}
+	\thispagestyle{plain}%
+	\CTUifVariableListNonemptyTF{% print variables list only if at least one used variable exists
+		\printacronyms[include=vel,name=Seznam použitých proměnných a indexů,preamble={}]\label{ch:Seznam použitých veličin}
+		\thispagestyle{plain}%
+	}{}
 \fi
 
-\chapter{Úvod}\label{ch:uvod}
+% Table of contents (the class uses the plain pagestyle here, so the page
+% number follows the currently active \thepage format).
+\tableofcontents
+
+% End the TOC page before switching the printed page format, otherwise the TOC
+% footer would also pick up Arabic digits.
+\clearpage
+% Switch the printed page format to Arabic, keeping the current page counter.
+\renewcommand{\thepage}{\arabic{page}}
 \pagestyle{fancy}
- 	\input{texparts/uvod.tex}
+
+%TC:endignore  — texcount: start counting from here (Úvod/Introduction = first body chapter)
+
+% ==============================================================================
+% Thesis body — Work Here
+% ==============================================================================
+\chapter{Úvod}\label{ch:uvod}
+ 	\input{texparts/uvod.tex} % uvest cil prace
 \part{Teoretická část}\label{p:teorie}
 \chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
 % 	\input{texparts/dialog.tex}
@@ -138,6 +169,7 @@ Veškeré obrázky bez uvedeného zdroje byly pořízeny či zhotoveny autory.
 	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
 \chapter{Závěr}\label{ch:zaver}
+%TC:ignore  — texcount: exclude back matter (bibliography, lists) from count
 
 % ==============================================================================
 % Back Matter: Bibliography, Software, Figures, And Optional Lists

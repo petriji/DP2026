@@ -13,8 +13,8 @@
 % list/display=used: \printacronyms omits acronyms that never appeared in text.
 % list/template=xltabular: use the custom two-column xltabular template below.
 % list/heading=chapter*: the printed list gets an unnumbered chapter heading.
-% list/preamble: the ocg-p back-link is applied by CTUthesis.cls in
-%   \AtBeginDocument via \CTU@acrobacklink (Czech/English localised).
+% list/preamble is overridden per-list in main.tex because the repeated
+%   per-page back-link is now handled directly by the shared xltabular template.
 \acsetup{
 	make-links     = true,
 	list/display   = used,
@@ -23,10 +23,65 @@
 }
 
 % ------------------------------------------------------------------------------
+% Shared per-page back-link for acro lists
+% ------------------------------------------------------------------------------
+% The link is emitted inside the table head so it repeats on continuation pages
+% of long xltabular lists.  \acuse{<id>} marks an entry as used without
+% printing it, which is useful for variables written directly in math.
+\newcounter{CTUacrolink}
+\newcommand\CTUacrolistbacklink{%
+	\stepcounter{CTUacrolink}%
+	\Acrobatmenu{GoBack}{%
+		\begin{ocg}[printocg=never]{CTU acro backlink}{ctu-acro-backlink-\arabic{CTUacrolink}}{1}%
+			\texttt{\CTUacrobacklink}%
+		\end{ocg}}}
+\newcommand\CTUacrolisthead{%
+	\multicolumn{2}{@{}l@{}}{\CTUacrolistbacklink}\\}
+
+% ------------------------------------------------------------------------------
+% Sorting helpers
+% ------------------------------------------------------------------------------
+% acro sorts printed lists by each entry's `sort` property. By default that
+% aliases to the short form, so we overwrite it after all declarations are
+% loaded to sort by the long form instead.
+\ExplSyntaxOn
+\cs_new_protected:Npn \CTU_use_long_sort_for_acro_lists:
+	{
+		\acronymsmapTF
+			{
+				\acro_property_set:nne {\AcronymID} {sort}
+					{\acro_property_get:ne {\AcronymID} {long}}
+			}
+			{}
+			{}
+	}
+\NewDocumentCommand{\CTUuseLongSortForAcronyms}{}
+	{\CTU_use_long_sort_for_acro_lists:}
+\ExplSyntaxOff
+
+% ------------------------------------------------------------------------------
+% Conditional print helper for variables list
+% ------------------------------------------------------------------------------
+% Suppress the variables chapter when no vel-tag entries are currently used.
+\ExplSyntaxOn
+\cs_new_protected:Npn \CTU_if_variable_list_nonempty:TF #1#2
+	{
+		\group_begin:
+			\keys_set:nn {acro/list} { include = vel , display = used }
+			\acronymsmapTF {} { \group_end: #1 } { \group_end: #2 }
+	}
+\NewDocumentCommand{\CTUifVariableListNonemptyTF}{mm}
+	{\CTU_if_variable_list_nonempty:TF {#1}{#2}}
+\ExplSyntaxOff
+
+% ------------------------------------------------------------------------------
 % List template: xltabular (two-column: bold short | long + foreign + page refs)
 % ------------------------------------------------------------------------------
 % Column layout: short acronym (bold, optional /alt variant) | long form
 %   with optional (foreign, extra) parenthetical, then dot-fill and page refs.
+% The short-form cell gets an explicit hyper target so in-text \ac{} links land
+%   on the visible acronym itself instead of slightly after the row start.
+% The repeated xltabular head makes the back-link available on every page.
 % \AcroRerun: if the list changes between runs, trigger another compilation.
 \RenewAcroTemplate[list]{xltabular}{
 	\AcroNeedPackage{xltabular}
@@ -51,6 +106,10 @@
 	\par
 	\begin{flushleft}
 	\begin{xltabular}[l]{\linewidth}{@{} lX @{}}
+	\CTUacrolisthead
+	\endfirsthead
+	\CTUacrolisthead
+	\endhead
 	\AcronymTable
 	\end{xltabular}
 	\end{flushleft}

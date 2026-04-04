@@ -46,17 +46,24 @@
             "args": [
                 "build/%DOCFILE%"
             ]
+        },
+        {
+            // All configuration (pdf mode, synctex, pdflatex flags, outdir, biber,
+            // normostrana/textchecks/citcount generation) is in latex/latexmkrc.
+            "name": "latexmk",
+            "command": "latexmk",
+            "args": [
+                "%DOC%"
+            ]
         }
     ],
     "latex-workshop.latex.recipes": [
         {
-            "name": "pdflatex -> biber -> pdflatex*2",
+            // Quick update: latexmk only (git metadata + all checks + pdflatex + biber
+            // as needed — latexmkrc handles the pre-flight computations automatically).
+            "name": "Update: latexmk",
             "tools": [
-                "git-metadata",
-                "pdflatex",
-                "biber",
-                "pdflatex",
-                "pdflatex"
+                "latexmk"
             ]
         }
     ],

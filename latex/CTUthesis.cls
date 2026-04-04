@@ -243,9 +243,58 @@
 \def\@department{\relax}
 	\newcommand{\department}[1]{\gdef\@department{#1}
 	}
+% \titlesecond{Text}: optional second line under the main thesis title.
+%   Printed on title page (same font size as the main title) and appended to
+%   the self-citation title in italics. It is intentionally excluded from
+%   running headers (which continue to use only \Title).
+\gdef\@titlesecond{}
+\newcommand{\titlesecond}[1]{\gdef\@titlesecond{#1}}
+% \supervisor{Name}: thesis supervisor for the self-citation entry.
+%   Format: academic titles + name, e.g. "PhDr. Aleš Opekar, CSc."
+%   Omit or leave commented to suppress the "Vedoucí práce" line.
+\gdef\@supervisor{}
+\newcommand{\supervisor}[1]{\gdef\@supervisor{#1}}
+% \facultylogo{path}: optional faculty logo shown at bottom-left of citation
+%   page.  Provide a path relative to the main .tex file.
+%   Example: \facultylogo{logo/logo_MUVS_cb.pdf}
+\gdef\@facultylogo{}
+\newcommand{\facultylogo}[1]{\gdef\@facultylogo{#1}}
+% \normostrana{N}: normostrana (standard-page) count for the citation page.
+%   N = total body character count / 1800 (ISO 690 / Czech thesis convention).
+%   Omit or leave commented to suppress the line entirely.
+\gdef\@normostrana{}
+\newcommand{\normostrana}[1]{\gdef\@normostrana{#1}}
+% Quality-check counter macros --- populated from latexmkrc-generated tmp files.
+%   Default -1 means "no data available"; CTU@runqualitychecks treats -1 as
+%   a signal to skip the corresponding check silently (rather than warn "0").
+\gdef\@CTUcitcount{-1}
+\gdef\@CTUabstractchars{-1}
+\gdef\@CTUabstractenchars{-1}
+\gdef\@CTUkeywordschars{-1}
+\gdef\@CTUkeywordsenchars{-1}
+% Thesis-type-dependent minimum thresholds (Czech academic standards).
+%   \CTU@normomin : minimum normostrana (40 bachelor / 60 master / 80 doctoral).
+%   \CTU@citmin   : minimum cited references (20 bachelor; 40 master/doctoral).
+%   Both are count commands (not macros expanding to digits) so they work
+%   safely inside \ifnum comparisons without brace/token issues.
+\newcount\CTU@normomin
+\newcount\CTU@citmin
+\AtBeginDocument{%
+  \ifx\CTU@thesistype\CTU@type@bachelor
+    \CTU@normomin=40\relax
+    \CTU@citmin=20\relax
+  \else\ifx\CTU@thesistype\CTU@type@doctoral
+    \CTU@normomin=80\relax
+    \CTU@citmin=40\relax
+  \else
+    \CTU@normomin=60\relax
+    \CTU@citmin=40\relax
+  \fi\fi}
 % \@course: default set by the 3-way combination of draft/final, czech/english,
 %   and bachelor/master/doctoral.  \course{} in the preamble overrides this.
 %   Accent commands used because inputenc is loaded later in this class file.
+% \CTU@selfcite@type: title-case thesis type for the self-citation entry.
+%   Mirrors \@course but in sentence case (ISO 690 citation, not cover heading).
 % Comparison tokens for \CTU@thesistype \ifx dispatch:
 \def\CTU@type@bachelor{bachelor}
 \def\CTU@type@doctoral{doctoral}
@@ -253,39 +302,59 @@
   \ifCTUenglish
     \ifx\CTU@thesistype\CTU@type@bachelor
       \def\@course{RESEARCH FOR BACHELOR'S THESIS}%
+      \def\CTU@selfcite@type{Research for bachelor's thesis}%
     \else\ifx\CTU@thesistype\CTU@type@doctoral
       \def\@course{RESEARCH FOR DOCTORAL THESIS}%
+      \def\CTU@selfcite@type{Research for doctoral thesis}%
     \else
       \def\@course{RESEARCH FOR MASTER'S THESIS}%
+      \def\CTU@selfcite@type{Research for master's thesis}%
     \fi\fi
   \else
     \ifx\CTU@thesistype\CTU@type@bachelor
       \def\@course{RE\v{S}ER\v{S}E K~BAKAL\'{A}\v{R}SK\'{E} PR\'{A}CI}%
+      \def\CTU@selfcite@type{Re\v{s}er\v{s}e k~bakal\'{a}\v{r}sk\'{e} pr\'{a}ci}%
     \else\ifx\CTU@thesistype\CTU@type@doctoral
       \def\@course{RE\v{S}ER\v{S}E K~DISERTA\v{C}N\'{I} PR\'{A}CI}%
+      \def\CTU@selfcite@type{Re\v{s}er\v{s}e k~diserta\v{c}n\'{i} pr\'{a}ci}%
     \else
       \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}%
+      \def\CTU@selfcite@type{Re\v{s}er\v{s}e k~diplomov\'{e} pr\'{a}ci}%
     \fi\fi
   \fi
 \else
   \ifCTUenglish
     \ifx\CTU@thesistype\CTU@type@bachelor
       \def\@course{BACHELOR'S THESIS}%
+      \def\CTU@selfcite@type{Bachelor's thesis}%
     \else\ifx\CTU@thesistype\CTU@type@doctoral
       \def\@course{DOCTORAL THESIS}%
+      \def\CTU@selfcite@type{Doctoral thesis}%
     \else
       \def\@course{MASTER'S THESIS}%
+      \def\CTU@selfcite@type{Master's thesis}%
     \fi\fi
   \else
     \ifx\CTU@thesistype\CTU@type@bachelor
       \def\@course{BAKAL\'{A}\v{R}SK\'{A} PR\'{A}CE}%
+      \def\CTU@selfcite@type{Bakal\'{a}\v{r}sk\'{a} pr\'{a}ce}%
     \else\ifx\CTU@thesistype\CTU@type@doctoral
       \def\@course{DISERTA\v{C}N\'{I} PR\'{A}CE}%
+      \def\CTU@selfcite@type{Diserta\v{c}n\'{i} pr\'{a}ce}%
     \else
       \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
+      \def\CTU@selfcite@type{Diplomov\'{a} pr\'{a}ce}%
     \fi\fi
   \fi
 \fi
+% \CTU@declaration@thesisword: Czech accusative noun for the thesis type used
+%   in the statutory declaration.  Always Czech regardless of document language
+%   (the declaration is a statutory requirement of Czech law).
+\newcommand\CTU@declaration@thesisword{%
+  \ifx\CTU@thesistype\CTU@type@bachelor bakal\'{a}\v{r}skou%
+  \else\ifx\CTU@thesistype\CTU@type@doctoral diserta\v{c}n\'{i}%
+  \else diplomovou%
+  \fi\fi}
 % \CTUsoftwarename: chapter heading for the list of software — localised.
 %   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTUsoftwarename}.
 \newcommand\CTUsoftwarename{%
@@ -352,16 +421,207 @@
   \ifx\@authortitlebefore\@empty\else\@authortitlebefore~\fi
   \@author
   \ifx\@authortitleafter\@empty\else~\@authortitleafter\fi}
+% ==============================================================================
+% Self-Citation Helpers
+% ==============================================================================
+% \CTU@selfcite@sn / \CTU@selfcite@fn are set at \AtBeginDocument by
+% \CTU@precompute@selfcite below.  \CTU@selfcite uses them directly so that
+% \MakeUppercase never sees delimited-argument macros (whose #1 #2\@@ patterns
+% would cause "Illegal parameter number" inside \edef).
+\gdef\CTU@selfcite@sn{}\gdef\CTU@selfcite@fn{}
+\gdef\TitleSecond{}
+%
+% \CTU@precompute@selfcite: Called at \AtBeginDocument after \Author is set.
+%   Splits \Author on spaces by redefining the tail helpers to store results
+%   via \gdef rather than emitting tokens — no \edef, no expansion issues.
+\newcommand\CTU@precompute@selfcite{%
+  % --- surname (last space-delimited word) ---
+  \begingroup
+    \def\CTU@scs@go##1 ##2\@@{\CTU@scs@tail{##2}}%
+    \def\CTU@scs@tail##1{%
+      \in@{ }{##1}%
+      \ifin@\expandafter\CTU@scs@nxt##1\@@
+      \else\gdef\CTU@selfcite@sn{##1}\fi}%
+    \def\CTU@scs@nxt##1 ##2\@@{\CTU@scs@tail{##2}}%
+    \expandafter\CTU@scs@go\Author\@@ 
+  \endgroup
+  % --- firstnames (all words before the last) ---
+  \begingroup
+    \def\CTU@scf@go##1 ##2\@@{\CTU@scf@tail{##1}{##2}}%
+    \def\CTU@scf@tail##1##2{%
+      \in@{ }{##2}%
+      \ifin@ ##1 \expandafter\CTU@scf@nxt##2\@@
+      \else\gdef\CTU@selfcite@fn{##1}\fi}%
+    \def\CTU@scf@nxt##1 ##2\@@{\CTU@scf@tail{##1}{##2}}%
+    \expandafter\CTU@scf@go\Author\@@ 
+  \endgroup}
+% \CTU@selfcite: full ISO-690 citation for this thesis.
+%   Format mirrors the Czech standard example:
+%   SURNAME, Firstname. Title. City, Year. Thesis type. University,
+%   Faculty, Department. Vedoucí práce/Thesis supervisor: Supervisor.
+%   \Author / \Title are \AtBeginDocument snapshots; they survive \maketitle.
+\newcommand\CTU@selfcite{%
+  % \CTU@selfcite@sn / \CTU@selfcite@fn are set at \AtBeginDocument by
+  % \CTU@precompute@selfcite; they contain only plain token sequences safe
+  % for \MakeUppercase (no delimited-macro expansion at call time).
+  % \@addpunct{.} adds a full stop only when the preceding character did not
+  % already set a high spacefactor (i.e. it is not itself a period) — this
+  % prevents double dots after abbreviations such as "Ph.D." or "CSc.".
+  \MakeUppercase{\CTU@selfcite@sn},
+  \CTU@selfcite@fn\@addpunct{.}
+  % \@addpunct must be INSIDE \textit{} so spacefactor reflects the last char
+  % of the title, not the restored outer spacefactor after the font group closes.
+  \textit{\Title\ifx\TitleSecond\@empty\else: \TitleSecond\fi\@addpunct{.}}
+  \ifCTUenglish Prague\else Praha\fi,
+  \number\year,
+  % \ (backslash-space) is an explicit inter-word space; required here because
+  % \fi is a control word and TeX eats the subsequent whitespace in state S.
+  \pageref*{LastPage}~\ifCTUenglish p.\else s.\fi\ \CTU@selfcite@type.
+  \ifCTUenglish Czech Technical University in Prague%
+  \else \v{C}esk\'{e} vysok\'{e} u\v{c}en\'{i} technick\'{e} v~Praze\fi,
+  \@faculty%
+  \ifx\@department\relax\else, \@department\fi\@addpunct{.}
+  \ifx\@supervisor\@empty\else
+    \ifCTUenglish Thesis supervisor\else Vedouc\'{i} pr\'{a}ce\fi:
+    \@supervisor\@addpunct{.}%
+  \fi}
 % Snapshot metadata into shorthand macros used by page styles and headers.
 %   \AtBeginDocument ensures any \author{}, \email{}, \title{}, \course{}
 %   override in the preamble has already executed before the snapshot is taken.
 %   These macros (\Author, \Email, \Title, \Course) do NOT need to be set
 %   manually in main.tex — they are maintained entirely by the class.
+% ==============================================================================
+% Quality-Check Infrastructure
+% ==============================================================================
+% \CTU@qualitywarn{log-msg}{debug-label}:
+%   Always emits a ClassWarning to the .log file.
+%   In debug mode, also appends a full-width red colourbox to
+%   \CTU@debugwarnlist, which \CTU@flushdebugwarnings renders in the PDF.
+%   (xcolor is required for \colorbox — loaded later in this file but only
+%   called at \AtBeginDocument time and beyond, so the order is safe.)
+\gdef\CTU@debugwarnlist{}
+\newcommand\CTU@qualitywarn[2]{%
+  \ClassWarning{CTUthesis}{#1}%
+  \if@debug
+    \g@addto@macro\CTU@debugwarnlist{%
+      \noindent\colorbox{red!25}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}%
+        {\small\sffamily\bfseries[CTUthesis] #2}}\par\smallskip}%
+  \fi}
+% \CTU@flushdebugwarnings: render all accumulated colourboxes and clear list.
+%   Called from \CTUcitationpage so boxes appear on the citation page in the
+%   PDF (only visible when the debug class option is active).
+\newcommand\CTU@flushdebugwarnings{%
+  \ifx\CTU@debugwarnlist\@empty\else
+    \CTU@debugwarnlist
+    \gdef\CTU@debugwarnlist{}%
+  \fi}
+% \CTU@runqualitychecks: load quality-metric tmp files then check all four
+%   thresholds.  Called from \AtBeginDocument — warnings reach the .log as
+%   early as possible; the PDF highlights are deferred to \CTUcitationpage.
+\newcommand\CTU@runqualitychecks{%
+  % Load latexmkrc-generated metric files (absent on first or plain-pdflatex
+  % runs -> counter stays at the -1 default -> check silently skipped).
+  % \makeatletter ensures @ has catcode 11 for the \@CTU... macro names in
+  % these files (\AtBeginDocument hooks run with @ as catcode 12 in modern LaTeX).
+  \makeatletter
+  \InputIfFileExists{build/\jobname-textchecks.tmp}{}{}%
+  \InputIfFileExists{build/\jobname-citcount.tmp}{}{}%
+  \makeatother
+  % (a) Normostrana threshold --------------------------------------------------
+  \ifx\@normostrana\@empty\else
+    \ifnum\@normostrana<\CTU@normomin\relax
+      \CTU@qualitywarn{%
+        Thesis scope is \@normostrana\space normostran
+        (minimum \the\CTU@normomin\space for this thesis type)}{%
+        Scope: \@normostrana\space normostran
+        (min \the\CTU@normomin)}%
+    \fi
+  \fi
+  % (b) Bibliography citation count -------------------------------------------
+  \ifnum\@CTUcitcount<0 \else
+    \ifnum\@CTUcitcount<\CTU@citmin\relax
+      \CTU@qualitywarn{%
+        Bibliography has \@CTUcitcount\space entries
+        (minimum \the\CTU@citmin\space for this thesis type)}{%
+        Bibliography: \@CTUcitcount\space entries
+        (min \the\CTU@citmin)}%
+    \fi
+  \fi
+  % (c) Abstract body character counts ----------------------------------------
+  \ifnum\@CTUabstractchars<0 \else
+    \ifnum\@CTUabstractchars<150
+      \CTU@qualitywarn{%
+        Czech abstract too short: \@CTUabstractchars\space chars (min 150)}{%
+        Czech abstract: \@CTUabstractchars\space chars (min 150)}%
+    \fi
+    \ifnum\@CTUabstractchars>4000
+      \CTU@qualitywarn{%
+        Czech abstract too long: \@CTUabstractchars\space chars (max 4000)}{%
+        Czech abstract: \@CTUabstractchars\space chars (max 4000)}%
+    \fi
+  \fi
+  \ifnum\@CTUabstractenchars<0 \else
+    \ifnum\@CTUabstractenchars<150
+      \CTU@qualitywarn{%
+        English abstract too short: \@CTUabstractenchars\space chars (min 150)}{%
+        English abstract: \@CTUabstractenchars\space chars (min 150)}%
+    \fi
+    \ifnum\@CTUabstractenchars>4000
+      \CTU@qualitywarn{%
+        English abstract too long: \@CTUabstractenchars\space chars (max 4000)}{%
+        English abstract: \@CTUabstractenchars\space chars (max 4000)}%
+    \fi
+  \fi
+  % (d) Keywords body character counts ----------------------------------------
+  \ifnum\@CTUkeywordschars<0 \else
+    \ifnum\@CTUkeywordschars<20
+      \CTU@qualitywarn{%
+        Czech keywords too short: \@CTUkeywordschars\space chars (min 20)}{%
+        Czech keywords: \@CTUkeywordschars\space chars (min 20)}%
+    \fi
+    \ifnum\@CTUkeywordschars>1000
+      \CTU@qualitywarn{%
+        Czech keywords too long: \@CTUkeywordschars\space chars (max 1000)}{%
+        Czech keywords: \@CTUkeywordschars\space chars (max 1000)}%
+    \fi
+  \fi
+  \ifnum\@CTUkeywordsenchars<0 \else
+    \ifnum\@CTUkeywordsenchars<20
+      \CTU@qualitywarn{%
+        English keywords too short: \@CTUkeywordsenchars\space chars (min 20)}{%
+        English keywords: \@CTUkeywordsenchars\space chars (min 20)}%
+    \fi
+    \ifnum\@CTUkeywordsenchars>1000
+      \CTU@qualitywarn{%
+        English keywords too long: \@CTUkeywordsenchars\space chars (max 1000)}{%
+        English keywords: \@CTUkeywordsenchars\space chars (max 1000)}%
+    \fi
+  \fi}
 \AtBeginDocument{%
   \let\Author\@author
   \let\Email\@email
   \let\Title\@title
+  \let\TitleSecond\@titlesecond
   \let\Course\@course
+  % Pre-compute selfcite surname and firstnames into \CTU@selfcite@sn / @fn.
+  %   Splits \Author by executing the extractors with side-effect \gdef
+  %   targets — no \edef, so UTF-8 accented names and delimiter tokens are safe.
+  \CTU@precompute@selfcite
+  % Auto-load normostrana count from latexmkrc-generated file only when the
+  %   user has not already called \normostrana{} in the preamble.
+  %   If the file is absent (e.g. first run, or plain pdflatex without latexmk)
+  %   \@normostrana stays \@empty and the footer block is simply omitted —
+  %   there is no fallback value, which is intentional (0 normostran would be
+  %   misleading).  LaTeX Workshop: configure it to invoke latexmk so that
+  %   latexmkrc runs texcount before each pdflatex call.
+  \ifx\@normostrana\@empty
+    \InputIfFileExists{build/\jobname-normostrana.tmp}{}{}%
+  \fi
+  % Run quality checks: loads abstract/keyword/citcount tmp files and emits a
+  %   ClassWarning to the .log for each violated threshold.  Debug-mode PDF
+  %   highlights are accumulated in \CTU@debugwarnlist and rendered later by
+  %   \CTU@flushdebugwarnings inside \CTUcitationpage.
+  \CTU@runqualitychecks
   % Initialise tunable header lengths from \textwidth (now finalised).
   %   Only set a length if the user has not already given it a positive value.
   \ifdim\CTUrheadmax=\z@      \setlength\CTUrheadmax{.75\textwidth}\fi
@@ -437,11 +697,14 @@
   \vfill
  % \vskip 60\p@
   \begin{center}
-    \includegraphics[scale=1]{ctu_logo_black.pdf} 
+    \includegraphics[scale=1]{logo/ctu_logo_black.pdf} 
     \vskip 0.7cm
     {\LARGE \sffamily \@course \par}%
     \vskip 0.8cm
     {\Large \sffamily \@title \par}%
+    \ifx\@titlesecond\@empty\else
+      {\Large \sffamily \@titlesecond \par}%
+    \fi
     \vfill
     \begin{minipage}[b]{\textwidth}
     {\large
@@ -622,15 +885,40 @@
 % ==============================================================================
 % Standard Text Environments
 % ==============================================================================
+\newcommand\CTU@abshead[1]{%
+    \par\bigskip
+    \@beginparpenalty\@lowpenalty
+    \begin{center}%
+      \bfseries #1%
+      \@endparpenalty\@M
+    \end{center}}
+% \CTUabstract{cz-abstract}{cz-keywords}{en-abstract}{en-keywords}
+% Convenience command: wraps the abstract environment and inserts the four
+% section headings automatically, language-aware (\ifCTUenglish).
+\newcommand\CTUabstract[4]{%
+  \begin{abstract}%
+    \input{#1}%
+    \CTU@abshead{\ifCTUenglish Keywords\else Kl\'{\i}\v{c}ov\'{a} slova\fi}%
+    \begin{center}%
+      \input{#2}%
+    \end{center}%
+    \CTU@abshead{\ifCTUenglish Abstrakt\else Abstract\fi}%
+    \input{#3}%
+    \CTU@abshead{\ifCTUenglish Kl\'{\i}\v{c}ov\'{a} slova\else Keywords\fi}%
+    \begin{center}%
+      \input{#4}%
+    \end{center}%
+  \end{abstract}}
 \newenvironment{abstract}{%
-    \titlepage
+    \clearpage
+    \thispagestyle{nonum}%
     \null\vfil
     \@beginparpenalty\@lowpenalty
     \begin{center}%
       \bfseries \abstractname
       \@endparpenalty\@M
     \end{center}}%
-   {\par\vfil\null\endtitlepage}
+   {\par\vfil\null\clearpage}
 % (verse, quotation, quote purged: unused in all CTUthesis projects.)
 % LaTeX2e titlepage: page counter starts at 1; twoside restores it after.
 \newenvironment{titlepage}
@@ -648,6 +936,190 @@
         \setcounter{page}\@ne
      \fi
     }
+% ==============================================================================
+% Front Matter Environments
+% ==============================================================================
+% All front-matter pages use \thispagestyle{empty} (no header, no footer) and
+% naturally increment the Arabic page counter (no reset), so TOC entries for
+%   In debug mode the normostrana number is wrapped in a red colourbox when it
+%   falls below the thesis-type minimum (\CTU@normomin).
+\newcommand\CTU@normohighlight{%
+  \if@debug
+    \ifnum\@normostrana<\CTU@normomin\relax
+      \colorbox{red!25}{\@normostrana}%
+    \else
+      \@normostrana
+    \fi
+  \else
+    \@normostrana
+  \fi}
+% \CTU@citation@scope: "Rozsah práce" line shown below the citation text.
+%   Shows only the normostrana count (with debug highlight when below minimum).
+%   Suppressed entirely when normostrana is not set (no latexmk run yet).
+\newcommand\CTU@citation@scope{%
+  \ifx\@normostrana\@empty\else
+    \ifCTUenglish Scope of thesis\else Rozsah pr\'{a}ce\fi:\space
+    \CTU@normohighlight\space
+    \ifCTUenglish standard pages\else normostran\fi\@addpunct{.}%
+  \fi}%
+%
+% \CTUcitationpage[key]: isolated page containing the thesis self-citation.
+%   Aligned to top; no header, no footer.
+%   Optional argument: a biblatex key — uses \fullcite{key}.
+%   Without argument: auto-generates ISO-690 entry via \CTU@selfcite.
+%   "Rozsah práce" scope line appears two lines below the citation, flush left.
+%   Faculty logo (if set) is pushed to the bottom of the page.
+%   In debug mode, quality-check colourboxes are rendered below the citation.
+\newcommand\CTUcitationpage[1][]{%
+  \clearpage
+  \thispagestyle{empty}%
+  \noindent
+  \@ifempty{#1}{\CTU@selfcite}{\fullcite{#1}}%
+  \par\vspace{2\baselineskip}%
+  \noindent\CTU@citation@scope\par
+  \CTU@flushdebugwarnings
+  \vspace*{\fill}%
+  \ifx\@facultylogo\@empty\else
+    \noindent\includegraphics[height=2.5\baselineskip]{\@facultylogo}\par
+  \fi
+  \clearpage
+}
+%
+% ==============================================================================
+% Front-matter free-standing pages: declaration, remarks, acknowledgements.
+%   All three share a common top-aligned layout: \CTU@frontskip of vertical
+%   space at the top of the text area, then content flows downward.  This
+%   places the first line at a consistent position on every front-matter page.
+% ==============================================================================
+%
+% \CTU@frontskip: vertical space from the top of the text area to the first
+%   line of content on all free-standing front-matter pages.
+\newlength\CTU@frontskip
+\setlength\CTU@frontskip{4\baselineskip}
+%
+% \CTUsigskip: vertical space below the "V Praze" date line reserved for a
+%   hand-written signature or an included signature image.
+\newlength\CTUsigskip
+\setlength\CTUsigskip{3\baselineskip}
+%
+% \CTU@declsig: internal — signature block appended at the end of every
+%   declaration page.  Two blank lines, then "V Praze dne ..." flush left
+%   with a dotted fill for the date, then \CTUsigskip space for the signature.
+\newcommand\CTU@declsig{%
+  \par\vspace{2\baselineskip}%
+  \noindent V~Praze dne \makebox[4cm]{\dotfill}\par
+  \vspace{\CTUsigskip}}%
+%
+% \CTU@declaration@default: the statutory Czech ethical declaration text.
+%   \CTU@declaration@thesisword inserts the correct accusative noun.
+%   Always Czech regardless of the document language (statutory requirement).
+\newcommand\CTU@declaration@default{%
+  Prohla\v{s}uji, \v{z}e jsem svou \CTU@declaration@thesisword{}
+  pr\'{a}ci vypracoval samostatn\v{e}.
+  D\'{a}le prohla\v{s}uji, \v{z}e jsem v\v{s}echny pou\v{z}it\'{e}
+  zdroje spr\'{a}vn\v{e} a \'{u}pln\v{e} citoval a uv\'{a}d\'{i}m
+  je v~p\v{r}ilo\v{z}en\'{e}m seznamu pou\v{z}it\'{e} literatury.\par
+  Nem\'{a}m z\'{a}va\v{z}n\'{y} d\r{u}vod proti
+  zp\v{r}\'{i}stup\v{n}ov\'{a}n\'{i} t\'{e}to z\'{a}v\v{e}re\v{c}n\'{e}
+  pr\'{a}ce v~souladu se z\'{a}konem \v{c}.~121/2000~Sb.,
+  o~pr\'{a}vu autorsk\'{e}m, o~pr\'{a}vech souvisej\'{i}c\'{i}ch
+  s~pr\'{a}vem autorsk\'{y}m a o~zm\v{e}n\v{e} n\v{e}kter\'{y}ch
+  z\'{a}kon\r{u} (autorsk\'{y} z\'{a}kon) v~platn\'{e}m zn\v{e}n\'{i}.}%
+%
+% \CTUdeclaration[text]: print the statutory Czech ethical declaration page.
+%   No argument : auto-generated text from \CTU@declaration@default.
+%   Optional arg: replaces the body text; signature block appended either way.
+%   For a completely custom layout use the declaration environment instead.
+\newcommand\CTUdeclaration[1][]{%
+  \clearpage
+  \thispagestyle{empty}%
+  \vspace*{\CTU@frontskip}%
+  \noindent
+  \@ifempty{#1}{\CTU@declaration@default}{#1}%
+  \CTU@declsig
+  \clearpage
+}
+%
+% declaration environment: full-override alternative to \CTUdeclaration.
+%   Use when you need a different language or a completely custom layout.
+%   The signature block (\CTU@declsig) is appended automatically at \end.
+\newenvironment{declaration}{%
+  \clearpage
+  \thispagestyle{empty}%
+  \vspace*{\CTU@frontskip}%
+  \noindent\ignorespaces
+}{%
+  \CTU@declsig
+  \clearpage
+}
+%
+% thankspage environment: acknowledgements page.
+\newenvironment{thankspage}{%
+  \clearpage
+  \thispagestyle{empty}%
+  \vspace*{\CTU@frontskip}%
+  \noindent\ignorespaces
+}{%
+  \par\clearpage
+}
+%
+% remarkspage environment: optional remarks page (AI usage, image credits, …).
+%   Include with \begin{remarkspage}…\end{remarkspage} in main.tex.
+\newenvironment{remarkspage}{%
+  \clearpage
+  \thispagestyle{empty}%
+  \vspace*{\CTU@frontskip}%
+  \noindent\ignorespaces
+}{%
+  \par\clearpage
+}
+%
+% \CTUassignment{file}: include the thesis assignment form as a full-page PDF.
+%   Each page of the PDF gets \thispagestyle{empty}.
+%   In twoside mode every assignment page is forced onto an odd (recto) page:
+%   a blank verso is inserted before each page so the binding margin is always
+%   on the left — assignment forms are single-sided originals.
+%   When the file is not found an empty page with a warning message is emitted
+%   instead of a hard error so the document still compiles.
+%
+%   Implementation note: pdfpages does not expose a per-page odd-forcing hook,
+%   so in twoside mode we include one page at a time inside a loop.
+%   \CTU@assignment@numpages is set via \pdfximage to count pages without
+%   rendering; the loop uses \@tempcnta as the running page index.
+\newcommand\CTUassignment[1]{%
+  \IfFileExists{#1}{%
+    \if@twoside
+      % Count pages in the PDF so we can loop page-by-page.
+      \pdfximage{#1}%
+      \@tempcnta=1\relax
+      \@whilenum\@tempcnta<\pdflastximagepages\advance\@tempcnta\@ne\do{%
+        % Force current page to start on an odd (recto) page.
+        \cleardoublepage
+        \includepdf[pages={\the\@tempcnta},pagecommand={\thispagestyle{empty}}]{#1}%
+        \advance\@tempcnta\@ne
+      }%
+      % Final page (or the only page when count is 1).
+      \cleardoublepage
+      \includepdf[pages={\the\@tempcnta},pagecommand={\thispagestyle{empty}}]{#1}%
+    \else
+      \includepdf[pages=-,pagecommand={\thispagestyle{empty}}]{#1}%
+    \fi
+  }{%
+    % File not found: emit a blank page with a visible warning.
+    \clearpage
+    \thispagestyle{empty}%
+    \vspace*{\fill}%
+    \begin{center}
+      \large\bfseries
+      [{\ttfamily\detokenize{#1}} not found ---
+       insert thesis assignment here]%
+    \end{center}%
+    \vspace*{\fill}%
+    \ClassWarning{CTUthesis}{Assignment file `#1' not found.
+      A placeholder page was inserted instead.}%
+    \clearpage
+  }%
+}
 % ==============================================================================
 % Primitive Spacing And Box Parameters
 % ==============================================================================
@@ -989,7 +1461,9 @@
 	\footrule
 	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
 }
-\tocloftpagestyle{nonum}
+% TOC pages use plain: shows roman page numbers while \pagenumbering{roman}
+% is active (front matter), arabic once the body begins.
+\tocloftpagestyle{plain}
 
 % ==============================================================================
 % Packages: Figures And Captions
@@ -1141,6 +1615,8 @@
 \else
   \RequirePackage[draft=false,hidelinks]{hyperref}
 \fi
+% lastpage: provides \pageref*{LastPage} for the page count on the citation page.
+\RequirePackage{lastpage}
 
 % ==============================================================================
 % Packages: Bibliography
