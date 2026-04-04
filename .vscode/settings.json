@@ -1,6 +1,12 @@
 {
     // Spell-checking for this project content
     "cSpell.language": "en,cs",
+    "cSpell.enabledFileTypes": {
+        "*": false,
+        "tex": true,
+        "txt": true,
+        "md": true
+    },
 
     // BibTeX Manager integration used for bibliography key generation
     "libraryFilePath": "latex/%DOCFILE%-bibtexmanager",
