@@ -1,12 +1,14 @@
 % ==============================================================================
 % Class Options — Edit Here
 % ==============================================================================
-% All packages and settings are provided by CTUthesis.cls.
-% Toggle options to match the current stage of your work.
+% All packages, page styles, and front matter are provided by CTUthesis.cls.
+% Toggle options below to match the current stage of your work.
 %
-%   Submission (final thesis) : remove draft            — cover: "DIPLOMOVÁ PRÁCE"
-%   Research / draft phase    : keep draft              — cover: "REŠERŠE K DIPLOMOVÉ PRÁCI"
-%   Layout / link debugging   : add debug               — overfull marks + colored link boxes
+% Key options:
+%   draft           — research phase: "REŠERŠE K DIPLOMOVÉ PRÁCI" on cover
+%   debug           — visible overfull marks + colored hyperlink boxes (remove for final build)
+%   english         — English-language thesis (switches TOC, LOF, LOT headings and date format)
+%   twoside         — mirror margins for binding; openright = new chapters on odd pages
 %
 % Full option reference is in CTUthesis.cls.
 \documentclass[
@@ -32,9 +34,20 @@
 ]{CTUthesis}
 
 % ==============================================================================
-% Preamble — Edit External Lists
+% Preamble — Acronyms, Variables, And Bibliography
 % ==============================================================================
-% Acronym and variable definitions are in separate files in texparts/references/ for better organization and to avoid cluttering the main.tex preamble.  Edit those files to add or modify entries, and use the provided commands in the body of the thesis to mark them as used (e.g. \acs{myacro} or \acuse{var-myvar}).
+% Acronym and variable definitions are in texparts/references/ for better organization.
+% Edit those files to add/modify entries; use \ac{}, \acs{}, or \acuse() in the thesis body.
+%
+% Setup files:
+%   acro_setup.tex       — acro package config, list template, sorting/display helpers
+%   acro.tex             — acronym declarations (\DeclareAcronym)
+%   acro_variables.tex   — mathematical variable/index entries (acro tag=vel)
+%
+% Features:
+%   make-links=true      — \ac{} calls become clickable links to list entries
+%   list/display=used    — only print acronyms/variables that are explicitly used in the text
+%   long-form sorting    — both lists sorted alphabetically by the long form (not short form)
 \input{texparts/references/acro_setup.tex}
 \input{texparts/references/acro.tex}
 \input{texparts/references/acro_variables.tex}
@@ -65,7 +78,19 @@
 %   git config, or if the name contains special LaTeX characters (%, &, \, ~).
 % \course is optional: draft/final option sets cover text automatically;
 %   uncomment to override.
-% ==============================================================================
+%
+% These settings populate the PDF document properties, cover page, citation page,
+% and self-citation. The class automatically generates PDF metadata (title, author,
+% subject, keywords) from the entries below and language-specific keyword files.
+%
+% Metadata source:
+%   \title{}          — PDF title (with optional \titlesecond{} appended)
+%   \author{}, \email — PDF author and link; auto-detected from git if available
+%   \department{}     — PDF subject entry
+%   \faculty{}        — displayed on citation page
+%   keywords files    — language-dependent (CZ/EN) PDF keywords metadata
+%
+==============================================================================
 
 \begin{document}
 %TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
@@ -113,13 +138,15 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 
 \fi % \ifCTUfrontmatter
 
-% Acronyms and symbols lists.
-% \pagestyle{plain} ensures continuation pages of long lists also show roman
-% page numbers.  \thispagestyle{plain} after each \printacronyms overrides the
-% \thispagestyle{empty} that titlesec applies on every \chapter* opening page.
-% Both lists share the same acro template; variables are a second acro group
-% and only appear after they are marked as used via an acro command (typically
-% \acs{...}) or explicitly with \acuse{...} near a raw math symbol.
+% Acronyms and symbols lists (printed with roman page numbers).
+% Both lists use the same xltabular template with per-page back-to-text links.
+% Variables list is automatically suppressed if no variables are marked as used.
+%
+% Features:
+%   - Per-page "back to text" link (OCG-based, togglable in PDF viewers)
+%   - Alphabetical sorting by long-form text (e.g., "Active Directory" before "WYSIWYG")
+%   - Hyperlinks from in-text \ac{} calls land on the bold acronym entry itself
+%   - Pagereferences to all first-use locations shown in the list
 \ifCTUacro
 	\pagestyle{plain}%
 	\printacronyms[include=zkr,name=Seznam použitých zkratek,preamble={}]\label{ch:zkratky}
@@ -130,12 +157,17 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 	}{}
 \fi
 
-% Table of contents (the class uses the plain pagestyle here, so the page
-% number follows the currently active \thepage format).
+% Table of Contents (roman page numbering continues here).
+% The document opens at the TOC with PDF viewers when twoside binding is detected.
+%
+% Page numbering sequence:
+%   Cover / title page        — page i (counted but not displayed)
+%   Assignment / declaration  — roman (ii, iii, …)
+%   TOC, acronym lists        — roman (continued)
+%   Body chapters             — arabic, restart at 1 after a page break
 \tableofcontents
 
-% End the TOC page before switching the printed page format, otherwise the TOC
-% footer would also pick up Arabic digits.
+% Finalize roman-numbered front-matter section before switching to arabic body text.
 \clearpage
 % Switch the printed page format to Arabic, keeping the current page counter.
 \renewcommand{\thepage}{\arabic{page}}
