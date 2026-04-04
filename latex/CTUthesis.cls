@@ -264,6 +264,28 @@
 %   Omit or leave commented to suppress the line entirely.
 \gdef\@normostrana{}
 \newcommand{\normostrana}[1]{\gdef\@normostrana{#1}}
+% Raw keyword text captured from the files passed to \CTUabstract; used for
+%   language-dependent PDF metadata.
+\gdef\CTU@pdfkeywordscz{}
+\gdef\CTU@pdfkeywordsen{}
+\gdef\CTU@pdfpagelayout{SinglePage}
+% \CTU@setpdfmetadata: populate the output PDF metadata from thesis metadata.
+\newcommand\CTU@setpdfmetadata{%
+  \pdfstringdef\CTU@pdftitle{\@title\ifx\@titlesecond\@empty\else: \@titlesecond\fi}%
+  \pdfstringdef\CTU@pdfauthor{\@author}%
+  \pdfstringdef\CTU@pdfsubject{\@course}%
+  \ifCTUenglish
+    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordsen}%
+  \else
+    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordscz}%
+  \fi
+  \hypersetup{%
+    pdftitle={\CTU@pdftitle},%
+    pdfauthor={\CTU@pdfauthor},%
+    pdfsubject={\CTU@pdfsubject},%
+    pdfkeywords={\CTU@pdfkeywords}%
+  }%
+}
 % Quality-check counter macros --- populated from latexmkrc-generated tmp files.
 %   Default -1 means "no data available"; CTU@runqualitychecks treats -1 as
 %   a signal to skip the corresponding check silently (rather than warn "0").
@@ -627,6 +649,14 @@
   \ifdim\CTUrheadmax=\z@      \setlength\CTUrheadmax{.75\textwidth}\fi
   \ifdim\CTUlheadmax=\z@      \setlength\CTUlheadmax{.25\textwidth}\fi
   \ifdim\CTUlheadshortmax=\z@ \setlength\CTUlheadshortmax{.30\textwidth}\fi
+  % Encode the intended binding side for PDF viewers that honor page-layout
+  %   hints: two-sided documents open as spreads with odd pages on the right.
+  \if@twoside
+    \gdef\CTU@pdfpagelayout{TwoPageRight}%
+  \else
+    \gdef\CTU@pdfpagelayout{SinglePage}%
+  \fi
+  \hypersetup{pdfdisplaydoctitle=true,pdfpagelayout=\CTU@pdfpagelayout}%
   % Language switch: if english option is active, override the babel main
   %   language (loaded as [english,czech] with czech as default) to English.
   %   This auto-translates \contentsname, \listfigurename, \listtablename,
@@ -674,6 +704,9 @@
   \else
     \gdef\CTU@authorhead{\CTU@headlink{\Author}}%
   \fi
+  % Set base PDF metadata early; \CTUabstract refreshes it later once keyword
+  %   files are known.
+  \CTU@setpdfmetadata
 }
 % ==============================================================================
 % Title Page
@@ -896,6 +929,9 @@
 % Convenience command: wraps the abstract environment and inserts the four
 % section headings automatically, language-aware (\ifCTUenglish).
 \newcommand\CTUabstract[4]{%
+  \CatchFileDef\CTU@pdfkeywordscz{#2}{}%
+  \CatchFileDef\CTU@pdfkeywordsen{#4}{}%
+  \CTU@setpdfmetadata
   \begin{abstract}%
     \input{#1}%
     \CTU@abshead{\ifCTUenglish Keywords\else Kl\'{\i}\v{c}ov\'{a} slova\fi}%
@@ -1190,6 +1226,8 @@
     \fi
     % Stable anchor for header links that navigate to the TOC.
     \hypertarget{CTU@toc}{}%
+    % Make the PDF open at the TOC anchor rather than the title page.
+    \pdfcatalog{/OpenAction << /S /GoTo /D (CTU@toc) >>}%
     \chapter*{\contentsname
         \@mkboth{%
            \MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
@@ -1600,6 +1638,9 @@
 \else
   \RequirePackage[make-links=false]{acro}
 \fi
+% catchfile: read external keyword files so their contents can populate PDF
+%   metadata without duplicating them in the preamble.
+\RequirePackage{catchfile}
 
 % ==============================================================================
 % Packages: Hyperlinks (after most packages, before biblatex)
@@ -1615,6 +1656,11 @@
 \else
   \RequirePackage[draft=false,hidelinks]{hyperref}
 \fi
+\pdfstringdefDisableCommands{%
+  \def\textit#1{#1}%
+  \def\emph#1{#1}%
+  \def\textbf#1{#1}%
+}
 % lastpage: provides \pageref*{LastPage} for the page count on the citation page.
 \RequirePackage{lastpage}
 
