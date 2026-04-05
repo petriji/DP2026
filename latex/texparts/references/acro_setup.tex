@@ -139,7 +139,9 @@
 % ------------------------------------------------------------------------------
 % On first use: "long form (SHORT)", with an optional footnote for the foreign
 %   equivalent and \acrogroupcite to attach a citation to the group.
-% On subsequent uses: "SHORT" only.
+% On subsequent uses: "SHORT" with a hover tooltip showing the long form
+%   (\pdftooltip from pdfcomment; screen-only per the OCG mechansim via pdfcomment,
+%   works in Acrobat and compatible viewers).
 \RenewAcroTemplate{long-short}{%
 	\acroiffirstTF{%
 		\acrowrite{long}%
@@ -149,7 +151,7 @@
 		\acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
 		\acrogroupcite)%
 	}%
-	{\acrowrite{short}}%
+	{\pdftooltip{\acrowrite{short}}{\acrowrite{long}}}%
 }
 
 % \DeclareAcroEnding{plural}{}{} % already defined inside the acro package
