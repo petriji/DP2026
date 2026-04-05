@@ -1287,13 +1287,15 @@
     \else
       \@restonecolfalse
     \fi
-    % Stable anchor for header links that navigate to the TOC.
-    \hypertarget{CTU@toc}{}%
     % Make the PDF open at the TOC anchor rather than the title page.
     \pdfcatalog{/OpenAction << /S /GoTo /D (CTU@toc) >>}%
     \chapter*{\CTUtocname
         \@mkboth{%
            \MakeUppercase\CTUtocname}{\MakeUppercase\CTUtocname}}%
+    % Stable anchor placed HERE (after \chapter*'s internal \clearpage) so
+    % it lands on the TOC page, not the preceding page.  Placed before
+    % \@starttoc so navigating to CTU@toc shows the entries immediately.
+    \hypertarget{CTU@toc}{}%
     \@starttoc{toc}%
     \if@restonecol\twocolumn\fi
     }
