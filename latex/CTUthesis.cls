@@ -423,6 +423,10 @@
 %   (via ocg-p; screen-only, hidden when printing). Localised.
 \newcommand\CTUacrobacklink{%
   \ifCTUenglish BACK TO TEXT\else ZP\v{E}T DO TEXTU\fi}
+% \CTUtoclink: label for the per-page TOC hyperlink in back-matter chapters
+%   (bibliography, LOF, LOT; screen-only via OCG, works in all PDF viewers).
+\newcommand\CTUtoclink{%
+  \ifCTUenglish CONTENTS\else OBSAH\fi}
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
 % \@author / \@email: placeholder defaults; overwritten at load time when
@@ -1754,14 +1758,126 @@
       \end{ocg}}%
   \fi}
 % acro: \ac{}, \acs{}, \acl{}, \acp{} acronym commands.
-%   \acsetup and \DeclareAcronym entries are \input in main.tex only when
-%   acro is active (guarded by \ifCTUacro there).
+%   Configuration, templates, and sorting helpers are defined here (inside
+%   \ifCTUacro) so the class fully owns the house-style acro setup.
+%   Per-thesis declaration files (acro.tex, acro_variables.tex) are \input
+%   separately in main.tex; \CTUuseLongSortForAcronyms is called there after
+%   all declarations are loaded.
 %   In noacro mode the package is skipped and lightweight stubs are defined
 %   so \acs{}, \ac{} etc. in body text typeset the key (= short form) without
-%   errors.  The two \acsetup{} calls in \AtBeginDocument hooks below are
+%   errors.  The \acsetup{} call in the \AtBeginDocument hook below is
 %   harmlessly gobbled by the stub.
 \ifCTUacro
   \RequirePackage{acro}
+  % --------------------------------------------------------------------------
+  % Global options
+  % make-links: each \ac{} call becomes a hyperlink to the acronym list entry.
+  % list/display=used: \printacronyms omits entries that never appear in text.
+  % list/template=xltabular: custom two-column table template defined below.
+  % list/heading=chapter*: printed list gets an unnumbered chapter heading.
+  \acsetup{%
+    make-links     = true,%
+    list/display   = used,%
+    list/template  = xltabular,%
+    list/heading   = chapter*%
+  }
+  % --------------------------------------------------------------------------
+  % Per-page GoBack button for acro lists
+  % Placed in the xltabular head so it repeats on every continuation page.
+  % \Acrobatmenu{GoBack} is correct here: the user arrived via an \ac{} link
+  % and GoBack returns to exactly that position in Acrobat.
+  \newcounter{CTUacrolink}
+  \newcommand\CTUacrolistbacklink{%
+    \stepcounter{CTUacrolink}%
+    \Acrobatmenu{GoBack}{%
+      \begin{ocg}[printocg=never]{CTU acro backlink}{ctu-acro-backlink-\arabic{CTUacrolink}}{1}%
+        \texttt{\CTUacrobacklink}%
+      \end{ocg}}}
+  \newcommand\CTUacrolisthead{%
+    \multicolumn{2}{@{}l@{}}{\CTUacrolistbacklink}\\}
+  % --------------------------------------------------------------------------
+  % Long-sort helper
+  % Overwrites each entry's `sort` property with its long form so
+  % \printacronyms outputs entries in long-form alphabetical order.
+  \ExplSyntaxOn
+  \cs_new_protected:Npn \CTU_use_long_sort_for_acro_lists:
+    {
+      \acronymsmapTF
+        {
+          \acro_property_set:nne {\AcronymID} {sort}
+            {\acro_property_get:ne {\AcronymID} {long}}
+        }
+        {}{}
+    }
+  \NewDocumentCommand{\CTUuseLongSortForAcronyms}{}
+    {\CTU_use_long_sort_for_acro_lists:}
+  \ExplSyntaxOff
+  % --------------------------------------------------------------------------
+  % Conditional variables-list helper
+  % Suppresses the variables chapter when no vel-tag entries are used.
+  \ExplSyntaxOn
+  \cs_new_protected:Npn \CTU_if_variable_list_nonempty:TF #1#2
+    {
+      \group_begin:
+        \keys_set:nn {acro/list} { include = vel , display = used }
+        \acronymsmapTF {} { \group_end: #1 } { \group_end: #2 }
+    }
+  \NewDocumentCommand{\CTUifVariableListNonemptyTF}{mm}
+    {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
+  \ExplSyntaxOff
+  % --------------------------------------------------------------------------
+  % List template: xltabular
+  % Two-column layout: bold short form (with optional /alt) | long form with
+  % optional (foreign, extra) parenthetical, dot-fill, and page references.
+  % \hypertarget on the short-form cell ensures \ac{} links land on the bold
+  % entry itself.  The repeated xltabular head repeats the GoBack button on
+  % every page of a long list.
+  \RenewAcroTemplate[list]{xltabular}{%
+    \AcroNeedPackage{xltabular}%
+    \acronymsmapF{%
+      \AcroAddRow{%
+        \hypertarget{\AcronymID}{\textbf{\acrowrite{short}}}%
+        \acroifT{alt}{/\acrowrite{alt}}%
+        &
+        \acrowrite{list}%
+        \acroifanyT{foreign,extra}{ (}%
+        \acroifT{foreign}{\acrowrite{foreign}\acroifT{extra}{,}}%
+        \acroifT{extra}{\acrowrite{extra}}%
+        \acroifanyT{foreign,extra}{)}%
+        \acropagefill
+        \acropages
+          {\acrotranslate{page}\nobreakspace}
+          {\acrotranslate{pages}\nobreakspace}%
+        \\}}
+    {\AcroRerun}%
+    \acroheading
+    \acropreamble
+    \par
+    \begin{flushleft}
+    \begin{xltabular}[l]{\linewidth}{@{} lX @{}}
+    \CTUacrolisthead
+    \endfirsthead
+    \CTUacrolisthead
+    \endhead
+    \AcronymTable
+    \end{xltabular}
+    \end{flushleft}%
+  }
+  % --------------------------------------------------------------------------
+  % First-use display template: long-short
+  % First use: "long form (SHORT)"; subsequent uses: SHORT with a hover tooltip
+  % showing the long form (\pdftooltip from pdfcomment, loaded below).
+  \RenewAcroTemplate{long-short}{%
+    \acroiffirstTF{%
+      \acrowrite{long}%
+      \acspace(%
+      \acrowrite{short}%
+      \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
+      \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
+      \acrogroupcite)%
+    }%
+    {\pdftooltip{\acrowrite{short}}{\acrowrite{long}}}%
+  }
 \else
   % --- noacro stubs -----------------------------------------------------------
   % In-text commands: emit the key, which equals the short form for every

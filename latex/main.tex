@@ -37,23 +37,21 @@
 % ==============================================================================
 % Preamble — Acronyms, Variables, And Bibliography
 % ==============================================================================
-% Acronym and variable definitions are in texparts/references/ for better organization.
-% Edit those files to add/modify entries; use \ac{}, \acs{}, or \acuse() in the thesis body.
-%
-% Setup files:
-%   acro_setup.tex       — acro package config, list template, sorting/display helpers
-%   acro.tex             — acronym declarations (\DeclareAcronym)
+% Acronym package setup (options, templates, sorting helpers) is provided by
+% CTUthesis.cls.  Only the per-thesis declaration files are \input here:
+%   acro.tex             — \DeclareAcronym entries (zkr tag = abbreviations)
+%                          also contains Czech locale strings (\AddAcroTranslations)
 %   acro_variables.tex   — mathematical variable/index entries (acro tag=vel)
 %
 % Features:
 %   make-links=true      — \ac{} calls become clickable links to list entries
-%   list/display=used    — only print acronyms/variables that are explicitly used in the text
-%   long-form sorting    — both lists sorted alphabetically by the long form (not short form)
-% All three acro input files and the sort command are skipped when noacro is
+%   list/display=used    — only print acronyms/variables explicitly used in text
+%   long-form sorting    — both lists sorted alphabetically by the long form
+%   hover tooltip        — repeated \ac{} shows the long form on hover (pdfcomment)
+% All acro input files and CTUuseLongSortForAcronyms are skipped when noacro is
 % active — the stubs in CTUthesis.cls keep \ac{} and friends working without
 % loading the package or parsing the declaration files.
 \ifCTUacro
-  \input{texparts/references/acro_setup.tex}
   \input{texparts/references/acro.tex}
   \input{texparts/references/acro_variables.tex}
   % Sort the lists alphabetically by the long form instead of the short form (default).
