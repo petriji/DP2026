@@ -89,6 +89,13 @@
                 "clean",
                 "latexmk"
             ]
+        },
+        {
+            // Fast draft pass: assumes tmp files exist and references are roughly stable.
+            "name": "Fast: pdflatex (no references, previous build artefacts required)",
+            "tools": [
+                "pdflatex",
+            ]
         }
     ],
 
