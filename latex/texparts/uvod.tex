@@ -1,12 +1,21 @@
-%dodelat schema Ramesh_errors, nahradit obrazek zdroju tepla
-Přesnost je významnou užitnou vlastností obráběcích strojů (\acs{OS}), a~proto je jejich vývoj zaměřen na odstraňování chyb vzájemného polohování obrobku a nástroje.\par
-Kromě přesnosti a tuhosti upnutí obrobku a nástroje, a~tedy pevného svázání jejich polohy se souřadnicovým systémem stroje, opotřebení stroje a~nástroje, tuhosti konstrukce stroje a kvality pohonu a~řízení polohování, mají na přesnost výrazný vliv teplotní deformace~(drift).\par
-Výkon pohonů \acs{OS} se přeměňuje na teplo ztrátami v~mechanických komponentách – převodových ústrojích, vedeních, ložiskách ad., v~pohonech a~pomocných agregátech a v~řezném procesu, kde je ho část absorbována nástrojem a~obrobkem. Další teplo je uvolněno do stroje a~jeho okolí přímo z~řezného procesu a~z~třísek. Ve stroji a~jeho okolí naakumulované teplo pak vlivem teplotní roztažnosti obrobku, nástroje a~konstrukce stroje nepříznivým způsobem ovlivňují přesnost vzájemné polohy obrobku a nástroje.\par
-Chyby způsobené teplotní deformací bývají dominantním zdrojem výrobních nepřesností s~až \SI{75}{\percent} podílem na celkové chybě a~jsou předmětem bádání již od 60.~let. Dlouhá léta byl však pokrok v~jejich odstraňování pomalý a ani dnes není dosaženo uspokojivého výsledku. Naopak se zlepšením přesnosti~–~statické a~dynamické tuhosti, zmenšením vůlí; a na druhou stranu vyššími technologickými požadavky~–~posuvovými rychlostmi a příkony vřeten, význam teplotních chyb v~čase vzrostl.\par
-Přístupy ke snižování teplotních chyb obecně vycházejí ze snah předcházet jejich vzniku nebo je kompenzovat. Vznik teplotních chyb lze omezit konstrukčními úpravami strojů a výrobním postupem. To však zvyšuje náklady a může omezit užitnou hodnotu. Softwarová kompenzace je u~strojů s~\acp{NC} flexibilnějším a~nákladově příznivějším postupem. Pomocí měření a~modelů vyjadřujících vztah mezi tepelným zatížením a deformacemi je simulována deformace, jejíž hodnota na \acl{TCP}  je následně odečtena od programované polohy. Tato metoda je ve shodě s~konceptem tzv.~digitálního dvojčete stroje, které je moderním trendem zlepšování užitných vlastností \acs{OS} v~různých oblastech.\cite{noauthor_penny_2026}\par
+% --- GENERIC introduction: demonstrates acro, siunitx, figure, cite ---
+Přesnost je významnou užitnou vlastností obráběcích strojů (\acs{OS}), a~proto je jejich vývoj
+zaměřen na odstraňování chyb vzájemného polohování obrobku a~nástroje.
+\Ac{NC} umožňuje na \acs{OS} automatizovat výrobní procesy s~vysokou opakovatelností.\par
+
+Teplotní deformace~(drift) patří mezi dominantní zdroje výrobních nepřesností: jejich podíl
+na celkové chybě polohování dosahuje až \SI{75}{\percent}.~\cite{noauthor_penny_2026}
+Typická provozní teplota uložení vřetena se pohybuje v~rozsahu \SI{40}{\degreeCelsius} až \SI{80}{\degreeCelsius}, přičemž teplotní gradient přes rám stroje může překročit \SI{5}{\kelvin\per\metre}.\par
+
+Softwarová kompenzace je u~strojů s~\ac{NC} flexibilnějším a~nákladově příznivějším postupem než konstrukční opatření.~\cite{noauthor_penny_2026}
+Hodnota simulované deformace je odečtena od programované polohy v~reálném čase \aclp{NC}. Jak je popsáno v~rovnici \ref{eqn:laplace}.\par
+
 \begin{figure}[H]
-%\includegraphics[scale=1,width=\textwidth]{../../schema/Ramesh_heatsrcCZ.png}
-%\caption{Vznik teplotních deformací na frézce s~"C-rámem" (převzato a~upraveno z~\cite{})\label{fig:zdrojetepla}}
+    \centering
+    \includegraphics[width=0.35\textwidth]{logo/ctu_logo_black.pdf}
+    \caption{Logo \acl{FS~ČVUT} (\acs{FS~ČVUT}) -- příklad vložení obrázku příkazem
+             \texttt{\textbackslash includegraphics} s~balíkem \texttt{graphicx}.\label{fig:ctu_logo}}
 \end{figure}
-%Teplotně-deformační chování má silnou dynamiku, nelze ho uspokojivě modelovat systémem nultého řádu, a~proto jsou rozvíjeny modely zejména na bázi diferenciálních rovnic (přenosových funkcí). Mimoto neustále se proměňující provozní podmínky (řezný výkon, posukove rychlosti, výkon chlazení, teplo v~okolí stroje ad.) nepřijatelnou měrou zvýrazňují nelinearity, kvůli nimž se pak skutečné chování odlišuje od jeho modelu.~\cite{}\cite{}\par%\cite{digidvojce} \par
-%Od roku 2007 jsou teplotní chyby předmětem normalizace zkoušek přesnosti \acs{OS} v~ISO~230-3 "Určení tepelných vlivů". Zkouší \ac{ETVE}, chyby vyvolané otáčením vřetena (aircutting) a~chyby vyvolané vedlejšími pohyby u~\acs{NC} strojů.~\cite{} \par
+
+Logo university je zobrazeno na obrázku~\ref{fig:ctu_logo}.
+Práce je vypracována na \acs{FS~ČVUT}.\par

@@ -13,11 +13,11 @@
 % Full option reference is in CTUthesis.cls.
 \documentclass[
   a4paper, 12pt,             % fixed for CTU thesis — do not change
- english,                   % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
-%  master,                    % thesis type: diplomová / master's (bachelor is default)
+% english,                   % English-language thesis (switches TOC/LOF/LOT/date and cover headings)
+ master,                    % thesis type: diplomová / master's (bachelor is default)
 % doctoral,                  % thesis type: disertační / doctoral
 % draft,                     % research mode: "REŠERŠE" + full date on cover
-% debug,                     % visible link boxes + overfull marks
+ debug,                     % visible link boxes + overfull marks
 % twoside,                   % mirror margins: wider binding side on every other page
 % openright,                 % new chapters always start on an odd (right-hand) page
 % leqno,                     % equation numbers on the left margin (default: right)
@@ -26,11 +26,11 @@
 % noemail,                   % suppress mailto: link in header and cover page
 % notitlepage,               % suppress cover page (use \includepdf of assignment sheet)
 % nofrontmatter,             % suppress abstract and mandatory pages
- noacro,                    % suppress acronym and variable lists
+% noacro,                    % suppress acronym and variable lists
 % nobibliography,            % suppress bibliography
 % nosoftware,                % suppress list of software
 % nobackmatter,              % suppress LOF, LOT, and appendices
- backmattertoc,             % include LOF, LOT, and appendices in TOC with dotted leaders
+% backmattertoc,             % include LOF, LOT, and appendices in TOC with dotted leaders
   CTUend                     % sentinel — keep last; allows trailing commas on all options above
 ]{CTUthesis}
 
@@ -47,7 +47,7 @@
 %   make-links=true      — \ac{} calls become clickable links to list entries
 %   list/display=used    — only print acronyms/variables explicitly used in text
 %   long-form sorting    — both lists sorted alphabetically by the long form
-%   hover tooltip        — repeated \ac{} shows the long form on hover (pdfcomment)
+%   hover tooltip        — repeated \ac{} shows the long form on hover (/Contents)
 % All acro input files and CTUuseLongSortForAcronyms are skipped when noacro is
 % active — the stubs in CTUthesis.cls keep \ac{} and friends working without
 % loading the package or parsing the declaration files.
@@ -59,19 +59,21 @@
 \fi
 
 % Bibliography files (BibLaTeX) — edit to match your sources.
-\addbibresource{socialnidialog.bib}
-\addbibresource{socialnidialog-zotero.bib}
-\addbibresource{socialnidialog-bibtexmanager.bib}
+\addbibresource{bibliography.bib}
+
+% Reduce hyphenation frequency slightly (default \hyphenpenalty=50).
+\hyphenpenalty=200
+\exhyphenpenalty=200
 
 % ==============================================================================
 % Thesis Metadata — Edit Here
 % ==============================================================================
-\title{Sociální dialog a kolektivní vyjednávání}
-\titlesecond{Druhá řádka názvu práce (volitelná)} % optional second line of the title
-\faculty{Masarykův ústav vyšších studií}
+\title{Název práce}  % title of the thesis (and PDF title metadata)
+%\titlesecond{Druhá řádka názvu práce (volitelná)} % optional second line of the title
+\faculty{Název součásti ČVUT}
 \facultylogo{logo/logo_MUVS_cb.pdf}  % faculty logo shown at bottom-left of citation page
-\department{Projektové řízení inovací}
-\supervisor{doc. Ing. Jan Novák, Ph.D.}  % thesis supervisor for citation page
+\department{Název katedry/oboru}
+\supervisor{Ing. Jan Novák, CSc.}  % thesis supervisor for citation page
 %\titlebefore{Ing.}         % prepended: "Ing. Name Surname"
 %\titleafter{, Ph.D.}       % appended:  "Name Surname Ph.D., MBA"
 %\author{Name Surname}      % override git user.name
@@ -111,7 +113,7 @@
 
 % 1. Thesis assignment form (A4 PDF, full page, may span multiple pages).
 %    Uncomment and set the correct filename when the signed form is available.
-\CTUassignment{../Petricek_DP2026_zadani.pdf}
+\CTUassignment{zadani.pdf}
 
 % 2. Thesis self-citation — top-aligned, no header/footer.
 %    Faculty logo (\facultylogo) and normostrana count (\normostrana) appear
@@ -131,8 +133,7 @@
 
 % 5. Acknowledgements
 \begin{thankspage}
-\noindent
-Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkresové dokumentace.
+	\input{texparts/mandatory/acknowledgements.tex}
 \end{thankspage}
 
 % 6. Abstract — class sets \thispagestyle{nonum} automatically;
@@ -155,7 +156,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 	\printacronyms[include=zkr,name=\CTUacroname,preamble={}]\label{ch:zkratky}
 	\thispagestyle{plain}%
 	\CTUifVariableListNonemptyTF{% print variables list only if at least one used variable exists
-		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:Seznam použitých veličin}
+		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:veliciny}
 		\thispagestyle{plain}%
 	}{}
 \fi
@@ -181,50 +182,38 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 % ==============================================================================
 % Thesis body — Work Here
 % ==============================================================================
+% HYPOTÉZA: ...
+%
+% ARGUMENTAČNÍ KOSTRA:
+% 
+
 \chapter{Úvod}\label{ch:uvod}
- 	\input{texparts/uvod.tex} % uvest cil prace
+	\input{texparts/uvod.tex}
 
 \part{Teoretická část}\label{p:teorie}
-\chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
-% 	\input{texparts/dialog.tex}
+\chapter{Legislativní, historický a teoretický rámec}\label{ch:ramec}
+	% \input{texparts/ramec.tex}
 	\section{Pojmy a vztahy, legislativa}\label{sec:pojmy}
-	% \input{texparts/pojmy.tex} % ceske pravo
+	% \input{texparts/pojmy.tex}
 	\section{Historický vývoj}\label{sec:historie}
+	% \input{texparts/historie.tex}
+	\section{Přehled současného poznání}\label{sec:teorie}
+	% \input{texparts/teorie.tex}
+
 \part{Praktická část}\label{p:prakticka}
-\chapter{Postup výzkumu}\label{ch:vyzkum}
-	% \input{texparts/vyzkum.tex} % zopakovat cil prace, metody, vysloveni hypotezy
+\chapter{Postup výzkumu}\label{ch:vyzkum}.
+	% \input{texparts/vyzkum.tex}
 	\section{Zpracování dat}\label{sec:datova_analyza}
-	% \input{texparts/datova_analyza.tex} % odkud data, jak zpracována (vzorce počítaných veličin), jak analyzována (python)
-\chapter{Stav trhu práce}\label{ch:stav}
-	% \input{texparts/stav.tex} % stav trhu prace v ČR, PESTLE analýza
-	\section{Výhled}\label{sec:vyhled}
-	\section{Evropský kontext}\label{sec:evropsky_kontext}
-		% komparativní analýza s~dalšími zeměmi EU, grafy, mapy, tabulky - uvést proč byly vybrány CZ, AT, DE, DK, PL, SK k porovnání (společná historie s CZ - odbory (AT)/východní blok, flexicurity DK, ekonomické vztahy DE)
-		\input{texparts/python/gdp_ppp_timeline}
-		\input{texparts/python/tax_wedge_map}
-		\input{texparts/python/flexicurity_table}
-		\input{texparts/python/arope_map_2025}
-		\subsection{Flexicurity}\label{ssec:flexicurity}
-			\input{texparts/python/arope_timeline_CE}
-			\input{texparts/python/arope_groups}
-		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
-		% fungování, výhody a nevýhody - k tomuto zatím chybí zdroje
-			% \input{texparts/rakousko.tex}
-			% \input{texparts/nemecko.tex}
-			% \input{texparts/polsko.tex}
-			% \input{texparts/slovensko.tex}
-	\section{Případová studie KS~Penny Market 2026}\label{sec:penny}
-		% analýza KS 2026 v~Penny Marketu
-	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
-		%\input{texparts/hodnoceni.tex} % SWOT analýza, diskuze, podarilo se vyvratit hypotezu?
-\chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
-	% \input{texparts/navrh}
+	% \input{texparts/datova_analyza.tex}
+
+\chapter{Návrh inovace}\label{ch:inovace}
+	% \input{texparts/navrh.tex}
 
 % Break Závěr out of the enclosing \part in the PDF bookmark panel so it
 % appears at the root level, parallel to Úvod.
 \bookmarksetup{startatroot}
 \chapter{Závěr}\label{ch:zaver}
-	\input{texparts/zaver.tex} % povedlo se dosahnout cile prace?
+	 \input{texparts/zaver.tex}
 
 %TC:ignore  — texcount: exclude back matter (bibliography, lists) from count
 
