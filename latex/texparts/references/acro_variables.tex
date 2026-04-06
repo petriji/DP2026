@@ -17,6 +17,22 @@
 		tag = vel
 	}}
 
+% \DeclareIndex{id}{symbol}{index}{long}
+%   For subscript/superscript index variables.
+%   #2  full symbol shown in the variables list bold column (e.g. \ensuremath{\square_0})
+%   #3  index-only form used in text (e.g. \ensuremath{0}); also works for
+%       superscripts (top indices) — just pass the superscript content.
+%   #4  long description (same format as \DeclareVariable)
+\newcommand\DeclareIndex[4]{%
+	\DeclareAcronym{#1}{%
+		short = {#2},
+		index = {#3},
+		long = {#4},
+		first-style = short,
+		single-style = short,
+		tag = vel
+	}}
+
 \DeclareVariable{var-one}{\ensuremath{\one}}{jednotkový skok [NDF]}
 \DeclareVariable{var-a}{\ensuremath{A}}{objemová hustota tepelného toku [\SI{}{\watt\per\cubic\meter}]; amplituda, magnituda [NDF]}
 \DeclareVariable{var-e-big}{\ensuremath{E}}{energie [\SI{}{\joule}]}
@@ -24,7 +40,7 @@
 \DeclareVariable{var-u}{\ensuremath{u}}{poměrná deformace [1]}
 \DeclareVariable{var-rho}{\ensuremath{\rho}}{hustota [\SI{}{\kilogram\per\cubic\meter}]}
 \DeclareVariable{var-omega}{\ensuremath{\omega, \Omega}}{úhlová rychlost [\SI{}{\per\second}]}
-\DeclareVariable{var-square-zero}{\ensuremath{\square_0}}{počáteční}
-\DeclareVariable{var-square-in}{\ensuremath{\square_{IN}}}{vstupní}
-\DeclareVariable{var-square-z}{\ensuremath{\square_Z}}{v ose Z}
-\DeclareVariable{var-square-sum}{\ensuremath{\square_\Sigma}}{souhrnný}
+\DeclareIndex{var-square-zero}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční}
+\DeclareIndex{var-square-in}{\ensuremath{\square_{IN}}}{\ensuremath{\mathit{IN}}}{vstupní}
+\DeclareIndex{var-square-z}{\ensuremath{\square_Z}}{\ensuremath{Z}}{v ose Z}
+\DeclareIndex{var-square-sum}{\ensuremath{\square_\Sigma}}{\ensuremath{\Sigma}}{souhrnný}
