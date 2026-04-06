@@ -1971,6 +1971,7 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
+  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -1978,7 +1979,7 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\HyperDestNameFilter{#1}}\relax
+  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
   \Hy@colorlink\@linkcolor
   #2%
   \Hy@endcolorlink
