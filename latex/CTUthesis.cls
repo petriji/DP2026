@@ -1341,6 +1341,7 @@
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
 \newcommand\listoffigures{%
+    \ifnum\c@figure>\z@
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1350,9 +1351,11 @@
       \chaptermark{\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
+    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
+    \ifnum\c@table>\z@
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1362,6 +1365,7 @@
       \chaptermark{\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
+    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
