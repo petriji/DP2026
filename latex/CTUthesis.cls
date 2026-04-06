@@ -1836,7 +1836,7 @@
   % full \square_N symbol used in the bold left column of the variables list.
   % When `index` is unset the behaviour is identical to the existing `short`
   % template.  Both sub- and superscript index variables use this mechanism.
-  \NewAcroProperty{index}
+  \DeclareAcroProperty{index}
   % --------------------------------------------------------------------------
   % List template: xltabular
   % Two-column layout: bold short form (with optional /alt) | long form with
