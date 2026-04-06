@@ -32,7 +32,7 @@
             "command": "bash",
             "args": [
                 "-c",
-                "cd '%DIR%/..' && python/run.sh stats_analytics.py"
+                "cd '%DIR%/..' && RUN_PYTHON_ANALYTICS=1 python/run.sh stats_analytics.py"
             ]
         },
         {
@@ -80,6 +80,15 @@
             // as needed — latexmkrc handles the pre-flight computations automatically).
             "name": "Update: latexmk",
             "tools": [
+                "latexmk"
+            ]
+        },
+        {
+            // Regenerate Python figures/snippets, then rebuild with latexmk.
+            // Sets RUN_PYTHON_ANALYTICS=1 via the stats-analytics bash tool.
+            "name": "Analytics + latexmk",
+            "tools": [
+                "stats-analytics",
                 "latexmk"
             ]
         },
