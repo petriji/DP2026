@@ -1,0 +1,34 @@
+# Registry of Python analysis scripts for the thesis.
+#
+# Each section [key] corresponds to one analysis group:
+#   script   – path relative to the python/ directory
+#   texparts – stem patterns matched against \input{texparts/python/STEM}
+#              in the LaTeX project; shell wildcards (*, ?) are supported
+#   pics     – stem patterns for PDF figures in pics/python/ (omit or leave
+#              empty [] for table-only scripts that produce no figure)
+#
+# Adding a new analysis:
+#   1. Create analyses/my_script.py writing into LATEX_PICS_DIR / LATEX_TEXPARTS_DIR.
+#   2. Add a section here.
+#   3. Add \input{texparts/python/my_texpart} to the .tex file.
+#   4. Run python_analytics.py — the missing output is detected automatically.
+
+[gdp]
+script   = "analyses/gdp_ppp_timeline.py"
+texparts = ["gdp_ppp_timeline"]
+pics     = ["gdp_ppp_timeline"]
+
+[taxwedge]
+script   = "analyses/tax_wedge_map.py"
+texparts = ["tax_wedge_map"]
+pics     = ["tax_wedge_map"]
+
+[arope]
+script   = "analyses/arope_example.py"
+texparts = ["arope_map_*", "arope_timeline_CE", "arope_groups"]
+pics     = ["arope_map_*", "arope_timeline_CE", "arope_groups"]
+
+[flexicurity]
+script   = "analyses/flexicurity_table.py"
+texparts = ["flexicurity_table"]
+pics     = []

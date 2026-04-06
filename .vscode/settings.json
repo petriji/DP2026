@@ -17,7 +17,8 @@
     // LaTeX build layout
     "latex-workshop.latex.outDir": "%DIR%/build",
     "latex-workshop.latex.texDirs": [
-        "%DIR%/texparts"
+        "%DIR%/texparts",
+        "%DIR%/texparts/python"
     ],
     "latex-workshop.latex.build.fromWorkspaceFolder": false,
     "latex-workshop.latex.autoBuild.run": "onSave",
@@ -27,11 +28,11 @@
     // LaTeX build tools
     "latex-workshop.latex.tools": [
         {
-            "name": "git-metadata",
-            "command": "perl",
+            "name": "stats-analytics",
+            "command": "bash",
             "args": [
-                "%DIR%/git-metadata.pl",
-                "%DIR%/build"
+                "-c",
+                "cd '%DIR%/..' && python/run.sh stats_analytics.py"
             ]
         },
         {

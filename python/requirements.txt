@@ -1,0 +1,16 @@
+# Core data
+pandas>=2.0
+openpyxl           # xlsx support for pd.read_excel
+requests           # HTTP downloads
+tqdm               # progress bars
+
+# Geospatial (Europe choropleth maps)
+geopandas>=0.14
+geodatasets        # Natural Earth shapefiles (replaces deprecated geopandas.datasets)
+
+# Visualization
+matplotlib>=3.8
+matplotlib-scalebar  # optional: scale bar on maps
+
+# Optional: direct Eurostat REST API client
+# eurostat          # pip install eurostat  (wraps the SDMX/JSON API)

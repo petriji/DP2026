@@ -1,4 +1,35 @@
 $out_dir = 'build';
+
+# ── Auto-generate figures before LaTeX build ──────────────────────────────────
+# Calls python/stats_analytics.py which is a fast no-op when all PDFs and .tex
+# snippets already exist (e.g. after a git clone).  Only runs Python scripts
+# when a file is missing or --force is used.
+#
+# The venv is resolved in order:
+#   1. python/.venv   (created by python/setup_venv.sh, preferred)
+#   2. ~/.venvs/dp_thesis  (legacy location)
+#   3. plain python3  (system Python, if deps are installed globally)
+#
+# To skip this step entirely, set SKIP_PYTHON_ANALYTICS=1 in the environment.
+{
+    unless ($ENV{SKIP_PYTHON_ANALYTICS}) {
+        my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
+        my $script = "$proj/../python/stats_analytics.py";
+
+        if (-f $script) {
+            my $venv1  = "$proj/../python/.venv/bin/python";
+            my $venv2  = "$ENV{HOME}/.venvs/dp_thesis/bin/python";
+            my $python = -f $venv1 ? $venv1
+                       : -f $venv2 ? $venv2
+                       : 'python3';
+
+            my $rc = system($python, $script);
+            if ($rc != 0) {
+                die "stats_analytics.py failed (exit " . ($rc >> 8) . "). Aborting LaTeX build.\n";
+            }
+        }
+    }
+}
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
