@@ -1916,13 +1916,34 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
-% pdfcomment: provides \pdftooltip{content}{tooltip text} — used in the acro
-%   long-short template so hovering over a repeated abbreviation shows its long
-%   form.  Loaded only when acro is active (tooltip support is only needed when
-%   the acro list is active).  Must be after hyperref.
-\ifCTUacro
-  \RequirePackage[final]{pdfcomment}%  'final' shows tooltips even in draft mode
-\fi
+% \CTU@tooltiplink{destination}{visible text}{tooltip text}
+%   Creates a single GoTo Link annotation whose /Contents entry is the tooltip.
+%   This is the standard PDF mechanism for hover tooltips on hyperlinks and is
+%   supported by Acrobat Reader, Acrobat Pro, and PDF.js (LaTeX Workshop).
+%   Border/colour mirrors hyperref's internal-link style so debug-mode boxes
+%   appear on acro and cite links exactly like all other internal links.
+%   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
+%   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
+\newcommand{\CTU@tooltiplink}[3]{%
+  \pdfstringdef\CTU@tip{#3}%
+  \protected@edef\Hy@tempa{%
+    \Hy@setpdfborder
+    \ifx\@linkbordercolor\relax\else /C[\@linkbordercolor]\fi
+    /Contents(\CTU@tip)%
+  }%
+  \leavevmode
+  \pdfstartlink attr{\Hy@tempa} goto name{\HyperDestNameFilter{#1}}\relax
+  \Hy@colorlink\@linkcolor
+  #2%
+  \Hy@endcolorlink
+  \pdfendlink
+}
+% Strip formatting and normalise dashes in PDF tooltip strings.
+% Also bypass the \exp_not:n (= \unexpanded) wrappers that acro3 and biblatex
+% use when storing field values, so that the active UTF-8 byte chars (e.g. byte
+% pair 0xC3 0xAD for U+00ED í) can be processed by hyperref's UTF-8→UTF-16BE
+% machinery inside \pdfstringdef's \edef.  The change is local to each
+% \pdfstringdef call (the PreHook runs inside its \begingroup).
 \pdfstringdefDisableCommands{%
   \def\textit#1{#1}%
   \def\emph#1{#1}%
