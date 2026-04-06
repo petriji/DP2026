@@ -2,9 +2,22 @@
 % Acronym Definitions
 % ==============================================================================
 % All \DeclareAcronym entries for the thesis.
-% Package setup (\acsetup, templates, translations) is in acro_setup.tex,
-% which is \input before this file in preamble.tex.
+% Package setup (\acsetup, templates, sorting helpers) and Czech translations
+% are in CTUthesis.cls.  Only the thesis-specific declarations live here.
 % ==============================================================================
+
+% Czech locale strings for \printacronyms output.
+% "s\abbrdot" produces "s." (strana).
+\AddAcroTranslations{Czech}{%
+  list-name  = Seznam pou\v{z}it\'ych zkratek,%
+  page       = s\abbrdot,%
+  pages      = s\abbrdot,%
+  sequens    = a~d\'ale,%
+  sequentes  = a~d\'ale,%
+  also       = tak\'e,%
+  and        = a,%
+  or         = nebo%
+}
 \DeclareAcronym{OS}{
 	short 	= OS,
 	long 	= obráběcí stroj,

@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "jinvim.vscode-zotero",
+        "tecosaur.latex-utilities",
+        "james-yu.latex-workshop",
+        "streetsidesoftware.code-spell-checker-czech",
+        "streetsidesoftware.code-spell-checker"
+    ]
+}
