@@ -1340,8 +1340,24 @@
 \newcommand*\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
+% Global flags: true when at least one captioned figure / table exists in the
+% document.  Set by patching \addcontentsline so they reflect the current run
+% rather than the per-chapter \c@figure / \c@table counters (which reset).
+\newif\if@CTUhasfigures
+\newif\if@CTUhastables
+\let\CTU@orig@addcontentsline\addcontentsline
+\renewcommand\addcontentsline[3]{%
+  \CTU@orig@addcontentsline{#1}{#2}{#3}%
+  \begingroup
+    \def\CTU@temp{#1}%
+    \ifx\CTU@temp\CTU@lof@name\global\@CTUhasfigurestrue\fi
+    \ifx\CTU@temp\CTU@lot@name\global\@CTUhastablestrue\fi
+  \endgroup
+}%
+\def\CTU@lof@name{lof}%
+\def\CTU@lot@name{lot}%
 \newcommand\listoffigures{%
-    \ifnum\c@figure>\z@
+    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1355,7 +1371,7 @@
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
-    \ifnum\c@table>\z@
+    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
