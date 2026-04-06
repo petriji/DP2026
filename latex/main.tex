@@ -182,50 +182,149 @@
 % ==============================================================================
 % Thesis body — Work Here
 % ==============================================================================
+% HYPOTÉZA: Český trh práce je zranitelnější vůči vývoji práce v~blízké budoucnosti
+%           kvůli slabému sociálnímu dialogu.
+%
+% ARGUMENTAČNÍ KOSTRA (viz sources/nocite/research_plan.md):
+%   Pilíř 1 — Slabý sociální dialog: hustota 11 %, pokrytí KV 32 %, hist. příčiny
+%   Pilíř 2 — Zranitelnost: model levné práce, low APZ (~0.3 % HDP), AI/automatizace
+%   Pilíř 3 — Kauzalita: korelace hustota×GINI, DK příklad adaptability
+%   Případová studie: KS Penny Market — formální KV, neviditelná role odborů v~PR
+%   Inovace: Ghent APZ model, rozšíření závaznosti KSVS, mzdová transparentnost
+
 \chapter{Úvod}\label{ch:uvod}
- 	\input{texparts/uvod.tex} % uvest cil prace
+	% TODO: Přepsat celý uvod.tex (stávající obsah je z~jiné práce).
+	% Obsah: kontext (i4.0/AI × model levné práce), zdůvodnění výběru zemí (AT/DE/DK/PL/SK),
+	%        cíl práce, vyslovení hypotézy.
+	 \input{texparts/uvod.tex}
 
 \part{Teoretická část}\label{p:teorie}
-\chapter{Sociální dialog a kolektivní vyjednávání}\label{ch:dialog}
-% 	\input{texparts/dialog.tex}
+\chapter{Legislativní, historický a teoretický rámec}\label{ch:ramec}
 	\section{Pojmy a vztahy, legislativa}\label{sec:pojmy}
-	% \input{texparts/pojmy.tex} % ceske pravo
+	% Definice: sociální dialog, KV, KS (PKS/KSVS), sociální partneři, tripartita (RHSD).
+	% Odborová hustota × pokrytí KV (rozdíl).
+	% Zákonný rámec: ZP §§ 24–29, zákon 2/1991 Sb. — klíčový bod: § 24 pluralita OS,
+	% § 7 zákona 2/1991 rozšiřování závaznosti KSVS (v~ČR minimálně využíváno).
+	% ILO Convention 87 + 98 (freedom of association, right to organise).
+	% Zdroje: Hrabcová 2008, ZP, zákon 2/1991, Armstrong HRM, Dvořáková 2012
+	% \input{texparts/pojmy.tex}
 	\section{Historický vývoj}\label{sec:historie}
+	% Vznik odborů (19. stol.) — industrializace = analogie k~i4.0/AI.
+	% ILO — 100 let (1919); CZ: první republika → ROH → transformace 1989 → RHSD.
+	% Strukturální pokles hustoty odborů v~ČR (70 %+ → 11 %): příčiny — ztráta důvěry
+	% po komunistickém ROH, privatizace, flexinovela, kulturní negativní vnímání odborů.
+	% Zdroje: ČMKOS: Historie a společnost 2020, 100 let MOP 2019, PETRICEK_IND4
+	% \input{texparts/historie.tex}
+	\section{Přehled současného poznání}\label{sec:teorie}
+
 \part{Praktická část}\label{p:prakticka}
 \chapter{Postup výzkumu}\label{ch:vyzkum}
-	% \input{texparts/vyzkum.tex} % zopakovat cil prace, metody, vysloveni hypotezy
+	% Výzkumná strategie: kvantitativní (trendy, korelace) + kvalitativní (syntéza, případová studie)
+	% + komparativní (časové, regionální, systémové).  Vyslovení hypotézy.
+	% Datové zdroje: Eurostat, OECD/AIAS ICTWSS, ČMKOS, MPSV/ISPV, ILO.
+	% Python pipeline: stahování CSV → čistění → vizualizace → export PDF+TeX.
+	% Výběr komparativních zemí: AT (odborová tradice, 98% pokrytí), DE (obchodní vazby,
+	% Mitbestimmung), DK (flexicurity vzor), PL+SK (post-sovětský blok).
+	% Limity: dostupnost dat, srovnatelnost definic přes země, česká specif. (ISPV/RSCP).
+	% \input{texparts/vyzkum.tex}
 	\section{Zpracování dat}\label{sec:datova_analyza}
-	% \input{texparts/datova_analyza.tex} % odkud data, jak zpracována (vzorce počítaných veličin), jak analyzována (python)
+	% Popis datových sad a proměnných (vzorce počítaných veličin, PPS normování).
+	% Popis Python analytic pipeline (stattool/, data/, figures/).
+	% \input{texparts/datova_analyza.tex}
+
 \chapter{Stav trhu práce}\label{ch:stav}
-	% \input{texparts/stav.tex} % stav trhu prace v ČR, PESTLE analýza
+	% Úvod kapitoly: zasadit CZ trh práce do kontextu (struktura, zaměstnanost 81.7 %,
+	% průměrná mzda 46 165 Kč / 2024, regionální diferenciace Praha vs. zbytek ČR).
+	% Python: union_density_trend.pdf (TODO — data z~OECD AIAS ICTWSS)
+	% \input{texparts/stav.tex}
 	\section{Výhled}\label{sec:vyhled}
+	% Faktory výhledu (strukturovat \paragraph):
+	% (a) Průmysl 4.0 a AI — automatizace low-wage sektorů, eliminace junior pozic, gen Z
+	% (b) Imigrace z~Ukrajiny — 340k TMP, mzdový tlak v~nízkokvalifikovaných sektorech
+	% (c) Brain drain — rostoucí jazyková vybavenost, mobilita do AT/DE; lékaři, IT
+	% (d) OSVČ a švarc systém — erodování sociální báze, IT sektor, efektivní zdanění rozdíl
+	% (e) Veřejný sektor — platy zaostávají (vzdělávání +2.7 % vs NH +7.1 % v~2024),
+	%     důsledky pro výkon státní správy, tlak na mzdy v~soukromém sektoru
+	% (f) Agenturní zaměstnávání — SZIP, ČMKOS KV data (PKS sec. 3.6.6)
+	% Python: lmp_expenditure.pdf (TODO), tax_osvč_comparison.pdf (TODO)
+	% Zdroje: ČMKOS Zpráva 2025 (kap. 1, 3.6, 3.8), Polents/Dvořáková (UA refugees),
+	%         Dvořáková: Active Employment Policy, demografické trendy
+	% \input{texparts/vyhled.tex}
 	\section{Evropský kontext}\label{sec:evropsky_kontext}
-		% komparativní analýza s~dalšími zeměmi EU, grafy, mapy, tabulky - uvést proč byly vybrány CZ, AT, DE, DK, PL, SK k porovnání (společná historie s CZ - odbory (AT)/východní blok, flexicurity DK, ekonomické vztahy DE)
+		% Klíčový argument: CZ pracuje nejdéle ze skupiny (39.6 h/týden), za nízké reálné
+		% mzdy (PPS), s~vysokým daňovým klínem (38.1 % vs DK 33.5 %), s~minimálním
+		% pokrytím KV → zaměstnanci nedostávají podíl na produktivitě hospodářství.
+		% HDP konverguje rychleji než reálné mzdy (P2 analýza — wage_gdp_convergence).
+		% Diskuze: AROPE interpretace (relativní chudoba, národní hranice), limity výzkumu.
+		% \input{texparts/evropsky_kontext.tex}
 		\input{texparts/python/gdp_ppp_timeline}
 		\input{texparts/python/tax_wedge_map}
 		\input{texparts/python/flexicurity_table}
 		\input{texparts/python/arope_map_2025}
+		% \input{texparts/python/wage_gdp_convergence} % TODO: vytvořit
+		% \input{texparts/python/union_gini_scatter}    % TODO: vytvořit (scatter hustota×GINI EU27)
 		\subsection{Flexicurity}\label{ssec:flexicurity}
+			% Dánský zlatý trojúhelník = flexibilita + příjmová jistota + APZ.
+			% CZ adopce: jen flexibilita (flexinovela) bez APZ a silného KV → deformace.
+			% DK APZ ~2 % HDP vs CZ ~0.3 % HDP (lmp_expenditure).
+			% DK: unemployment benefit ~90 % mzdy / 2 roky vs CZ ~50 % / 5 měsíců.
+			% Kritika EU propagace: Keune/Jepsen (2007), ETUC reakce.
+			% Zdroje: PETRICEK_HOPO (vlastní), Andersen/Mailand 2005, Jde to pružně (DK/DE),
+			%         ETUC: Commission's Communication on Flexicurity
 			\input{texparts/python/arope_timeline_CE}
 			\input{texparts/python/arope_groups}
+			% \input{texparts/python/lmp_expenditure} % TODO: vytvořit
 		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
-		% fungování, výhody a nevýhody - k tomuto zatím chybí zdroje
-			% \input{texparts/rakousko.tex}
-			% \input{texparts/nemecko.tex}
-			% \input{texparts/polsko.tex}
-			% \input{texparts/slovensko.tex}
+			% AT: Kammer-system, téměř automatické rozšíření KSVS → 98 % pokrytí i při 26 % hustotě.
+			% DE: Mitbestimmung (spolurozhodování v~dozorčích radách), Hartz reformy — varování
+			%     před flexibilizací bez dostatečné jistoty.
+			% PL: slabý SD podobný CZ, ale větší ekonomická váha → jiné tlaky.
+			% SK: nejnižší GINI (21.6), ale nízké HDP i nízké KV pokrytí (35 %).
+			% Zdroje: ÖGB (AT), Jde to pružně DE model, Eurostat — datové srovnání
+			% \input{texparts/porovnani_modely.tex}
 	\section{Případová studie KS~Penny Market 2026}\label{sec:penny}
-		% analýza KS 2026 v~Penny Marketu
+		% METODIKA: analýza smlouvy → srovnání se zákonným minimem a průměrem PKS (ČMKOS).
+		% ZJIŠTĚNÍ:
+		% - 4 ZO u~jednoho zaměstnavatele (§ 24 ZP efekt: pluralita OS slabší koordinace)
+		% - PD: 40 h/týden jednodirektivní, konto 52 týdnů = max. flexibilita zaměstnavatele
+		% - Přesčas příplatek 25 % = zákonné minimum
+		% - Sociální klid závazek odborů
+		% - Srovnat se 77 % PKS →+1 týden dovolena, 71 % →penz. připojištění (ČMKOS data)
+		% PARADOX: Top Employer 2026 certifikace — tisková zpráva nezmíní sociální partnery
+		% ani kolektivní smlouvu → SD jako "neviditelná" složka HRM v~ČR
+		% Paralela Ulrich HR BP: Employee Advocate = střet zájmů → odbory jako nezávislý EA
+		% Zdroje: KS Penny Market 2026, ČMKOS Zpráva 2025, penny_top_employer_2026,
+		%         Armstrong HRM Handbook, Ulrich HR Champion 1997
+		% \input{texparts/penny.tex}
 	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
-		%\input{texparts/hodnoceni.tex} % SWOT analýza, diskuze, podarilo se vyvratit hypotezu?
+		% SWOT analýza SD v~ČR (S: fungující RHSD, legální rámec; W: hustota 11 %, hist. nedůvěra,
+		% § 24 ZP pluralita; O: rozšíření KSVS, Ghent APZ, EU Pay Directive 2023/970;
+		% T: NERV deregulace, automatizace, politická polarizace).
+		% Korelační analýza: hustota odborů × GINI (EU27 scatter) → inverse korelace
+		%                     pokrytí KV × týdenní pracovní hodiny → inverse korelace
+		% → Pilíř 3 potvrzení hypotézy.
+		% Závěr sekce: Hypotéza POTVRZENA.
+		% \input{texparts/hodnoceni.tex}
+
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
-	% \input{texparts/navrh}
+	% INOVACE (číslované návrhy):
+	% 1. Rozšíření závaznosti KSVS — snížit práh, vzor AT (§ 7 zákona 2/1991)
+	% 2. Odbory jako agenti APZ — Ghent model adaptace: ČMKOS/OS spravují rekvalif. programy ÚP
+	%    → nová legitimita u~zaměstnanců bez "komunistické" konotace
+	%    → nutnost zvýšit výdaje na APZ z~0.3 % na ~1 % HDP
+	% 3. Transparentnost odměňování — mzdové tabulky v~KS, EU Pay Transparency Directive 2023/970
+	% 4. Reforma švarc systému — SZIP posílení, daňová reforma OSVČ v~faktickém PPV
+	% 5. Digitalizace KV — transparentní registr PKS (vzor BE/NL)
+	% Zdroje: Dvořáková: Active Employment Policy, DK ministry of employment, ETUC Quality Jobs 2025
+	% \input{texparts/navrh.tex}
 
 % Break Závěr out of the enclosing \part in the PDF bookmark panel so it
 % appears at the root level, parallel to Úvod.
 \bookmarksetup{startatroot}
 \chapter{Závěr}\label{ch:zaver}
-	\input{texparts/zaver.tex} % povedlo se dosahnout cile prace?
+	% TODO: Přepsat celý zaver.tex (stávající obsah je z~jiné práce).
+	% Obsah: potvrzení hypotézy, shrnutí pilířů, přínos inovačních návrhů, limity, výhled dalšího výzkumu.
+	 \input{texparts/zaver.tex}
 
 %TC:ignore  — texcount: exclude back matter (bibliography, lists) from count
 
