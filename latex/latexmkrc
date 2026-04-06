@@ -1,18 +1,16 @@
 $out_dir = 'build';
 
 # ── Auto-generate figures before LaTeX build ──────────────────────────────────
-# Calls python/stats_analytics.py which is a fast no-op when all PDFs and .tex
-# snippets already exist (e.g. after a git clone).  Only runs Python scripts
-# when a file is missing or --force is used.
+# Calls python/stats_analytics.py to regenerate figure PDFs and .tex snippets.
+# Skipped by default — run only when RUN_PYTHON_ANALYTICS=1 is set.
+# Use the "Analytics + latexmk" VS Code recipe to trigger this automatically.
 #
 # The venv is resolved in order:
 #   1. python/.venv   (created by python/setup_venv.sh, preferred)
 #   2. ~/.venvs/dp_thesis  (legacy location)
 #   3. plain python3  (system Python, if deps are installed globally)
-#
-# To skip this step entirely, set SKIP_PYTHON_ANALYTICS=1 in the environment.
 {
-    unless ($ENV{SKIP_PYTHON_ANALYTICS}) {
+    if ($ENV{RUN_PYTHON_ANALYTICS}) {
         my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
         my $script = "$proj/../python/stats_analytics.py";
 

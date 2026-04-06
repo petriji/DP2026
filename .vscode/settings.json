@@ -32,7 +32,7 @@
             "command": "bash",
             "args": [
                 "-c",
-                "cd '%DIR%/..' && python/run.sh stats_analytics.py"
+                "cd '%DIR%/..' && RUN_PYTHON_ANALYTICS=1 python/run.sh stats_analytics.py"
             ]
         },
         {
@@ -72,6 +72,20 @@
                 "-C",
                 "%DOC%"
             ]
+        },
+        {
+            // Copy build/main.pdf to the project root named from thesis metadata:
+            //   SURNAME_(R)TYPELANG YEAR.pdf
+            //     R    — present when draft option is uncommented in \documentclass[]
+            //     TYPE — B (bachelor) | D (master/diplová) | Dis (doctoral)
+            //     LANG — P (Czech) | T (English)
+            //     YEAR — current calendar year
+            "name": "publish",
+            "command": "bash",
+            "args": [
+                "-c",
+                "set +H; cd '%DIR%'; SURNAME=$(git config user.name 2>/dev/null | awk '{print $NF}' | iconv -f UTF-8 -t ASCII//TRANSLIT | tr a-z A-Z | tr -cd A-Z); YEAR=$(date +%Y); BLOCK=$(sed -n '/documentclass\\[/,/CTUthesis/p' main.tex | grep -Ev '^[[:space:]]*%'); echo \"$BLOCK\" | grep -qE '\\bdraft\\b' && R=R || R=; echo \"$BLOCK\" | grep -qE '\\bdoctoral\\b' && T=Dis || { echo \"$BLOCK\" | grep -qE '\\bmaster\\b' && T=D || T=B; }; echo \"$BLOCK\" | grep -qE '\\benglish\\b' && L=T || L=P; NAME=\"${SURNAME}_${R}${T}${L}${YEAR}.pdf\"; cp build/main.pdf '%DIR%/../'\"${NAME}\" && echo \"Published: ${NAME}\""
+            ]
         }
     ],
     "latex-workshop.latex.recipes": [
@@ -81,6 +95,25 @@
             "name": "Update: latexmk",
             "tools": [
                 "latexmk"
+            ]
+        },
+        {
+            // Regenerate Python figures/snippets, then rebuild with latexmk.
+            // Sets RUN_PYTHON_ANALYTICS=1 via the stats-analytics bash tool.
+            "name": "Analytics + latexmk",
+            "tools": [
+                "stats-analytics",
+                "latexmk"
+            ]
+        },
+        {
+            // Full publish: regenerate figures, clean build, compile, copy PDF to root.
+            "name": "Publish: analytics + clean + latexmk",
+            "tools": [
+                "stats-analytics",
+                "clean",
+                "latexmk",
+                "publish"
             ]
         },
         {
