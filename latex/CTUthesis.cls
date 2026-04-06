@@ -2030,7 +2030,10 @@
 %   \DeclareCiteCommand overrides iso-numeric's default \cite so every key in a
 %   multi-key cite gets its own \CTU@tooltiplink.  Range compression is not used
 %   in this project so disabling it here has no effect on existing citations.
-%   Destination format matches biblatex's \bibhypertarget: cite.<refsection>:<key>.
+%   Destination format matches biblatex's unconditional \hypertarget placed on
+%   every bibliography entry: cite.<refsection>@<key>  (@ separator, not :).
+%   Note: \bibhypertarget (used by verbose styles) produces the : form, but
+%   iso-numeric does not call \bibhypertarget — only the @ form exists.
 %   \thefield{} retrieves the field value with active UTF-8 byte chars intact so
 %   that hyperref's \HyPsd@expand@utfviii machinery can produce correct UTF-16BE.
 %   (\strfield uses \detokenize which converts active chars to catcode-12 bytes,
@@ -2039,7 +2042,7 @@
 \DeclareCiteCommand{\cite}[\mkbibbrackets]
   {\usebibmacro{prenote}}
   {\usebibmacro{citeindex}%
-   \CTU@tooltiplink{cite.\the\c@refsection:\strfield{entrykey}}
+   \CTU@tooltiplink{cite.\the\c@refsection @\thefield{entrykey}}
      {\thefield{labelnumber}}
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
