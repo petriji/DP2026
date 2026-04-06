@@ -56,3 +56,11 @@ pics/python/
 latex/texparts/python/
 
 -- 
+-- Temporary files --
+*.tmp
+
+-- Logo files --
+/latex/logo/*
+!/latex/logo/ctu_logo_black.pdf
+!/latex/logo/logo_MUVS*
+!/latex/logo/masaryk*
