@@ -1340,48 +1340,31 @@
 \newcommand*\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
-% Global flags: true when at least one captioned figure / table exists in the
-% document.  Set by patching \addcontentsline so they reflect the current run
-% rather than the per-chapter \c@figure / \c@table counters (which reset).
-\newif\if@CTUhasfigures
-\newif\if@CTUhastables
-\let\CTU@orig@addcontentsline\addcontentsline
-\renewcommand\addcontentsline[3]{%
-  \CTU@orig@addcontentsline{#1}{#2}{#3}%
-  \begingroup
-    \def\CTU@temp{#1}%
-    \ifx\CTU@temp\CTU@lof@name\global\@CTUhasfigurestrue\fi
-    \ifx\CTU@temp\CTU@lot@name\global\@CTUhastablestrue\fi
-  \endgroup
-}%
-\def\CTU@lof@name{lof}%
-\def\CTU@lot@name{lot}%
 \newcommand\listoffigures{%
-    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
     \chapter*{\CTUlofname}%
-      \chaptermark{\CTUlofname}%
+      \@mkboth{\MakeUppercase\CTUlofname}%
+              {\MakeUppercase\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
-    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
     \chapter*{\CTUlotname}%
-      \chaptermark{\CTUlotname}%
+      \@mkboth{%
+          \MakeUppercase\CTUlotname}%
+         {\MakeUppercase\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
@@ -1846,15 +1829,6 @@
     {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
   \ExplSyntaxOff
   % --------------------------------------------------------------------------
-  % Index property
-  % Variables that represent subscript/superscript indices (e.g. \square_0)
-  % declare an `index` property holding the in-text display form (e.g.
-  % \ensuremath{0}, \ensuremath{\Sigma}).  The `short` property retains the
-  % full \square_N symbol used in the bold left column of the variables list.
-  % When `index` is unset the behaviour is identical to the existing `short`
-  % template.  Both sub- and superscript index variables use this mechanism.
-  \DeclareAcroProperty{index}
-  % --------------------------------------------------------------------------
   % List template: xltabular
   % Two-column layout: bold short form (with optional /alt) | long form with
   % optional (foreign, extra) parenthetical, dot-fill, and page references.
@@ -1928,20 +1902,9 @@
         { \acro_property_get:Vn \AcronymID { long } }%
     }%
   }
-  % short template: when `index` is set (subscript/superscript index variable)
-  %   show only the index part in text; otherwise show the normal short form.
-  %   The `short` form (e.g. \square_0) is always shown in the variables list
-  %   via \acrowrite{short} in the xltabular list template above.
   \RenewAcroTemplate{short}{%
-    \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
-      {%  no index property — normal short display
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
-          { \acro_property_get:Vn \AcronymID { long } }%
-      }%
-      {%  index property set — show only the index part in text
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
-          { \acro_property_get:Vn \AcronymID { long } }%
-      }%
+    \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+      { \acro_property_get:Vn \AcronymID { long } }%
   }
   \ExplSyntaxOff
 \else
@@ -1991,7 +1954,6 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -1999,7 +1961,7 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
+  \pdfstartlink attr{\Hy@tempa} goto name{\HyperDestNameFilter{#1}}\relax
   \Hy@colorlink\@linkcolor
   #2%
   \Hy@endcolorlink
@@ -2060,18 +2022,15 @@
 %   \CTUaddtotoc internally so the TOC entry obeys the toggle.
 \defbibheading{CTUbib}[\CTUbibname]{%
   \chapter*{#1}%
-  \chaptermark{#1}%
-  \CTUaddtotoc{#1}}
+  \CTUaddtotoc{#1}%
+  \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}}
 
 % \cite hover tooltips: each [N] in text gets a GoTo link with /Contents tooltip
 %   showing the entry's title (and year when present).
 %   \DeclareCiteCommand overrides iso-numeric's default \cite so every key in a
 %   multi-key cite gets its own \CTU@tooltiplink.  Range compression is not used
 %   in this project so disabling it here has no effect on existing citations.
-%   Destination format matches biblatex's unconditional \hypertarget placed on
-%   every bibliography entry: cite.<refsection>@<key>  (@ separator, not :).
-%   Note: \bibhypertarget (used by verbose styles) produces the : form, but
-%   iso-numeric does not call \bibhypertarget — only the @ form exists.
+%   Destination format matches biblatex's \bibhypertarget: cite.<refsection>:<key>.
 %   \thefield{} retrieves the field value with active UTF-8 byte chars intact so
 %   that hyperref's \HyPsd@expand@utfviii machinery can produce correct UTF-16BE.
 %   (\strfield uses \detokenize which converts active chars to catcode-12 bytes,
@@ -2080,7 +2039,7 @@
 \DeclareCiteCommand{\cite}[\mkbibbrackets]
   {\usebibmacro{prenote}}
   {\usebibmacro{citeindex}%
-   \CTU@tooltiplink{cite.\the\c@refsection @\thefield{entrykey}}
+   \CTU@tooltiplink{cite.\the\c@refsection:\strfield{entrykey}}
      {\thefield{labelnumber}}
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
@@ -2091,8 +2050,8 @@
 % ==============================================================================
 % Default content-file paths (without .tex extension, resolved at call time).
 %   Override in preamble with \softwarefile{path} / \attachmentsfile{path}.
-\gdef\CTU@softwarefile{texparts/references/list_software}
-\gdef\CTU@attachmentsfile{texparts/references/list_attachments}
+\gdef\CTU@softwarefile{texparts/references/seznamsoftwaru}
+\gdef\CTU@attachmentsfile{texparts/references/seznampriloh}
 \newcommand\softwarefile[1]{\gdef\CTU@softwarefile{#1}}
 \newcommand\attachmentsfile[1]{\gdef\CTU@attachmentsfile{#1}}
 % \CTUbackmatter: typeset all toggled back-matter sections in the standard order:
@@ -2117,7 +2076,6 @@
   \fi
   \ifCTUsoftware
     \chapter*{\CTUsoftwarename}%
-    \chaptermark{\CTUsoftwarename}%
     \CTUaddtotoc{\CTUsoftwarename}%
     \InputIfFileExists{\CTU@softwarefile.tex}{}{}%
     \label{ch:software}%
@@ -2130,7 +2088,6 @@
     \CTUaddtotoc{\CTUlotname}%
     \label{ch:tables}%
     \chapter*{\CTUprilohaname}%
-    \chaptermark{\CTUprilohaname}%
     \CTUaddtotoc{\CTUprilohaname}%
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
