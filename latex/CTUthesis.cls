@@ -1347,8 +1347,7 @@
       \@restonecolfalse
     \fi
     \chapter*{\CTUlofname}%
-      \@mkboth{\MakeUppercase\CTUlofname}%
-              {\MakeUppercase\CTUlofname}%
+      \chaptermark{\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
     }
@@ -1360,9 +1359,7 @@
       \@restonecolfalse
     \fi
     \chapter*{\CTUlotname}%
-      \@mkboth{%
-          \MakeUppercase\CTUlotname}%
-         {\MakeUppercase\CTUlotname}%
+      \chaptermark{\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
     }
@@ -1916,7 +1913,7 @@
   %   The `short` form (e.g. \square_0) is always shown in the variables list
   %   via \acrowrite{short} in the xltabular list template above.
   \RenewAcroTemplate{short}{%
-    \str_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
+    \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
         \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
           { \acro_property_get:Vn \AcronymID { long } }%
@@ -2042,8 +2039,8 @@
 %   \CTUaddtotoc internally so the TOC entry obeys the toggle.
 \defbibheading{CTUbib}[\CTUbibname]{%
   \chapter*{#1}%
-  \CTUaddtotoc{#1}%
-  \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}}
+  \chaptermark{#1}%
+  \CTUaddtotoc{#1}}
 
 % \cite hover tooltips: each [N] in text gets a GoTo link with /Contents tooltip
 %   showing the entry's title (and year when present).
@@ -2099,6 +2096,7 @@
   \fi
   \ifCTUsoftware
     \chapter*{\CTUsoftwarename}%
+    \chaptermark{\CTUsoftwarename}%
     \CTUaddtotoc{\CTUsoftwarename}%
     \InputIfFileExists{\CTU@softwarefile.tex}{}{}%
     \label{ch:software}%
@@ -2111,6 +2109,7 @@
     \CTUaddtotoc{\CTUlotname}%
     \label{ch:tables}%
     \chapter*{\CTUprilohaname}%
+    \chaptermark{\CTUprilohaname}%
     \CTUaddtotoc{\CTUprilohaname}%
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
