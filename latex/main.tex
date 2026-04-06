@@ -63,6 +63,10 @@
 \addbibresource{socialnidialog-zotero.bib}
 \addbibresource{socialnidialog-bibtexmanager.bib}
 
+% Reduce hyphenation frequency slightly (default \hyphenpenalty=50).
+\hyphenpenalty=200
+\exhyphenpenalty=200
+
 % ==============================================================================
 % Thesis Metadata — Edit Here
 % ==============================================================================
@@ -155,7 +159,7 @@ Děkujeme Správě železniční dopravní cesty, s.~o., za poskytnutí výkreso
 	\printacronyms[include=zkr,name=\CTUacroname,preamble={}]\label{ch:zkratky}
 	\thispagestyle{plain}%
 	\CTUifVariableListNonemptyTF{% print variables list only if at least one used variable exists
-		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:Seznam použitých veličin}
+		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:veliciny}
 		\thispagestyle{plain}%
 	}{}
 \fi
