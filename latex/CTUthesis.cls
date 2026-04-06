@@ -2025,6 +2025,26 @@
   \CTUaddtotoc{#1}%
   \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}}
 
+% \cite hover tooltips: each [N] in text gets a GoTo link with /Contents tooltip
+%   showing the entry's title (and year when present).
+%   \DeclareCiteCommand overrides iso-numeric's default \cite so every key in a
+%   multi-key cite gets its own \CTU@tooltiplink.  Range compression is not used
+%   in this project so disabling it here has no effect on existing citations.
+%   Destination format matches biblatex's \bibhypertarget: cite.<refsection>:<key>.
+%   \thefield{} retrieves the field value with active UTF-8 byte chars intact so
+%   that hyperref's \HyPsd@expand@utfviii machinery can produce correct UTF-16BE.
+%   (\strfield uses \detokenize which converts active chars to catcode-12 bytes,
+%   causing each UTF-8 byte to be misinterpreted as an individual Latin-1 code
+%   point — the same root cause as the acro \exp_not:n issue addressed above.)
+\DeclareCiteCommand{\cite}[\mkbibbrackets]
+  {\usebibmacro{prenote}}
+  {\usebibmacro{citeindex}%
+   \CTU@tooltiplink{cite.\the\c@refsection:\strfield{entrykey}}
+     {\thefield{labelnumber}}
+     {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
+  {\addcomma\addspace}
+  {\usebibmacro{postnote}}
+
 % ==============================================================================
 % Back Matter Command
 % ==============================================================================
