@@ -1771,12 +1771,15 @@
   \RequirePackage{acro}
   % --------------------------------------------------------------------------
   % Global options
-  % make-links: each \ac{} call becomes a hyperlink to the acronym list entry.
+  % make-links=false: links and /Contents tooltips are created manually via
+  %   \CTU@tooltiplink in the renewed templates below.  acro's built-in link
+  %   mechanism only produces plain \hyperlink annotations with no /Contents,
+  %   so it cannot carry the hover tooltip needed for Acrobat Reader.
   % list/display=used: \printacronyms omits entries that never appear in text.
   % list/template=xltabular: custom two-column table template defined below.
   % list/heading=chapter*: printed list gets an unnumbered chapter heading.
   \acsetup{%
-    make-links     = true,%
+    make-links     = false,%
     list/display   = used,%
     list/template  = xltabular,%
     list/heading   = chapter*%
@@ -1864,20 +1867,46 @@
     \end{flushleft}%
   }
   % --------------------------------------------------------------------------
-  % First-use display template: long-short
-  % First use: "long form (SHORT)"; subsequent uses: SHORT with a hover tooltip
-  % showing the long form (\pdftooltip from pdfcomment, loaded below).
+  % Display templates for \ac{} (long-short) and \acs{} (short).
+  %   make-links=false means acro creates no link annotations.  All links and
+  %   /Contents tooltips are created here via \CTU@tooltiplink (defined after
+  %   hyperref below), which wraps the text in a single GoTo Link annotation
+  %   that carries /Contents — the tooltip mechanism supported by Acrobat Reader,
+  %   Acrobat Pro, and PDF.js (LaTeX Workshop preview).
+  %
+  %   The tooltip text is the long form of the acronym.  \acrowrite{long} is a
+  %   non-expandable \NewDocumentCommand so it cannot be used directly inside
+  %   \pdfstringdef.  \acro_property_get:Vn IS expandable (defined with
+  %   \cs_new:Npn) and returns the raw stored property tokens, which \pdfstringdef
+  %   with unicode=true encodes correctly — including Czech/UTF-8 characters.
+  %   \AcronymID is a plain LaTeX macro that acro sets to the current acronym
+  %   ID string (e.g. "NC") immediately before each template body executes;
+  %   the :Vn variant extracts its VALUE (the ID string) as the lookup key.
+  %   The templates are defined inside \ExplSyntaxOn so that the expl3 function
+  %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
+  %   catcodes (colon and underscore as letters).
+  \ExplSyntaxOn
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
-      \acrowrite{long}%
-      \acspace(%
-      \acrowrite{short}%
-      \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
-      \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
-      \acrogroupcite)%
+      \CTU@tooltiplink{\AcronymID}{%
+        \acrowrite{long}%
+        \acspace(%
+        \acrowrite{short}%
+        \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
+        \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
+        \acrogroupcite)%
+      }{ \acro_property_get:Vn \AcronymID { long } }%
     }%
-    {\pdftooltip{\acrowrite{short}}{\acrowrite{long}}}%
+    {%
+      \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+        { \acro_property_get:Vn \AcronymID { long } }%
+    }%
   }
+  \RenewAcroTemplate{short}{%
+    \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+      { \acro_property_get:Vn \AcronymID { long } }%
+  }
+  \ExplSyntaxOff
 \else
   % --- noacro stubs -----------------------------------------------------------
   % In-text commands: emit the key, which equals the short form for every
@@ -1948,6 +1977,11 @@
   \def\textit#1{#1}%
   \def\emph#1{#1}%
   \def\textbf#1{#1}%
+  \def\textendash{--}%
+  \def\textemdash{---}%
+  % Make \exp_not:n a pass-through so storage wrappers don't block expansion.
+  % \csname produces the expl3 cs regardless of the catcode of : in scope here.
+  \expandafter\let\csname exp_not:n\endcsname\@firstofone%
 }
 % lastpage: sets the LastPage label at the end of the document; also stores
 %   \@abspage@last (a plain Arabic integer) in the .aux file so self-citation
