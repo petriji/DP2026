@@ -135,6 +135,127 @@ def fetch_oecd(
     return fetch(url, suffix=".csv", force=force)
 
 
+def fetch_ipp(
+    year: int,
+    topic: str = "odmenovani",
+    *,
+    force: bool = False,
+) -> Path:
+    """Download an IPP (Informace o pracovních podmínkách) Excel workbook from MPSV.
+
+    IPP is the annual Czech survey of collective agreements conducted by the Ministry
+    of Labour and Social Affairs (MPSV) in cooperation with trade unions and employer
+    associations.  Results are published at ``https://www.kolektivnismlouvy.cz``.
+
+    URL pattern::
+
+        https://www.kolektivnismlouvy.cz/download/{year}/IPP_{yy}_{topic}.xlsx
+
+    Parameters
+    ----------
+    year:
+        Survey / reference year (e.g., ``2025``).
+    topic:
+        File topic code.  Known codes and the data they contain:
+
+        Available in all years (2016–present):
+
+        - ``"odmenovani"``                      – remuneration: negotiated wage
+          increases, forms of pay, tariff vs. non-tariff systems.
+        - ``"mzda_tarify"``                     – wage tariff levels agreed in CAs.
+        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
+          components (overtime, night shifts, holiday pay, …).
+        - ``"zamestnanost_rozvoj_BOZP_dohody"`` – employment, personnel
+          development, health & safety, and other agreements.
+        - ``"spoluprace_smluvnich_stran"``      – cooperation of contracting
+          parties (unions and employers).
+
+        New from 2025:
+
+        - ``"pracovni_zivotni_vyroci"``         – work and life anniversaries
+          (jubilee benefits, service-length bonuses).
+        - ``"prac_doba_zmeny_prac_pomeru"``      – working hours, leave, and
+          changes to the employment relationship.
+        - ``"prac_podminky_benefity"``           – working conditions and
+          employee benefits (meal vouchers, transport, home-office, …).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns
+    -------
+    Path
+        Local path to the cached ``.xlsx`` file.  Load it with
+        :func:`pandas.read_excel` or :meth:`~stattool.dataset.Dataset.from_ipp_excel`.
+    """
+    yy = str(year)[2:]  # last two digits: 2024 → "24"
+    filename = f"IPP_{yy}_{topic}.xlsx"
+    url = f"https://www.kolektivnismlouvy.cz/download/{year}/{filename}"
+    return fetch(url, suffix=".xlsx", force=force)
+
+
+def fetch_ispv(
+    year: int,
+    half: int = 2,
+    *,
+    sphere: str = "podnikatelska",
+    force: bool = False,
+) -> Path:
+    """Download an ISPV / RSCP Excel workbook from the TREXIMA portal.
+
+    ISPV (*Informační systém o průměrném výdělku*) is the Czech wage-statistics
+    system covering the **business / private sector** (podnikatelská sféra).
+    RSCP (*Registr středních cen práce*) covers the **public / non-business
+    sector** (nepodnikatelská sféra – e.g. government, education, health).
+    Both surveys are published semi-annually by TREXIMA on behalf of the
+    Ministry of Labour and Social Affairs (MPSV) at ``https://www.ispv.cz``.
+
+    URL pattern::
+
+        https://www.ispv.cz/files/{PREFIX}_{yy}H{half}.xlsx
+
+    where ``PREFIX`` is ``"ISPV"`` for the private sector and ``"RSCP"`` for
+    the public sector.
+
+    The Excel workbooks contain sector-specific (NACE Rev. 2) breakdowns
+    of median and mean wages, wage percentiles (P10, P25, P75, P90), and
+    employee counts for the reference half-year period.
+
+    Parameters
+    ----------
+    year:
+        Reference year (e.g., ``2024``).
+    half:
+        Half-year: ``1`` = January–June, ``2`` = July–December.
+        The H2 edition is typically the main annual publication.
+    sphere:
+        Which employment sphere to download:
+
+        - ``"podnikatelska"``   – private / business sector (ISPV).
+        - ``"nepodnikatelska"`` – public / non-business sector (RSCP).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns
+    -------
+    Path
+        Local path to the cached ``.xlsx`` file.  Parse it with
+        :func:`pandas.read_excel`; the sector labels are in Czech and
+        correspond to NACE Rev. 2 section-level codes (A–S).
+
+    Notes
+    -----
+    The TREXIMA portal occasionally reorganises its URL structure between
+    annual editions.  If this function raises an HTTP 404, check the current
+    download links at ``https://www.ispv.cz/cz/Vysledky/`` and pass an
+    explicit URL via the generic :func:`fetch` helper instead.
+    """
+    yy = str(year)[2:]  # last two digits: 2024 → "24"
+    prefix = "ISPV" if sphere == "podnikatelska" else "RSCP"
+    filename = f"{prefix}_{yy}H{half}.xlsx"
+    url = f"https://www.ispv.cz/files/{filename}"
+    return fetch(url, suffix=".xlsx", force=force)
+
+
 def fetch_eurostat(
     dataset: str,
     filter_expr: str = "",
