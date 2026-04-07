@@ -245,6 +245,100 @@ class Dataset:
         df["time"] = df["time"].astype(int)
         return cls(df, name=name, unit=unit, source_url=source_url, geo_col=geo_col)
 
+    @classmethod
+    def from_oecd_csv(
+        cls,
+        path,
+        *,
+        name: str = "value",
+        unit: str = "",
+        source_url: str = "",
+        filters: Optional[dict] = None,
+    ) -> "Dataset":
+        """Parse a CSV file downloaded from the OECD Stats SDMX API.
+
+        The OECD Stats CSV format (``contentType=csv``) typically looks like::
+
+            LOCATION,INDICATOR,SUBJECT,MEASURE,FREQUENCY,TIME,Value,Flag Codes
+            CZE,TUD,,,A,1990,65.2,
+            AUT,TUD,,,A,1990,55.3,
+
+        Country codes are 3-letter ISO 3166-1 alpha-3 and are automatically
+        converted to 2-letter codes used throughout this codebase.
+
+        Parameters
+        ----------
+        path:
+            Local path to the OECD CSV (returned by
+            :func:`~stattool.fetch.fetch_oecd`).
+        name:
+            Human-readable variable name stored in :attr:`Dataset.name`.
+        unit:
+            Unit string (e.g. ``"%"`` or ``"USD PPP"``).
+        source_url:
+            The OECD URL used to obtain the file.
+        filters:
+            Optional dict of ``{column_name: value_or_list}`` to keep only
+            matching rows after loading, e.g.::
+
+                filters={"INDICATOR": "TUD"}
+        """
+        df = pd.read_csv(path, na_values=["", "..", "NA", ": "])
+
+        # Detect column names — OECD CSV format varies across datasets
+        cols_up = {c.upper(): c for c in df.columns}
+
+        # Geo column: LOCATION (old) or REF_AREA / COU (newer exports)
+        geo_col = next(
+            (cols_up[k] for k in ("LOCATION", "COU", "REF_AREA", "COUNTRY", "GEO")
+             if k in cols_up),
+            None,
+        )
+        # Time column: TIME (old) or TIME_PERIOD / YEAR
+        time_col = next(
+            (cols_up[k] for k in ("TIME", "YEAR", "TIME_PERIOD", "PERIOD")
+             if k in cols_up),
+            None,
+        )
+        # Value column: Value (old) or OBS_VALUE
+        value_col = next(
+            (cols_up[k] for k in ("VALUE", "OBS_VALUE", "OBSVALUE")
+             if k in cols_up),
+            None,
+        )
+
+        if not all([geo_col, time_col, value_col]):
+            raise ValueError(
+                f"Could not identify geo/time/value columns. "
+                f"Available columns: {list(df.columns)}"
+            )
+
+        df = df.rename(columns={geo_col: "geo", time_col: "time", value_col: "value"})
+
+        # Normalise OECD 3-letter ISO codes to 2-letter
+        df["geo"] = df["geo"].map(
+            lambda x: _OECD_ISO3_TO_ISO2.get(str(x).upper(), str(x))
+        )
+
+        # Coerce time to int (years)
+        try:
+            df["time"] = df["time"].astype(int)
+        except (ValueError, TypeError):
+            pass
+
+        # Apply optional row filters
+        if filters:
+            for col, val in filters.items():
+                if col not in df.columns:
+                    continue
+                if isinstance(val, (list, tuple, set)):
+                    df = df[df[col].isin(val)]
+                else:
+                    df = df[df[col] == val]
+
+        df = df.dropna(subset=["value"])
+        return cls(df, name=name, unit=unit, source_url=source_url)
+
 
 def _is_year_col(col: str) -> bool:
     try:
@@ -252,3 +346,17 @@ def _is_year_col(col: str) -> bool:
         return 1900 <= y <= 2100
     except ValueError:
         return False
+
+
+# ── OECD ISO 3166-1 alpha-3 → alpha-2 mapping ────────────────────────────────
+# OECD uses 3-letter codes; the rest of the codebase uses 2-letter codes.
+_OECD_ISO3_TO_ISO2: dict[str, str] = {
+    "AUT": "AT", "BEL": "BE", "BGR": "BG", "CYP": "CY", "CZE": "CZ",
+    "DEU": "DE", "DNK": "DK", "ESP": "ES", "EST": "EE", "FIN": "FI",
+    "FRA": "FR", "GBR": "GB", "GRC": "GR", "HRV": "HR", "HUN": "HU",
+    "IRL": "IE", "ISL": "IS", "ITA": "IT", "LTU": "LT", "LUX": "LU",
+    "LVA": "LV", "MLT": "MT", "NLD": "NL", "NOR": "NO", "POL": "PL",
+    "PRT": "PT", "ROU": "RO", "SVK": "SK", "SVN": "SI", "SWE": "SE",
+    "CHE": "CH", "TUR": "TR", "USA": "US", "JPN": "JP", "KOR": "KR",
+    "AUS": "AU", "CAN": "CA", "MEX": "MX", "NZL": "NZ",
+}
