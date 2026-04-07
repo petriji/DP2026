@@ -65,3 +65,6 @@ latex/texparts/python/
 !/latex/logo/ctu_logo_black.pdf
 !/latex/logo/logo_MUVS*
 !/latex/logo/masaryk*
+
+-- Google docs (incompatible) --
+*.gdoc
