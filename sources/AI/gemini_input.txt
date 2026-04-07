@@ -1,0 +1,77 @@
+Píši diplomovou práci na MÚVS ČVUT, obor Projektové řízení inovací na téma "Sociální dialog a kolektivní vyjednávání". Pracovní složka na Google disku je Můj disk\CVUT\CTU\PRI\DP\. 
+
+---Zadání---
+
+Cílem DP je hodnocení místa a role sociálního dialogu na národní nebo sektorové úrovni, postavení sociálních​
+
+partnerů,​
+
+legislativní úprava kolektivního vyjednávání, postavení a role odborů, kolektivní smlouvy, hodnocení kolektivní​
+
+smlouvy (vyššího stupně nebo podnikové).​
+
+Obsah:​
+
+Úvod​
+
+I Teoretická část​- Definice pojmů a vztahů​- Přehled současného stavu poznání​- Statistika o předmětu práce​
+
+II Praktická část​- Metodologie/Metody práce​- Sběr údajů a analýza dat​- Výsledky rozboru​- Návrh inovací​- Limity výzkumu a diskuze​
+
+Závěr​
+
+Seznam literatury​
+
+Přílohy
+
+---konec zadání---
+
+K doporučeným zdrojům se pokus nalézt přístup pro akademické pracovníky online, např. s orcid id, jako k tomu poslednímu (k nalezení ve složce source projektu na mém GDrive)
+
+---seznam doporučených zdrojů---
+
+Armstrong, Michael – Taylor, Stephen (2023). Armstrong's Handbook of Human Resource Management​
+
+Practice. A Guide to the Theory and Practice of People Management. 16th ed. Kogan Page. 760 p. EAN:​
+
+9781398606630.​
+
+Dessler, Gary – Varkkey, Biju (2023). Human Resource Management. 17th ed. Pearson. 688 p. ISBN-10:​
+
+9357054286 · ISBN-13: 978-9357054287.​
+
+Dvořáková, Z. a kol. (2012). Řízení lidských zdrojů. Praha, C.H.Beck, 559 s. ISBN 978-80-7400-347-9.​
+
+Wojtczuk-Turek, A.; Dvořáková, Z.; Turek, D.; Edgar, F.; Klein, H.J.; Bosak, J.; Okay-Somerville, B.; Fu, N. et​
+
+al. Sustainable human resource management and job satisfaction—Unlocking the power of organizational​
+
+identification: A cross-cultural perspective from 54 countries. Corporate Social Responsibility and Environmental​
+
+Management. 2024, 31(5), 4910-4932. ISSN 1535-3958. https://onlinelibrary.wiley.com/doi/epdf/10.1002/csr.2815
+
+---konec seznamu---
+
+Moje myšlenky:
+
+1. Využít publikací ČMKOS (zpráva o průběhu KV za rok 2025 a jiné) v teoretické části s inspirací diplomovými pracemi na toto téma a mými jinými pracemi s příbuzným tématem v /sources na GDrive k definici pojmů, historie (kontextu odborového hnutí a kolektivního vyjednávání v industrializaci s vazbami na poslední inovační cykly - průmysl 4.0 a AI) a hodnocení současné role sociálního dialogu v ČR (klesající členská základna, slabá podpora veřejného mínění, dlouhodobě konfliktní politické prostředí, příčiny v socialistickém režimu před rokem 89).
+
+2. Podpořit teze analýzy prostředí pro odbory statistikami - syntéza dat z vhodných datových sad z Eurostatu, ILO pro analýzu trhu práce v Evropském kontextu (AT, DE, DK, SK, PL, CZ) podobně jako v práci o flexicurity popisující český trh levné práce, RSCP a jiné statistiky ministerstev ČR pro argumentaci slabého postavení zaměstnanců v ČR a nespravedlnosti ve vztahu k početným živnostníkům, zejména Švarc systému, vývoj HDP, mezd, distribuce bohatství od roku 1995. Tato data budu zpracovávat v pythonu a ilustrovat graficky.
+
+2. inspirace Dánskem, jak je zkreslená interpretace modelu flexicurity v Česku využívána k zhoršení postavení zaměstnanců a čím se ve skutečnosti Dánský model liší 
+
+3. Problémy (českého) trhu práce - imigrace kvůli válce na Ukrajině, odliv vysoce kvalifikovaných pracovníků (lékaři, rostoucí pracovní mobilita díky rostoucí jazykové vybavenosti populace), agenturní zaměstnávání, Švarc systém (zejména ve vysokopříjmovém IT), nízká odolnost trhu levné práce proti průmyslu 4.0, omezení juniorních pozic a výsledné narušení udržitelnosti v důsledku AI jazykových modelů, nízké mzdy ve veřejné sféře
+
+4. analyzovat dopady nedávných změn zákoníku práce (např. paragraf 24 ve vztahu ke kolektivnímu vyjednávání v České poště) a dalších předpisů upravující kolektivní vyjednávání
+
+5. na vhodných místech zvýraznit rozdíly mezi českými podmínkami a podmínkami v Rakousku (se společnou odborovou historií), v Německu (jako ekonomice se silnými vazbami na tu českou) a v Dánsku (často citovaném modelu) 
+
+6. Hodnocení kolektivního vyjednávání v Penny Marketu a skutečnosti, že se tiskové zprávy k "zaměstnavateli roku" o sociálních partnerech a kolektivním vyjednávání nezmiňují
+
+7. odhalit prostor pro inovace, jak zlepšit postavení odborů - můj nápad je, že odbory by v čase zrychlujícího technologického pokroku měli zastřešovat aktivní politiku nezaměstnanosti (podobně jako v Dánsku), zprostředkovávat profesní vzdělávání a podpořit tak ekonomiku přípravou kvalifikovaných pracovníků - získat tak důvěru zaměstnanců a politickou váhu pro obranu jejich pozice tak, aby získali podíl na zvyšujícím se výkonu hospodářství (spojeném s nároky na kvalifikaci a hrozbou zvyšování nerovnosti ve společnosti, pro což má ČR ideální podmínky kvůli politikám - nízké majetkové daně, vysoká podpora podnikání; vytvářející po konci socialismu nové majetkové elity)
+
+8. stylizovat práci v souladu s formou diplomové práce vedené stejnou vedoucí a také s jejími pracemi - identifikovat její pravděpodobný pohled na problematiku a sladit ho s mým
+
+Navrhni zdroje pro myšlenky, které nemají oporu v již použitých pramenech.
+Navrhni strukturu, jak napasovat tyto myšlenky do osnovy práce oddělující teoretickou a praktickou část.
+Navrhni efektivní postup prací.
