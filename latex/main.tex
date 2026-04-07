@@ -235,7 +235,8 @@
 \chapter{Stav trhu práce}\label{ch:stav}
 	% Úvod kapitoly: zasadit CZ trh práce do kontextu (struktura, zaměstnanost 81.7 %,
 	% průměrná mzda 46 165 Kč / 2024, regionální diferenciace Praha vs. zbytek ČR).
-	% Python: union_density_trend.pdf (TODO — data z~OECD AIAS ICTWSS)
+	% Python: union_density_trend.pdf — data from OECD AIAS ICTWSS
+	\input{texparts/python/union_density_trend}
 	% \input{texparts/stav.tex}
 	\section{Výhled}\label{sec:vyhled}
 	% Faktory výhledu (strukturovat \paragraph):
@@ -261,8 +262,8 @@
 		\input{texparts/python/tax_wedge_map}
 		\input{texparts/python/flexicurity_table}
 		\input{texparts/python/arope_map_2025}
-		% \input{texparts/python/wage_gdp_convergence} % TODO: vytvořit
-		% \input{texparts/python/union_gini_scatter}    % TODO: vytvořit (scatter hustota×GINI EU27)
+		\input{texparts/python/wage_gdp_convergence}
+		\input{texparts/python/union_gini_scatter}
 		\subsection{Flexicurity}\label{ssec:flexicurity}
 			% Dánský zlatý trojúhelník = flexibilita + příjmová jistota + APZ.
 			% CZ adopce: jen flexibilita (flexinovela) bez APZ a silného KV → deformace.
@@ -273,7 +274,7 @@
 			%         ETUC: Commission's Communication on Flexicurity
 			\input{texparts/python/arope_timeline_CE}
 			\input{texparts/python/arope_groups}
-			% \input{texparts/python/lmp_expenditure} % TODO: vytvořit
+			\input{texparts/python/lmp_expenditure}
 		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
 			% AT: Kammer-system, téměř automatické rozšíření KSVS → 98 % pokrytí i při 26 % hustotě.
 			% DE: Mitbestimmung (spolurozhodování v~dozorčích radách), Hartz reformy — varování
