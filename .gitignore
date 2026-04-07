@@ -30,6 +30,7 @@
 !/sources/AI/**
 !/sources/PETRICEK*
 !/sources/Petricek*
+!/sources/scrape/
 
 -- User-made LaTeX templates --
 /templates
