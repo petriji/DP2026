@@ -32,3 +32,23 @@ pics     = ["arope_map_*", "arope_timeline_CE", "arope_groups"]
 script   = "analyses/flexicurity_table.py"
 texparts = ["flexicurity_table"]
 pics     = []
+
+[union_density]
+script   = "analyses/union_density_trend.py"
+texparts = ["union_density_trend"]
+pics     = ["union_density_trend"]
+
+[lmp]
+script   = "analyses/lmp_expenditure.py"
+texparts = ["lmp_expenditure"]
+pics     = ["lmp_expenditure"]
+
+[wage_convergence]
+script   = "analyses/wage_gdp_convergence.py"
+texparts = ["wage_gdp_convergence"]
+pics     = ["wage_gdp_convergence"]
+
+[union_gini]
+script   = "analyses/union_gini_scatter.py"
+texparts = ["union_gini_scatter"]
+pics     = ["union_gini_scatter"]

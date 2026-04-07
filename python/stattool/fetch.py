@@ -90,6 +90,51 @@ def fetch(
     return dest
 
 
+def fetch_oecd(
+    dataset: str,
+    filter_expr: str = "all",
+    *,
+    start_period: Optional[Union[int, str]] = None,
+    end_period: Optional[Union[int, str]] = None,
+    force: bool = False,
+) -> Path:
+    """Download a dataset from the OECD Stats SDMX REST API as CSV.
+
+    Uses the ``stats.oecd.org`` endpoint which accepts plain dataset codes
+    and returns comma-separated values via ``contentType=csv``.
+
+    Parameters
+    ----------
+    dataset:
+        OECD dataset code, e.g. ``"TUD"`` (Trade Union Density) or
+        ``"AV_AN_WAGE"`` (Average Annual Wages).
+    filter_expr:
+        Dot-separated SDMX key filter, e.g.
+        ``"CZE+AUT+DEU+DNK+POL+SVK.../all"``.
+        Use ``"all"`` (default) to download the full dataset.
+    start_period / end_period:
+        Integer years or strings, e.g. ``1990`` or ``"2023"``.
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns the local :class:`Path` to the cached CSV.  Load it with
+    :meth:`~stattool.dataset.Dataset.from_oecd_csv`.
+    """
+    from urllib.parse import urlencode as _urlencode
+
+    base = "https://stats.oecd.org/SDMX-JSON/data"
+    endpoint = f"{base}/{dataset}/{filter_expr}/all"
+
+    qp: dict = {"contentType": "csv"}
+    if start_period is not None:
+        qp["startTime"] = str(start_period)
+    if end_period is not None:
+        qp["endTime"] = str(end_period)
+
+    url = endpoint + "?" + _urlencode(qp)
+    return fetch(url, suffix=".csv", force=force)
+
+
 def fetch_eurostat(
     dataset: str,
     filter_expr: str = "",
