@@ -72,3 +72,28 @@ pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispe
 script   = "analyses/rscp_stratification.py"
 texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
 pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+
+[old_age_dependency]
+script   = "analyses/old_age_dependency_map.py"
+texparts = ["old_age_dependency_map"]
+pics     = ["old_age_dependency_map"]
+
+[employment_rate]
+script   = "analyses/employment_rate_timeline.py"
+texparts = ["employment_rate_timeline"]
+pics     = ["employment_rate_timeline"]
+
+[income_pps]
+script   = "analyses/income_pps_map.py"
+texparts = ["income_pps_map"]
+pics     = ["income_pps_map"]
+
+[gini_income]
+script   = "analyses/gini_income_timeline.py"
+texparts = ["gini_income_timeline"]
+pics     = ["gini_income_timeline"]
+
+[wage_pension_distribution]
+script   = "analyses/wage_pension_distribution.py"
+texparts = ["wage_pension_distribution"]
+pics     = ["wage_pension_distribution"]
