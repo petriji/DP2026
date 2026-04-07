@@ -52,3 +52,23 @@ pics     = ["wage_gdp_convergence"]
 script   = "analyses/union_gini_scatter.py"
 texparts = ["union_gini_scatter"]
 pics     = ["union_gini_scatter"]
+
+[ipp_wage_growth]
+script   = "analyses/ipp_wage_growth.py"
+texparts = ["ipp_wage_growth"]
+pics     = ["ipp_wage_growth"]
+
+[ipp_supplementary]
+script   = "analyses/ipp_supplementary.py"
+texparts = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+pics     = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+
+[rscp_sector_wages]
+script   = "analyses/rscp_sector_wages.py"
+texparts = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
+pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
+
+[rscp_stratification]
+script   = "analyses/rscp_stratification.py"
+texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
