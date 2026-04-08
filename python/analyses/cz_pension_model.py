@@ -211,13 +211,16 @@ OSVC_TYPES: list[tuple[float, str, str, int]] = [
 PASMO_COLORS: list[str] = [PALETTE[2], PALETTE[3], PALETTE[6]]  # pásmo 1, 2, 3
 
 # Limity měsíčních příjmů pro výdajový paušál (zákon č. 586/1992 Sb., § 7 odst. 7)
-# Maximální roční výdaje: 80 % = 1 600 000 Kč, 60 % = 1 200 000 Kč, 40 % = 800 000 Kč.
-# Nad těmito hranicemi (roční max / 12) výdajová sazba přestává platit a je třeba
-# uplatnit skutečné výdaje (daňová evidence). Linestyle se v grafech změní na '-.'.
+# Nad těmito hranicemi výdajová sazba přestává platit – je třeba uplatnit skutečné
+# výdaje (daňová evidence). Hodnoty = roční strop výdajů ÷ 12:
+#   80 %: max roční výdaje 1 600 000 Kč → příjmový limit = 1 600 000 ÷ 12 ≈ 133 333 Kč/měs.
+#   60 %: max roční výdaje 1 200 000 Kč → příjmový limit = 1 200 000 ÷ 12 = 100 000 Kč/měs.
+#   40 %: max roční výdaje   800 000 Kč → příjmový limit =   800 000 ÷ 12 ≈  66 667 Kč/měs.
+# V grafech se linestyle změní na '-.' pro příjmy nad limitem.
 OSVC_VYDAJOVY_CAP: dict[float, int] = {
-    0.80: 133_333,  # 80 % paušál: max výdaje 1 600 000 Kč/rok ÷ 12
-    0.60: 100_000,  # 60 % paušál: max výdaje 1 200 000 Kč/rok ÷ 12
-    0.40:  66_667,  # 40 % paušál: max výdaje   800 000 Kč/rok ÷ 12
+    0.80: 133_333,  # max měsíční příjmy pro uplatnění 80 % paušálu
+    0.60: 100_000,  # max měsíční příjmy pro uplatnění 60 % paušálu
+    0.40:  66_667,  # max měsíční příjmy pro uplatnění 40 % paušálu
 }
 
 # ── Pomocné výpočetní funkce ──────────────────────────────────────────────────
