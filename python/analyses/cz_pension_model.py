@@ -453,6 +453,17 @@ def plot_pension_comparison(
         fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
     )
 
+    # Hranice chudoby
+    poverty_kczk = 18.6  # 18 600 Kč (2025)
+    ax.axhline(poverty_kczk, color="#aa0000", linewidth=0.8,
+               linestyle=(0, (3, 4)), alpha=0.7, zorder=1)
+    ax.annotate(
+        "Hranice chudoby (18\u202f600\u00a0Kč, 2025)",
+        xy=(income_max * 0.01 / 1_000, poverty_kczk),
+        xytext=(3, 4), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color="#aa0000", va="bottom",
+    )
+
     # Referenční svislé čáry
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
                       f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",

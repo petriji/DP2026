@@ -480,7 +480,29 @@ def plot_tax_wedge_vs_income(
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
-    _bottom_legend(fig, c_emp)
+    # Inline popisky křivek – umístěny na pravém konci každé křivky
+    x_end = float(income_max)
+    tw_end_emp = float(tax_wedge_employee(x_end))
+    ax.annotate("Zam.", (x_end / 1_000, tw_end_emp),
+                xytext=(4, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+
+    for expense_rate, _label, color, _max_pasmo in OSVC_TYPES:
+        tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
+        short = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
+        ax.annotate(short, (x_end / 1_000, tw_end_o),
+                    xytext=(4, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color=color, va="center")
+
+    # Paušální pásmo – popisky na konci každého pásma
+    for i, ((_max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
+            zip(PAUSALNI_DAN, PAUSALNI_DAN_TOTAL)):
+        x_lab = float(min(income_max, max_inc_t))
+        tw_lab = float(total_pay) / x_lab * 100
+        ax.annotate(f"Paušál\u00a0{i + 1}", (x_lab / 1_000, tw_lab),
+                    xytext=(4, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color="#555555", va="center")
+
     return fig
 
 
@@ -530,6 +552,17 @@ def plot_net_income_vs_income(
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
+
+    # Hranice chudoby
+    poverty_kczk = 18.6  # 18 600 Kč (2025)
+    ax.axhline(poverty_kczk, color="#555555", linewidth=0.8,
+               linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
+    ax.annotate(
+        "Hranice chudoby (18\u202f600\u00a0Kč, 2025)",
+        xy=(MIN_WAGE_TOTAL_COST / 1_000, poverty_kczk),
+        xytext=(3, 4), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
+    )
 
     _bottom_legend(fig, c_emp)
     return fig
