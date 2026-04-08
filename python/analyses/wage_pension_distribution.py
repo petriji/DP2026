@@ -110,13 +110,21 @@ _FALLBACK_PENSION_YEAR = 2024
 # Source: CSSZ Statistická ročenka důchodového pojistění 2024
 N_PENSION = 2_367_000
 
-# X-axis evaluation grid (Kč/měsíc)
+# X-axis evaluation grid – net-income scale (Kč/měsíc)
+# Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5–90 tis. to cover both series.
 _X_MIN   =  5_000
-_X_MAX   = 120_000
+_X_MAX   = 90_000
 _X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
 
 # Reference constants (2026 / latest available)
-MIN_WAGE       = 20_800   # Kč/měsíc (nařízení vlády č.405/2025 Sb.)
+MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.405/2025 Sb.)
+
+# 2026 CZ employee statutory deductions (for gross-to-net conversion)
+_SP_EMPLOYEE_RATE = 0.065   # sociální pojistění zaměstnanec
+_ZP_EMPLOYEE_RATE = 0.045   # zdravotní pojistění zaměstnanec
+_DPFO_RATE        = 0.15    # sazba DPFO (platí do 131 901 Kč/měsíc)
+_SLEVA_POPLATNIK  = 2_570   # Kč/měsíc (sleva na poplatníka = 30 840 Kč/rok)
+EMPLOYER_INS_RATE = 0.338   # SP + ZP zaměstnavatele (24,8 % + 9 %)
 
 # Colour assignments
 _COLOR_WAGE    = PALETTE[0]   # deep blue
@@ -207,6 +215,22 @@ def fit_lognormal(quantile_dict: dict[float, float]) -> tuple[float, float]:
     # Ensure positive sigma (numerical safety)
     sigma = max(sigma, 1e-6)
     return mu, sigma
+
+
+def gross_to_net_wage(gross: float | np.ndarray) -> float | np.ndarray:
+    """Čistá měsíční mzda po odečtení zaměstnaneckých odvodů a DPFO.
+
+    CZ 2026: SP = 6,5 %, ZP = 4,5 %, DPFO 15 %,
+    sleva na poplatníka = 2 570 Kč/měsíc.
+    Platí pro hrubou mzdu ≤ 131 901 Kč/měsíc (pásmo 15 %).
+
+    Základ daně DPFO je hrubá mzda (od 1. 1. 2021 bylo zrušeno
+    zdanění ze „superhrubé mzdy"; zákon č. 586/1992 Sb., §6 odst. 12).
+    """
+    g = np.asarray(gross, dtype=float)
+    # Tax base = gross wage (since 2021 abolition of superhrubá mzda)
+    dpfo = np.maximum(_DPFO_RATE * g - _SLEVA_POPLATNIK, 0.0)
+    return g * (1.0 - _SP_EMPLOYEE_RATE - _ZP_EMPLOYEE_RATE) - dpfo
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -437,16 +461,27 @@ if pension_q is None:
 # Fit log-normal distributions
 # ════════════════════════════════════════════════════════════════════════════
 
-mu_w, sig_w = fit_lognormal(wage_q)
+# Convert gross ISPV wage quantiles to net take-home wages
+wage_q_net = {p: float(gross_to_net_wage(q)) for p, q in wage_q.items()}
+
+mu_w, sig_w = fit_lognormal(wage_q_net)
 mu_p, sig_p = fit_lognormal(pension_q)
 
-med_wage    = float(wage_q.get(0.50, np.exp(mu_w)))
-med_pension = float(pension_q.get(0.50, np.exp(mu_p)))
+med_wage_gross      = float(wage_q.get(0.50, np.exp(mu_w)))
+med_wage_net        = float(wage_q_net.get(0.50, np.exp(mu_w)))
+med_wage_total_cost = med_wage_gross * (1.0 + EMPLOYER_INS_RATE)
+med_pension         = float(pension_q.get(0.50, np.exp(mu_p)))
 
-print(f"\nWage    fit: μ={mu_w:.4f}, σ={sig_w:.4f}  "
-      f"→ median≈{np.exp(mu_w):,.0f} Kč")
-print(f"Pension fit: μ={mu_p:.4f}, σ={sig_p:.4f}  "
-      f"→ median≈{np.exp(mu_p):,.0f} Kč")
+# Net minimum wage and equivalent total employer labour cost
+min_wage_net        = float(gross_to_net_wage(MIN_WAGE))
+min_wage_total_cost = MIN_WAGE * (1.0 + EMPLOYER_INS_RATE)
+
+print(f"\nWage    fit (net): μ={mu_w:.4f}, σ={sig_w:.4f}  "
+      f"→ čistý medián≈{med_wage_net:,.0f} Kč  "
+      f"(hrubá {med_wage_gross:,.0f} Kč, "
+      f"náklady zaměstnavatele {med_wage_total_cost:,.0f} Kč)")
+print(f"Pension fit:       μ={mu_p:.4f}, σ={sig_p:.4f}  "
+      f"→ medián≈{med_pension:,.0f} Kč")
 
 pdf_wage    = lognormal_pdf(_X_GRID, mu_w, sig_w)
 pdf_pension = lognormal_pdf(_X_GRID, mu_p, sig_p)
@@ -472,7 +507,7 @@ ax.fill_between(
 ax.plot(
     _X_GRID / 1_000, freq_wage,
     color=_COLOR_WAGE, linewidth=2.0,
-    label=f"Mzdy zaměstnanců (ISPV {wage_year}/H1, podnikat. sféra)",
+    label=f"Čistá mzda zaměstnanců (ISPV {wage_year}/H1, podnikat. sféra)",
 )
 
 ax.fill_between(
@@ -487,9 +522,13 @@ ax.plot(
 
 # Median reference lines
 ax.axvline(
-    med_wage / 1_000,
+    med_wage_net / 1_000,
     color=_COLOR_WAGE, linewidth=1.0, linestyle="--", alpha=0.8,
-    label=f"Medián mzdy {med_wage:,.0f} Kč",
+    label=(
+        f"Medián čisté mzdy {med_wage_net:,.0f} Kč"
+        f" (hrubá {med_wage_gross:,.0f} Kč,"
+        f" nákl. {med_wage_total_cost:,.0f} Kč)"
+    ),
 )
 ax.axvline(
     med_pension / 1_000,
@@ -497,14 +536,15 @@ ax.axvline(
     label=f"Medián důchodu {med_pension:,.0f} Kč",
 )
 
-# Minimum wage reference
+# Minimum wage reference (net)
 ax.axvline(
-    MIN_WAGE / 1_000,
+    min_wage_net / 1_000,
     color="gray", linewidth=0.9, linestyle=":", alpha=0.7,
-    label=f"Minimální mzda {MIN_WAGE:,} Kč",
+    label=f"Minimální čistá mzda {min_wage_net:,.0f} Kč"
+          f" (hrubá {MIN_WAGE:,} Kč)",
 )
 
-ax.set_xlabel("Hrubá mzda / výše důchodu (tis. Kč/měsíc)", fontsize=FONT_SIZE)
+ax.set_xlabel("Čistá mzda / výše důchodu (tis. Kč/měsíc)", fontsize=FONT_SIZE)
 ax.set_ylabel(
     "Počet osob (tis.) na interval 1 tis. Kč",
     fontsize=FONT_SIZE,
@@ -518,7 +558,7 @@ ax.yaxis.set_major_formatter(
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
 ax.set_title(
-    "Rozložení mzdy zaměstnanců a starobních důchodů – ČR",
+    "Rozložení čisté mzdy zaměstnanců a starobních důchodů – ČR",
     fontsize=FONT_SIZE,
 )
 ax.legend(
@@ -532,17 +572,24 @@ savefig(fig, "wage_pension_distribution", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "wage_pension_distribution",
     caption=(
-        f"Odhadnuté frekvenční distribuce hrubých mezd zaměstnanců "
+        f"Odhadnuté frekvenční distribuce čistých mezd zaměstnanců "
         f"(ISPV {wage_year}/H1, podnikatelská sféra, MPSV/TREXIMA; "
         f"N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
         f"a starobních důchodů (CSSZ {pension_year}; "
         f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
+        "Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\\,\\%), "
+        "ZP (4{{,}}5\\,\\%) a daně z příjmů fyzických osob "
+        "(DPFO\\,=\\,15\\,\\%\\,$\\times$\\,hrubá\\,$-$\\,2\\,570\\,Kč/měsíc); "
+        "celkové mzdové náklady zaměstnavatele "
+        "odpovídají násobku 1{{,}}338 hrubé mzdy "
+        f"(medián: {med_wage_total_cost:,.0f}\\,Kč). "
+        "Starobní důchody jsou vypláceny jako čistá částka. "
         "Obě distribuce jsou aproximovány log-normálním rozdělením "
         "fitovaným metodou nejmenších čtverců na percentilové profily "
         "(P10\\,--\\,P90). "
         "Osa y udává počet osob v intervalu šíře 1\\,tis.\\,Kč. "
         "Přerušované svislé čáry označují mediány; "
-        "tečkovaná čára minimální mzdu."
+        "tečkovaná čára čistou minimální mzdu."
     ),
     label="fig:wage_pension_distribution",
     width=r"0.95\linewidth",
