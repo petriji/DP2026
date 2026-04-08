@@ -52,3 +52,8 @@ pics     = ["wage_gdp_convergence"]
 script   = "analyses/union_gini_scatter.py"
 texparts = ["union_gini_scatter"]
 pics     = ["union_gini_scatter"]
+
+[ipp_wage_growth]
+script   = "analyses/ipp_wage_growth.py"
+texparts = ["ipp_wage_growth"]
+pics     = ["ipp_wage_growth"]

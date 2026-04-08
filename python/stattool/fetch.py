@@ -135,6 +135,53 @@ def fetch_oecd(
     return fetch(url, suffix=".csv", force=force)
 
 
+def fetch_ipp(
+    year: int,
+    topic: str = "odmenovani",
+    *,
+    force: bool = False,
+) -> Path:
+    """Download an IPP (Informace o pracovních podmínkách) Excel workbook from MPSV.
+
+    IPP is the annual Czech survey of collective agreements conducted by the Ministry
+    of Labour and Social Affairs (MPSV) in cooperation with trade unions and employer
+    associations.  Results are published at ``https://www.kolektivnismlouvy.cz``.
+
+    URL pattern::
+
+        https://www.kolektivnismlouvy.cz/download/{year}/IPP_{yy}_{topic}.xlsx
+
+    Parameters
+    ----------
+    year:
+        Survey / reference year (e.g., ``2024``).
+    topic:
+        File topic code.  Known codes and the data they contain:
+
+        - ``"odmenovani"``                    – remuneration: negotiated wage
+          increases, forms of pay, tariff vs. non-tariff systems.
+        - ``"mzda_tarify"``                   – wage tariff levels agreed in CAs.
+        - ``"priplatky_dalsi_slozky_mzdy"``   – supplements and other wage
+          components (overtime, night shifts, holiday pay, …).
+        - ``"zamestnanost_rozvoj_BOZP_dohody"`` – employment, personnel
+          development, health & safety, and other agreements.
+        - ``"spoluprace_smluvnich_stran"``    – cooperation of contracting
+          parties (unions and employers).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns
+    -------
+    Path
+        Local path to the cached ``.xlsx`` file.  Load it with
+        :func:`pandas.read_excel` or :meth:`~stattool.dataset.Dataset.from_ipp_excel`.
+    """
+    yy = str(year)[2:]  # last two digits: 2024 → "24"
+    filename = f"IPP_{yy}_{topic}.xlsx"
+    url = f"https://www.kolektivnismlouvy.cz/download/{year}/{filename}"
+    return fetch(url, suffix=".xlsx", force=force)
+
+
 def fetch_eurostat(
     dataset: str,
     filter_expr: str = "",
