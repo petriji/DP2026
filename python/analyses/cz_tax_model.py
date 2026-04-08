@@ -33,7 +33,7 @@ Figure
 ------
   plot_tax_wedge_comparison() – parametric single panel:
       X-axis: daňový klín [%]
-      Y-axis: náhradový poměr [%] = důchod / příjmy
+      Y-axis: náhradový poměr [%] = důchod / čistý příjem
       Parameter: income (celkové náklady / příjmy), range ~39–300 tis. Kč/měsíc.
       Output: pics/python/cz_pension_wedge.pdf
 
@@ -408,9 +408,9 @@ def _plot_osvc_lines(
             x_band = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), min(max_inc_t, income_max), 300)
             y_band = fn_pausalni(x_band, total_pay, i)
             ax.plot(x_band / 1_000, y_band,
-                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+                    color=color, linewidth=2.0, linestyle=":", zorder=2)
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_inc_t / 1_000, color=PASMO_COLORS[i],
+                ax.axvline(max_inc_t / 1_000, color=color,
                            linewidth=0.5, linestyle=":", alpha=0.4)
             prev_max = max_inc_t
 
@@ -428,10 +428,9 @@ def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
     legend_handles.append(
         Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
                label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
-    for i in range(len(PAUSALNI_DAN)):
-        legend_handles.append(
-            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
-                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    legend_handles.append(
+        Line2D([0], [0], color="#555555", linewidth=2.0, linestyle=":",
+               label="Paušální daň (tečkovaně, barva dle typu OSVČ)"))
     fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
@@ -562,52 +561,6 @@ def sp_osvc_vydajovy(revenue: np.ndarray | float,
     return OSVC_SOCIAL_RATE * social_base
 
 
-def plot_pension_vs_income(
-    income_max: int = 300_000,
-    years: int = INSURANCE_YEARS,
-) -> plt.Figure:
-    """Obrázek: měsíční starobní důchod [tis. Kč] v závislosti na příjmech / nákladech.
-
-    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
-    Osa y = měsíční starobní důchod [tis. Kč/měsíc] (pojistná doba {years} let).
-    """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
-    c_emp = PALETTE[0]
-    gross_emp = x / (1 + EMPLOYER_INS_RATE)
-    pen_emp = pension_employee(gross_emp, years) / 1_000
-
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
-    ax.plot(x / 1_000, pen_emp, color=c_emp, linewidth=2.0, zorder=3)
-
-    _plot_osvc_lines(
-        ax, x,
-        fn_osvc=lambda x_v, er: pension_osvc_vydajovy(x_v, er, years) / 1_000,
-        fn_pausalni=lambda x_b, _tp, i: np.full_like(
-            x_b, _pension(PAUSALNI_DAN[i][1], years) / 1_000),
-        income_max=income_max,
-    )
-
-    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
-                      color="#cc6600", linestyle=(0, (4, 3)))
-    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
-                      color="#888888")
-
-    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
-    ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč/měsíc]")
-    ax.set_title(
-        f"Výše starobního důchodu v závislosti na příjmech / nákladech na práci\n"
-        f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let)",
-        loc="center",
-    )
-    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
-    ax.set_ylim(bottom=0)
-
-    _bottom_legend(fig, c_emp)
-    return fig
-
-
 def plot_sp_vs_income(
     income_max: int = 300_000,
 ) -> plt.Figure:
@@ -705,8 +658,6 @@ def plot_pension_sp_ratio_vs_income(
                     color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             prev_max = max_inc_t
 
-    ax.invert_yaxis()
-
     ax.axhline(24.7, color="#555555", linewidth=1.0, linestyle=(0, (5, 5)), alpha=0.8, zorder=1)
     ax.annotate(
         "Průměrná délka pobírání\ndůchodu (24,7 let, 2024)",
@@ -727,7 +678,7 @@ def plot_pension_sp_ratio_vs_income(
     ax.set_title(
         f"Počet let pobírání důchodu k vrácení 40 let odvodů na SP\n"
         f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let; "
-        f"zaměstnanec: celkové SP; nižší = lepší návratnost)",
+        f"zaměstnanec: celkové SP)",
         loc="center",
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
@@ -744,7 +695,7 @@ def plot_tax_wedge_comparison(
     """Parametrický obrázek: náhradový poměr vs. daňový klín.
 
     Osa x = efektivní daňový klín [%] = (SP + ZP + DPFO) / příjmy × 100.
-    Osa y = náhradový poměr [%] = důchod / příjmy × 100.
+    Osa y = náhradový poměr [%] = důchod / čistý příjem × 100.
 
     Každá křivka je parametrizována příjmem (celkové náklady zaměstnavatele /
     příjmy OSVČ) v rozsahu [income_min, income_max].
@@ -753,7 +704,7 @@ def plot_tax_wedge_comparison(
 
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     tw_emp    = tax_wedge_employee(x)
-    rr_emp    = pension_employee(gross_emp, years) / x * 100
+    rr_emp    = pension_employee(gross_emp, years) / net_income_employee(x) * 100
 
     fig, ax = plt.subplots(figsize=cm2in(16, 12))
     c_emp = PALETTE[0]
@@ -763,7 +714,7 @@ def plot_tax_wedge_comparison(
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
-        rr_osvc = pension_osvc_vydajovy(x, expense_rate, years) / x * 100
+        rr_osvc = pension_osvc_vydajovy(x, expense_rate, years) / np.maximum(net_income_osvc_vydajovy(x, expense_rate), 1) * 100
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         mask_below = x <= cap
         mask_above = ~mask_below
@@ -781,9 +732,10 @@ def plot_tax_wedge_comparison(
             x_band  = np.linspace(max(prev_max, income_min), max_inc_t, 300)
             tw_band = total_pay / x_band * 100
             p_val   = _pension(monthly_base, years)  # fixed VZ per pásmo
-            rr_band = p_val / x_band * 100
+            net_band = np.maximum(x_band - float(total_pay), 1.0)
+            rr_band = p_val / net_band * 100
             ax.plot(tw_band, rr_band,
-                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+                    color=color, linewidth=2.0, linestyle=":", zorder=2)
             prev_max = max_inc_t
 
     # Referenční body na křivkách pro min. mzdu a mediánové náklady zaměstnance
@@ -795,18 +747,18 @@ def plot_tax_wedge_comparison(
         if income_min <= x_ref <= income_max:
             gross_r = x_ref / (1 + EMPLOYER_INS_RATE)
             tw_e = float(tax_wedge_employee(float(x_ref)))
-            rr_e = float(pension_employee(float(gross_r), years)) / x_ref * 100
+            rr_e = float(pension_employee(float(gross_r), years)) / float(net_income_employee(float(x_ref))) * 100
             ax.plot(tw_e, rr_e, "o", color=col, markersize=5, zorder=5)
             ax.annotate(lbl, (tw_e, rr_e), xytext=(4, 4),
                         textcoords="offset points",
                         fontsize=FONT_SIZE - 2, color=col)
             for expense_rate_ref, _label, color_ref, _max_pasmo in OSVC_TYPES:
                 tw_o = float(tax_wedge_osvc_vydajovy(float(x_ref), expense_rate_ref))
-                rr_o = float(pension_osvc_vydajovy(float(x_ref), expense_rate_ref, years)) / x_ref * 100
+                rr_o = float(pension_osvc_vydajovy(float(x_ref), expense_rate_ref, years)) / max(float(net_income_osvc_vydajovy(float(x_ref), expense_rate_ref)), 1.0) * 100
                 ax.plot(tw_o, rr_o, "o", color=col, markersize=5, zorder=5)
 
     ax.set_xlabel("Daňový klín\u00a0[%]")
-    ax.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0příjmy)\u00a0[%]")
+    ax.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0čistý\u00a0příjem)\u00a0[%]")
     ax.set_title(
         "Náhradový poměr v závislosti na daňovém klínu\n"
         f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let)",
@@ -820,14 +772,14 @@ def plot_tax_wedge_comparison(
     x_end = float(income_max)
     gross_end = x_end / (1 + EMPLOYER_INS_RATE)
     tw_end_emp = float(tax_wedge_employee(x_end))
-    rr_end_emp = float(pension_employee(gross_end, years)) / x_end * 100
+    rr_end_emp = float(pension_employee(gross_end, years)) / float(net_income_employee(x_end)) * 100
     ax.annotate("Zam.", (tw_end_emp, rr_end_emp),
                 xytext=(4, 0), textcoords="offset points",
                 fontsize=FONT_SIZE - 2, color=c_emp, va="center")
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
-        rr_end_o = float(pension_osvc_vydajovy(x_end, expense_rate, years)) / x_end * 100
+        rr_end_o = float(pension_osvc_vydajovy(x_end, expense_rate, years)) / max(float(net_income_osvc_vydajovy(x_end, expense_rate)), 1.0) * 100
         # Short label: extract the expense-rate percentage from label string
         short = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
         ax.annotate(short, (tw_end_o, rr_end_o),
@@ -840,7 +792,8 @@ def plot_tax_wedge_comparison(
         x_lab = float(min(income_max, max_inc_t))
         tw_lab = total_pay / x_lab * 100
         p_val  = _pension(monthly_base, years)
-        rr_lab = p_val / x_lab * 100
+        net_lab = max(float(x_lab) - float(total_pay), 1.0)
+        rr_lab = p_val / net_lab * 100
         ax.annotate(f"Paušál {i + 1}", (tw_lab, rr_lab),
                     xytext=(4, 0), textcoords="offset points",
                     fontsize=FONT_SIZE - 2, color=PASMO_COLORS[i], va="center")
@@ -867,7 +820,7 @@ if __name__ == "__main__":
             r"(ZDP § 7 odst. 7). Sleva na poplatníka 2\,570\,Kč/měs.\ "
             r"uplatněna pro zaměstnance a OSVČ se standardními/výdajovými odvody; "
             r"pro paušální daň je již zahrnuta v pevné platbě. "
-            r"Osa y: náhradový poměr = důchod\,/\,příjmy. "
+            r"Osa y: náhradový poměr = důchod\,/\,čistý příjem. "
             r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) "
             r"zobrazeny přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
             r"Body označené kroužkem odpovídají minimální mzdě a mediánu zaměstnaneckých mezd "
@@ -925,28 +878,6 @@ if __name__ == "__main__":
             r"a nařízení vlády č.\,365/2025~Sb."
         ),
         label="fig:cz_net_income_vs_income",
-        width=r"0.95\linewidth",
-    )
-
-    # ── Obrázek 6: důchod vs. příjmy ──────────────────────────────────────────
-    fig_pvi = plot_pension_vs_income()
-    savefig(fig_pvi, "cz_pension_vs_income", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
-        "cz_pension_vs_income",
-        caption=(
-            r"Výše starobního důchodu v závislosti na celkových nákladech zaměstnavatele "
-            r"(zaměstnanec) resp. příjmech OSVČ za měsíc. "
-            r"Zaměstnanec: OVZ = hrubá mzda = celkové náklady\,/\,1,338. "
-            r"OSVČ s výdajovým paušálem: OVZ = SP vyměřovací základ = "
-            r"max(55\,\% × ZD, min.\,základ). "
-            r"Paušální daň: OVZ = pevný základ příslušného pásma. "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
-            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Parametry roku~2026, pojistná doba 40~let. "
-            r"Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
-        ),
-        label="fig:cz_pension_vs_income",
         width=r"0.95\linewidth",
     )
 

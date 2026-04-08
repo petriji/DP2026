@@ -32,7 +32,7 @@ PCT_PER_YEAR = 1,495 % for 2026 (gradual reduction from 1,5 % to 1,45 % by 2035,
                zákon č. 270/2023 Sb., § 34 odst. 1).
 
 Reduction (§ 15 ZPDS):
-    ROVZ = min(OVZ, RH1) × 1.00
+    ROVZ = min(OVZ, RH1) × 0.99
          + max(min(OVZ, RH2) − RH1, 0) × 0.26
          + max(OVZ − RH2, 0) × 0.22
 
@@ -247,7 +247,7 @@ def _rovz(ovz: np.ndarray | float) -> np.ndarray | float:
     ROVZ v Kč/měsíc (stejného typu/tvaru jako vstup).
     """
     return (
-        np.minimum(ovz, RH1)
+        np.minimum(ovz, RH1) * 0.99
         + np.maximum(np.minimum(ovz, RH2) - RH1, 0) * 0.26
         + np.maximum(ovz - RH2, 0) * 0.22
     )
@@ -330,6 +330,37 @@ def pension_osvc_vydajovy(revenue: np.ndarray | float,
     return _pension(ovz, years)
 
 
+def _net_income_emp(total_cost: np.ndarray | float) -> np.ndarray | float:
+    """Čistý příjem zaměstnance z celkových nákladů zaměstnavatele."""
+    x = np.asarray(total_cost, dtype=float)
+    gross = x / (1 + EMPLOYER_INS_RATE)
+    sp_e = EMPLOYEE_SOCIAL_RATE * gross
+    zp_e = EMPLOYEE_HEALTH_RATE * gross
+    dan_raw = (
+        np.minimum(gross, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
+        + np.maximum(gross - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
+    )
+    dan = np.maximum(dan_raw - SLEVA_POPLATNIK_MONTHLY, 0)
+    return gross - sp_e - zp_e - dan
+
+
+def _net_income_osvc_vydajovy(revenue: np.ndarray | float,
+                               expense_rate: float) -> np.ndarray | float:
+    """Čistý příjem OSVČ s výdajovým paušálem (ZD − SP − ZP − DPFO)."""
+    x = np.asarray(revenue, dtype=float)
+    zd = (1.0 - expense_rate) * x
+    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
+    social = OSVC_SOCIAL_RATE * social_base
+    health = OSVC_HEALTH_RATE * health_base
+    dan_raw = (
+        np.minimum(zd, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
+        + np.maximum(zd - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
+    )
+    dan = np.maximum(dan_raw - SLEVA_POPLATNIK_MONTHLY, 0)
+    return zd - social - health - dan
+
+
 # ── Vizualizace ───────────────────────────────────────────────────────────────
 
 def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
@@ -404,9 +435,9 @@ def plot_pension_comparison(
             x_seg  = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
             y_seg  = [p_val / 1_000, p_val / 1_000]
             ax.plot(x_seg, y_seg,
-                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+                    color=color, linewidth=2.0, linestyle=":", zorder=2)
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_income / 1_000, color=PASMO_COLORS[i],
+                ax.axvline(max_income / 1_000, color=color,
                            linewidth=0.5, linestyle=":", alpha=0.4)
             pasmo_plotted.add(i)
             prev_max = max_income
@@ -459,10 +490,9 @@ def plot_pension_comparison(
     legend_handles.append(
         Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
                label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
-    for i in range(len(PAUSALNI_DAN)):
-        legend_handles.append(
-            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
-                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    legend_handles.append(
+        Line2D([0], [0], color="#555555", linewidth=2.0, linestyle=":",
+               label="Paušální daň (tečkovaně, barva dle typu OSVČ)"))
     fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
@@ -544,9 +574,9 @@ def plot_pension_solidarity(
             x_seg = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
             y_seg = [p_val / 1_000, p_val / 1_000]
             ax_top.plot(x_seg, y_seg,
-                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+                        color=color, linewidth=2.0, linestyle=":", zorder=2)
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_top.axvline(max_income / 1_000, color=PASMO_COLORS[i],
+                ax_top.axvline(max_income / 1_000, color=color,
                                linewidth=0.5, linestyle=":", alpha=0.4)
             prev_max = max_income
 
@@ -589,12 +619,12 @@ def plot_pension_solidarity(
     # ══════════════════════════════════════════════════════════════════════════
     # DOLNÍ PANEL – náhradový poměr [%] = důchod / x × 100
     # ══════════════════════════════════════════════════════════════════════════
-    rr_emp = p_emp_rr / x_rr * 100
+    rr_emp = p_emp_rr / _net_income_emp(x_rr) * 100
     ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
-        rr_osvc   = p_osvc_rr / x_rr * 100
+        rr_osvc   = p_osvc_rr / _net_income_osvc_vydajovy(x_rr, expense_rate) * 100
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x_rr, cap, side='right'))
         if idx > 0:
@@ -606,14 +636,15 @@ def plot_pension_solidarity(
                         color=color, linewidth=1.5, linestyle="-.", alpha=0.45)
 
         prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
+        for i, ((max_income, monthly_base), (_, total_pay_band)) in enumerate(
+                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
             p_val   = _pension(monthly_base, years)
             x_band  = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), max_income, 300)
-            rr_band = p_val / x_band * 100
+            rr_band = p_val / np.maximum(x_band - total_pay_band, 1) * 100
             ax_bot.plot(x_band / 1_000, rr_band,
-                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":")
+                        color=color, linewidth=2.0, linestyle=":")
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_bot.axvline(max_income / 1_000, color=PASMO_COLORS[i],
+                ax_bot.axvline(max_income / 1_000, color=color,
                                linewidth=0.5, linestyle=":", alpha=0.4)
             prev_max = max_income
 
@@ -634,7 +665,7 @@ def plot_pension_solidarity(
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax_bot.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
-    ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0nákl.)\u00a0[%]")
+    ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0čistý\u00a0příjem)\u00a0[%]")
     ax_bot.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax_bot.set_ylim(bottom=0)
 
@@ -649,10 +680,9 @@ def plot_pension_solidarity(
     legend_handles.append(
         Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
                label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
-    for i in range(len(PAUSALNI_DAN)):
-        legend_handles.append(
-            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
-                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    legend_handles.append(
+        Line2D([0], [0], color="#555555", linewidth=2.0, linestyle=":",
+               label="Paušální daň (tečkovaně, barva dle typu OSVČ)"))
     fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
@@ -694,7 +724,7 @@ if __name__ == "__main__":
             r"(dolní panel) v závislosti na celkových nákladech zaměstnavatele "
             r"(zaměstnanec) resp. zisku (OSVČ) za měsíc – viz obrázek "
             r"\ref{fig:cz_pension_income} pro popis osy\,x. "
-            r"Náhradový poměr = důchod\,/\,celkové náklady\,/\,zisk; "
+            r"Náhradový poměr = důchod\,/\,čistý příjem; "
             r"klesající průběh dokládá solidární přerozdělení ve prospěch nižších příjmů. "
             r"Parametry roku~2026, pojistná doba 40~let. "
             r"Výpočet dle zákona č.\,155/1995~Sb., zákona č.\,270/2023~Sb. "
