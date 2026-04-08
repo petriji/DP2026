@@ -163,6 +163,12 @@ OSVC_HEALTH_RATE: float = 0.135   # 13,5 % z vyměřovacího základu
 # = 50 % průměrné mzdy.
 OSVC_MIN_HEALTH_BASE: int = AVG_WAGE // 2  # 24 484 Kč/měsíc (2026)
 
+# ── Minimální mzda ────────────────────────────────────────────────────────────
+# Nařízení vlády č. 405/2025 Sb. – platné od 1. 1. 2026.
+MIN_WAGE: int = 20_800  # CZK/měsíc (hrubá mzda, zaměstnanec)
+# Celkové náklady zaměstnavatele při minimální mzdě (osa x ekvivalent):
+MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830 Kč
+
 # ── Polohy zlomů (kinks) na ose x (celkové náklady / zisk) pro RH1/RH2 ───────
 # Redukční hranice RH1 a RH2 jsou prahové hodnoty OVZ, nikoliv osy x.
 # Na ose x = celkové náklady zaměstnavatele / zisk OSVČ se zlomy nacházejí:
@@ -393,7 +399,10 @@ def plot_pension_comparison(
         fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
     )
 
-    # Referenční čára: průměrná hrubá mzda přepočtená na celkové náklady zaměstnavatele
+    # Referenční čáry
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
     avg_total_cost = int(AVG_WAGE * (1 + EMPLOYER_INS_RATE))
     _add_vertical_ref(ax, avg_total_cost / 1_000,
                       f"Celk.\u00a0nákl.\u00a0(prům.\u00a0mzda)\n({_fmt_czk(avg_total_cost)})",
@@ -523,6 +532,9 @@ def plot_pension_solidarity(
 
     # Referenční svislé čáry – průměrná hrubá mzda přepočtená na celkové náklady
     avg_total_cost = int(AVG_WAGE * (1 + EMPLOYER_INS_RATE))
+    _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax_top, avg_total_cost / 1_000,
                       f"Celk.\u00a0nákl.\u00a0(prům.\u00a0mzda)\n({_fmt_czk(avg_total_cost)})",
                       color="#888888")
@@ -584,6 +596,9 @@ def plot_pension_solidarity(
         prev_max = max_income
 
     # Referenční svislé čáry – dolní panel (stejné kink pozice jako horní)
+    _add_vertical_ref(ax_bot, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda",
+                      color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax_bot, avg_total_cost / 1_000,
                       "Celk.\u00a0nákl.\u00a0(prům.\u00a0mzda)",
                       color="#888888")
@@ -702,6 +717,9 @@ def plot_tax_wedge_comparison(
         prev_max = max_inc_t
 
     # Referenční čáry
+    _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax_top, avg_total_cost / 1_000,
                       f"Celk.\u00a0nákl.\u00a0(prům.\u00a0mzda)\n({_fmt_czk(avg_total_cost)})",
                       color="#888888")
@@ -745,6 +763,9 @@ def plot_tax_wedge_comparison(
                            linewidth=0.5, linestyle=":", alpha=0.4)
         prev_max = max_income
 
+    _add_vertical_ref(ax_bot, MIN_WAGE_TOTAL_COST / 1_000,
+                      "Min.\u00a0mzda",
+                      color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax_bot, avg_total_cost / 1_000,
                       "Celk.\u00a0nákl.\u00a0(prům.\u00a0mzda)",
                       color="#888888")
