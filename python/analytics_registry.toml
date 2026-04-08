@@ -57,3 +57,8 @@ pics     = ["union_gini_scatter"]
 script   = "analyses/ipp_wage_growth.py"
 texparts = ["ipp_wage_growth"]
 pics     = ["ipp_wage_growth"]
+
+[ipp_supplementary]
+script   = "analyses/ipp_supplementary.py"
+texparts = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+pics     = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
