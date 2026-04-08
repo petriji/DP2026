@@ -1,23 +1,23 @@
 r"""
-Labour Market Policy (LMP) expenditure as % of GDP – CZ, AT, DE, DK, PL, SK.
+Employment rate (ages 20–64) timeline – CZ, AT, DE, DK, PL, SK.
 
-Key message for the thesis: DK spends ~2 % of GDP on active labour-market
-policy; CZ spends ~0.3 %.  The "flexicurity" triangle only works with
-adequate income-support and re-skilling investment.
+Shows the trend in total employment rates across the six reference countries
+from 2000 to the latest available year.  CZ's high employment rate relative
+to its wage level is a key protiargument that the thesis addresses.
 
-Data source: Eurostat, ``lmp_expsumm``
-  LMP summary expenditure by type of action.
-  Dimensions: freq · exptype · unit · geo
-  Filter used: freq=A, exptype=LMP_TOT (total LMP), unit=PC_GDP.
+Data source: Eurostat, ``lfsi_emp_a``
+  Employment rate by sex and age (annual), age group Y20-64.
+  Dimensions: freq · unit · sex · age · geo
+  Filter: freq=A, unit=PC_POP (%), sex=T (total), age=Y20-64.
 
 Output
 ------
-  pics/lmp_expenditure.pdf
-  latex/texparts/lmp_expenditure.tex  ← \input{} this in main.tex
+  pics/python/employment_rate_timeline.pdf
+  latex/texparts/python/employment_rate_timeline.tex  ← \input{} this in main.tex
 
 Run
 ---
-    python analyses/lmp_expenditure.py
+    python analyses/employment_rate_timeline.py
 """
 
 import sys
@@ -35,27 +35,27 @@ from statout.timeline import timeline
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 GEO = "+".join(COUNTRIES)
-START_YEAR = 2004
-HIGHLIGHT = ["CZ", "DK"]
+START_YEAR = 2000
+HIGHLIGHT = ["CZ"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# lmp_expsumm: LMP expenditure summary (annual)
-# exptype=LMP_TOT selects total LMP spending; unit=PC_GDP gives % of GDP.
+# lfsi_emp_a: employment rate by sex and age
+# Dimensions: freq · unit · sex · age · geo
 path = fetch_eurostat(
-    "lmp_expsumm",
-    f"A.LMP_TOT.PC_GDP.{GEO}",
+    "lfsi_emp_a",
+    f"A.PC_POP.T.Y20-64.{GEO}",
     start_period=START_YEAR,
 )
 
 # ── 2. Parse ──────────────────────────────────────────────────────────────────
 ds = Dataset.from_sdmx_csv(
     path,
-    name="Výdaje na APZ",
-    unit="% HDP",
-    source_url="Eurostat/lmp_expsumm",
+    name="Míra zaměstnanosti",
+    unit="%",
+    source_url="Eurostat/lfsi_emp_a",
 )
 
 print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}–{ds.years[-1]}")
@@ -64,26 +64,26 @@ print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}–{ds.years[-1]}")
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Výdaje na aktivní politiku zaměstnanosti (% HDP)",
-    ylabel="Výdaje na aktivní politiku zaměstnanosti (% HDP)",
+    title="Míra zaměstnanosti (20–64 let)",
+    ylabel="Míra zaměstnanosti (% populace 20–64)",
     highlight=HIGHLIGHT,
     annotate_last=True,
-    show_eu_avg=False,
+    show_eu_avg=True,
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "lmp_expenditure", out_dir=LATEX_PICS_DIR)
+savefig(fig, "employment_rate_timeline", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex(
-    "lmp_expenditure",
+    "employment_rate_timeline",
     caption=(
-        f"Výdaje na aktivní politiku zaměstnanosti jako podíl HDP, "
+        f"Vývoj míry zaměstnanosti osob ve věku 20–64 let, "
         f"{START_YEAR}--{ds.years[-1]}."
     ),
-    label="fig:lmp_expenditure",
+    label="fig:employment_rate_timeline",
     width=r"0.95\linewidth",
-    cite_key="eurostat_lmp_expsumm",
+    cite_key="eurostat_lfsi_emp_a",
 )
 
 print("Done.")

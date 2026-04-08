@@ -3,6 +3,7 @@ pandas>=2.0
 openpyxl           # xlsx support for pd.read_excel
 requests           # HTTP downloads
 tqdm               # progress bars
+scipy              # statistical distributions (wage_pension_distribution)
 
 # Geospatial (Europe choropleth maps)
 geopandas>=0.14
