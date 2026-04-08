@@ -92,6 +92,8 @@ from cz_pension_model import (
 )
 
 
+# ── Výpočetní funkce ──────────────────────────────────────────────────────────
+
 def tax_wedge_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | float:
     """Efektivní daňový klín zaměstnance [%] z celkových nákladů zaměstnavatele.
 
@@ -865,8 +867,6 @@ def plot_tax_wedge_comparison(
 # ── Spuštění ──────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    apply_style()
-
     fig_tw = plot_tax_wedge_comparison()
     savefig(fig_tw, "cz_pension_wedge", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
