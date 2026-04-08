@@ -210,6 +210,16 @@ OSVC_TYPES: list[tuple[float, str, str, int]] = [
 # protože VZ paušálu je pevný na pásmo a křivky různých typů OSVČ se překrývají).
 PASMO_COLORS: list[str] = [PALETTE[2], PALETTE[3], PALETTE[6]]  # pásmo 1, 2, 3
 
+# Limity měsíčních příjmů pro výdajový paušál (zákon č. 586/1992 Sb., § 7 odst. 7)
+# Maximální roční výdaje: 80 % = 1 600 000 Kč, 60 % = 1 200 000 Kč, 40 % = 800 000 Kč.
+# Nad těmito hranicemi (roční max / 12) výdajová sazba přestává platit a je třeba
+# uplatnit skutečné výdaje (daňová evidence). Linestyle se v grafech změní na '-.'.
+OSVC_VYDAJOVY_CAP: dict[float, int] = {
+    0.80: 133_333,  # 80 % paušál: max výdaje 1 600 000 Kč/rok ÷ 12
+    0.60: 100_000,  # 60 % paušál: max výdaje 1 200 000 Kč/rok ÷ 12
+    0.40:  66_667,  # 40 % paušál: max výdaje   800 000 Kč/rok ÷ 12
+}
+
 # ── Pomocné výpočetní funkce ──────────────────────────────────────────────────
 
 def _fmt_czk(amount: int) -> str:
@@ -371,12 +381,19 @@ def plot_pension_comparison(
     ax.plot(x / 1_000, p_emp / 1_000,
             color=c_emp, linewidth=2.0, zorder=3)
 
-    # OSVČ typy – standardní odvody (dashed) + paušální daň (dotted, barva dle pásma)
+    # OSVČ typy – standardní odvody (dashed below cap, dash-dot above cap) + paušální daň
     pasmo_plotted: set[int] = set()
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
-        ax.plot(x / 1_000, p_osvc / 1_000,
-                color=color, linewidth=1.5, linestyle="--", zorder=3)
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        idx = int(np.searchsorted(x, cap, side='right'))
+        if idx > 0:
+            ax.plot(x[:idx] / 1_000, p_osvc[:idx] / 1_000,
+                    color=color, linewidth=1.5, linestyle="--", zorder=3)
+        if idx < len(x):
+            start = max(0, idx - 1)
+            ax.plot(x[start:] / 1_000, p_osvc[start:] / 1_000,
+                    color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
@@ -432,6 +449,9 @@ def plot_pension_comparison(
     for _er, lbl, col, _mp in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    legend_handles.append(
+        Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
+               label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
     for i in range(len(PAUSALNI_DAN)):
         legend_handles.append(
             Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
@@ -500,8 +520,15 @@ def plot_pension_solidarity(
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
-        ax_top.plot(x / 1_000, p_osvc / 1_000,
-                    color=color, linewidth=1.5, linestyle="--", zorder=3)
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        idx = int(np.searchsorted(x, cap, side='right'))
+        if idx > 0:
+            ax_top.plot(x[:idx] / 1_000, p_osvc[:idx] / 1_000,
+                        color=color, linewidth=1.5, linestyle="--", zorder=3)
+        if idx < len(x):
+            start = max(0, idx - 1)
+            ax_top.plot(x[start:] / 1_000, p_osvc[start:] / 1_000,
+                        color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
@@ -556,8 +583,15 @@ def plot_pension_solidarity(
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
         rr_osvc   = p_osvc_rr / x_rr * 100
-        ax_bot.plot(x_rr / 1_000, rr_osvc,
-                    color=color, linewidth=1.5, linestyle="--")
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        idx = int(np.searchsorted(x_rr, cap, side='right'))
+        if idx > 0:
+            ax_bot.plot(x_rr[:idx] / 1_000, rr_osvc[:idx],
+                        color=color, linewidth=1.5, linestyle="--")
+        if idx < len(x_rr):
+            start = max(0, idx - 1)
+            ax_bot.plot(x_rr[start:] / 1_000, rr_osvc[start:],
+                        color=color, linewidth=1.5, linestyle="-.", alpha=0.45)
 
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
@@ -596,6 +630,9 @@ def plot_pension_solidarity(
     for _er, lbl, col, _mp in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    legend_handles.append(
+        Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
+               label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
     for i in range(len(PAUSALNI_DAN)):
         legend_handles.append(
             Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
