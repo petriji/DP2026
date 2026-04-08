@@ -193,6 +193,69 @@ def fetch_ipp(
     return fetch(url, suffix=".xlsx", force=force)
 
 
+def fetch_ispv(
+    year: int,
+    half: int = 2,
+    *,
+    sphere: str = "podnikatelska",
+    force: bool = False,
+) -> Path:
+    """Download an ISPV / RSCP Excel workbook from the TREXIMA portal.
+
+    ISPV (*Informační systém o průměrném výdělku*) is the Czech wage-statistics
+    system covering the **business / private sector** (podnikatelská sféra).
+    RSCP (*Registr středních cen práce*) covers the **public / non-business
+    sector** (nepodnikatelská sféra – e.g. government, education, health).
+    Both surveys are published semi-annually by TREXIMA on behalf of the
+    Ministry of Labour and Social Affairs (MPSV) at ``https://www.ispv.cz``.
+
+    URL pattern::
+
+        https://www.ispv.cz/files/{PREFIX}_{yy}H{half}.xlsx
+
+    where ``PREFIX`` is ``"ISPV"`` for the private sector and ``"RSCP"`` for
+    the public sector.
+
+    The Excel workbooks contain sector-specific (NACE Rev. 2) breakdowns
+    of median and mean wages, wage percentiles (P10, P25, P75, P90), and
+    employee counts for the reference half-year period.
+
+    Parameters
+    ----------
+    year:
+        Reference year (e.g., ``2024``).
+    half:
+        Half-year: ``1`` = January–June, ``2`` = July–December.
+        The H2 edition is typically the main annual publication.
+    sphere:
+        Which employment sphere to download:
+
+        - ``"podnikatelska"``   – private / business sector (ISPV).
+        - ``"nepodnikatelska"`` – public / non-business sector (RSCP).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns
+    -------
+    Path
+        Local path to the cached ``.xlsx`` file.  Parse it with
+        :func:`pandas.read_excel`; the sector labels are in Czech and
+        correspond to NACE Rev. 2 section-level codes (A–S).
+
+    Notes
+    -----
+    The TREXIMA portal occasionally reorganises its URL structure between
+    annual editions.  If this function raises an HTTP 404, check the current
+    download links at ``https://www.ispv.cz/cz/Vysledky/`` and pass an
+    explicit URL via the generic :func:`fetch` helper instead.
+    """
+    yy = str(year)[2:]  # last two digits: 2024 → "24"
+    prefix = "ISPV" if sphere == "podnikatelska" else "RSCP"
+    filename = f"{prefix}_{yy}H{half}.xlsx"
+    url = f"https://www.ispv.cz/files/{filename}"
+    return fetch(url, suffix=".xlsx", force=force)
+
+
 def fetch_eurostat(
     dataset: str,
     filter_expr: str = "",
