@@ -105,7 +105,7 @@ EMPLOYER_INS_RATE: float = 0.338  # 33,8 % z hrubé mzdy
 
 # ── OSVČ – specifika ──────────────────────────────────────────────────────────
 # Vyměřovací základ OSVČ pro sociální pojištění (SP) = 55 % ze základu daně.
-# Zákon č. 589/1992 Sb. § 5b ve znění zákon č. 270/2023 Sb. (důchodová reforma):
+# Zákon č. 589/1992 Sb. § 5b ve znění zákona č. 270/2023 Sb. (důchodová reforma):
 # sazba VZ pro SP zvýšena z 50 % na 55 % s účinností od 1. 1. 2024.
 # Pro důchodové pojištění je OVZ totožný s VZ pro SP (§ 11 ZPDS).
 OSVC_BASE_RATIO: float = 0.55   # SP VZ / OVZ = 55 % ze základu daně (2024–)

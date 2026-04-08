@@ -286,8 +286,8 @@ def tax_breakdown(
         r["net_income"]      = zd - sp - zp - r["dpfo_net"]
         r["tax_wedge_pct"]   = r["total_charges"] / income * 100
         r["note"] = (
-            f"Výdajový paušál {expense_rate*100:.0f}%; ZD DPFO = {expense_rate*100:.0f}% výdaje "
-            f"⇒ ZD = {(1-expense_rate)*100:.0f}% příjmů. "
+            f"Výdajový paušál {expense_rate*100:.0f}% = uznatelné výdaje; "
+            f"ZD DPFO = {(1-expense_rate)*100:.0f}% příjmů (zisk po paušálu). "
             "SP a ZP nejsou odečitatelné od ZD DPFO (ZDP §7/7). "
             "Sleva na poplatníka uplatněna."
         )
