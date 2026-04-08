@@ -372,7 +372,7 @@ def plot_pension_comparison(
     -------
     matplotlib Figure objekt.
     """
-    x = np.linspace(0, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
 
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     p_emp     = pension_employee(gross_emp, years)
@@ -401,7 +401,7 @@ def plot_pension_comparison(
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
             p_val  = _pension(monthly_base, years)
-            x_seg  = [prev_max / 1_000, max_income / 1_000]
+            x_seg  = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
             y_seg  = [p_val / 1_000, p_val / 1_000]
             ax.plot(x_seg, y_seg,
                     color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
@@ -433,6 +433,10 @@ def plot_pension_comparison(
         _add_vertical_ref(ax, EMP_RH1_X / 1_000,
                           f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
+    if EMP_RH2_X <= income_max:
+        _add_vertical_ref(ax, EMP_RH2_X / 1_000,
+                          f"2.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH2_X)})",
+                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
@@ -441,7 +445,7 @@ def plot_pension_comparison(
         f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02026)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
     # Legenda mimo osy – dole pod grafem; ručně sestavené handles pro přehlednost
@@ -462,6 +466,7 @@ def plot_pension_comparison(
     fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
+    fig.subplots_adjust(bottom=0.20)
     return fig
 
 
@@ -495,8 +500,8 @@ def plot_pension_solidarity(
     matplotlib Figure objekt (dva panely sdílející osu x).
     """
     # ── Datové vektory ─────────────────────────────────────────────────────────
-    x    = np.linspace(0, income_max, 2_000)
-    x_rr = np.linspace(income_min_rr, income_max, 2_000)
+    x    = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    x_rr = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
 
     gross_emp    = x    / (1 + EMPLOYER_INS_RATE)
     gross_emp_rr = x_rr / (1 + EMPLOYER_INS_RATE)
@@ -536,7 +541,7 @@ def plot_pension_solidarity(
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
             p_val = _pension(monthly_base, years)
-            x_seg = [prev_max / 1_000, max_income / 1_000]
+            x_seg = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
             y_seg = [p_val / 1_000, p_val / 1_000]
             ax_top.plot(x_seg, y_seg,
                         color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
@@ -567,6 +572,10 @@ def plot_pension_solidarity(
         _add_vertical_ref(ax_top, EMP_RH1_X / 1_000,
                           f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
+    if EMP_RH2_X <= income_max:
+        _add_vertical_ref(ax_top, EMP_RH2_X / 1_000,
+                          f"2.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH2_X)})",
+                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax_top.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
     ax_top.set_title(
@@ -574,7 +583,7 @@ def plot_pension_solidarity(
         f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02026)",
         loc="center",
     )
-    ax_top.set_xlim(0, income_max / 1_000)
+    ax_top.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax_top.set_ylim(bottom=0)
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -599,7 +608,7 @@ def plot_pension_solidarity(
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
             p_val   = _pension(monthly_base, years)
-            x_band  = np.linspace(max(prev_max + 1, income_min_rr), max_income, 300)
+            x_band  = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), max_income, 300)
             rr_band = p_val / x_band * 100
             ax_bot.plot(x_band / 1_000, rr_band,
                         color=PASMO_COLORS[i], linewidth=2.0, linestyle=":")
@@ -619,10 +628,14 @@ def plot_pension_solidarity(
         _add_vertical_ref(ax_bot, EMP_RH1_X / 1_000,
                           "1.\u00a0RH\u00a0(zam.)",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
+    if EMP_RH2_X <= income_max:
+        _add_vertical_ref(ax_bot, EMP_RH2_X / 1_000,
+                          "2.\u00a0RH\u00a0(zam.)",
+                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax_bot.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0nákl.)\u00a0[%]")
-    ax_bot.set_xlim(0, income_max / 1_000)
+    ax_bot.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax_bot.set_ylim(bottom=0)
 
     # Legenda mimo osy – dole pod figúrou; sdílena oběma panely
@@ -643,10 +656,8 @@ def plot_pension_solidarity(
     fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
+    fig.subplots_adjust(bottom=0.18)
     return fig
-
-
-# ── Spuštění ──────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     apply_style()
