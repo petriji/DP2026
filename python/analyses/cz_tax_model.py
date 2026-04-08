@@ -671,23 +671,23 @@ def plot_pension_sp_ratio_vs_income(
     x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
-    ratio_emp = INSURANCE_YEARS / (pension_employee(gross_emp, years) / sp_employee(x))
+    breakeven_years_emp = INSURANCE_YEARS / (pension_employee(gross_emp, years) / sp_employee(x))
 
     fig, ax = plt.subplots(figsize=cm2in(16, 10))
-    ax.plot(x / 1_000, ratio_emp, color=c_emp, linewidth=2.0, zorder=3)
+    ax.plot(x / 1_000, breakeven_years_emp, color=c_emp, linewidth=2.0, zorder=3)
 
     for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
         pen_o = pension_osvc_vydajovy(x, expense_rate, years)
         sp_o = sp_osvc_vydajovy(x, expense_rate)
-        ratio_o = INSURANCE_YEARS / (pen_o / sp_o)
+        breakeven_years_o = INSURANCE_YEARS / (pen_o / sp_o)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x, cap, side='right'))
         if idx > 0:
-            ax.plot(x[:idx] / 1_000, ratio_o[:idx],
+            ax.plot(x[:idx] / 1_000, breakeven_years_o[:idx],
                     color=color, linewidth=1.5, linestyle="--", zorder=3)
         if idx < len(x):
             start = max(0, idx - 1)
-            ax.plot(x[start:] / 1_000, ratio_o[start:],
+            ax.plot(x[start:] / 1_000, breakeven_years_o[start:],
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = int(MIN_WAGE_TOTAL_COST)
@@ -700,8 +700,8 @@ def plot_pension_sp_ratio_vs_income(
                 continue
             pen_band = _pension(monthly_base, years)
             sp_band = OSVC_SOCIAL_RATE * monthly_base
-            ratio_band = np.full_like(x_band, INSURANCE_YEARS / (pen_band / sp_band))
-            ax.plot(x_band / 1_000, ratio_band,
+            breakeven_years_band = np.full_like(x_band, INSURANCE_YEARS / (pen_band / sp_band))
+            ax.plot(x_band / 1_000, breakeven_years_band,
                     color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             prev_max = max_inc_t
 
