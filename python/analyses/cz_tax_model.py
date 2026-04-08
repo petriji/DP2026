@@ -54,6 +54,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
+from matplotlib.lines import Line2D
+
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import apply_style, cm2in, save_figure_tex, savefig
 
@@ -331,6 +333,198 @@ def tax_breakdown(
     return r
 
 
+# ── Pomocné výpočetní funkce pro nové obrázky ─────────────────────────────────
+
+def net_income_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | float:
+    """Čistý příjem zaměstnance (odchozí mzda) z celkových nákladů zaměstnavatele.
+
+    Čistý příjem = hrubá mzda − SP zaměstnance − ZP zaměstnance − DPFO (po slevě).
+    """
+    x = np.asarray(total_labor_cost, dtype=float)
+    gross = x / (1 + EMPLOYER_INS_RATE)
+    employee_social = EMPLOYEE_SOCIAL_RATE * gross
+    employee_health = EMPLOYEE_HEALTH_RATE * gross
+    dan_raw = (
+        np.minimum(gross, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
+        + np.maximum(gross - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
+    )
+    dan = np.maximum(dan_raw - SLEVA_POPLATNIK_MONTHLY, 0)
+    return gross - employee_social - employee_health - dan
+
+
+def net_income_osvc_vydajovy(revenue: np.ndarray | float,
+                              expense_rate: float) -> np.ndarray | float:
+    """Čistý příjem OSVČ s výdajovým paušálem po odvedení SP, ZP a DPFO.
+
+    Čistý příjem = základ daně (ZD) − SP − ZP − DPFO (po slevě).
+    ZD = příjmy × (1 − sazba paušálu).
+
+    Výdajový paušál nahrazuje skutečné výdaje; výsledný čistý příjem je
+    tedy příjem po zaplacení daní a pojistného, při uvažování paušálních
+    výdajů jako skutečných nákladů.
+    SP a ZP NEJSOU odečitatelné od ZD DPFO (ZDP § 7 odst. 7).
+    """
+    x = np.asarray(revenue, dtype=float)
+    zd = (1.0 - expense_rate) * x
+    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
+    social = OSVC_SOCIAL_RATE * social_base
+    health = OSVC_HEALTH_RATE * health_base
+    dan_raw = (
+        np.minimum(zd, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
+        + np.maximum(zd - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
+    )
+    dan = np.maximum(dan_raw - SLEVA_POPLATNIK_MONTHLY, 0)
+    return zd - social - health - dan
+
+
+def _plot_osvc_lines(
+    ax: plt.Axes,
+    x: np.ndarray,
+    fn_osvc,
+    fn_pausalni,
+    income_max: int,
+) -> None:
+    """Pomocná funkce: vykreslí křivky pro všechny typy OSVČ (standardní + paušální).
+
+    fn_osvc(x, expense_rate) → y hodnoty pro standardní odvody.
+    fn_pausalni(x_band, total_pay, i) → y hodnoty pro paušální daň pásmo i.
+    """
+    for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
+        y_osvc = fn_osvc(x, expense_rate)
+        ax.plot(x / 1_000, y_osvc,
+                color=color, linewidth=1.5, linestyle="--", zorder=3)
+
+        prev_max = 0
+        for i, ((max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
+                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
+            x_band = np.linspace(max(prev_max + 1, 1), min(max_inc_t, income_max), 300)
+            y_band = fn_pausalni(x_band, total_pay, i)
+            ax.plot(x_band / 1_000, y_band,
+                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
+                ax.axvline(max_inc_t / 1_000, color=PASMO_COLORS[i],
+                           linewidth=0.5, linestyle=":", alpha=0.4)
+            prev_max = max_inc_t
+
+
+def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
+    """Přidá sdílenou legendu dole mimo osy (stejný formát jako v cz_pension_model)."""
+    legend_handles = [
+        Line2D([0], [0], color=c_emp, linewidth=2.0,
+               label="Zaměstnanec (celk.\u00a0nákl.)"),
+    ]
+    for _er, lbl, col, _mp in OSVC_TYPES:
+        legend_handles.append(
+            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    for i in range(len(PAUSALNI_DAN)):
+        legend_handles.append(
+            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
+                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
+               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
+
+
+def plot_tax_wedge_vs_income(
+    income_max: int = 300_000,
+) -> plt.Figure:
+    """Obrázek: efektivní daňový klín [%] v závislosti na příjmech / nákladech.
+
+    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
+    Osa y = efektivní daňový klín [%] = (SP + ZP + DPFO) / příjmy × 100.
+
+    Pro zaměstnance zahrnuje odvody zaměstnavatele i zaměstnance.
+    Pro OSVČ s výdajovým paušálem SP a ZP nejsou odečitatelné od ZD DPFO
+    (ZDP § 7 odst. 7). Sleva na poplatníka 2 570 Kč/měs. uplatněna.
+    """
+    x = np.linspace(1, income_max, 2_000)
+    c_emp = PALETTE[0]
+    tw_emp = tax_wedge_employee(x)
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+
+    ax.plot(x / 1_000, tw_emp, color=c_emp, linewidth=2.0, zorder=3)
+
+    _plot_osvc_lines(
+        ax, x,
+        fn_osvc=lambda x_v, er: tax_wedge_osvc_vydajovy(x_v, er),
+        fn_pausalni=lambda x_b, tp, _i: tp / x_b * 100,
+        income_max=income_max,
+    )
+
+    # Referenční svislé čáry
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
+    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
+                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      color="#888888")
+
+    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
+    ax.set_ylabel("Efektivní daňový klín [%]")
+    ax.set_title(
+        "Efektivní daňový klín v závislosti na příjmech / nákladech na práci\n"
+        "(parametry\u00a02026)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+
+    _bottom_legend(fig, c_emp)
+    return fig
+
+
+def plot_net_income_vs_income(
+    income_max: int = 300_000,
+) -> plt.Figure:
+    """Obrázek: čistý příjem [tis. Kč] v závislosti na příjmech / nákladech.
+
+    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
+    Osa y = čistý příjem [tis. Kč/měsíc].
+
+    Zaměstnanec: čistý = hrubá mzda − SP − ZP − DPFO.
+    OSVČ s výdajovým paušálem: čistý = ZD − SP − ZP − DPFO
+        (ZD = příjmy × (1 − sazba paušálu); paušální výdaje nejsou součástí čistého).
+    OSVČ paušální daň: čistý = příjmy − celková pevná platba
+        (skutečné výdaje nejsou modelovány).
+    """
+    x = np.linspace(1, income_max, 2_000)
+    c_emp = PALETTE[0]
+    ni_emp = net_income_employee(x)
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+
+    ax.plot(x / 1_000, ni_emp / 1_000, color=c_emp, linewidth=2.0, zorder=3)
+
+    _plot_osvc_lines(
+        ax, x,
+        fn_osvc=lambda x_v, er: net_income_osvc_vydajovy(x_v, er),
+        fn_pausalni=lambda x_b, tp, _i: x_b - tp,
+        income_max=income_max,
+    )
+
+    # Referenční svislé čáry
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
+    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
+                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      color="#888888")
+
+    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
+    ax.set_ylabel("Čistý příjem [tis.\u00a0Kč/měsíc]")
+    ax.set_title(
+        "Čistý příjem v závislosti na příjmech / nákladech na práci\n"
+        "(parametry\u00a02026; OSVČ s výdajovým paušálem: po odečtení paušálních výdajů)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+
+    _bottom_legend(fig, c_emp)
+    return fig
+
+
 def plot_tax_wedge_comparison(
     income_max: int = 300_000,
     income_min: int = OSVC_MIN_MONTHLY_BASE * 2,
@@ -465,6 +659,53 @@ if __name__ == "__main__":
             r"a nařízení vlády č.\,365/2025~Sb."
         ),
         label="fig:cz_pension_wedge",
+        width=r"0.95\linewidth",
+    )
+
+    # ── Obrázek 4: daňový klín vs. příjmy ────────────────────────────────────
+    fig_twi = plot_tax_wedge_vs_income()
+    savefig(fig_twi, "cz_tax_wedge_vs_income", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_tax_wedge_vs_income",
+        caption=(
+            r"Efektivní daňový klín v závislosti na celkových nákladech zaměstnavatele "
+            r"(zaměstnanec) resp. příjmech OSVČ za měsíc. "
+            r"Daňový klín = (SP + ZP + DPFO) / příjmy; pro zaměstnance zahrnuje "
+            r"odvody zaměstnavatele i zaměstnance a DPFO (po slevě na poplatníka). "
+            r"Pro OSVČ s výdajovým paušálem SP a ZP nejsou odečitatelné od základu "
+            r"DPFO (ZDP § 7 odst. 7); sleva na poplatníka 2\,570\,Kč/měs.\ uplatněna. "
+            r"Pro paušální daň: daňový klín = celková pevná platba\,/\,příjmy. "
+            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
+            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
+            r"Parametry roku~2026. "
+            r"Výpočet dle zákonů č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. "
+            r"a nařízení vlády č.\,365/2025~Sb."
+        ),
+        label="fig:cz_tax_wedge_vs_income",
+        width=r"0.95\linewidth",
+    )
+
+    # ── Obrázek 5: čistý příjem vs. příjmy ───────────────────────────────────
+    fig_ni = plot_net_income_vs_income()
+    savefig(fig_ni, "cz_net_income_vs_income", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_net_income_vs_income",
+        caption=(
+            r"Čistý příjem v závislosti na celkových nákladech zaměstnavatele "
+            r"(zaměstnanec) resp. příjmech OSVČ za měsíc. "
+            r"Zaměstnanec: čistý příjem = hrubá mzda\,−\,SP\,−\,ZP\,−\,DPFO. "
+            r"OSVČ s výdajovým paušálem: čistý příjem = základ daně (ZD)\,−\,SP\,−\,ZP\,−\,DPFO, "
+            r"kde ZD\,=\,příjmy\,×\,(1\,−\,sazba paušálu); paušální výdaje nejsou "
+            r"součástí čistého příjmu (jsou uvažovány jako skutečné obchodní náklady). "
+            r"OSVČ paušální daň: čistý příjem = příjmy\,−\,celková pevná platba "
+            r"(skutečné výdaje nejsou modelovány). "
+            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
+            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
+            r"Parametry roku~2026. "
+            r"Výpočet dle zákonů č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. "
+            r"a nařízení vlády č.\,365/2025~Sb."
+        ),
+        label="fig:cz_net_income_vs_income",
         width=r"0.95\linewidth",
     )
 
