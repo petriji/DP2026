@@ -524,6 +524,189 @@ def plot_net_income_vs_income(
     return fig
 
 
+def sp_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | float:
+    """Celkové sociální pojistné zaměstnance + zaměstnavatele [Kč/měs.].
+
+    Zahrnuje:
+      • SP zaměstnance: 7,1 % z hrubé mzdy
+      • SP zaměstnavatele: 24,8 % z hrubé mzdy
+    Celkem: 31,9 % z hrubé mzdy = 31,9 / 133,8 × celkové náklady.
+    """
+    x = np.asarray(total_labor_cost, dtype=float)
+    gross = x / (1 + EMPLOYER_INS_RATE)
+    return (0.248 + EMPLOYEE_SOCIAL_RATE) * gross
+
+
+def sp_osvc_vydajovy(revenue: np.ndarray | float,
+                     expense_rate: float) -> np.ndarray | float:
+    """Sociální pojistné OSVČ s výdajovým paušálem [Kč/měs.].
+
+    SP = 29,2 % × max(55 % × ZD, min. základ).
+    ZD = příjmy × (1 − sazba paušálu).
+    """
+    x = np.asarray(revenue, dtype=float)
+    zd = (1.0 - expense_rate) * x
+    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    return OSVC_SOCIAL_RATE * social_base
+
+
+def plot_pension_vs_income(
+    income_max: int = 300_000,
+    years: int = INSURANCE_YEARS,
+) -> plt.Figure:
+    """Obrázek: měsíční starobní důchod [tis. Kč] v závislosti na příjmech / nákladech.
+
+    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
+    Osa y = měsíční starobní důchod [tis. Kč/měsíc] (pojistná doba {years} let).
+    """
+    x = np.linspace(1, income_max, 2_000)
+    c_emp = PALETTE[0]
+    gross_emp = x / (1 + EMPLOYER_INS_RATE)
+    pen_emp = pension_employee(gross_emp, years) / 1_000
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    ax.plot(x / 1_000, pen_emp, color=c_emp, linewidth=2.0, zorder=3)
+
+    _plot_osvc_lines(
+        ax, x,
+        fn_osvc=lambda x_v, er: pension_osvc_vydajovy(x_v, er, years) / 1_000,
+        fn_pausalni=lambda x_b, _tp, i: np.full_like(
+            x_b, _pension(PAUSALNI_DAN[i][1], years) / 1_000),
+        income_max=income_max,
+    )
+
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
+    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
+                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      color="#888888")
+
+    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
+    ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč/měsíc]")
+    ax.set_title(
+        f"Výše starobního důchodu v závislosti na příjmech / nákladech na práci\n"
+        f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+
+    _bottom_legend(fig, c_emp)
+    return fig
+
+
+def plot_sp_vs_income(
+    income_max: int = 300_000,
+) -> plt.Figure:
+    """Obrázek: měsíční odvody na SP [tis. Kč] v závislosti na příjmech / nákladech.
+
+    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
+    Osa y = měsíční odvody na sociální pojistné [tis. Kč/měsíc].
+
+    Zaměstnanec: SP zaměstnance (7,1 %) + SP zaměstnavatele (24,8 %) = 31,9 % z hrubé.
+    OSVČ: SP = 29,2 % × max(55 % × ZD, min. základ).
+    Paušální daň: SP = 29,2 % × pevný vyměřovací základ pásma.
+    """
+    x = np.linspace(1, income_max, 2_000)
+    c_emp = PALETTE[0]
+    sp_emp = sp_employee(x) / 1_000
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    ax.plot(x / 1_000, sp_emp, color=c_emp, linewidth=2.0, zorder=3)
+
+    _plot_osvc_lines(
+        ax, x,
+        fn_osvc=lambda x_v, er: sp_osvc_vydajovy(x_v, er) / 1_000,
+        fn_pausalni=lambda x_b, _tp, i: np.full_like(
+            x_b, OSVC_SOCIAL_RATE * PAUSALNI_DAN[i][1] / 1_000),
+        income_max=income_max,
+    )
+
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
+    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
+                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      color="#888888")
+
+    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
+    ax.set_ylabel("Odvody na SP [tis.\u00a0Kč/měsíc]")
+    ax.set_title(
+        "Odvody na sociální pojistné v závislosti na příjmech / nákladech na práci\n"
+        "(parametry\u00a02026; zaměstnanec: SP zaměstnance + SP zaměstnavatele)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+
+    _bottom_legend(fig, c_emp)
+    return fig
+
+
+def plot_pension_sp_ratio_vs_income(
+    income_max: int = 300_000,
+    years: int = INSURANCE_YEARS,
+) -> plt.Figure:
+    """Obrázek: poměr důchod/odvody na SP v závislosti na příjmech / nákladech.
+
+    Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
+    Osa y = měsíční důchod / měsíční odvody na SP (bezrozměrné).
+
+    Ukazuje, kolik Kč měsíčního důchodu připadá na každou Kč měsíčně odváděnou na SP.
+    Vyšší hodnota = vyšší návratnost (rentabilita) odvodů na SP.
+    """
+    x = np.linspace(OSVC_MIN_MONTHLY_BASE * 2, income_max, 2_000)
+    c_emp = PALETTE[0]
+    gross_emp = x / (1 + EMPLOYER_INS_RATE)
+    ratio_emp = pension_employee(gross_emp, years) / sp_employee(x)
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    ax.plot(x / 1_000, ratio_emp, color=c_emp, linewidth=2.0, zorder=3)
+
+    for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
+        pen_o = pension_osvc_vydajovy(x, expense_rate, years)
+        sp_o = sp_osvc_vydajovy(x, expense_rate)
+        ax.plot(x / 1_000, pen_o / sp_o,
+                color=color, linewidth=1.5, linestyle="--", zorder=3)
+
+        prev_max = int(OSVC_MIN_MONTHLY_BASE * 2)
+        for i, ((max_inc_t, monthly_base), (_max_inc_t2, _total_pay)) in enumerate(
+                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
+            x_band = np.linspace(max(prev_max, int(OSVC_MIN_MONTHLY_BASE * 2)),
+                                 min(max_inc_t, income_max), 300)
+            if len(x_band) == 0:
+                prev_max = max_inc_t
+                continue
+            pen_band = _pension(monthly_base, years)
+            sp_band = OSVC_SOCIAL_RATE * monthly_base
+            ratio_band = np.full_like(x_band, pen_band / sp_band)
+            ax.plot(x_band / 1_000, ratio_band,
+                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
+            prev_max = max_inc_t
+
+    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
+                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      color="#cc6600", linestyle=(0, (4, 3)))
+    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
+                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      color="#888888")
+
+    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
+    ax.set_ylabel("Důchod\u00a0/\u00a0odvody na SP")
+    ax.set_title(
+        f"Poměr starobního důchodu k odvodům na SP\n"
+        f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let; "
+        f"zaměstnanec: celkové SP)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+
+    _bottom_legend(fig, c_emp)
+    return fig
+
+
 def plot_tax_wedge_comparison(
     income_max: int = 300_000,
     income_min: int = OSVC_MIN_MONTHLY_BASE * 2,
@@ -705,6 +888,73 @@ if __name__ == "__main__":
             r"a nařízení vlády č.\,365/2025~Sb."
         ),
         label="fig:cz_net_income_vs_income",
+        width=r"0.95\linewidth",
+    )
+
+    # ── Obrázek 6: důchod vs. příjmy ──────────────────────────────────────────
+    fig_pvi = plot_pension_vs_income()
+    savefig(fig_pvi, "cz_pension_vs_income", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_pension_vs_income",
+        caption=(
+            r"Výše starobního důchodu v závislosti na celkových nákladech zaměstnavatele "
+            r"(zaměstnanec) resp. příjmech OSVČ za měsíc. "
+            r"Zaměstnanec: OVZ = hrubá mzda = celkové náklady\,/\,1,338. "
+            r"OSVČ s výdajovým paušálem: OVZ = SP vyměřovací základ = "
+            r"max(55\,\% × ZD, min.\,základ). "
+            r"Paušální daň: OVZ = pevný základ příslušného pásma. "
+            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
+            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
+            r"Parametry roku~2026, pojistná doba 40~let. "
+            r"Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb. "
+            r"a nařízení vlády č.\,365/2025~Sb."
+        ),
+        label="fig:cz_pension_vs_income",
+        width=r"0.95\linewidth",
+    )
+
+    # ── Obrázek 7: odvody na SP vs. příjmy ───────────────────────────────────
+    fig_spi = plot_sp_vs_income()
+    savefig(fig_spi, "cz_sp_vs_income", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_sp_vs_income",
+        caption=(
+            r"Měsíční odvody na sociální pojistné (SP) v závislosti na celkových "
+            r"nákladech zaměstnavatele (zaměstnanec) resp. příjmech OSVČ za měsíc. "
+            r"Zaměstnanec: celkové SP = SP zaměstnance (7,1\,\%) + SP zaměstnavatele "
+            r"(24,8\,\%) = 31,9\,\% z hrubé mzdy. "
+            r"OSVČ s výdajovým paušálem: SP = 29,2\,\% × max(55\,\% × ZD, min.\,základ). "
+            r"Paušální daň: SP = 29,2\,\% × pevný vyměřovací základ pásma. "
+            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
+            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
+            r"Parametry roku~2026. "
+            r"Výpočet dle zákonů č.\,589/1992~Sb., č.\,270/2023~Sb. "
+            r"a nařízení vlády č.\,365/2025~Sb."
+        ),
+        label="fig:cz_sp_vs_income",
+        width=r"0.95\linewidth",
+    )
+
+    # ── Obrázek 8: poměr důchod/SP vs. příjmy ────────────────────────────────
+    fig_rsr = plot_pension_sp_ratio_vs_income()
+    savefig(fig_rsr, "cz_pension_sp_ratio", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_pension_sp_ratio",
+        caption=(
+            r"Poměr měsíčního starobního důchodu k měsíčním odvodům na SP "
+            r"v závislosti na celkových nákladech zaměstnavatele (zaměstnanec) "
+            r"resp. příjmech OSVČ za měsíc. "
+            r"Hodnota 2,0 znamená, že za každou Kč měsíčně odváděnou na SP "
+            r"je vyplácen důchod 2\,Kč/měsíc (při pojistné době 40~let). "
+            r"Zaměstnanec: celkové SP = SP zaměstnance + SP zaměstnavatele. "
+            r"OSVČ: SP = 29,2\,\% × vyměřovací základ (standardní nebo pevný pro paušál). "
+            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
+            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
+            r"Parametry roku~2026, pojistná doba 40~let. "
+            r"Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb., "
+            r"č.\,589/1992~Sb. a nařízení vlády č.\,365/2025~Sb."
+        ),
+        label="fig:cz_pension_sp_ratio",
         width=r"0.95\linewidth",
     )
 
