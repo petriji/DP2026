@@ -10,7 +10,7 @@ Legislation:
   ZDP zákon č. 586/1992 Sb.
   Zákon č. 270/2023 Sb. (progressive DPFO thresholds)
   NV č. 405/2025 Sb. (minimum wage 2026)
-  NV č. (SP/ZP rates 2026)
+  NV č. 365/2025 Sb. (SP/ZP rates and assessment base 2026)
 
 Figures
 -------
