@@ -67,6 +67,12 @@ _WID_COUNTRY_MAP: dict[str, str] = {
 }
 # WID.world API: wealth Gini indicator
 _WID_INDICATOR = "wgini992j"
+# WID.world per-country CSV endpoint (no bulk zip needed)
+_WID_CSV_URL_TEMPLATE = (
+    "https://wid.world/data/?country={cc}"
+    "&variable={var}&from={start}&to=2099&normalized=true"
+)
+
 
 # ── Fallback data — UBS/Credit Suisse Global Wealth Databook 2022, Tab. 3-1 ──
 # Values are the Gini coefficient × 100 (reported as 0–100 scale in Databook).
@@ -116,15 +122,11 @@ def _fetch_wid_gini(
     Returns ``None`` on any failure so the caller can fall back to the
     hardcoded Databook values.
     """
-    # WID provides a per-country CSV download endpoint:
-    # https://wid.world/data/?country=<ISO>&variable=<var>&from=<yr>&to=<yr>
-    # The direct bulk download is a large zip; use the per-country CSV endpoint.
     rows: list[dict] = []
     for cc in countries:
         wid_cc = _WID_COUNTRY_MAP[cc]
-        url = (
-            f"https://wid.world/data/?country={wid_cc}"
-            f"&variable={indicator}&from={start_year}&to=2099&normalized=true"
+        url = _WID_CSV_URL_TEMPLATE.format(
+            cc=wid_cc, var=indicator, start=start_year
         )
         try:
             path = fetch(url, suffix=".csv", force=False)
@@ -134,14 +136,12 @@ def _fetch_wid_gini(
             if df_raw.empty or "value" not in df_raw.columns:
                 log.warning("WID: empty or unexpected format for %s", wid_cc)
                 return None
-            # Filter the right indicator and percentile
-            mask = (
-                df_raw.get("variable", pd.Series(dtype=str)).str.startswith(indicator)
-                | df_raw.columns.tolist() == ["country", "variable", "percentile", "year", "value"]
-            )
-            sub = df_raw[
-                df_raw.get("variable", pd.Series(dtype=str)).str.startswith(indicator)
-            ].copy() if "variable" in df_raw.columns else df_raw.copy()
+            if "variable" in df_raw.columns:
+                sub = df_raw[
+                    df_raw["variable"].astype(str).str.startswith(indicator)
+                ].copy()
+            else:
+                sub = df_raw.copy()
             if sub.empty:
                 log.warning("WID: no rows matching indicator %s for %s", indicator, wid_cc)
                 return None
