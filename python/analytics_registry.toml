@@ -55,5 +55,5 @@ pics     = ["union_gini_scatter"]
 
 [cz_pension]
 script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_solidarity"]
-pics     = ["cz_pension_solidarity"]
+texparts = ["cz_pension_income", "cz_pension_solidarity"]
+pics     = ["cz_pension_income", "cz_pension_solidarity"]
