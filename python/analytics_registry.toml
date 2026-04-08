@@ -93,16 +93,6 @@ script   = "analyses/gini_income_timeline.py"
 texparts = ["gini_income_timeline"]
 pics     = ["gini_income_timeline"]
 
-[cz_tax_model]
-script   = "analyses/cz_tax_model.py"
-texparts = ["cz_tax_wedge", "cz_tax_breakdown"]
-pics     = ["cz_tax_wedge", "cz_tax_breakdown"]
-
-[cz_pension]
-script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_solidarity", "cz_pension_income", "cz_tax_wedge_comparison"]
-pics     = ["cz_pension_solidarity", "cz_pension_income", "cz_tax_wedge_comparison"]
-
 [wage_pension_distribution]
 script   = "analyses/wage_pension_distribution.py"
 texparts = ["wage_pension_distribution"]
