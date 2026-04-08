@@ -79,6 +79,7 @@ from cz_pension_model import (
     MIN_WAGE_TOTAL_COST,
     MEDIAN_EMP_TOTAL_COST,
     OSVC_TYPES,
+    PASMO_COLORS,
     _add_vertical_ref,
     _fmt_czk,
     _pension,
@@ -353,14 +354,13 @@ def plot_tax_wedge_comparison(
     c_emp = PALETTE[0]
 
     ax.plot(tw_emp, rr_emp,
-            color=c_emp, linewidth=2.0, label="Zaměstnanec (celk.\u00a0nákl.)", zorder=3)
+            color=c_emp, linewidth=2.0, zorder=3)
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
         rr_osvc = pension_osvc_vydajovy(x, expense_rate, years) / x * 100
         ax.plot(tw_osvc, rr_osvc,
-                color=color, linewidth=1.5, linestyle="--",
-                label=f"{label} – stand.\u00a0odvody", zorder=3)
+                color=color, linewidth=1.5, linestyle="--", zorder=3)
 
         prev_max = income_min
         for i, ((max_inc_p, monthly_base), (max_inc_t, total_pay)) in enumerate(
@@ -369,10 +369,8 @@ def plot_tax_wedge_comparison(
             tw_band = total_pay / x_band * 100
             p_val   = _pension(monthly_base, years)  # fixed VZ per pásmo
             rr_band = p_val / x_band * 100
-            seg_label = f"{label} – paušální daň" if i == 0 else None
             ax.plot(tw_band, rr_band,
-                    color=color, linewidth=2.0, linestyle=":",
-                    label=seg_label, zorder=2)
+                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             prev_max = max_inc_t
 
     # Referenční body na křivkách pro min. mzdu a mediánové náklady zaměstnance
@@ -403,8 +401,36 @@ def plot_tax_wedge_comparison(
     )
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
-    ax.legend(frameon=False, fontsize=FONT_SIZE - 2,
-              loc="upper left", borderaxespad=0.5, ncols=2)
+
+    # Inline popisky kurvek – zkratky v barvě u nejnižší hodnoty náhradového poměru
+    # (tj. na konci křivky při nejvyšším příjmu income_max).
+    x_end = float(income_max)
+    gross_end = x_end / (1 + EMPLOYER_INS_RATE)
+    tw_end_emp = float(tax_wedge_employee(x_end))
+    rr_end_emp = float(pension_employee(gross_end, years)) / x_end * 100
+    ax.annotate("Zam.", (tw_end_emp, rr_end_emp),
+                xytext=(4, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+
+    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+        tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
+        rr_end_o = float(pension_osvc_vydajovy(x_end, expense_rate, years)) / x_end * 100
+        # Short label: extract the expense-rate percentage from label string
+        short = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
+        ax.annotate(short, (tw_end_o, rr_end_o),
+                    xytext=(4, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color=color, va="center")
+
+    for i, ((max_inc_p, monthly_base), (max_inc_t, total_pay)) in enumerate(
+            zip(PAUSALNI_DAN, PAUSALNI_DAN_TOTAL)):
+        # The paušální band ends at max_inc_t; label at high-income end of band
+        x_lab = float(min(income_max, max_inc_t))
+        tw_lab = total_pay / x_lab * 100
+        p_val  = _pension(monthly_base, years)
+        rr_lab = p_val / x_lab * 100
+        ax.annotate(f"Paušál {i + 1}", (tw_lab, rr_lab),
+                    xytext=(4, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color=PASMO_COLORS[i], va="center")
 
     return fig
 

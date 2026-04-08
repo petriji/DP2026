@@ -62,6 +62,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from matplotlib.lines import Line2D
+
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import apply_style, cm2in, save_figure_tex, savefig
 
@@ -203,6 +205,10 @@ OSVC_TYPES: list[tuple[float, str, str, int]] = [
     (0.80, "OSVČ 80\u202f%\u00a0výdajů (řemeslná živnost)",          PALETTE[4], 3),
     (0.40, "OSVČ 40\u202f%\u00a0výdajů (svobodná\u00a0povolání)",   PALETTE[5], 1),
 ]
+
+# Barvy paušální daně – jedna barva na pásmo (nezávisle na typu OSVČ,
+# protože VZ paušálu je pevný na pásmo a křivky různých typů OSVČ se překrývají).
+PASMO_COLORS: list[str] = [PALETTE[2], PALETTE[3], PALETTE[6]]  # pásmo 1, 2, 3
 
 # ── Pomocné výpočetní funkce ──────────────────────────────────────────────────
 
@@ -363,27 +369,26 @@ def plot_pension_comparison(
 
     # Zaměstnanec
     ax.plot(x / 1_000, p_emp / 1_000,
-            color=c_emp, linewidth=2.0, label="Zaměstnanec (celk.\u00a0nákl.)", zorder=3)
+            color=c_emp, linewidth=2.0, zorder=3)
 
-    # OSVČ typy – standardní odvody (dashed) + paušální daň (dotted)
+    # OSVČ typy – standardní odvody (dashed) + paušální daň (dotted, barva dle pásma)
+    pasmo_plotted: set[int] = set()
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
         ax.plot(x / 1_000, p_osvc / 1_000,
-                color=color, linewidth=1.5, linestyle="--",
-                label=f"{label} – stand.\u00a0odvody", zorder=3)
+                color=color, linewidth=1.5, linestyle="--", zorder=3)
 
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
             p_val  = _pension(monthly_base, years)
             x_seg  = [prev_max / 1_000, max_income / 1_000]
             y_seg  = [p_val / 1_000, p_val / 1_000]
-            seg_label = f"{label} – paušální daň" if i == 0 else None
             ax.plot(x_seg, y_seg,
-                    color=color, linewidth=2.0, linestyle=":",
-                    label=seg_label, zorder=2)
+                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_income / 1_000, color=color,
+                ax.axvline(max_income / 1_000, color=PASMO_COLORS[i],
                            linewidth=0.5, linestyle=":", alpha=0.4)
+            pasmo_plotted.add(i)
             prev_max = max_income
 
     # Minimální výše důchodu
@@ -418,8 +423,21 @@ def plot_pension_comparison(
     )
     ax.set_xlim(0, income_max / 1_000)
     ax.set_ylim(bottom=0)
-    ax.legend(frameon=False, fontsize=FONT_SIZE - 2,
-              loc="upper left", borderaxespad=0.5, ncols=2)
+
+    # Legenda mimo osy – dole pod grafem; ručně sestavené handles pro přehlednost
+    legend_handles = [
+        Line2D([0], [0], color=c_emp, linewidth=2.0,
+               label="Zaměstnanec (celk.\u00a0nákl.)"),
+    ]
+    for _er, lbl, col, _mp in OSVC_TYPES:
+        legend_handles.append(
+            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    for i in range(len(PAUSALNI_DAN)):
+        legend_handles.append(
+            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
+                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
+               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
     return fig
 
@@ -478,25 +496,22 @@ def plot_pension_solidarity(
     # HORNÍ PANEL – výše důchodu [tis. Kč/měsíc]
     # ══════════════════════════════════════════════════════════════════════════
     ax_top.plot(x / 1_000, p_emp / 1_000,
-                color=c_emp, linewidth=2.0, label="Zaměstnanec (celk.\u00a0nákl.)", zorder=3)
+                color=c_emp, linewidth=2.0, zorder=3)
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
         ax_top.plot(x / 1_000, p_osvc / 1_000,
-                    color=color, linewidth=1.5, linestyle="--",
-                    label=f"{label} – stand.\u00a0odvody", zorder=3)
+                    color=color, linewidth=1.5, linestyle="--", zorder=3)
 
         prev_max = 0
         for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
             p_val = _pension(monthly_base, years)
             x_seg = [prev_max / 1_000, max_income / 1_000]
             y_seg = [p_val / 1_000, p_val / 1_000]
-            seg_label = f"{label} – paušální daň" if i == 0 else None
             ax_top.plot(x_seg, y_seg,
-                        color=color, linewidth=2.0, linestyle=":",
-                        label=seg_label, zorder=2)
+                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_top.axvline(max_income / 1_000, color=color,
+                ax_top.axvline(max_income / 1_000, color=PASMO_COLORS[i],
                                linewidth=0.5, linestyle=":", alpha=0.4)
             prev_max = max_income
 
@@ -531,13 +546,6 @@ def plot_pension_solidarity(
     )
     ax_top.set_xlim(0, income_max / 1_000)
     ax_top.set_ylim(bottom=0)
-    ax_top.legend(
-        frameon=False,
-        fontsize=FONT_SIZE - 2,
-        loc="upper left",
-        borderaxespad=0.5,
-        ncols=2,
-    )
 
     # ══════════════════════════════════════════════════════════════════════════
     # DOLNÍ PANEL – náhradový poměr [%] = důchod / x × 100
@@ -557,9 +565,9 @@ def plot_pension_solidarity(
             x_band  = np.linspace(max(prev_max + 1, income_min_rr), max_income, 300)
             rr_band = p_val / x_band * 100
             ax_bot.plot(x_band / 1_000, rr_band,
-                        color=color, linewidth=2.0, linestyle=":")
+                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":")
             if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_bot.axvline(max_income / 1_000, color=color,
+                ax_bot.axvline(max_income / 1_000, color=PASMO_COLORS[i],
                                linewidth=0.5, linestyle=":", alpha=0.4)
             prev_max = max_income
 
@@ -579,6 +587,21 @@ def plot_pension_solidarity(
     ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0nákl.)\u00a0[%]")
     ax_bot.set_xlim(0, income_max / 1_000)
     ax_bot.set_ylim(bottom=0)
+
+    # Legenda mimo osy – dole pod figúrou; sdílena oběma panely
+    legend_handles = [
+        Line2D([0], [0], color=c_emp, linewidth=2.0,
+               label="Zaměstnanec (celk.\u00a0nákl.)"),
+    ]
+    for _er, lbl, col, _mp in OSVC_TYPES:
+        legend_handles.append(
+            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    for i in range(len(PAUSALNI_DAN)):
+        legend_handles.append(
+            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
+                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
+    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
+               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
 
     return fig
 
