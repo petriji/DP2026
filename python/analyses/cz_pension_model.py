@@ -639,7 +639,12 @@ def plot_pension_solidarity(
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
-        rr_osvc   = p_osvc_rr / _net_income_osvc_vydajovy(x_rr, expense_rate) * 100
+        ni_osvc   = _net_income_osvc_vydajovy(x_rr, expense_rate)
+        # Mask points where net income ≤ 0 to avoid division artifacts
+        # (e.g. OSVČ 80 % has negative net income at low income levels where
+        # mandatory minimum SP/ZP bases exceed the 20 % profit margin).
+        valid = ni_osvc > 0
+        rr_osvc = np.where(valid, p_osvc_rr / np.maximum(ni_osvc, 1.0) * 100, np.nan)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x_rr, cap, side='right'))
         if idx > 0:
