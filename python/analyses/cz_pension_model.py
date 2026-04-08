@@ -187,6 +187,10 @@ MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830
 MEDIAN_EMP_WAGE: int = 40_709   # CZK/měsíc hrubé mzdy (ISPV 2024)
 MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 54 469 Kč
 
+# ── Hranice chudoby ───────────────────────────────────────────────────────────
+# Zdroj: ČSÚ, rok 2025. Definice: 60 % mediánu čistého příjmu domácnosti.
+POVERTY_THRESHOLD: int = 18_600  # CZK/měsíc (2025)
+
 # ── Polohy zlomů (kinks) na ose x (celkové náklady / příjmy) pro RH1/RH2 ─────
 # Redukční hranice RH1 a RH2 jsou prahové hodnoty OVZ, nikoliv osy x.
 # Zaměstnanec: OVZ = hrubá = x / (1 + EMPLOYER_INS_RATE) → kink = RH × (1 + rate)
@@ -454,11 +458,11 @@ def plot_pension_comparison(
     )
 
     # Hranice chudoby
-    poverty_kczk = 18.6  # 18 600 Kč (2025)
+    poverty_kczk = POVERTY_THRESHOLD / 1_000
     ax.axhline(poverty_kczk, color="#aa0000", linewidth=0.8,
                linestyle=(0, (3, 4)), alpha=0.7, zorder=1)
     ax.annotate(
-        "Hranice chudoby (18\u202f600\u00a0Kč, 2025)",
+        f"Hranice chudoby ({_fmt_czk(POVERTY_THRESHOLD)}, 2025)",
         xy=(income_max * 0.01 / 1_000, poverty_kczk),
         xytext=(3, 4), textcoords="offset points",
         fontsize=FONT_SIZE - 2, color="#aa0000", va="bottom",
