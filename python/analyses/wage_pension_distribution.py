@@ -66,33 +66,49 @@ apply_style()
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 # Most recent ISPV year to try (going backwards)
-_ISPV_END_YEAR = 2024
+_ISPV_END_YEAR = 2025
 
 # Standard-normal quantile values for P10, P25, P50, P75, P90
 # (Φ⁻¹ at the five standard percentile levels – exact to 6 d.p.)
 _PROBS  = np.array([0.10, 0.25, 0.50, 0.75, 0.90])
 _ZSCORES = np.array([-1.281552, -0.674490, 0.000000, 0.674490, 1.281552])
 
-# Fallback wage quantiles (ISPV 2024/H2, podnikatelská sféra – celkem, Kč/měsíc)
-# Source: MPSV / TREXIMA ISPV 2024 H2
+# Fallback wage quantiles (ISPV 2025/H1, podnikatelská sféra – celkem, Kč/měsíc)
+# Source: MPSV / TREXIMA ISPV 2025 H1 press release
+# P10/P90 from published D1/D9 = 24 592 / 85 768 Kč; P25/P75 estimated from
+# log-normal fit (σ ≈ 0.487 derived from D1–D9 ratio 3.49).
 _FALLBACK_WAGE_Q: dict[float, float] = {
-    0.10: 20_400,
-    0.25: 27_900,
-    0.50: 40_709,   # ISPV 2024 H2 median (z paměti)
-    0.75: 59_800,
-    0.90: 84_500,
+    0.10: 24_592,
+    0.25: 30_100,
+    0.50: 42_101,   # ISPV 2025 H1 median
+    0.75: 58_400,
+    0.90: 85_768,
 }
+_FALLBACK_WAGE_YEAR = 2025
 
-# Fallback pension quantiles (CSSZ Statistická ročenka 2023 – starobní důchody,
-# prosinec 2023, přibližné hodnoty percentilů)
-# Source: CSSZ Statistická ročenka důchodového pojištění 2023
+# Total private-sector employees covered by ISPV 2025/H1 (approx.)
+# Source: MPSV / ČSÚ – business-sphere employment, 2025/H1
+N_WAGE = 3_500_000
+
+# Fallback pension quantiles (CSSZ Statistická ročenka 2024 – starobní důchody,
+# prosinec 2024, přibližné hodnoty percentilů odvozené z distribuce dle pásem výše
+# důchodu).  Průměr = 20 736 Kč, mediánová hodnota ≈ 20 800 Kč (těsně pod 21 000 Kč).
+# Celkový počet příjemců plného starobního důchodu k 31. 12. 2024: 2 367 000.
+# P10 odhadnuto z faktu, že 271 000 osob (11,5 %) pobírá méně než 16 442 Kč.
+# P25/P75/P90 odhadnuty z tvaru log-normálního rozdělení (σ ≈ 0.22).
+# Source: CSSZ Statistická ročenka důchodového pojistění 2024
 _FALLBACK_PENSION_Q: dict[float, float] = {
-    0.10: 13_600,
-    0.25: 17_000,
-    0.50: 19_800,
-    0.75: 23_700,
-    0.90: 28_300,
+    0.10: 15_900,
+    0.25: 18_500,
+    0.50: 20_800,
+    0.75: 24_000,
+    0.90: 27_500,
 }
+_FALLBACK_PENSION_YEAR = 2024
+
+# Total old-age pensioners (plný starobní důchod), k 31. 12. 2024
+# Source: CSSZ Statistická ročenka důchodového pojistění 2024
+N_PENSION = 2_367_000
 
 # X-axis evaluation grid (Kč/měsíc)
 _X_MIN   =  5_000
@@ -114,6 +130,8 @@ _COLOR_PENSION = PALETTE[4]   # vermillion
 # Attempt to fetch each year's edition; fall back when unavailable.
 _CSSZ_URLS: list[tuple[int, str]] = [
     # (year, URL) – add newer editions here when available
+    (2024, "https://www.cssz.cz/documents/20143/99587/"
+           "CSSZ-SR-DP-2024-tabulky.xlsx"),
     (2023, "https://www.cssz.cz/documents/20143/9756022/"
            "CSSZ-SR-DP-2023-tabulky.xlsx"),
     (2022, "https://www.cssz.cz/documents/20143/9756022/"
@@ -219,56 +237,60 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
     national_kw = ["celkem", "česká republika", "čr celkem", "total", "cr"]
 
     for yr in range(_ISPV_END_YEAR, _ISPV_END_YEAR - 5, -1):
-        try:
-            path = fetch_ispv(yr, half=2, sphere="podnikatelska")
-        except Exception as exc:
-            print(f"  ISPV {yr}/H2 fetch failed: {exc}")
-            continue
-
-        # Try reading first sheet
-        for skiprows in range(0, 8):
+        # For the most recent year try H1 first (H2 may not be published yet);
+        # for prior years prefer the authoritative H2 annual release.
+        halves = [1, 2] if yr == _ISPV_END_YEAR else [2, 1]
+        for half in halves:
             try:
-                df = pd.read_excel(
-                    path, sheet_name=0, skiprows=skiprows, header=0
-                )
-                df = df.dropna(how="all").reset_index(drop=True)
-                if df.shape[1] < 3 or df.shape[0] < 3:
-                    continue
-
-                first_col = df.columns[0]
-                df_str = df[first_col].astype(str).str.lower().str.strip()
-
-                # Find the national-aggregate row
-                nat_mask = df_str.apply(
-                    lambda s: any(kw in s for kw in national_kw)
-                )
-                if not nat_mask.any():
-                    continue
-
-                row = df.loc[nat_mask].iloc[0]
-
-                # Match percentile columns
-                found: dict[float, float] = {}
-                for col in df.columns[1:]:
-                    col_lc = str(col).lower().strip()
-                    for kw, prob in kw_percentile.items():
-                        if kw in col_lc:
-                            val = pd.to_numeric(row[col], errors="coerce")
-                            if pd.notna(val) and 5_000 < val < 500_000:
-                                found.setdefault(prob, float(val))
-                            break
-
-                if len(found) >= 3:
-                    print(
-                        f"  ISPV {yr}/H2: national quantiles parsed "
-                        f"({len(found)} percentiles)"
-                    )
-                    return found, yr
-
+                path = fetch_ispv(yr, half=half, sphere="podnikatelska")
             except Exception as exc:
-                log.debug("ISPV parse skiprows=%d: %s", skiprows, exc)
+                print(f"  ISPV {yr}/H{half} fetch failed: {exc}")
+                continue
 
-        print(f"  ISPV {yr}/H2: no national aggregate row found")
+            # Try reading first sheet
+            for skiprows in range(0, 8):
+                try:
+                    df = pd.read_excel(
+                        path, sheet_name=0, skiprows=skiprows, header=0
+                    )
+                    df = df.dropna(how="all").reset_index(drop=True)
+                    if df.shape[1] < 3 or df.shape[0] < 3:
+                        continue
+
+                    first_col = df.columns[0]
+                    df_str = df[first_col].astype(str).str.lower().str.strip()
+
+                    # Find the national-aggregate row
+                    nat_mask = df_str.apply(
+                        lambda s: any(kw in s for kw in national_kw)
+                    )
+                    if not nat_mask.any():
+                        continue
+
+                    row = df.loc[nat_mask].iloc[0]
+
+                    # Match percentile columns
+                    found: dict[float, float] = {}
+                    for col in df.columns[1:]:
+                        col_lc = str(col).lower().strip()
+                        for kw, prob in kw_percentile.items():
+                            if kw in col_lc:
+                                val = pd.to_numeric(row[col], errors="coerce")
+                                if pd.notna(val) and 5_000 < val < 500_000:
+                                    found.setdefault(prob, float(val))
+                                break
+
+                    if len(found) >= 3:
+                        print(
+                            f"  ISPV {yr}/H{half}: national quantiles parsed "
+                            f"({len(found)} percentiles)"
+                        )
+                        return found, yr
+
+                except Exception as exc:
+                    log.debug("ISPV parse skiprows=%d: %s", skiprows, exc)
+
+            print(f"  ISPV {yr}/H{half}: no national aggregate row found")
 
     return None, None
 
@@ -400,16 +422,16 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
 print("Fetching ISPV wage quantile data …")
 wage_q, wage_year = _fetch_ispv_national_quantiles()
 if wage_q is None:
-    print("  → Using fallback ISPV 2024 quantiles")
+    print(f"  → Using fallback ISPV {_FALLBACK_WAGE_YEAR} quantiles")
     wage_q    = _FALLBACK_WAGE_Q
-    wage_year = 2024
+    wage_year = _FALLBACK_WAGE_YEAR
 
 print("Fetching CSSZ pension distribution data …")
 pension_q, pension_year = _fetch_cssz_pension_quantiles()
 if pension_q is None:
-    print("  → Using fallback CSSZ 2023 representative quantiles")
+    print(f"  → Using fallback CSSZ {_FALLBACK_PENSION_YEAR} representative quantiles")
     pension_q    = _FALLBACK_PENSION_Q
-    pension_year = 2023
+    pension_year = _FALLBACK_PENSION_YEAR
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fit log-normal distributions
@@ -429,27 +451,36 @@ print(f"Pension fit: μ={mu_p:.4f}, σ={sig_p:.4f}  "
 pdf_wage    = lognormal_pdf(_X_GRID, mu_w, sig_w)
 pdf_pension = lognormal_pdf(_X_GRID, mu_p, sig_p)
 
+# Convert probability-density to absolute frequency density:
+#   freq(x) = N × pdf(x)      [osob / Kč]
+# When plotted with x in tis. Kč and y divided by 1 000 the y-axis shows
+# thousands of persons per 1-tis.-Kč bin, i.e. the number of people that
+# would fall into each 1 000 Kč-wide bracket:
+#   y_display = N × pdf(x) × 1 000 / 1 000  =  N × pdf(x)
+freq_wage    = N_WAGE    * pdf_wage     # tis. osob  per  tis. Kč bracket
+freq_pension = N_PENSION * pdf_pension  # tis. osob  per  tis. Kč bracket
+
 # ════════════════════════════════════════════════════════════════════════════
-# Figure – combined PDF plot
+# Figure – combined frequency plot
 # ════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=cm2in(16, 10))
 
 ax.fill_between(
-    _X_GRID / 1_000, pdf_wage * 1_000,
+    _X_GRID / 1_000, freq_wage,
     alpha=0.18, color=_COLOR_WAGE,
 )
 ax.plot(
-    _X_GRID / 1_000, pdf_wage * 1_000,
+    _X_GRID / 1_000, freq_wage,
     color=_COLOR_WAGE, linewidth=2.0,
-    label=f"Mzdy zaměstnanců (ISPV {wage_year}/H2, podnikat. sféra)",
+    label=f"Mzdy zaměstnanců (ISPV {wage_year}/H1, podnikat. sféra)",
 )
 
 ax.fill_between(
-    _X_GRID / 1_000, pdf_pension * 1_000,
+    _X_GRID / 1_000, freq_pension,
     alpha=0.18, color=_COLOR_PENSION,
 )
 ax.plot(
-    _X_GRID / 1_000, pdf_pension * 1_000,
+    _X_GRID / 1_000, freq_pension,
     color=_COLOR_PENSION, linewidth=2.0,
     label=f"Starobní důchody (CSSZ {pension_year})",
 )
@@ -475,19 +506,19 @@ ax.axvline(
 
 ax.set_xlabel("Hrubá mzda / výše důchodu (tis. Kč/měsíc)", fontsize=FONT_SIZE)
 ax.set_ylabel(
-    "Hustota pravděpodobnosti (×10⁻³ Kč⁻¹)",
+    "Počet osob (tis.) na interval 1 tis. Kč",
     fontsize=FONT_SIZE,
 )
 ax.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda v, _: f"{v:.0f}")
 )
 ax.yaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda v, _: f"{v:.2f}")
+    ticker.FuncFormatter(lambda v, _: f"{v:.0f}")
 )
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
 ax.set_title(
-    "Rozdělení pravděpodobnosti – mzdy zaměstnanců a starobní důchody (ČR)",
+    "Rozložení mzdy zaměstnanců a starobních důchodů – ČR",
     fontsize=FONT_SIZE,
 )
 ax.legend(
@@ -501,12 +532,15 @@ savefig(fig, "wage_pension_distribution", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "wage_pension_distribution",
     caption=(
-        f"Odhadnuté hustoty pravděpodobnosti distribuce hrubých mezd "
-        f"zaměstnanců (ISPV {wage_year}/H2, podnikatelská sféra, MPSV/TREXIMA) "
-        f"a starobních důchodů (CSSZ {pension_year}). "
+        f"Odhadnuté frekvenční distribuce hrubých mezd zaměstnanců "
+        f"(ISPV {wage_year}/H1, podnikatelská sféra, MPSV/TREXIMA; "
+        f"N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
+        f"a starobních důchodů (CSSZ {pension_year}; "
+        f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
         "Obě distribuce jsou aproximovány log-normálním rozdělením "
         "fitovaným metodou nejmenších čtverců na percentilové profily "
         "(P10\\,--\\,P90). "
+        "Osa y udává počet osob v intervalu šíře 1\\,tis.\\,Kč. "
         "Přerušované svislé čáry označují mediány; "
         "tečkovaná čára minimální mzdu."
     ),
