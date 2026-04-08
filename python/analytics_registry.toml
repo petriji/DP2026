@@ -72,3 +72,8 @@ pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispe
 script   = "analyses/rscp_stratification.py"
 texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
 pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+
+[wage_pension_distribution]
+script   = "analyses/wage_pension_distribution.py"
+texparts = ["wage_pension_distribution"]
+pics     = ["wage_pension_distribution"]
