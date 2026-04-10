@@ -109,3 +109,8 @@ pics     = ["gini_income_timeline"]
 script   = "analyses/wage_pension_distribution.py"
 texparts = ["wage_pension_distribution"]
 pics     = ["wage_pension_distribution"]
+
+[gini_wealth]
+script   = "analyses/gini_wealth_timeline.py"
+texparts = ["gini_wealth_timeline"]
+pics     = ["gini_wealth_timeline"]
