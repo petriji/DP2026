@@ -444,7 +444,7 @@ def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
 
 
 def plot_tax_wedge_vs_income(
-    income_max: int = 300_000,
+    income_max: int = 250_000,
 ) -> plt.Figure:
     """Obrázek: efektivní daňový klín [%] v závislosti na příjmech / nákladech.
 
@@ -524,7 +524,7 @@ def plot_tax_wedge_vs_income(
 
 
 def plot_net_income_vs_income(
-    income_max: int = 300_000,
+    income_max: int = 250_000,
 ) -> plt.Figure:
     """Obrázek: čistý příjem [tis. Kč] v závislosti na příjmech / nákladech.
 
@@ -615,7 +615,7 @@ def sp_osvc_vydajovy(revenue: np.ndarray | float,
 
 
 def plot_sp_vs_income(
-    income_max: int = 300_000,
+    income_max: int = 250_000,
 ) -> plt.Figure:
     """Obrázek: měsíční odvody na SP [tis. Kč] v závislosti na příjmech / nákladech.
 
@@ -666,7 +666,7 @@ def plot_sp_vs_income(
 
 
 def plot_pension_sp_ratio_vs_income(
-    income_max: int = 300_000,
+    income_max: int = 250_000,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
     """Obrázek: poměr důchod/odvody na SP v závislosti na příjmech / nákladech.
@@ -740,13 +740,14 @@ def plot_pension_sp_ratio_vs_income(
         loc="center",
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
+    ax.set_ylim(bottom=0)
 
     _bottom_legend(fig, c_emp)
     return fig
 
 
 def plot_tax_wedge_comparison(
-    income_max: int = 300_000,
+    income_max: int = 250_000,
     income_min: int = MIN_WAGE_TOTAL_COST,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
