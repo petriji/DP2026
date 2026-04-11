@@ -87,4 +87,4 @@ GEO_NOT_IN_EUROSTAT: frozenset[str] = frozenset([
 # Diverging colourmap for choropleth maps
 CMAP_DIVERGING = "RdYlBu_r"
 # Sequential colourmap for single-variable maps
-CMAP_SEQUENTIAL = "YlOrRd"
+CMAP_SEQUENTIAL = "RdYlGn_r"

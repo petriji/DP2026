@@ -17,6 +17,7 @@ from typing import Optional
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from shapely.geometry import box as shapely_box
 
@@ -74,6 +75,7 @@ def choropleth(
     year: Optional[int] = None,
     title: str = "",
     cmap: Optional[str] = None,
+    n_colors: int = 256,
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
     diverging: bool = False,
@@ -143,6 +145,12 @@ def choropleth(
         fig = ax.figure  # type: ignore[assignment]
 
     chosen_cmap = cmap or (CMAP_DIVERGING if diverging else CMAP_SEQUENTIAL)
+    # Resample to n_colors levels when requested (improves visual gradation)
+    if n_colors != 256:
+        base = plt.get_cmap(chosen_cmap)
+        chosen_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+            f"{chosen_cmap}_{n_colors}", base(np.linspace(0, 1, n_colors)), N=n_colors
+        )
 
     europe[europe["value"].isna()].plot(
         ax=ax, color=missing_color, linewidth=0.3, edgecolor="white"
@@ -194,8 +202,10 @@ def choropleth(
     ax.set_axis_off()
 
     # Title centred over the full figure (axes + colourbar)
+    # top=0.88 + y=0.95 pushes the title a bit higher away from the map.
     if title:
+        fig.subplots_adjust(top=0.88)
         fig.suptitle(title, fontsize=plt.rcParams.get("axes.titlesize", 9),
-                     y=0.97, ha="center")
+                     y=0.95, ha="center")
 
     return fig

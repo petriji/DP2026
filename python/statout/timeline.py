@@ -82,6 +82,7 @@ def timeline(
     markers: bool = False,
     highlight: Optional[list[str]] = None,
     annotate_last: bool = True,
+    label_offsets: Optional[dict[str, tuple[float, float]]] = None,
     background_eu: bool = False,
     eu_norm: bool = False,
     show_eu_avg: Optional[bool] = None,
@@ -176,10 +177,11 @@ def timeline(
         if annotate_last:
             valid = series.dropna()
             if not valid.empty:
+                _ofs = (label_offsets or {}).get(geo, (4, 0))
                 ax.annotate(
                     geo,
                     xy=(valid.index[-1], valid.iloc[-1]),
-                    xytext=(4, 0),
+                    xytext=_ofs,
                     textcoords="offset points",
                     fontsize=FONT_SIZE,
                     va="center",
