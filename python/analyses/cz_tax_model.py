@@ -159,7 +159,8 @@ def tax_wedge_osvc_vydajovy(revenue: np.ndarray | float,
     Sleva na poplatníka (2 570 Kč/měs.) odečtena od DPFO.
     """
     x = np.asarray(revenue, dtype=float)
-    zd = (1.0 - expense_rate) * x               # základ daně = zisk (paušální výdaje)
+    actual_rev = _revenue_after_dph(x)           # příjmy po DPH (= x pod prahem)
+    zd = (1.0 - expense_rate) * actual_rev       # základ daně = zisk (paušální výdaje)
     social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
@@ -170,7 +171,8 @@ def tax_wedge_osvc_vydajovy(revenue: np.ndarray | float,
         + np.maximum(zd - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
     )
     dan = np.maximum(dan_raw - SLEVA_POPLATNIK_MONTHLY, 0)
-    return (social + health + dan) / x * 100
+    dph = x - actual_rev                         # DPH odváděné státu (0 pod prahem)
+    return (social + health + dan + dph) / x * 100
 
 
 def tax_breakdown(
@@ -270,7 +272,9 @@ def tax_breakdown(
         )
 
     elif mode == "osvc_vydajovy":
-        zd = (1.0 - expense_rate) * income          # základ daně = paušální zisk
+        actual_rev = float(_revenue_after_dph(float(income)))
+        dph = income - actual_rev                    # DPH odváděné státu (0 pod prahem)
+        zd = (1.0 - expense_rate) * actual_rev       # základ daně = paušální zisk
         sp_vz = max(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
         zp_vz = max(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
         sp    = OSVC_SOCIAL_RATE * sp_vz
@@ -290,14 +294,20 @@ def tax_breakdown(
         r["dpfo_gross"]      = dpfo_raw
         r["sleva_poplatnik"] = min(dpfo_raw, SLEVA_POPLATNIK_MONTHLY)
         r["dpfo_net"]        = max(dpfo_raw - SLEVA_POPLATNIK_MONTHLY, 0)
-        r["total_charges"]   = sp + zp + r["dpfo_net"]
+        r["dph"]             = dph
+        r["total_charges"]   = sp + zp + r["dpfo_net"] + dph
         r["net_income"]      = zd - sp - zp - r["dpfo_net"]
         r["tax_wedge_pct"]   = r["total_charges"] / income * 100
+        dph_note = (
+            f" DPH 21 % ({dph:,.0f} Kč/měs.) zahrnuto – OSVČ plátce DPH."
+            if dph > 0 else ""
+        )
         r["note"] = (
             f"Výdajový paušál {expense_rate*100:.0f}% = uznatelné výdaje; "
             f"ZD DPFO = {(1-expense_rate)*100:.0f}% příjmů (zisk po paušálu). "
             "SP a ZP nejsou odečitatelné od ZD DPFO (ZDP §7/7). "
             "Sleva na poplatníka uplatněna."
+            + dph_note
         )
 
     elif mode == "osvc_pausalni":
@@ -328,7 +338,7 @@ def tax_breakdown(
         r["net_income"]      = income - total_pay  # čistý příjem = příjmy − pevná platba
         r["tax_wedge_pct"]   = total_pay / income * 100
         r["note"] = (
-            f"Paušální daň pásmo {pausalni_pasmo}: celková platba {total_pay} Kč/měs. "
+            f"paušální daň pásmo {pausalni_pasmo}: celková platba {total_pay} Kč/měs. "
             f"(max. příjem {max_inc} Kč/měs.). "
             "Sleva na poplatníka je zahrnuta ve výši DPFO složky paušálu."
         )
@@ -370,7 +380,8 @@ def net_income_osvc_vydajovy(revenue: np.ndarray | float,
     SP a ZP NEJSOU odečitatelné od ZD DPFO (ZDP § 7 odst. 7).
     """
     x = np.asarray(revenue, dtype=float)
-    zd = (1.0 - expense_rate) * x
+    actual_rev = _revenue_after_dph(x)
+    zd = (1.0 - expense_rate) * actual_rev
     social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
@@ -609,7 +620,8 @@ def sp_osvc_vydajovy(revenue: np.ndarray | float,
     ZD = příjmy × (1 − sazba paušálu).
     """
     x = np.asarray(revenue, dtype=float)
-    zd = (1.0 - expense_rate) * x
+    actual_rev = _revenue_after_dph(x)
+    zd = (1.0 - expense_rate) * actual_rev
     social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
     return OSVC_SOCIAL_RATE * social_base
 
