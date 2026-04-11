@@ -81,6 +81,7 @@ from cz_pension_model import (
     PAUSALNI_SEGS,
     MIN_WAGE_TOTAL_COST,
     MEDIAN_EMP_TOTAL_COST,
+    IT_MEDIAN_TOTAL_COST,
     POVERTY_THRESHOLD,
     OSVC_TYPES,
     PASMO_COLORS,
@@ -476,6 +477,9 @@ def plot_tax_wedge_vs_income(
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("Efektivní daňový klín [%]")
@@ -555,6 +559,9 @@ def plot_net_income_vs_income(
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("Čistý příjem [tis.\u00a0Kč/měsíc]")
@@ -640,6 +647,9 @@ def plot_sp_vs_income(
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("Odvody na SP [tis.\u00a0Kč/měsíc]")
@@ -717,6 +727,9 @@ def plot_pension_sp_ratio_vs_income(
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("Roky důchodu ke splacení 40 let odvodů na SP")
@@ -799,6 +812,7 @@ def plot_tax_wedge_comparison(
     ref_points = [
         (MIN_WAGE_TOTAL_COST,   "Min.\u00a0mzda",                "#cc6600"),
         (MEDIAN_EMP_TOTAL_COST, "Medián\u00a0(zam., ISPV\u00a02024)", "#888888"),
+        (IT_MEDIAN_TOTAL_COST,  "Medián\u00a0ICT\u00a0(ISCO\u00a025)",  "#1a7abf"),
     ]
     for x_ref, lbl, col in ref_points:
         if income_min <= x_ref <= income_max:
