@@ -252,6 +252,7 @@ for spec in _SCATTER_SPECS:
         highlight=HIGHLIGHT_COUNTRIES,
         x_min=0,
         countries=EU27_LIST,
+        year_tolerance=8,
     )
     savefig(fig, spec["name"], out_dir=LATEX_PICS_DIR)
     common_years = sorted(set(spec["ds_x"].years) & set(spec["ds_y"].years))
@@ -289,6 +290,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         x_min=0,
         ax=ax,
         countries=EU27_LIST,
+        year_tolerance=8,
     )
     # Subcaption label in caption style
     ax.text(
