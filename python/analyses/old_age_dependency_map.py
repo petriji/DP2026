@@ -62,9 +62,9 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Koeficient ekonomického zatížení seniory, {ds.latest_year}",
+    title=f"Koeficient ekonomického zatížení seniory ({ds.latest_year})",
     colorbar_label="Osoby 65+ / osoby 20–64 (%)",
-    cmap="YlOrRd",
+    cmap="RdYlGn_r",
     vmin=20,
     vmax=60,
     label_countries=True,

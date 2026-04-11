@@ -53,8 +53,11 @@ map_name = f"arope_map_{ds.latest_year}"
 fig_a = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"AROPE – ohrožení chudobou nebo sociálním vyloučením, {ds.latest_year}",
-    colorbar_label="AROPE (%)",
+    title=f"AROPE – ohrožení chudobou nebo sociálním vyloučením ({ds.latest_year})",
+    colorbar_label="AROPE [%]",
+    cmap="RdYlGn_r",
+    vmin=0,
+    vmax=40,
 )
 savefig(fig_a, map_name, out_dir=LATEX_PICS_DIR)
 save_figure_tex(
@@ -64,7 +67,7 @@ save_figure_tex(
         f"{ds.latest_year}\\,\\%."
     ),
     label=f"fig:{map_name}",
-    cite_key="eurostat_ilc_peps01n",
+    cite_key="eurostat_ilc_peps01n_PC_pop",
 )
 
 # ── 3. Figure B – Timeline for Central European countries ─────────────────────
@@ -73,7 +76,7 @@ fig_b = timeline(
     ds,
     countries=V4_AND_NEIGHBOURS,
     title="AROPE – vývoj ve střední Evropě",
-    ylabel="AROPE (%)",
+    ylabel="AROPE [%]",
     highlight=["CZ"],
     background_eu=True,
 )
@@ -85,7 +88,7 @@ save_figure_tex(
         f"ve vybraných zemích střední Evropy, {ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:arope_timeline_CE",
-    cite_key="eurostat_ilc_peps01n",
+    cite_key="eurostat_ilc_peps01n_PC_pop",
 )
 
 # ── 4. Figure C – Country-group averages ──────────────────────────────────────
@@ -98,7 +101,7 @@ fig_c = timeline_groups(
     ds,
     GROUPS,
     title="AROPE – průměr podle skupin zemí",
-    ylabel="AROPE (%)",
+    ylabel="AROPE [%]",
 )
 savefig(fig_c, "arope_groups", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
@@ -108,7 +111,7 @@ save_figure_tex(
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:arope_groups",
-    cite_key="eurostat_ilc_peps01n",
+    cite_key="eurostat_ilc_peps01n_PC_pop",
 )
 
 print(f"\nVšechny výstupy uloženy do {LATEX_PICS_DIR}")

@@ -63,7 +63,7 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"HDP na obyvatele v PPS (EU27\xa0=\xa0100), {ds.latest_year}",
+    title=f"HDP na obyvatele ({ds.latest_year})",
     colorbar_label="HDP/obyvatele (EU27 = 100)",
     cmap="RdYlGn",
     vmin=40,
@@ -83,7 +83,7 @@ save_figure_tex(
     ),
     label="fig:income_pps_map",
     width=r"0.92\linewidth",
-    cite_key="eurostat_nama_10_pc",
+    cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
 )
 
 print("Done.")

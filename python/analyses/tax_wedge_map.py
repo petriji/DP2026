@@ -49,11 +49,9 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Daňový klín na průměrnou mzdu, {ds.latest_year}",
-    colorbar_label="Daňový klín (% mzdových nákladů)",
+    title=f"Daňový klín na průměrnou mzdu ({ds.latest_year})",
+    colorbar_label="daňový klín [% mzdových nákladů]",
     cmap="RdYlGn_r",
-    vmin=25,
-    vmax=55,
     label_countries=True,
 )
 
@@ -64,12 +62,13 @@ savefig(fig, "tax_wedge_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "tax_wedge_map",
     caption=(
-        f"Daňový klín na průměrnou mzdu (100\\,\\% AW, bezdětný zaměstnanec), "
-        f"{ds.latest_year}."
+        f"Daňový klín na průměrnou mzdu (100\\,\\%\\,AW, bezdětný zaměstnanec), "
+        f"vyjadřuje \\% celkových nákladů práce – bez korekce v~PPS "
+        f"(daňový klín je bězrozměrný poměr). {ds.latest_year}."
     ),
     label="fig:tax_wedge_map",
     width=r"0.92\linewidth",
-    cite_key="eurostat_earn_nt_taxwedge",
+    cite_key="eurostat_earn_nt_taxwedge_PC_AW100",
 )
 
 print("Done.")
