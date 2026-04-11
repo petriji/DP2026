@@ -35,13 +35,13 @@ pics     = []
 
 [union_density]
 script   = "analyses/union_density_trend.py"
-texparts = ["union_density_trend"]
-pics     = ["union_density_trend"]
+texparts = ["union_density_trend", "union_density_trend_2004"]
+pics     = ["union_density_trend", "union_density_trend_2004"]
 
 [lmp]
 script   = "analyses/lmp_expenditure.py"
-texparts = ["lmp_expenditure"]
-pics     = ["lmp_expenditure"]
+texparts = ["lmp_expenditure", "lmp_expenditure_2004"]
+pics     = ["lmp_expenditure", "lmp_expenditure_2004"]
 
 [wage_convergence]
 script   = "analyses/wage_gdp_convergence.py"
@@ -59,7 +59,7 @@ texparts = ["cz_pension_income", "cz_pension_solidarity"]
 pics     = ["cz_pension_income", "cz_pension_solidarity"]
 
 [cz_tax_model]
-script   = "analyses/cz_tax_model.py"
+script   = "analyses/cz_figures.py"
 texparts = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
             "cz_sp_vs_income", "cz_pension_sp_ratio"]
 pics     = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
@@ -100,6 +100,11 @@ script   = "analyses/income_pps_map.py"
 texparts = ["income_pps_map"]
 pics     = ["income_pps_map"]
 
+[pli_map]
+script   = "analyses/pli_map.py"
+texparts = ["pli_map"]
+pics     = ["pli_map"]
+
 [gini_income]
 script   = "analyses/gini_income_timeline.py"
 texparts = ["gini_income_timeline"]
@@ -109,3 +114,60 @@ pics     = ["gini_income_timeline"]
 script   = "analyses/wage_pension_distribution.py"
 texparts = ["wage_pension_distribution"]
 pics     = ["wage_pension_distribution"]
+
+[kv_coverage_map]
+script   = "analyses/kv_coverage_map.py"
+texparts = ["kv_coverage_map"]
+pics     = ["kv_coverage_map"]
+
+[lmp_map]
+script   = "analyses/lmp_expenditure_map.py"
+texparts = ["lmp_expenditure_map"]
+pics     = ["lmp_expenditure_map"]
+
+[union_density_map]
+script   = "analyses/union_density_map.py"
+texparts = ["union_density_map"]
+pics     = ["union_density_map"]
+
+[self_employment_map]
+script   = "analyses/self_employment_map.py"
+texparts = ["self_employment_map"]
+pics     = ["self_employment_map"]
+
+[coverage_income_scatter]
+script   = "analyses/coverage_income_scatter.py"
+texparts = ["coverage_income_scatter"]
+pics     = ["coverage_income_scatter"]
+
+[net_income_ratio]
+script   = "analyses/net_income_ratio_timeline.py"
+texparts = ["net_income_ratio_timeline"]
+pics     = ["net_income_ratio_timeline"]
+
+[correlations]
+script   = "analyses/correlation_analyses.py"
+texparts = ["scatter_combined", "coverage_hours_scatter", "coverage_income_scatter",
+            "coverage_gini_scatter", "coverage_ratio_scatter",
+            "coverage_correlation_table"]
+pics     = ["scatter_combined", "coverage_hours_scatter", "coverage_income_scatter",
+            "coverage_gini_scatter", "coverage_ratio_scatter"]
+
+[wealth_timeline]
+script   = "analyses/gini_wealth_timeline.py"
+texparts = ["wealth_top10_timeline"]
+pics     = ["wealth_top10_timeline"]
+
+[wealth_map]
+script   = "analyses/gini_wealth_map.py"
+texparts = ["wealth_top10_map"]
+pics     = ["wealth_top10_map"]
+
+[sector_wages]
+script   = "analyses/sector_wages_net_pps.py"
+texparts = ["sector_wages_bar", "sector_wages_deviation",
+            "sector_wages_map_C", "sector_wages_map_G",
+            "sector_wages_map_J", "sector_wages_map_K"]
+pics     = ["sector_wages_bar", "sector_wages_deviation",
+            "sector_wages_map_C", "sector_wages_map_G",
+            "sector_wages_map_J", "sector_wages_map_K"]
