@@ -98,6 +98,7 @@
 % ==============================================================================
 
 \begin{document}
+\extrafloats{100}
 %TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
 % Page numbering: roman numerals start at the title page; the title page number
 % is suppressed, but the counter still advances there.
@@ -237,6 +238,7 @@
 	% průměrná mzda 46 165 Kč / 2024, regionální diferenciace Praha vs. zbytek ČR).
 	% Python: union_density_trend.pdf — data from OECD AIAS ICTWSS
 	\input{texparts/python/union_density_trend}
+	\input{texparts/python/union_density_trend_2004}
 	% \input{texparts/stav.tex}
 	\section{Výhled}\label{sec:vyhled}
 	% Faktory výhledu (strukturovat \paragraph):
@@ -266,8 +268,12 @@
 		\input{texparts/python/flexicurity_table}
 		\input{texparts/python/arope_map_2025}
 		\input{texparts/python/wage_gdp_convergence}
+		\input{texparts/python/net_income_ratio_timeline}
 		\input{texparts/python/union_gini_scatter}
+		\input{texparts/python/kv_coverage_map}
+		\input{texparts/python/union_density_map}
 		% \input{texparts/python/income_pps_map}
+		\input{texparts/python/pli_map}
 		% \input{texparts/python/employment_rate_timeline}
 		% \input{texparts/python/gini_income_timeline}
 		\subsection{Flexicurity}\label{ssec:flexicurity}
@@ -281,6 +287,8 @@
 			\input{texparts/python/arope_timeline_CE}
 			\input{texparts/python/arope_groups}
 			\input{texparts/python/lmp_expenditure}
+			\input{texparts/python/lmp_expenditure_2004}
+			\input{texparts/python/lmp_expenditure_map}
 		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
 			% AT: Kammer-system, téměř automatické rozšíření KSVS → 98 % pokrytí i při 26 % hustotě.
 			% DE: Mitbestimmung (spolurozhodování v~dozorčích radách), Hartz reformy — varování
@@ -288,6 +296,12 @@
 			% PL: slabý SD podobný CZ, ale větší ekonomická váha → jiné tlaky.
 			% SK: nejnižší GINI (21.6), ale nízké HDP i nízké KV pokrytí (35 %).
 			% Zdroje: ÖGB (AT), Jde to pružně DE model, Eurostat — datové srovnání
+			\input{texparts/python/sector_wages_bar}
+			\input{texparts/python/sector_wages_deviation}
+			\input{texparts/python/sector_wages_map_C}
+			\input{texparts/python/sector_wages_map_G}
+			\input{texparts/python/sector_wages_map_J}
+			\input{texparts/python/sector_wages_map_K}
 			% \input{texparts/porovnani_modely.tex}
 	\section{Případová studie KS~Penny Market 2026}\label{sec:penny}
 		% METODIKA: analýza smlouvy → srovnání se zákonným minimem a průměrem PKS (ČMKOS).
@@ -311,6 +325,14 @@
 		%                     pokrytí KV × týdenní pracovní hodiny → inverse korelace
 		% → Pilíř 3 potvrzení hypotézy.
 		% Závěr sekce: Hypotéza POTVRZENA.
+		\input{texparts/python/scatter_combined}
+		\input{texparts/python/coverage_income_scatter}
+		\input{texparts/python/coverage_hours_scatter}
+		\input{texparts/python/coverage_gini_scatter}
+		\input{texparts/python/coverage_ratio_scatter}
+		\input{texparts/python/coverage_correlation_table}
+		\input{texparts/python/wealth_top10_timeline}
+		\input{texparts/python/wealth_top10_map}
 		% \input{texparts/hodnoceni.tex}
 
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
@@ -323,6 +345,12 @@
 	% 4. Reforma švarc systému — SZIP posílení, daňová reforma OSVČ v~faktickém PPV
 	% 5. Digitalizace KV — transparentní registr PKS (vzor BE/NL)
 	% Zdroje: Dvořáková: Active Employment Policy, DK ministry of employment, ETUC Quality Jobs 2025
+	% \input{texparts/navrh.tex}
+	Na~základě analýzy trhu práce z~předchozí kapitoly jsou níže představeny dva
+	klíčové ukazatele, které ilustrují specifika české ekonomiky relevantní pro
+	návrh inovace sociálního dialogu.
+	\input{texparts/python/self_employment_map}
+	\input{texparts/python/cz_tax_wedge_vs_income}
 	% \input{texparts/navrh.tex}
 
 % Break Závěr out of the enclosing \part in the PDF bookmark panel so it
