@@ -102,18 +102,3 @@ pics     = ["wage_pension_distribution"]
 script   = "analyses/gini_wealth_timeline.py"
 texparts = ["gini_wealth_timeline"]
 pics     = ["gini_wealth_timeline"]
-
-[cz_tax_comparison]
-script   = "analyses/cz_tax_comparison.py"
-texparts = ["cz_tax_comparison"]
-pics     = ["cz_tax_comparison"]
-
-[cz_pension_model]
-script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_comparison", "cz_replacement_rate", "cz_pension_sp_ratio"]
-pics     = ["cz_pension_comparison", "cz_replacement_rate", "cz_pension_sp_ratio"]
-
-[cz_tax_model]
-script   = "analyses/cz_tax_model.py"
-texparts = ["cz_tax_wedge_vs_income", "cz_net_income_vs_income", "cz_sp_vs_income", "cz_tax_breakdown"]
-pics     = ["cz_tax_wedge_vs_income", "cz_net_income_vs_income", "cz_sp_vs_income", "cz_tax_breakdown"]
