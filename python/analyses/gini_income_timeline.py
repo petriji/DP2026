@@ -35,7 +35,6 @@ from statout.timeline import timeline
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-GEO = "+".join(COUNTRIES)
 START_YEAR = 2003
 HIGHLIGHT = ["CZ"]
 
@@ -45,9 +44,10 @@ apply_style()
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # ilc_di12: Gini coefficient of equivalised disposable income
 # Dimensions: freq · unit · indunit · geo
+# Download all countries (trailing dot) for EU background cloud.
 path = fetch_eurostat(
     "ilc_di12",
-    f"A.TOTAL.GINI_HND.{GEO}",
+    "A.TOTAL.GINI_HND.",
     start_period=START_YEAR,
 )
 
@@ -74,7 +74,7 @@ fig = timeline(
 )
 
 ax = fig.axes[0]
-ax.set_ylim(20, 40)
+ax.set_ylim(15, 45)
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
 savefig(fig, "gini_income_timeline", out_dir=LATEX_PICS_DIR)

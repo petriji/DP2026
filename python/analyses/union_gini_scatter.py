@@ -84,7 +84,7 @@ ds_gini = Dataset.from_sdmx_csv(
 fig = scatter_xy(
     ds_tud,
     ds_gini,
-    title="hustota odborů vs. Giniho koeficient [EU27]",
+    title="Korelace: hustota odborů a Giniho koeficient (EU27)",
     xlabel="hustota odborů [%]",
     ylabel="Giniho koeficient (disponibilní příjem, 0–100)",
     trendline=True,

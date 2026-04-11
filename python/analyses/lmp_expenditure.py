@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR
+from config import FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
@@ -81,6 +81,14 @@ fig = timeline(
 fig.axes[0].set_xlim(START_YEAR, ds_all.years[-1])
 fig.axes[0].set_ylim(0, 7.5)
 
+# COVID-19 annotation: 2020 spike was caused by emergency short-time work
+# schemes (Kurzarbeit/furlough), extended unemployment benefits, and wage
+# subsidies. DK 'Lønkompensation' covered 75% of wages — hence the highest spike.
+_ax = fig.axes[0]
+_ax.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
+_ax.text(2020.2, 6.8, "COVID-19", fontsize=FONT_SIZE - 1,
+         color="#CC4444", alpha=0.85, va="top")
+
 # ── 4. Save figure ────────────────────────────────────────────────────────────
 savefig(fig, "lmp_expenditure", out_dir=LATEX_PICS_DIR)
 
@@ -113,6 +121,10 @@ fig2 = timeline(
 )
 fig2.axes[0].set_xlim(YEAR_2004, ds_all.years[-1])
 fig2.axes[0].set_ylim(0, 5.0)
+
+_ax2 = fig2.axes[0]
+_ax2.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
+_ax2.text(2020.2, 4.7, "COVID-19", fontsize=FONT_SIZE - 1, color="#CC4444", alpha=0.85, va="top")
 
 savefig(fig2, "lmp_expenditure_2004", out_dir=LATEX_PICS_DIR)
 save_figure_tex(

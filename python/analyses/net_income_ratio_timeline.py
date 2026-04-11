@@ -86,14 +86,16 @@ df["value"] = df["net_pps"] / df["gdp_pps"] * 100.0
 df = df[["geo", "time", "value"]].dropna()
 
 # ── 3b. Normalise to EU27=100 ─────────────────────────────────────────────────────────────────
-# Primary: EU27_2020 aggregate row; fallback per missing year: mean of EU27 member countries
-eu27_ratio = df[df["geo"] == "EU27_2020"][["time", "value"]].set_index("time")["value"]
-member_eu27 = (
+# Use ARITHMETIC MEAN of EU27 member countries as the normalisation denominator
+# (not the GDP-weighted EU27_2020 aggregate).  This ensures that the arithmetic
+# mean of country-level normalised values equals 100 in every year, making the
+# grey background cloud visually centred on the 100 % reference line.
+# (Using the population-weighted aggregate would put the displayed mean at ~87 %
+# because large, high-income countries like DE/FR dominate the aggregate.)
+eu27_ratio = (
     df[df["geo"].isin(_EU27)]
     .groupby("time")["value"].mean()
 )
-# Fill years where EU27_2020 aggregate is absent (e.g. 2004–2012) with member mean
-eu27_ratio = eu27_ratio.combine_first(member_eu27)
 df = df.merge(eu27_ratio.rename("eu27"), on="time", how="left")
 df["value"] = df["value"] / df["eu27"] * 100.0
 df = df.drop(columns=["eu27"]).dropna(subset=["value"])
