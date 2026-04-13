@@ -28,6 +28,14 @@
     // LaTeX build tools
     "latex-workshop.latex.tools": [
         {
+            "name": "setup-venv",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cd '%DIR%/../python' && bash setup_venv.sh"
+            ]
+        },
+        {
             "name": "stats-analytics",
             "command": "bash",
             "args": [
@@ -102,6 +110,7 @@
             // Sets RUN_PYTHON_ANALYTICS=1 via the stats-analytics bash tool.
             "name": "Analytics + latexmk",
             "tools": [
+                "setup-venv",
                 "stats-analytics",
                 "latexmk"
             ]
