@@ -96,8 +96,8 @@ savefig(fig, "lmp_expenditure", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "lmp_expenditure",
     caption=(
-        f"Výdaje na aktivní politiku zaměstnanosti jako podíl HDP (\\%), "
-        f"bez korekce v~PPS (podíl HDP je bězrozměrný poměr), "
+        f"Výdaje na APZ jako podíl HDP, vývoj do {ds_all.years[-1]}, "
+        f"bez korekce v~PPS (podíl HDP je bezrozměrný poměr), "
         f"{START_YEAR}--{ds_all.years[-1]}. Šedé linie = ostatní evropské země."
     ),
     label="fig:lmp_expenditure",

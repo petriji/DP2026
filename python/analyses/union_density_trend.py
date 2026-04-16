@@ -73,8 +73,7 @@ savefig(fig, "union_density_trend", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "union_density_trend",
     caption=(
-        f"Vývoj hustoty odborových organizací (podíl odborově organizovaných "
-        f"zaměstnanců, \\%), {START_YEAR}--{ds.years[-1]}. "
+        f"Vývoj hustoty odborových organizací, {START_YEAR}--{ds.years[-1]}. "
         f"Šedé linie = ostatní evropské země."
     ),
     label="fig:union_density_trend",

@@ -105,14 +105,10 @@ display_year = common_years[-1] if common_years else "?"
 
 save_figure_tex(
     "union_gini_scatter",
-    caption=(
-        f"Hustota odborových organizací (osa x) a Giniho koeficient disponibilního "
-        f"příjmu (osa y) pro členské státy EU27, {display_year}. "
-        f"Přerušovaná čára – regrese OLS."
-    ),
+    caption=f"Hustota odborů a~příjmová nerovnost, EU27, {display_year}.",
     label="fig:union_gini_scatter",
     width=r"0.85\linewidth",
-    cite_key="oecd_aias_ictwss_TUD_pct,eurostat_ilc_di12_Gini",
+    cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],
 )
 
 print("Done.")
