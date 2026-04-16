@@ -42,6 +42,7 @@
 
 -- VS Code profile --
 *.code-profile
+.vscode/
 
 -- Python --
 python/.venv/
