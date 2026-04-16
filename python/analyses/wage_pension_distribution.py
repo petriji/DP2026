@@ -137,19 +137,18 @@ _COLOR_WAGE    = PALETTE[0]   # deep blue
 _COLOR_PENSION = PALETTE[4]   # vermillion
 
 # ── CSSZ pension data URLs ────────────────────────────────────────────────────
-# CSSZ publishes "Přehled starobních důchodů podle výše důchodu" as part of
-# the annual statistical yearbook.  The Excel editions typically appear at:
-#   https://www.cssz.cz/documents/20143/<doc_id>/<filename>.xlsx
-# The table of interest has columns [výše důchodu bracket, počet důchodů, %].
-# Attempt to fetch each year's edition; fall back when unavailable.
+# CSSZ publishes the annual statistical yearbook as a ZIP archive containing
+# multiple Excel tables.  URL pattern (discovered 2026-04-14):
+#   https://www.cssz.cz/documents/20143/2946719/Ročenka+{year}.zip/{guid}
+# The table with pension-amount distribution is one of the XLSX files inside.
 _CSSZ_URLS: list[tuple[int, str]] = [
-    # (year, URL) – add newer editions here when available
-    (2024, "https://www.cssz.cz/documents/20143/99587/"
-           "CSSZ-SR-DP-2024-tabulky.xlsx"),
-    (2023, "https://www.cssz.cz/documents/20143/9756022/"
-           "CSSZ-SR-DP-2023-tabulky.xlsx"),
-    (2022, "https://www.cssz.cz/documents/20143/9756022/"
-           "CSSZ-SR-DP-2022-tabulky.xlsx"),
+    # (year, ZIP URL) – add newer editions here when available
+    (2024, "https://www.cssz.cz/documents/20143/2946719/"
+           "Ro%C4%8Denka+2024.zip/616fb679-ad56-768a-6276-eddb0b99273a"),
+    (2023, "https://www.cssz.cz/documents/20143/2946719/"
+           "Ro%C4%8Denka+2023.zip/736e528f-2bf9-9f4f-8bde-8ecad9d6bfe2"),
+    (2022, "https://www.cssz.cz/documents/20143/2946719/"
+           "Ro%C4%8Denka+2022.zip/ee569157-cf9d-c4ca-068a-1b3ac24d4c65"),
 ]
 
 
@@ -360,30 +359,53 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
 
     Returns (quantile_dict, year) or (None, None) on failure.
     """
+    import io
+    import zipfile
+
     amount_kw = ["výše", "výši", "důchod", "částka", "pásmo", "skupin"]
     count_kw  = ["počet", "count", "celkem"]
 
     for year, url in _CSSZ_URLS:
         try:
-            path = fetch(url, suffix=".xlsx")
+            path = fetch(url, suffix=".zip")
         except Exception as exc:
             print(f"  CSSZ {year} fetch failed: {exc}")
             continue
 
-        # Try every sheet
+        # Extract all XLSX files from the yearbook ZIP
         try:
-            import openpyxl
-            wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-            sheets = wb.sheetnames
-            wb.close()
-        except Exception:
-            sheets = list(range(6))
+            with zipfile.ZipFile(path) as zf:
+                xlsx_names = [n for n in zf.namelist() if n.lower().endswith(".xlsx")]
+        except zipfile.BadZipFile as exc:
+            print(f"  CSSZ {year} ZIP extraction failed: {exc}")
+            continue
 
-        for sheet in sheets:
+        # Build list of (sheet, file_like) pairs to try
+        def _iter_sheets(zf_path: Path, xlsx_list: list[str]):  # noqa: E306
+            for xname in xlsx_list:
+                try:
+                    with zipfile.ZipFile(zf_path) as zf:
+                        buf = io.BytesIO(zf.read(xname))
+                    import openpyxl
+                    wb = openpyxl.load_workbook(buf, read_only=True, data_only=True)
+                    snames = wb.sheetnames
+                    wb.close()
+                except Exception:
+                    snames = list(range(6))
+                for sname in snames:
+                    try:
+                        with zipfile.ZipFile(zf_path) as zf:
+                            b2 = io.BytesIO(zf.read(xname))
+                        yield sname, b2
+                    except Exception:
+                        continue
+
+        for sheet, sheet_src in _iter_sheets(path, xlsx_names):
             for skiprows in range(0, 12):
                 try:
+                    sheet_src.seek(0)
                     df = pd.read_excel(
-                        path, sheet_name=sheet, skiprows=skiprows, header=0
+                        sheet_src, sheet_name=sheet, skiprows=skiprows, header=0
                     )
                     df = df.dropna(how="all").reset_index(drop=True)
                     if df.shape[1] < 2 or df.shape[0] < 5:
@@ -609,9 +631,7 @@ savefig(fig, "wage_pension_distribution", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "wage_pension_distribution",
     caption=(
-        f"Odhadnuté frekvenční distribuce čistých mezd zaměstnanců "
-        f"(ISPV {wage_year}/H1, podnikatelská sféra, MPSV/TREXIMA; "
-        f"N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
+        f"Distribuce čistých mezd a~starobních důchodů, ČR, {wage_year}.N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
         f"a starobních důchodů (CSSZ {pension_year}; "
         f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
         "Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\\,\\%), "
@@ -633,6 +653,7 @@ save_figure_tex(
         "Přerušované svislé čáry označují mediány; "
         "tečkované čáry zákonná minima."
     ),
+    cite_keys="mpsv_ispv",
     label="fig:wage_pension_distribution",
     width=r"0.95\linewidth",
     cite_key="mpsv_ispv",

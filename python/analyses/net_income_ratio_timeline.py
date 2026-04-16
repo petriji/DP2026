@@ -132,17 +132,10 @@ savefig(fig, "net_income_ratio_timeline", out_dir=LATEX_PICS_DIR)
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
 save_figure_tex(
     "net_income_ratio_timeline",
-    caption=(
-        "Poměr ročního čistého příjmu pracovníka (100\\,\\% prům.~mzdy, "
-        "svobodný bez dětí) v~PPS k~HDP na obyvatele v~PPS, normováno na "
-        "průměr EU27\\,=\\,100 (Eurostat/\\texttt{earn\\_nt\\_net} + "
-        "\\texttt{nama\\_10\\_pc}; obě řady v~PPS). "
-        f"{START_YEAR}--{last_year}. "
-        "Šedé linie = ostatní země EU27."
-    ),
+    caption=f"Poměr čistého příjmu k~HDP na obyvatele (EU27\\,=\\,100), {START_YEAR}--{last_year}.",
     label="fig:net_income_ratio_timeline",
     width=r"0.95\linewidth",
-    cite_key="eurostat_earn_nt_net_PPS_AW100,eurostat_nama_10_pc_PPS_EU27eq100",
+    cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
 )
 
 print("Done.")
