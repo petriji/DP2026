@@ -1,22 +1,24 @@
-\begin{samepage}
-Minimalizace teplotních deformací je perspektivním odvětvím vývoje obráběcích strojů (OS). Rešerše metod v~kapitole \ref{ch:minimalizace} ukazuje na důležitou roli softwarové kompenzace pomocí matematických modelů. Mezi nimi vynikají přenosové funkce (PF), které dosahují nejlepších výsledků a~nevykazují přílišnou složitost. Jedná se vlastně o~diferenciální rovnice. Dosud jsou používány jako black box modely, tj. nezaložené na fyzikálních zákonech.  \par
-\par V~kapitole \ref{ch:MFA} byl shrnut komplexní matematický aparát, na jehož základě PF fungují, a~který byl používán pro analýzu vlivu vzorkovací frekvence na přesnost jejich simulace. Dále byl z~běžně užívaných modelů PF vybrán ARMAX, který předpokládá závislost chyby na modelovaném procesu, ale nepovažuje ji pouze za bílý šum.
-\par Pátá kapitola seznamuje čtenáře s~metodikou a~úspěchy vývoje kompenzačních metod na půdě RCMT. Dosavadní přístup je neslučitelný s~vyšetřováním vlivu vzorkovací frekvence, která je předmětem kapitoly \ref{ch:analyza_fs_uvod}.
-\par Pro praktickou část – analýzu vlivu vzorkovací frekvence na přesnost aproximace softwarové kompenzace teplotních chyb se základem v~přenosových funkcích, byl nalezen nový přístup k~identifikaci a~analýze PF pomocí jejich frekvenčních vlastností. Na ně jsou také navázané uvedené podmínky pro volbu vzorkovací frekvence (kapitola~\ref{subsec:PF_a_Ts}). Analýza probíhá v~programu v~jazyce matlab, který byl v~rámci této práce vytvořen.
-\par Za účelem demonstrace metody a ukázky poznatků nabytých při zpracování byly na souboru dat ze tří komerčních OS a jednoho modelu zkoumány možné příčiny změny sledovaných parametrů kvality modelu PF v~závislosti na vzorkovací frekvenci (kapitola~\ref{sec:analyza_fs_vystupy_uvod}). Vzhledem ke komplexnosti problematiky byly možné příčiny pouze naznačeny, ale nebyl ověřen jejich skutečný vliv.
-\par Směrodatným závěrem analýzy je, že vzorkovací frekvence je úzce spjata s~kvalitou simulace konkrétních modelů přenosových funkcí.
-Práce naplnila všechny cíle vytyčené v~kapitole \ref{ch:cil}.
-\end{samepage}
-\newpage
-Dalšími závěry, které jsou z~výstupů analýzy vyvozeny jsou:
-\begin{itemize}[noitemsep]
-\item Frekvenční vlastnosti OS jsou různé.
-\item Předpoklad druhého řádu teplotně-deformačního chování byl mylný. Jak ukazují naměřená data, je v~souladu s~matematicko-fyzikálním rozborem (kapitola~\ref{sec:TDF}) druhý řád rovnice vedení tepla integrací jejího lineárního funkcionálu s~funkcí teplotní roztažnosti  snížen na první řád.
-\item Při měření je třeba dodržovat hygienu vzorkování – používat antialiasingový filtr. Aliasing je zdrojem velmi nepříznivého nevratného zkreslení naměřených signálů.
-\item Při identifikaci modelů je třeba dbát frekvenčních vlastností použitých signálů, zejména výskytu spektrálních čar.
-\item Proces na němž probíhá identifikace je silně nestacionární, což může velmi postihovat kvalitu a~spolehlivost identifikace. Pro relativně ustálený stav bez buzení silnými zdroji tepla (ETVE) může být výhodné identifikovat jiný systém.
-\item Diskrétní PF fungují správně pouze pro data se stejnou vzorkovací frekvencí jako identifikační data.
-\item Vliv vzorkovací frekvence na přesnost simulace lze omezit dodržením podmínek uvedených v~kapitole~\ref{subsec:PF_a_Ts}.
-\item Na výstupu z~PF může vznikat aliasing.
-\item BIBO stabilita není postačujícím kritériem pro bezpečnost aplikace PF v~OS.
-\end{itemize}
+% TODO: Přepsat celý zaver.tex (stávající obsah je z~jiné práce).
+% (níže je zakomentovaný původní text ze šablony — lze smazat)
+%\begin{samepage}
+%Minimalizace teplotních deformací je perspektivním odvětvím vývoje obráběcích strojů (OS). Rešerše metod v~kapitole \ref{ch:minimalizace} ukazuje na důležitou roli softwarové kompenzace pomocí matematických modelů. Mezi nimi vynikají přenosové funkce (PF), které dosahují nejlepších výsledků a~nevykazují přílišnou složitost. Jedná se vlastně o~diferenciální rovnice. Dosud jsou používány jako black box modely, tj. nezaložené na fyzikálních zákonech.  \par
+%\par V~kapitole \ref{ch:MFA} byl shrnut komplexní matematický aparát, na jehož základě PF fungují, a~který byl používán pro analýzu vlivu vzorkovací frekvence na přesnost jejich simulace. Dále byl z~běžně užívaných modelů PF vybrán ARMAX, který předpokládá závislost chyby na modelovaném procesu, ale nepovažuje ji pouze za bílý šum.
+%\par Pátá kapitola seznamuje čtenáře s~metodikou a~úspěchy vývoje kompenzačních metod na půdě RCMT. Dosavadní přístup je neslučitelný s~vyšetřováním vlivu vzorkovací frekvence, která je předmětem kapitoly \ref{ch:analyza_fs_uvod}.
+%\par Pro praktickou část – analýzu vlivu vzorkovací frekvence na přesnost aproximace softwarové kompenzace teplotních chyb se základem v~přenosových funkcích, byl nalezen nový přístup k~identifikaci a~analýze PF pomocí jejich frekvenčních vlastností. Na ně jsou také navázané uvedené podmínky pro volbu vzorkovací frekvence (kapitola~\ref{subsec:PF_a_Ts}). Analýza probíhá v~programu v~jazyce matlab, který byl v~rámci této práce vytvořen.
+%\par Za účelem demonstrace metody a ukázky poznatků nabytých při zpracování byly na souboru dat ze tří komerčních OS a jednoho modelu zkoumány možné příčiny změny sledovaných parametrů kvality modelu PF v~závislosti na vzorkovací frekvenci (kapitola~\ref{sec:analyza_fs_vystupy_uvod}). Vzhledem ke komplexnosti problematiky byly možné příčiny pouze naznačeny, ale nebyl ověřen jejich skutečný vliv.
+%\par Směrodatným závěrem analýzy je, že vzorkovací frekvence je úzce spjata s~kvalitou simulace konkrétních modelů přenosových funkcí.
+%Práce naplnila všechny cíle vytyčené v~kapitole \ref{ch:cil}.
+%\end{samepage}
+%\newpage
+%Dalšími závěry, které jsou z~výstupů analýzy vyvozeny jsou:
+%\begin{itemize}[noitemsep]
+%\item Frekvenční vlastnosti OS jsou různé.
+%\item Předpoklad druhého řádu teplotně-deformačního chování byl mylný. Jak ukazují naměřená data, je v~souladu s~matematicko-fyzikálním rozborem (kapitola~\ref{sec:TDF}) druhý řád rovnice vedení tepla integrací jejího lineárního funkcionálu s~funkcí teplotní roztažnosti  snížen na první řád.
+%\item Při měření je třeba dodržovat hygienu vzorkování – používat antialiasingový filtr. Aliasing je zdrojem velmi nepříznivého nevratného zkreslení naměřených signálů.
+%\item Při identifikaci modelů je třeba dbát frekvenčních vlastností použitých signálů, zejména výskytu spektrálních čar.
+%\item Proces na němž probíhá identifikace je silně nestacionární, což může velmi postihovat kvalitu a~spolehlivost identifikace. Pro relativně ustálený stav bez buzení silnými zdroji tepla (ETVE) může být výhodné identifikovat jiný systém.
+%\item Diskrétní PF fungují správně pouze pro data se stejnou vzorkovací frekvencí jako identifikační data.
+%\item Vliv vzorkovací frekvence na přesnost simulace lze omezit dodržením podmínek uvedených v~kapitole~\ref{subsec:PF_a_Ts}.
+%\item Na výstupu z~PF může vznikat aliasing.
+%\item BIBO stabilita není postačujícím kritériem pro bezpečnost aplikace PF v~OS.
+%\end{itemize}
