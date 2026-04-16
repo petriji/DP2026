@@ -63,8 +63,7 @@ savefig(fig_a, map_name, out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     map_name,
     caption=(
-        f"Podíl obyvatel ohrožených chudobou nebo sociálním vyloučením (AROPE), "
-        f"{ds.latest_year}\\,\\%."
+        f"Míra AROPE v~evropských zemích, {ds.latest_year}."
     ),
     label=f"fig:{map_name}",
     cite_key="eurostat_ilc_peps01n_PC_pop",
@@ -83,10 +82,7 @@ fig_b = timeline(
 savefig(fig_b, "arope_timeline_CE", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "arope_timeline_CE",
-    caption=(
-        "Vývoj míry ohrožení chudobou nebo sociálním vyloučením (AROPE) "
-        f"ve vybraných zemích střední Evropy, {ds.years[0]}--{ds.years[-1]}."
-    ),
+    caption=f"Vývoj míry AROPE, střední Evropa, {ds.years[0]}--{ds.years[-1]}.",
     label="fig:arope_timeline_CE",
     cite_key="eurostat_ilc_peps01n_PC_pop",
 )
@@ -107,7 +103,7 @@ savefig(fig_c, "arope_groups", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "arope_groups",
     caption=(
-        "Vývoj průměrné míry AROPE podle skupin zemí, "
+        "Vývoj míry AROPE podle skupin zemí, "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:arope_groups",

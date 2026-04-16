@@ -77,8 +77,7 @@ savefig(fig, "old_age_dependency_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "old_age_dependency_map",
     caption=(
-        f"Koeficient ekonomického zatížení seniory (počet osob 65+ na 100 osob "
-        f"ve věku 20–64 let), {ds.latest_year}."
+        f"Koeficient ekonomického zatížení seniory, EU, {ds.latest_year}."
     ),
     label="fig:old_age_dependency_map",
     width=r"0.92\linewidth",

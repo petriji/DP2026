@@ -1,20 +1,21 @@
 r"""
-Top 10 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
+Top 20 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
 
-Shows changes in the top 10 % net wealth share (% of total household net
-wealth) from OECD HFCS survey waves.  Illustrates persistent and growing
-wealth concentration relative to income inequality.
+Shows changes in the top 20 % net wealth share (% of total household net
+wealth) from OECD HFCS survey waves.  The top quintile captures the broad
+wealthy class rather than just the ultra-rich top decile, making concentration
+trends more interpretable in policy terms.
 
-Data source: OECD Wealth Distribution database (WEALTH dataset, SH_TOP10)
+Data source: OECD Wealth Distribution database (WEALTH dataset, SH_TOP20)
 
 Output
 ------
-  pics/python/wealth_top10_timeline.pdf
-  latex/texparts/python/wealth_top10_timeline.tex
+  pics/python/wealth_top20_timeline.pdf
+  latex/texparts/python/wealth_top20_timeline.tex
 
 Run
 ---
-    python analyses/gini_wealth_timeline.py
+    python analyses/wealth_top20_timeline.py
 """
 
 import sys
@@ -38,15 +39,15 @@ START_YEAR = 2008
 apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# WEALTH dataset: SH_TOP10 = top 10 % net wealth share (% of total)
+# WEALTH dataset: SH_TOP20 = top 20 % net wealth share (% of total)
 path = fetch_oecd("WEALTH", start_period=START_YEAR)
 
 ds = Dataset.from_oecd_csv(
     path,
-    name="Podíl top 10 % na čistém jmění",
+    name="Podíl top 5 % na čistém jmění",
     unit="%",
     source_url="OECD Wealth Distribution / WEALTH",
-    filters={"MEASURE": "SH_TOP10"},
+    filters={"MEASURE": "SH_TOP5"},
 )
 
 print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
@@ -107,24 +108,24 @@ for country in COUNTRIES:
     )
 
 ax.set_xlabel("rok (HFCS vlna)")
-ax.set_ylabel("podíl top 10 % domácností na čistém jmění [%]")
-ax.set_title("koncentrace bohatství: podíl top 10 % na čistém jmění [%]")
-ax.set_ylim(25, 80)
+ax.set_ylabel("podíl top 5 % domácností na čistém jmění [%]")
+ax.set_title("koncentrace bohatství: podíl top 5 % na čistém jmění [%]")
+ax.set_ylim(20, 60)
 if ds_all.years:
     ax.set_xlim(ds_all.years[0] - 1, ds_all.years[-1] + 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig(fig, "wealth_top10_timeline", out_dir=LATEX_PICS_DIR)
+savefig(fig, "wealth_top20_timeline", out_dir=LATEX_PICS_DIR)
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex(
-    "wealth_top10_timeline",
+    "wealth_top20_timeline",
     caption=(
-        f"Podíl top 10\,\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
+        f"Podíl top 5\,\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
         "Přerušovaná spojnice propojuje průzkumné vlny (data nejsou roční). "
         "Šedé linie = ostatní země v~datové sadě."
     ),
-    label="fig:wealth_top10_timeline",
+    label="fig:wealth_top20_timeline",
     width=r"0.95\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",
 )
