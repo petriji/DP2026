@@ -70,9 +70,7 @@ savefig(fig, "kv_coverage_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "kv_coverage_map",
     caption=(
-        f"Pokrytí kolektivním vyjednáváním~-- podíl zaměstnanců, "
-        f"na~které se vztahuje kolektivní smlouva, {ds.latest_year}. "
-        r"Data nejsou dostupná pro nečlenské státy OECD (BG, HR, CY, MT, RO)."
+        f"Pokrytí kolektivním vyjednáváním, EU, {ds.latest_year}."
     ),
     label="fig:kv_coverage_map",
     width=r"0.92\linewidth",

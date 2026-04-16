@@ -6,21 +6,22 @@ Data sources
 Czech Republic (negotiated):
     MPSV IPP (Informace o pracovních podmínkách) – annual Excel workbooks
     downloaded from ``https://www.kolektivnismlouvy.cz``.
-    The ``odmenovani`` workbook for each year contains the median negotiated
-    basic-wage increase (%) agreed in collective contracts surveyed that year.
+    The ``odmenovani`` workbook sheet A15a "Mzdový vývoj" contains, for each
+    trade union sector, the breakdown of collective agreements (KS) by wage
+    adjustment method. The **Celkem** (total) row col 11 gives the average
+    percentage increase (``prům.%``) among KS that used the
+    "zvýšením v %" (percentage-increase) method.
 
-    Sheet / row mapping used here (adjust ``_IPP_SHEET_CFG`` if MPSV change
-    the workbook layout in a future edition):
-      - ``sheet_name``  – 0-based sheet index or name of the sheet
-      - ``skiprows``    – header rows to skip before the data table
-      - ``value_col``   – column header substring matching the median-increase
-                          column (Czech: "Sjednaný nárůst …" / "Medián …")
-      - ``year``        – override for single-year files (no year column)
+    Fixed layout (verified 2019–2025):
+      - sheet: ``A15a``
+      - header rows: 6 (rows 0–5 are title/header; row 6 starts the table)
+      - Celkem row: row index 11 (0-based) or the first row where col 0 == "Celkem"
+      - value column: index 11 (``prům.%`` for "zvýšením v %" sub-column)
 
 All 6 countries (actual):
-    Eurostat Labour Cost Index – nominal, total economy (``lc_lci_r2``).
-    ``B-S`` = total business economy; ``LCI`` = labour cost index;
-    ``TOTAL`` = total; ``I15`` = 2015 = 100 base year.
+    Eurostat Labour Cost Index – nominal, annual (``lc_lci_r2_a``).
+    ``B-S`` = total business economy; ``D1_D4_MD5`` = total labour cost index;
+    ``I20`` = 2020 = 100 base year.
     Annual growth rate derived by dividing consecutive index values.
 
 Output
@@ -58,23 +59,8 @@ log = logging.getLogger(__name__)
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 GEO_6 = "+".join(COUNTRIES)
-START_YEAR = 2016   # first year with consistent IPP odmenovani time-series data
+START_YEAR = 2007   # first year with available IPP odmenovani data
 END_YEAR = 2025     # most recent complete survey year
-
-# IPP odmenovani workbook structure (adjust if MPSV updates the layout)
-# Each entry: year → dict with read_excel kwargs + metric column info.
-# When MPSV publish a new year, add an entry; if the structure changed,
-# adjust ``sheet_name``, ``skiprows``, and ``value_col`` accordingly.
-_IPP_SHEET_CFG: dict[int, dict] = {
-    # Default config applied to years without a specific override
-    # Typical IPP odmenovani layout (verified for 2018–2024 editions):
-    #   Row 0-2: title / blank rows (skipped)
-    #   Row 3:   column headers – "Ukazatel" | numeric columns
-    #   Rows 4+: data rows where the first column contains the metric label
-    #            and subsequent columns contain values.
-    # The row containing the median negotiated-increase figure is identified
-    # by the keyword search in _extract_ipp_negotiated_increase() below.
-}
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
@@ -82,52 +68,52 @@ apply_style()
 # ── 1. Download IPP odmenovani for each survey year ───────────────────────────
 
 def _extract_ipp_negotiated_increase(path: Path, year: int) -> float | None:
-    """Extract the median negotiated basic-wage increase (%) from one IPP file.
+    """Extract the average negotiated wage increase (%) from one IPP odmenovani file.
 
-    The odmenovani Excel workbook has a transposed layout:
-    - rows  = indicators (Czech text)
-    - columns = values for the survey year / different groups
+    Reads sheet A15a "Mzdový vývoj" and dynamically locates:
+    - the ``prům.%`` column (col 9 in 2007–2013 files, col 11 in 2014+ files)
+    - the "Celkem" aggregate row (col 0 in 2009+ files, col 1 in 2007-era files
+      where the first column is empty)
 
-    The function:
-    1. Reads the first sheet with up to 6 leading rows skipped sequentially
-       until it finds a parseable table.
-    2. Searches for the row whose first column contains keywords associated
-       with the negotiated basic-wage increase (sjednaný nárůst základní mzdy).
-    3. Returns the first numeric value from that row, interpreted as a %.
-
-    If no matching row is found, returns ``None`` and logs a warning.
+    Returns ``None`` if the value cannot be found or is outside 0–50 %.
     """
-    import openpyxl  # lightweight read for structure inspection
+    try:
+        df = pd.read_excel(path, sheet_name="A15a", header=None)
+    except Exception as exc:
+        log.warning("IPP %d: cannot read sheet A15a from %s: %s", year, path.name, exc)
+        return None
 
-    keywords = [
-        "sjednaný nárůst základní mzdy",
-        "sjednaný nárůst mzdy",
-        "sjednaný nárůst",
-        "nárůst základní mzdy",
-        "medián nárůstu",
-        "medián sjednané mzdy",
-        "sjednaná mzda",
-    ]
+    # Find the 'prům.%' column by scanning header rows (first 15 rows)
+    prumpc_col: int | None = None
+    for row_idx in range(min(15, df.shape[0])):
+        for col_idx in range(df.shape[1]):
+            if str(df.iloc[row_idx, col_idx]).strip() == "prům.%":
+                prumpc_col = col_idx
+                break
+        if prumpc_col is not None:
+            break
 
-    for skiprows in range(0, 7):
-        try:
-            df = pd.read_excel(path, sheet_name=0, skiprows=skiprows, header=0)
-            df = df.dropna(how="all").reset_index(drop=True)
-            if df.shape[1] < 2 or df.shape[0] < 1:
-                continue
+    if prumpc_col is None:
+        log.warning("IPP %d: 'prům.%%' column not found in %s", year, path.name)
+        return None
 
-            first_col = df.columns[0]
-            for _, row in df.iterrows():
-                cell = str(row[first_col]).lower().strip()
-                if any(kw in cell for kw in keywords):
-                    # Found the row – extract first numeric value
-                    for col in df.columns[1:]:
-                        val = pd.to_numeric(row[col], errors="coerce")
-                        if pd.notna(val) and 0 < val < 200:
-                            return float(val)
-        except Exception as exc:
-            log.debug("skiprows=%d failed: %s", skiprows, exc)
-            continue
+    # Find the 'Celkem' row; check col 0 and col 1 (pre-2009 files shift labels right)
+    celkem_row: int | None = None
+    for row_idx in range(df.shape[0]):
+        for label_col in range(min(2, df.shape[1])):
+            if str(df.iloc[row_idx, label_col]).strip().lower() == "celkem":
+                celkem_row = row_idx
+                break
+        if celkem_row is not None:
+            break
+
+    if celkem_row is None:
+        log.warning("IPP %d: 'Celkem' row not found in %s", year, path.name)
+        return None
+
+    val = pd.to_numeric(df.iloc[celkem_row, prumpc_col], errors="coerce")
+    if pd.notna(val) and 0 < val < 50:
+        return float(val)
 
     log.warning("IPP %d: could not extract negotiated increase from %s", year, path.name)
     return None
@@ -161,21 +147,21 @@ if not ipp_records:
     )
 
 # ── 2. Download Eurostat labour cost index (nominal, all countries) ───────────
-# lc_lci_r2: Labour cost index – nominal, total economy
-# Dimensions: freq · nace_r2 · lcstruct · unit · geo
-# Filter: A (annual) · B-S (business economy) · LCI (index) · TOTAL · I15 (2015=100)
+# lc_lci_r2_a: Labour cost index – nominal, annual (replaced lc_lci_r2 in 2024)
+# Dimensions: freq · unit · nace_r2 · lcstruct · geo
+# Filter: A (annual) · I20 (2020=100) · B-S (business economy) · D1_D4_MD5 (total LCI)
 print("Downloading Eurostat labour cost index …")
 path_lci = fetch_eurostat(
-    "lc_lci_r2",
-    f"A.B-S.LCI.TOTAL.I15.{GEO_6}",
+    "lc_lci_r2_a",
+    f"A.I20.B-S.D1_D4_MD5.{GEO_6}",
     start_period=START_YEAR - 1,  # one extra year to compute first difference
 )
 
 ds_lci = Dataset.from_sdmx_csv(
     path_lci,
     name="Index mzdových nákladů",
-    unit="2015=100",
-    source_url="Eurostat/lc_lci_r2",
+    unit="2020=100",
+    source_url="Eurostat/lc_lci_r2_a",
 )
 
 print(f"LCI countries: {ds_lci.countries}  |  years: {ds_lci.years[0]}–{ds_lci.years[-1]}")
@@ -268,14 +254,10 @@ savefig(fig, "ipp_wage_growth", out_dir=LATEX_PICS_DIR)
 year_range = f"{START_YEAR}–{END_YEAR}"
 save_figure_tex(
     "ipp_wage_growth",
-    caption=(
-        "Sjednaný nárůst základní mzdy v kolektivních smlouvách v~ČR "
-        "(MPSV/IPP, plná čára) a~skutečný meziroční nárůst mzdových nákladů "
-        f"(Eurostat LCI, přerušovaná čára) pro vybrané země, {year_range}."
-    ),
+    caption=f"Sjednaný a~skutečný mzdový nárůst v~KS, ČR, {year_range}.",
     label="fig:ipp_wage_growth",
     width=r"0.95\linewidth",
-    cite_key="mpsv_ipp",
+    cite_keys=["mpsv_ipp", "eurostat_lci"],
 )
 
 print("Done.")
