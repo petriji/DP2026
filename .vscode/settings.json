@@ -21,7 +21,7 @@
         "%DIR%/texparts/python"
     ],
     "latex-workshop.latex.build.fromWorkspaceFolder": false,
-    "latex-workshop.latex.autoBuild.run": "onSave",
+    "latex-workshop.latex.autoBuild.run": "never",
     "latex-workshop.latex.autoClean.run": "onSucceeded",
     "latex-workshop.latex.recipe.default": "lastUsed",
 
