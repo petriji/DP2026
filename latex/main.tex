@@ -189,35 +189,40 @@
 % ARGUMENTAČNÍ KOSTRA (viz sources/nocite/research_plan.md):
 %   Pilíř 1 — Slabý sociální dialog: hustota 11 %, pokrytí KV 32 %, hist. příčiny
 %   Pilíř 2 — Zranitelnost: model levné práce, low APZ (~0.3 % HDP), AI/automatizace
-%   Pilíř 3 — Kauzalita: korelace hustota×GINI, DK příklad adaptability
+%   Pilíř 3 — Kauzalita: korelace hustota×GINI, DK příklad adaptability během covidu
 %   Případová studie: KS Penny Market — formální KV, neviditelná role odborů v~PR
 %   Inovace: Ghent APZ model, rozšíření závaznosti KSVS, mzdová transparentnost
 
 \chapter{Úvod}\label{ch:uvod}
 	% TODO: Přepsat celý uvod.tex (stávající obsah je z~jiné práce).
 	% Obsah: kontext (i4.0/AI × model levné práce), zdůvodnění výběru zemí (AT/DE/DK/PL/SK),
-	%        cíl práce, vyslovení hypotézy.
+	%        cíl práce, vyslovení hypotézy, odkaz na výzkumnou strategii.
 	 \input{texparts/uvod.tex}
 
 \part{Teoretická část}\label{p:teorie}
 \chapter{Legislativní, historický a teoretický rámec}\label{ch:ramec}
 	\section{Pojmy a vztahy, legislativa}\label{sec:pojmy}
-	% Definice: sociální dialog, KV, KS (PKS/KSVS), sociální partneři, tripartita (RHSD).
-	% Odborová hustota × pokrytí KV (rozdíl).
-	% Zákonný rámec: ZP §§ 24–29, zákon 2/1991 Sb. — klíčový bod: § 24 pluralita OS,
-	% § 7 zákona 2/1991 rozšiřování závaznosti KSVS (v~ČR minimálně využíváno).
-	% ILO Convention 87 + 98 (freedom of association, right to organise).
-	% Zdroje: Hrabcová 2008, ZP, zákon 2/1991, Armstrong HRM, Dvořáková 2012
-	% \input{texparts/pojmy.tex}
+		% Definice: sociální dialog, KV, KS (PKS/KSVS), sociální partneři, tripartita (RHSD).
+		% Odborová hustota × pokrytí KV (rozdíl).
+		% Zákonný rámec: ZP §§ 24–29, zákon 2/1991 Sb. — klíčový bod: § 24 pluralita OS,
+		% § 7 zákona 2/1991 rozšiřování závaznosti KSVS (v~ČR minimálně využíváno).
+		% ILO Convention 87 + 98 (freedom of association, right to organise).
+		% Zdroje: Hrabcová 2008, ZP, zákon 2/1991, Armstrong HRM, Dvořáková 2012
+		% \input{texparts/pojmy.tex}
 	\section{Historický vývoj}\label{sec:historie}
-	% Vznik odborů (19. stol.) — industrializace = analogie k~i4.0/AI.
-	% ILO — 100 let (1919); CZ: první republika → ROH → transformace 1989 → RHSD.
-	% Strukturální pokles hustoty odborů v~ČR (70 %+ → 11 %): příčiny — ztráta důvěry
-	% po komunistickém ROH, privatizace, flexinovela, kulturní negativní vnímání odborů.
-	% Zdroje: ČMKOS: Historie a společnost 2020, 100 let MOP 2019, PETRICEK_IND4
-	% \input{texparts/historie.tex}
+		% Vznik odborů (19. stol.) — industrializace = analogie k~i4.0/AI.
+		% ILO — 100 let (1919); CZ: první republika → ROH → transformace 1989 → RHSD.
+		% Strukturální pokles hustoty odborů v~ČR (70 %+ → 11 %): příčiny — ztráta důvěry
+		% po komunistickém ROH, privatizace, individualizace, kulturní negativní vnímání odborů.
+		% Zdroje: ČMKOS: Historie a společnost 2020, 100 let MOP 2019, PETRICEK_IND4
+		% \input{texparts/historie.tex}
 	\section{Přehled současného poznání}\label{sec:teorie}
-
+		% Teoretické přístupy k~sociálnímu dialogu: pluralistický (sdílené zájmy, kompromis),
+		% marxistický (konflikt, třídní boj), institucionální (formální struktury a pravidla).
+		% Role sociálního dialogu: zajištění spravedlivých mezd, pracovních podmínek, APZ;
+		% stabilizace trhu práce; adaptace na technologické změny.
+		% Zdroje: Armstrong HRM Handbook, Dvořáková 2012, ETUC 2025, VÚPSV 2013
+		% \input{texparts/teorie.tex}
 \part{Praktická část}\label{p:prakticka}
 \chapter{Postup výzkumu}\label{ch:vyzkum}
 	% Výzkumná strategie: kvantitativní (trendy, korelace) + kvalitativní (syntéza, případová studie)
@@ -229,54 +234,108 @@
 	% Limity: dostupnost dat, srovnatelnost definic přes země, česká specif. (ISPV/RSCP).
 	% \input{texparts/vyzkum.tex}
 	\section{Zpracování dat}\label{sec:datova_analyza}
-	% Popis datových sad a proměnných (vzorce počítaných veličin, PPS normování).
-	% Popis Python analytic pipeline (stattool/, data/, figures/).
-	% \input{texparts/datova_analyza.tex}
+		% Popis datových sad a proměnných (vzorce počítaných veličin, PPS normování,...).
+		% Rovnice pro korelační analýzu
+		% Popis Python analytic pipeline (stattool/, data/, figures/).
+		% \input{texparts/datova_analyza.tex}
 
-\chapter{Stav trhu práce}\label{ch:stav}
-	% Úvod kapitoly: zasadit CZ trh práce do kontextu (struktura, zaměstnanost 81.7 %,
-	% průměrná mzda 46 165 Kč / 2024, regionální diferenciace Praha vs. zbytek ČR).
-	% Python: union_density_trend.pdf — data from OECD AIAS ICTWSS
-	\input{texparts/python/union_density_trend}
-	\input{texparts/python/union_density_trend_2004}
+\chapter{Stav sociálního dialogu v~ČR}\label{ch:stav}
+	% Úvod kapitoly: zasadit CZ trh práce do kontextu (struktura, zaměstnanost,
+	% průměrná mzda / 2025, socální partneři, členství, pokrytí KV, počet KSVS).
+	% Diskuze: AROPE interpretace (relativní chudoba, národní hranice), limity výzkumu.
+	\input{texparts/commentary/flexicurity_table}
+	\input{texparts/commentary/net_income_ratio_timeline}
+	\input{texparts/commentary/gdp_ppp_timeline}
+	\input{texparts/commentary/employment_rate_timeline}
+	\input{texparts/commentary/wage_pension_distribution}		% CZ pension system analysis (cz_pension_model.py):
+		\input{texparts/commentary/cz_pension_income}
+		\input{texparts/commentary/cz_pension_solidarity}
+		\input{texparts/commentary/cz_pension_wedge}
+		\input{texparts/commentary/cz_pension_sp_ratio}
+	\input{texparts/commentary/union_density_trend}
+	\input{texparts/commentary/union_density_trend_2004}		% IPP — vývoj vyjednaných mezd v~kolektivních smlouvách ČR (ipp_wage_growth.py):
+		\input{texparts/commentary/ipp_wage_growth}
+		\input{texparts/commentary/ipp_actual_vs_neg_gap}
+		\input{texparts/commentary/ipp_cumulative_real}
+		\input{texparts/commentary/ipp_neg_vs_inflation}
+		\input{texparts/commentary/ipp_ca_breadth}
+	\input{texparts/commentary/arope_timeline_CE}
+	\input{texparts/commentary/arope_groups}
+	\input{texparts/commentary/arope_map_2025}
 	% \input{texparts/stav.tex}
-	\section{Výhled}\label{sec:vyhled}
-	% Faktory výhledu (strukturovat \paragraph):
-	% (a) Průmysl 4.0 a AI — automatizace low-wage sektorů, eliminace junior pozic, gen Z
-	% (b) Imigrace z~Ukrajiny — 340k TMP, mzdový tlak v~nízkokvalifikovaných sektorech
-	% (c) Brain drain — rostoucí jazyková vybavenost, mobilita do AT/DE; lékaři, IT
-	% (d) OSVČ a švarc systém — erodování sociální báze, IT sektor, efektivní zdanění rozdíl
-	% (e) Veřejný sektor — platy zaostávají (vzdělávání +2.7 % vs NH +7.1 % v~2024),
-	%     důsledky pro výkon státní správy, tlak na mzdy v~soukromém sektoru
-	% (f) Agenturní zaměstnávání — SZIP, ČMKOS KV data (PKS sec. 3.6.6)
-	% Python: lmp_expenditure.pdf (TODO), tax_osvč_comparison.pdf (TODO)
-	% \input{texparts/python/old_age_dependency_map}
-	% \input{texparts/python/employment_rate_timeline}
-	% \input{texparts/python/wage_pension_distribution}
-	% Zdroje: ČMKOS Zpráva 2025 (kap. 1, 3.6, 3.8), Polents/Dvořáková (UA refugees),
-	%         Dvořáková: Active Employment Policy, demografické trendy
-	% \input{texparts/vyhled.tex}
+	\section{Problémy trhu práce}\label{sec:problemy}
+		% strukturovat do subsections
+		% přesunout vhodné části popisu stavu trhu práce sem, aby se nepletly s~analýzou trendů a 	výhledových faktorů v~následujících sekcích
+		% regionální diferenciace Praha vs. zbytek ČR, vysoká genderová stratifikace, brain drain, platy ve veřejném sektoru (vzdělávání +2.7 % vs NH +7.1 % v~2024) - důsledky pro výkon státní správy, tlak na mzdy v~soukromém sektoru, agenturní zaměstnávání, nízká porodnost, nízká nezaměstnanost, struktura volných pracovních míst (nízkokvalifikované), Švarc systém, mzdová netransparentnost
+		\input{texparts/commentary/rscp_regional_wages}
+		\input{texparts/commentary/rscp_regional_wages_map}
+		\input{texparts/commentary/cross_border_commuting_timeline}
+		\input{texparts/commentary/cross_border_commuting_map}
+		\input{texparts/commentary/cross_border_commuting_nuts2}
+		% Gender wage stratification – pay gap choropleth + percentile profiles:
+		\input{texparts/commentary/gender_pay_gap_map}
+		\input{texparts/commentary/gender_wage_stratification}
+		% RSCP gender pay gap by NACE sector (rscp_stratification.py):
+		\input{texparts/commentary/rscp_gender_gap}
+		% Public vs private sector wage comparison (ISPV 2025):
+		\input{texparts/commentary/rscp_public_private_sector}
+		\input{texparts/commentary/rscp_public_private_distribution}
+		% Sectoral wage structure by NACE — percentiles, dispersion, LCI growth (rscp_stratification.py):
+		\input{texparts/commentary/rscp_sector_wages_cz}
+		\input{texparts/commentary/rscp_sector_percentiles}
+		\input{texparts/commentary/rscp_sector_dispersion}
+		\input{texparts/commentary/rscp_sector_lci_growth}
+		% Brain drain – přeshraniční dojíždění, jazyková vybavenost, emigrace:
+		\input{texparts/commentary/language_skills_total_map}
+		\input{texparts/commentary/language_skills_age_map}
+		\input{texparts/commentary/language_skills_isced_map}
+		\input{texparts/commentary/emigration_cz_timeline}
+		\input{texparts/commentary/cz_tax_wedge_vs_income}
+		\input{texparts/commentary/cz_net_income_vs_income}
+		\input{texparts/commentary/cz_sp_vs_income}
+	\section{Výhledové faktory}\label{sec:vyhled}
+		% Faktory výhledu (strukturovat do \paragraph):
+		% (a) Průmysl 4.0 a AI — automatizace low-wage sektorů, eliminace junior pozic, gen Z, FAUB Boeing - automatizace s mechanizací je náročnější než automatizace kancelářských profesí (které mají často také vyšší mzdové náklady)
+		% (b) Imigrace z~Ukrajiny — 340k TMP, mzdový tlak v~nízkokvalifikovaných sektorech
+		% (f) Agenturní zaměstnávání — SZIP, ČMKOS KV data (PKS sec. 3.6.6)
+		% (c) Brain drain — rostoucí jazyková vybavenost, mobilita do AT/DE; lékaři, IT
+		% (d) OSVČ a švarc systém — erodování sociální báze, IT sektor, efektivní zdanění rozdíl -> výpadek příjmů státního rozpočtu, platformové zaměstnávání
+		% (g) Demografický vývoj — stárnutí populace,závislostní poměr, pracovní síla, důchodový systém, nízká porodnost
+		\input{texparts/commentary/old_age_dependency_map}
+		% Úhrnná plodnost — časová řada a choropleth (demo_find/TOTFERRT):
+		\input{texparts/commentary/natality_tfr_timeline}
+		\input{texparts/commentary/natality_tfr_map}
+		% Zdroje: ČMKOS Zpráva 2025 (kap. 1, 3.6, 3.8), Polents/Dvořáková (UA refugees),
+		%         Dvořáková: Active Employment Policy, demografické trendy
+		% \input{texparts/vyhled.tex}
 	\section{Evropský kontext}\label{sec:evropsky_kontext}
 		% Klíčový argument: CZ pracuje nejdéle ze skupiny (39.6 h/týden), za nízké reálné
 		% mzdy (PPS), s~vysokým daňovým klínem (38.1 % vs DK 33.5 %), s~minimálním
 		% pokrytím KV → zaměstnanci nedostávají podíl na produktivitě hospodářství.
 		% HDP konverguje rychleji než reálné mzdy (P2 analýza — wage_gdp_convergence).
-		% Diskuze: AROPE interpretace (relativní chudoba, národní hranice), limity výzkumu.
 		% \input{texparts/evropsky_kontext.tex}
-		\input{texparts/python/gdp_ppp_timeline}
-		\input{texparts/python/tax_wedge_map}
-		\input{texparts/python/flexicurity_table}
-		\input{texparts/python/arope_map_2025}
-		\input{texparts/python/wage_gdp_convergence}
-		\input{texparts/python/net_income_ratio_timeline}
-		\input{texparts/python/union_gini_scatter}
-		\input{texparts/python/kv_coverage_map}
-		\input{texparts/python/union_density_map}
-		% \input{texparts/python/income_pps_map}
-		\input{texparts/python/pli_map}
-		% \input{texparts/python/employment_rate_timeline}
-		% \input{texparts/python/gini_income_timeline}
-		\subsection{Flexicurity}\label{ssec:flexicurity}
+		\input{texparts/commentary/pli_map}		
+		\input{texparts/commentary/tax_wedge_map}
+		\input{texparts/commentary/wage_gdp_convergence}
+		\input{texparts/commentary/union_gini_scatter}
+		\input{texparts/commentary/kv_coverage_map}
+		\input{texparts/commentary/union_density_map}
+		\input{texparts/commentary/income_pps_map}
+		\input{texparts/commentary/gini_income_timeline}
+		\input{texparts/commentary/wealth_top10_timeline}
+		\input{texparts/commentary/wealth_top20_timeline}
+		\input{texparts/commentary/wealth_top10_map}
+		\input{texparts/commentary/sector_wages_bar}
+		\input{texparts/commentary/sector_wages_deviation}
+		\input{texparts/commentary/sector_wages_map_C}
+		\input{texparts/commentary/sector_wages_map_G}
+		\input{texparts/commentary/sector_wages_map_J}
+		\input{texparts/commentary/sector_wages_map_K}
+		\input{texparts/commentary/lmp_expenditure}
+		\input{texparts/commentary/lmp_expenditure_2004}
+		\input{texparts/commentary/lmp_expenditure_map}
+		\input{texparts/commentary/self_employment_map}
+		\subsection{Evropské modely trhu práce}\label{ssec:modely}
 			% Dánský zlatý trojúhelník = flexibilita + příjmová jistota + APZ.
 			% CZ adopce: jen flexibilita (flexinovela) bez APZ a silného KV → deformace.
 			% DK APZ ~2 % HDP vs CZ ~0.3 % HDP (lmp_expenditure).
@@ -284,26 +343,23 @@
 			% Kritika EU propagace: Keune/Jepsen (2007), ETUC reakce.
 			% Zdroje: PETRICEK_HOPO (vlastní), Andersen/Mailand 2005, Jde to pružně (DK/DE),
 			%         ETUC: Commission's Communication on Flexicurity
-			\input{texparts/python/arope_timeline_CE}
-			\input{texparts/python/arope_groups}
-			\input{texparts/python/lmp_expenditure}
-			\input{texparts/python/lmp_expenditure_2004}
-			\input{texparts/python/lmp_expenditure_map}
-		\subsection{Porovnání s~dalšími modely}\label{ssec:porovnani_modely}
 			% AT: Kammer-system, téměř automatické rozšíření KSVS → 98 % pokrytí i při 26 % hustotě.
 			% DE: Mitbestimmung (spolurozhodování v~dozorčích radách), Hartz reformy — varování
 			%     před flexibilizací bez dostatečné jistoty.
 			% PL: slabý SD podobný CZ, ale větší ekonomická váha → jiné tlaky.
 			% SK: nejnižší GINI (21.6), ale nízké HDP i nízké KV pokrytí (35 %).
 			% Zdroje: ÖGB (AT), Jde to pružně DE model, Eurostat — datové srovnání
-			\input{texparts/python/sector_wages_bar}
-			\input{texparts/python/sector_wages_deviation}
-			\input{texparts/python/sector_wages_map_C}
-			\input{texparts/python/sector_wages_map_G}
-			\input{texparts/python/sector_wages_map_J}
-			\input{texparts/python/sector_wages_map_K}
 			% \input{texparts/porovnani_modely.tex}
-	\section{Případová studie KS~Penny Market 2026}\label{sec:penny}
+		\subsection{Korelační analýza}\label{ssec:korelace}
+			% Závěr: Pilíř 3 potvrzení hypotézy.
+			% Zdroje: Eurostat, OECD/AIAS ICTWSS, ČMKOS, MPSV/ISPV, ILO
+			\input{texparts/commentary/coverage_correlation_table}
+			\input{texparts/commentary/scatter_combined}
+			\input{texparts/commentary/coverage_hours_scatter}
+			\input{texparts/commentary/coverage_income_scatter}
+			\input{texparts/commentary/coverage_gini_scatter}
+			\input{texparts/commentary/coverage_ratio_scatter}
+	\section{Případové studie}\label{sec:case_studies}
 		% METODIKA: analýza smlouvy → srovnání se zákonným minimem a průměrem PKS (ČMKOS).
 		% ZJIŠTĚNÍ:
 		% - 4 ZO u~jednoho zaměstnavatele (§ 24 ZP efekt: pluralita OS slabší koordinace)
@@ -316,8 +372,9 @@
 		% Paralela Ulrich HR BP: Employee Advocate = střet zájmů → odbory jako nezávislý EA
 		% Zdroje: KS Penny Market 2026, ČMKOS Zpráva 2025, penny_top_employer_2026,
 		%         Armstrong HRM Handbook, Ulrich HR Champion 1997
-		% \input{texparts/penny.tex}
-	\section{Hodnocení sociálního dialogu v~ČR}\label{sec:hodnoceni}
+		% obdobně pro Poštu a KSVS
+		% \input{texparts/case_studies.tex}
+	\section{Zhodnocení}\label{sec:zhodnoceni}
 		% SWOT analýza SD v~ČR (S: fungující RHSD, legální rámec; W: hustota 11 %, hist. nedůvěra,
 		% § 24 ZP pluralita; O: rozšíření KSVS, Ghent APZ, EU Pay Directive 2023/970;
 		% T: NERV deregulace, automatizace, politická polarizace).
@@ -325,16 +382,7 @@
 		%                     pokrytí KV × týdenní pracovní hodiny → inverse korelace
 		% → Pilíř 3 potvrzení hypotézy.
 		% Závěr sekce: Hypotéza POTVRZENA.
-		\input{texparts/python/scatter_combined}
-		\input{texparts/python/coverage_income_scatter}
-		\input{texparts/python/coverage_hours_scatter}
-		\input{texparts/python/coverage_gini_scatter}
-		\input{texparts/python/coverage_ratio_scatter}
-		\input{texparts/python/coverage_correlation_table}
-		\input{texparts/python/wealth_top10_timeline}
-		\input{texparts/python/wealth_top10_map}
-		% \input{texparts/hodnoceni.tex}
-
+		% \input{texparts/zhodnoceni.tex}
 \chapter{Návrh inovace sociálního dialogu v~ČR}\label{ch:inovace}
 	% INOVACE (číslované návrhy):
 	% 1. Rozšíření závaznosti KSVS — snížit práh, vzor AT (§ 7 zákona 2/1991)
@@ -345,13 +393,7 @@
 	% 4. Reforma švarc systému — SZIP posílení, daňová reforma OSVČ v~faktickém PPV
 	% 5. Digitalizace KV — transparentní registr PKS (vzor BE/NL)
 	% Zdroje: Dvořáková: Active Employment Policy, DK ministry of employment, ETUC Quality Jobs 2025
-	% \input{texparts/navrh.tex}
-	Na~základě analýzy trhu práce z~předchozí kapitoly jsou níže představeny dva
-	klíčové ukazatele, které ilustrují specifika české ekonomiky relevantní pro
-	návrh inovace sociálního dialogu.
-	\input{texparts/python/self_employment_map}
-	\input{texparts/python/cz_tax_wedge_vs_income}
-	% \input{texparts/navrh.tex}
+	% \input{texparts/inovace.tex}
 
 % Break Závěr out of the enclosing \part in the PDF bookmark panel so it
 % appears at the root level, parallel to Úvod.
