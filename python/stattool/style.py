@@ -209,6 +209,44 @@ def savefig(
     return out
 
 
+# ── Citation helpers for save_figure_tex ─────────────────────────────────────
+
+_CITE_PROVIDERS: list[tuple[str, str]] = [
+    ("eurostat",         "Eurostat"),
+    ("oecd_aias_ictwss", "OECD\\,ICTWSS"),
+    ("oecd",             "OECD"),
+    ("mpsv_ipp",         "MPSV/IPP"),
+    ("mpsv_ispv",        "MPSV/ISPV"),
+    ("zakon_",           "zákon\\,ČR"),
+    ("nv_",              "zákon\\,ČR"),
+    ("sdeleni_",         "zákon\\,ČR"),
+]
+
+
+def _cite_provider(key: str) -> str:
+    """Return human-readable provider label for a biblatex cite key."""
+    for prefix, label in _CITE_PROVIDERS:
+        if key.startswith(prefix):
+            return label
+    return ""
+
+
+def _build_cite_source(keys: list) -> str:
+    """Return grouped 'Provider~\\cite{k1}\\cite{k2}, …' string."""
+    from collections import OrderedDict
+    groups: "OrderedDict[str, list]" = OrderedDict()
+    for k in keys:
+        lbl = _cite_provider(k)
+        if lbl not in groups:
+            groups[lbl] = []
+        groups[lbl].append(k)
+    parts = []
+    for lbl, ks in groups.items():
+        cites = "".join(f"\\cite{{{k}}}" for k in ks)
+        parts.append(f"{lbl}~{cites}" if lbl else cites)
+    return ", ".join(parts)
+
+
 def save_figure_tex(
     name: str,
     caption: str,
@@ -217,6 +255,7 @@ def save_figure_tex(
     out_dir: Optional[Union[str, Path]] = None,
     include_path: Optional[str] = None,
     width: str = r"\columnwidth",
+    cite_keys: Optional[Union[str, list]] = None,
     cite_key: Optional[str] = None,
 ) -> Path:
     r"""Write a LaTeX ``\begin{figure}`` environment that includes *name*.pdf.
@@ -226,7 +265,8 @@ def save_figure_tex(
     name:
         Figure filename *without* extension.
     caption:
-        Caption text (Czech OK).
+        Short title (≤10 words, Czech OK).  A ``Zdroj dat:`` sentence is
+        appended automatically when *cite_keys* are provided.
     label:
         ``\label{}`` key, e.g. ``"fig:gdp_timeline"``.
     out_dir:
@@ -235,18 +275,33 @@ def save_figure_tex(
         Path for ``\includegraphics``.  Defaults to ``"../pics/<name>"``.
     width:
         LaTeX width expression (default ``\columnwidth``).
+    cite_keys:
+        List of biblatex cite keys, or a comma-separated string.
+        Provider labels (Eurostat, OECD, MPSV/IPP, MPSV/ISPV) are inferred
+        from key prefixes and prepended before the ``\cite{}`` commands.
     cite_key:
-        biblatex cite key for the data source.  When provided, ``\cite{key}``
-        is appended to the caption so the bibliography entry is referenced.
+        Deprecated alias for *cite_keys* (kept for backward compatibility).
     """
     from config import LATEX_TEXPARTS_DIR
 
     directory = Path(out_dir) if out_dir else LATEX_TEXPARTS_DIR
     include_path = include_path or f"../pics/python/{name}"
 
-    caption_full = caption
-    if cite_key:
-        caption_full += f" \\cite{{{cite_key}}}"
+    # Resolve cite keys — cite_keys takes priority over deprecated cite_key
+    raw = cite_keys if cite_keys is not None else cite_key
+    keys: list = []
+    if raw is not None:
+        if isinstance(raw, str):
+            keys = [k.strip() for k in raw.split(",") if k.strip()]
+        else:
+            keys = [k.strip() for k in raw if k.strip()]
+
+    title = caption.rstrip(". \t\n")
+    if keys:
+        source = _build_cite_source(keys)
+        caption_full = f"{title}. Zdroj dat: {source}."
+    else:
+        caption_full = title
 
     tex = (
         f"\\begin{{figure}}[htbp]\n"
