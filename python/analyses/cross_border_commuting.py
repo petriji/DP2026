@@ -52,6 +52,7 @@ import matplotlib.cm as mcm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.patheffects as mpe
 import pandas as pd
 import geopandas as gpd
 
@@ -99,7 +100,7 @@ df.columns = [c.strip().upper() for c in df.columns]
 
 # Identify the dimension for unit (% employed)
 unit_candidates = [c for c in df.columns if "UNIT" in c]
-wrkplace_candidates = [c for c in df.columns if any(k in c for k in ["WRKPLC", "WRKPLACE", "WSTATUS"])]
+wrkplace_candidates = [c for c in df.columns if any(k in c for k in ["WRKPLC", "WRKPLACE", "WSTATUS", "C_WORK", "CWORK"])]
 sex_candidates = [c for c in df.columns if "SEX" in c]
 age_candidates = [c for c in df.columns if "AGE" in c]
 geo_col = next((c for c in df.columns if c in ("GEO", "REF_AREA")), None)
@@ -126,9 +127,9 @@ def _first_val(df: pd.DataFrame, col_list: list[str], keywords: list[str]) -> st
     return None
 
 unit_val     = _first_val(df, unit_candidates,    ["THS_PER", "THOUS", "THS", "PC_ACT", "PC_EMP", "PC"])
-wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD"])
+wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD", "TOTAL"])
 sex_val      = _first_val(df, sex_candidates,      ["T", "TOTAL"])
-age_val      = _first_val(df, age_candidates,      ["TOTAL", "Y_GE15", "Y15-74"])
+age_val      = _first_val(df, age_candidates,      ["Y20-64", "Y_GE15", "TOTAL", "Y15-74"])
 
 print(f"  Selected: unit={unit_val}, wrkplace={wrkplace_val}, sex={sex_val}, age={age_val}")
 
@@ -153,6 +154,35 @@ filt = filt.rename(columns={geo_col: "geo", time_col: "time", val_col: "value"})
 filt["time"] = filt["time"].astype(str).str[:4].astype(int)
 filt = filt[["geo", "time", "value"]].dropna()
 
+# ── 3c. Top destination country per CZ NUTS2 region ─────────────────────────
+# Finds which foreign country has the highest commuter count per CZ region
+# at the latest available year, excluding aggregate rows (FOR/TOTAL).
+_top_dest: dict[str, str] = {}
+_cwork_col = next((c for c in df.columns if c in ("C_WORK", "CWORK")), None)
+if _cwork_col is not None and geo_col and val_col and time_col:
+    _AGG_VALS = {"FOR", "TOTAL", "ABROAD", "ABRD", "EU27_2020"}
+    _td_mask = (
+        df[geo_col].astype(str).str.match(r"^CZ[A-Z0-9]{2}$")
+        & ~df[_cwork_col].astype(str).str.upper().isin(_AGG_VALS)
+    )
+    if sex_val and sex_candidates:
+        _td_mask &= df[sex_candidates[0]].astype(str).str.upper() == sex_val.upper()
+    if age_val and age_candidates:
+        _td_mask &= df[age_candidates[0]].astype(str).str.upper() == age_val.upper()
+    if unit_val and unit_candidates:
+        _td_mask &= df[unit_candidates[0]].astype(str).str.upper() == unit_val.upper()
+    _td = df[_td_mask].copy()
+    _td[val_col] = pd.to_numeric(_td[val_col], errors="coerce")
+    _td = _td.dropna(subset=[val_col])
+    _td["_time_int"] = _td[time_col].astype(str).str[:4].astype(int)
+    _td_latest_yr = _td.groupby(geo_col)["_time_int"].transform("max")
+    _td = _td[_td["_time_int"] == _td_latest_yr]
+    _idx = _td.groupby(geo_col)[val_col].idxmax()
+    _top_dest = _td.loc[_idx, [geo_col, _cwork_col]].set_index(geo_col)[_cwork_col].to_dict()
+    print(f"  Top destinations per CZ NUTS2: {_top_dest}")
+else:
+    print("  C_WORK column not found — top-destination labels unavailable.")
+
 ds = Dataset(filt, name="Přeshraniční dojíždění", unit="% zaměstnaných",
              source_url="Eurostat/lfst_r_lfe2ecomm")
 
@@ -161,7 +191,7 @@ ds = Dataset(filt, name="Přeshraniční dojíždění", unit="% zaměstnaných"
 print("Downloading lfst_r_lfe2emprtn (denominator: employed persons) …")
 _emp_data: "pd.DataFrame | None" = None
 try:
-    _emp_path = fetch_eurostat("lfst_r_lfe2emprtn", start_period=START_YEAR)
+    _emp_path = fetch_eurostat("lfst_r_lfe2emprtn", "A.THS_PER.T.TOTAL.", start_period=2015)
     _emp_raw = pd.read_csv(_emp_path, comment="#")
     _emp_raw.columns = [c.strip().upper() for c in _emp_raw.columns]
     _emp_geo  = next((c for c in _emp_raw.columns if c in ("GEO", "REF_AREA")), None)
@@ -296,7 +326,7 @@ try:
         # Prefer exact year; fall back to latest available per region.
         _emp_snap = _emp_data[
             (_emp_data["geo"].str.len() == 4) & (_emp_data["time"] == latest_nuts2)
-        ][["geo", "emp_value"]]
+        ][["geo", "emp_value"]].drop_duplicates(subset="geo")
         if _emp_snap.empty:
             _emp_snap = (
                 _emp_data[_emp_data["geo"].str.len() == 4]
@@ -313,7 +343,7 @@ try:
         print("  WARNING: absolute unit detected but denominator unavailable — "
               "values not normalised; map may have non-comparable scale.")
 
-    data_series = snap_nuts2.set_index("geo")["value"].dropna()
+    data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
     fig_c = choropleth_cz(
         data_series,
         nuts_level_cz=2,
@@ -323,7 +353,30 @@ try:
         ),
         colorbar_label="% regionální pracovní síly pracující v zahraničí",
         cmap="YlOrRd",
+        label_cz=False,
     )
+    # Annotate each CZ NUTS2 region with its top destination country code
+    if _top_dest:
+        try:
+            _nuts_path_c = fetch(_GISCO_NUTS_URL, suffix=".geojson")
+            _cz2_gdf = gpd.read_file(_nuts_path_c)
+            _cz2_gdf = _cz2_gdf[
+                (_cz2_gdf["LEVL_CODE"] == 2) & (_cz2_gdf["CNTR_CODE"] == "CZ")
+            ]
+            _ax_c = fig_c.axes[0]
+            for _, _row in _cz2_gdf.iterrows():
+                _rid = _row["NUTS_ID"]
+                if _rid not in _top_dest:
+                    continue
+                _cx, _cy = _row.geometry.centroid.x, _row.geometry.centroid.y
+                _ax_c.text(
+                    _cx, _cy, _top_dest[_rid],
+                    ha="center", va="center",
+                    fontsize=FONT_SIZE, fontweight="bold", color="white",
+                    path_effects=[mpe.withStroke(linewidth=2.5, foreground="black")],
+                )
+        except Exception as _exc:
+            print(f"  Top-destination labels skipped: {_exc}")
     savefig(fig_c, "cross_border_commuting_nuts2", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "cross_border_commuting_nuts2",
