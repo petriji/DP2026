@@ -1,0 +1,212 @@
+% ── Korelační analýza: pokrytí KS a ukazatele trhu práce ─────────────────────
+
+\paragraph{Datová základna a pokrytí zemí EU27}\label{par:korelace_data}
+
+Korelační analýza pracuje s~párovým panelem (\textit{geo\,$\times$\,rok}) sestaveným z~následujících zdrojů.
+Pokrytí \ac{KS} pochází z~databáze OECD/AIAS ICTWSS~\cite{oecd_aias_ictwss_CBC_ERB_pct}: pro 22~zemí EU27 je použita upravená míra \textit{AdjCov} zachycující podíl zaměstnanců pokrytých jakoukoliv kolektivní smlouvou bez ohledu na odborové členství; pro Německo~(DE) a~Slovensko~(SK) je \textit{AdjCov} nahrazena mírou ERB z~průzkumu OECD/CBC, neboť \textit{AdjCov} pro tyto země stagnuje přibližně na hodnotách z~roku 1990 resp.~2015.
+Hustota odborů pochází z~téže databáze (ukazatel TUD~\cite{oecd_aias_ictwss_TUD_pct}).
+Výstupní proměnné pocházejí z~Eurostatu: průměrná týdenní pracovní doba (lfsa\_ewhun2~\cite{eurostat_lfsa_ewhun2_HR_weekly}), HDP~na~obyvatele v~PPS (nama\_10\_pc~\cite{eurostat_nama_10_pc_PPS_EU27eq100}), Giniho koeficient disponibilního příjmu (ilc\_di12~\cite{eurostat_ilc_di12_Gini}) a~čistý roční příjem v~PPS (earn\_nt\_net~\cite{eurostat_earn_nt_net_PPS_AW100}).
+Datová řada začíná rokem 2004 shodně ve všech souborech.
+
+Ze 27~členských zemí EU jsou do analýzy zahrnuty \textbf{čtyřiadvacet}; z~dat jsou vyjmuty tři:
+\begin{itemize}
+  \item \textbf{Irsko~(IE)} je záměrně vyřazeno jako statistický outlier.
+    Jeho HDP/ob.~v~PPS dosahuje přibližně 237~(EU27\,=\,100), přičemž tato hodnota je způsobena přesunem zisků nadnárodních technologických a~farmaceutických korporací se sídlem v~Irsku pro účely daňové optimalizace v~prostoru EU (transfer pricing, relokace duševního vlastnictví).
+    Skutečná životní úroveň, vyjádřená upravenými národními příjmy GNI* (CSO Ireland), se pohybuje okolo indexu~135.
+    Zahrnutí Irska by systematicky zkreslilo regresní koeficient $\hat{\beta}$ u~páru pokrytí~vs.~HDP a~tím deformovalo predikci pro zbývající země.
+  \item \textbf{Estonsko~(EE) a~Lotyšsko~(LV)} --- databáze ICTWSS \textit{AdjCov} pro tyto země neobsahuje žádné záznamy; jde o~strukturálně chybějící hodnoty (MCAR), jejichž doplnění bez externího zdroje není opodstatněné.
+  \item \textbf{Lucembursko~(LU)} --- data \textit{AdjCov} jsou dostupná pouze před rokem 2004; po aplikaci filtru \texttt{START\_YEAR\,=\,2004} vypadávají z~panelu.
+\end{itemize}
+
+Zbývajících 24~zemí pokrývá všechny geografické a~institucionální skupiny EU27: nordické, kontinentální, středomořské, středoevropské a~balkánské (s~výjimkou EE a~LV).
+Panel není vyvážený: počet párových pozorování~$n$ se liší dle dostupnosti výstupní proměnné (viz tabulku~\ref{tab:coverage_correlation_table}).
+Nejřídší je pár pokrytí~vs.~Gini ($n = 163$), neboť šetření EU-SILC má mezery zejména pro roky 2020--2021 (omezený sběr dat v~době pandemie COVID-19), a~Gini pro některé nové členské státy chybí před rokem 2007.
+Nejhustší panel má pár pokrytí~vs.~HDP ($n = 299$) díky úplné dostupnosti Eurostat / nama\_10\_pc.
+
+\paragraph{Matematický aparát}\label{par:korelace_math}
+
+Jsou použity tři statistické míry asociace a~jeden predikční model.
+
+\emph{Pearsonův korelační koeficient} měří sílu a~směr lineárního vztahu mezi proměnnými~$x$ a~$y$:
+\begin{equation}\label{eq:pearson_r}
+  r_{xy}
+  = \frac{\displaystyle\sum_{i=1}^{n}(x_i - \bar{x})\,(y_i - \bar{y})}
+         {\displaystyle\sqrt{\sum_{i=1}^{n}(x_i-\bar{x})^2
+                             \cdot \sum_{i=1}^{n}(y_i-\bar{y})^2}}
+  \;\in\; [-1,\,1].
+\end{equation}
+
+\emph{Spearmanův koeficient~$\rho$} je Pearsonovo~$r$ aplikované na hodnosti (ranky) pozorování namísto původních hodnot:
+\begin{equation}\label{eq:spearman_rho}
+  \rho = r\!\bigl(R(x),\,R(y)\bigr)
+       = 1 - \frac{6\,\displaystyle\sum_{i=1}^{n} d_i^{\,2}}{n\,(n^2-1)},
+  \quad d_i = R(x_i) - R(y_i),
+\end{equation}
+kde pravý výraz platí při absenci shodných hodnot (\textit{ties}); obecně platí levý tvar.
+Výrazná divergence~$|r - \rho|$ signalizuje přítomnost vlivných odlehlých pozorování, která posouvají lineární vztah.
+
+\emph{Prostá lineární regrese} metodou nejmenších čtverců (OLS):
+\begin{equation}\label{eq:ols}
+  \hat{y} = \hat{\alpha} + \hat{\beta}\,x,
+  \qquad
+  \hat{\beta}
+    = \frac{\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})\,(y_i-\bar{y})}
+           {\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})^2},
+  \quad
+  \hat{\alpha} = \bar{y} - \hat{\beta}\,\bar{x}.
+\end{equation}
+Parametr~$\hat{\beta}$ udává průměrnou změnu $\hat{y}$ při nárůstu pokrytí \ac{KS} o~jeden procentní bod.
+
+\emph{Koeficient determinace}~$R^2$ vyjadřuje podíl rozptylu~$y$ vysvětlený regresním modelem:
+\begin{equation}\label{eq:r2}
+  R^2
+  = 1 - \frac{\displaystyle\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}
+             {\displaystyle\sum_{i=1}^{n}(y_i - \bar{y})^2}
+  = r^2 \;\in\; [0,\,1],
+\end{equation}
+kde rovnost $R^2 = r^2$ platí pro prostou regresi s~konstantou.
+
+\emph{Predikce dopadu změny pokrytí}~$\Delta x$ na výstupní proměnnou:
+\begin{equation}\label{eq:delta_pred}
+  \Delta\hat{y} = \hat{\beta}\,\Delta x.
+\end{equation}
+Tento vztah je využit v~modelovém výpočtu pro ČR (viz~odst.~\ref{par:model_cz}).
+Síla korelací je hodnocena dle Evansovy (1996) škály: $|r| < 0{,}20$ velmi slabá;
+$0{,}20$--$0{,}39$ slabá; $0{,}40$--$0{,}59$ střední; $0{,}60$--$0{,}79$ silná;
+$\geq 0{,}80$ velmi silná.
+
+\paragraph{Kombinovaný pohled na asociace pokrytí KS s trhem práce}\label{par:scatter_combined}
+
+Kombinovaný rozptylový diagram (obr.~\ref{fig:scatter_combined}) zachycuje simultánně vztah pokrytí \ac{KS} ke čtyřem výstupním proměnným a~umožňuje evaluaci omnibusové hypotézy práce: silnější \ac{KV} instituce jsou systematicky asociovány s~lepšími výsledky napříč všemi sledovanými dimenzemi.
+Každý dílčí panel potvrzuje parciální asociaci, ale kombinovaný pohled odhaluje koherentní systémový vzorec: státy s~vysokým pokrytím \ac{KS} (AT, DK, BE, FR) konzistentně vykazují vyšší příjmy v~PPS, nižší pracovní dobu za srovnatelný příjem a~nižší Gini.
+ČR se ve všech čtyřech dílčích grafech nachází v~kvadrantu nízkého pokrytí, ačkoli absolutně není na dně EU27.
+Polysystémový argument je silnější než jakákoli dílčí korelace: holistické posílení \ac{KV} pokrytí (mechanismus erga omnes, větší dopad \ac{APZ}) by s~vysokou pravděpodobností zlepšilo celou sadu výstupů současně, protože sdílejí společný institucionální determinant.
+
+\input{texparts/python/scatter_combined}
+
+\paragraph{Tabulka korelačních koeficientů}\label{par:corr_table}
+
+Tabulka~\ref{tab:coverage_correlation_table} shrnuje výsledky korelační analýzy za roky 2004--2024.
+Každý řádek reportuje: počet párových pozorování~$n$, Pearsonovo~$r$ (rov.~\ref{eq:pearson_r}) na celém panelu, Spearmanovo~$\rho$ (rov.~\ref{eq:spearman_rho}) jako robustní neparametrická alternativa a~$r_{\text{akt.}}$ = Pearsonovo~$r$ pro průřez roku~2024.
+
+\input{texparts/python/coverage_correlation_table}
+
+Výsledky jsou interpretovány po párech:
+\begin{description}
+  \item[Pokrytí \ac{KV} vs.\ pracovní doba]
+    ($r = -0{,}483$; $\rho = -0{,}525$; $R^2 = 0{,}23$; $n = 256$):
+    střední záporná asociace robustně potvrzená oběma metodami.
+    Spearmanovo $\rho$ je v~absolutní hodnotě vyšší než Pearsonovo~$r$, což svědčí o~monotónním charakteru vztahu bez dominantních outlierů posouvajících lineární složku.
+    Průřezová korelace $r_{\text{akt.}} = -0{,}324$ je slabší než panelová hodnota, pravděpodobně vlivem strukturní konvergence pracovní doby v~rámci EU v~posledním desetiletí (zkracování doby v~CEE, stagnace na severu).
+
+  \item[Pokrytí \ac{KV} vs.\ HDP/ob.\ (PPS)]
+    ($r = 0{,}562$; $\rho = 0{,}450$; $R^2 = 0{,}32$; $n = 299$):
+    střední až silná kladná asociace; Pearsonovo~$r$ je o~0,112 vyšší než Spearmanovo~$\rho$, což naznačuje citlivost panelového odhadu na severské země s~extrémně vysokým pokrytím i~HDP.
+    Vyřazení Irska posílilo panelový signál (Irsko kombinovalo nízké pokrytí s~extrémním HDP/ob., což dříve tlumilo kladnou korelaci); průřezová hodnota $r_{\text{akt.}} = 0{,}448$ zůstává střední.
+
+  \item[Pokrytí \ac{KV} vs.\ Gini]
+    ($r = -0{,}303$; $\rho = -0{,}238$; $R^2 = 0{,}09$; $n = 163$):
+    slabá záporná asociace; divergence $|r - \rho| = 0{,}065$ je výrazně menší než při zahrnutí Irska (tehdy 0,159), čímž je potvrzeno, že Irsko bylo strukturálním outlierem narušujícím tuto korelaci.
+    Průřezová hodnota $r_{\text{akt.}} = +0{,}481$ je kladná, neboť v~průřezu roku~2024 mají státy s~erga omnes pokrytím (FR, IT, BE, AT --- všechny $\geq 90\,\%$) vyšší disponibilní Gini díky vysokým kapitálovým příjmům a~odměnám vrcholového managementu, nikoliv absenci mzdové komprese.
+    Panelový koeficient sledující \emph{změny v~čase v~rámci zemí} je informačně hodnotnější: dokumentuje, že kdykoli pokrytí \ac{KS} v~dané zemi kleslo, Gini se tendovalo zvýšit.
+    Příčinný mechanismus KV\,$\to$\,Gini operuje zejména přes primární mzdovou distribuci, nikoliv přes disponibilní příjmy ovlivněné fiskální redistribucí.
+
+  \item[Pokrytí \ac{KV} vs.\ příjem/HDP]
+    ($r = 0{,}210$; $\rho = 0{,}177$; $R^2 = 0{,}04$; $n = 286$):
+    slabá kladná asociace, konzistentní v~obou metodách.
+    Nízká hodnota je z~velké části artefaktem konstrukce ukazatele: HDP/ob.~je sám středně silně korelováno s~pokrytím ($r = 0{,}562$), takže ve jmenovateli podílu oba členy rostou společně s~pokrytím a~efekt se vzájemně tlumí.
+    Absolutní příjmová míra (předchozí pár) je proto citlivějším testem hypotézy o~mzdovém efektu \ac{KV}.
+
+  \item[Hustota odborů vs.\ Gini]
+    ($r = -0{,}458$; $\rho = -0{,}462$):
+    statisticky nejrobustnější pár v~celé tabulce: Pearsonovo~$r$ a~Spearmanovo~$\rho$ jsou prakticky totožné (rozdíl 0,004), což svědčí o~přibližně lineárním vztahu bez systematického vlivu odlehlých hodnot.
+    Průřezová korelace $r_{\text{akt.}} = -0{,}627$ dosahuje \emph{silné záporné} asociace a~je nejsilnějším institucionálním prediktorem nízkého Gini ze všech testovaných párů.
+    Shoda panelových koeficientů a~jejich posílení v~průřezu zpětně potvrzuje, že kladná průřezová hodnota u~páru pokrytí~vs.~Gini je specifická pro pokrytí (kde státy jako Francie deformují průřezový vztah), nikoliv obecná vlastnost vztahu \ac{KV} institucí k~nerovnosti.
+\end{description}
+
+Žádná z~panelových korelací nefalzifikuje teorii mzdové komprese prostřednictvím \ac{KV} institucí.
+Jednoduchou bivariátní korelací na heterogenním průřezu 24~zemí nelze izolovat marginální příspěvek pokrytí \ac{KS}; přesto jsou všechny panelové korelace ve správném předpokládaném směru bez výjimky.
+Kauzální identifikaci přináší panelová analýza s~fixními efekty: metaanalytická literatura (Jaumotte \& Osorio Buitron, 2015; Card a~kol., 2004) konzistentně dokládá věcně i~statisticky významný efekt \ac{KV} institucí na mzdovou kompresi.
+Korelace v~tabulce tak plní funkci deskriptivního podkladu motivujícího institucionální případovou studii ČR --- jako konzistentní mezinárodní vzorec, v~němž ČR se svým pokrytím $\approx 31\,\%$ systematicky vykazuje horší výsledky než srovnatelné ekonomiky s~vyšším pokrytím \ac{KS}.
+
+\paragraph{Pokrytí \ac{KS} a pracovní doba}\label{par:hours_scatter}
+
+Bodový graf (obr.~\ref{fig:coverage_hours_scatter}) ukazuje zápornou korelaci mezi pokrytím \ac{KS} a~průměrnou týdenní pracovní dobou ($r = -0{,}483$; $\hat{\beta} = -0{,}042$~h/týden na pp pokrytí dle rov.~\ref{eq:ols}): pracovníci v~zemích s~vyšším pokrytím pracují v~průměru méně hodin při srovnatelném nebo vyšším reálném příjmu.
+Efekt je konzistentní s~teorií, podle níž silné \ac{KS} prosazují pracovní dobu jako plnohodnotnou vyjednávací proměnnou --- zkrácené úvazky, limit přesčasů, minimální odpočinkové doby nad zákonné standardy.
+V~ČR, kde \ac{KS} zřídka obsahují ustanovení o~pracovní době nad zákonné minimum, pracovníci ve srovnatelných odvětvích odpracují více hodin než v~AT nebo DK, přičemž hodinová mzdová sazba je přesto nižší.
+Prodloužená pracovní doba v~ČR (nadprůměrný podíl přesčasů, nejnižší podíl částečných úvazků v~EU) nesignalizuje vyšší produktivitu, ale neschopnost \ac{KS} prosadit kompenzaci výkonu formou kratší doby nebo vyšší sazby za přesčas.
+Reforma \ac{KV} by proto měla výslovně zahrnout pracovní dobu jako standardní vyjednávací agendu: \ac{KS}, která řeší jen základní mzdu bez úpravy doby, nevyjednává celkovou hodnotu pracovního vztahu.
+
+\input{texparts/python/coverage_hours_scatter}
+
+\paragraph{Pokrytí \ac{KS} a HDP na obyvatele v~PPS}\label{par:income_scatter}
+
+Bodový graf (obr.~\ref{fig:coverage_income_scatter}) dokumentuje kladnou korelaci pokrytí \ac{KS} s~HDP na obyvatele v~PPS ($r = 0{,}562$; $\hat{\beta} = 0{,}476$~indexových bodů na pp pokrytí; $R^2 = 0{,}316$).
+Kauzální interpretaci podporuje teorie vyjednávání: \ac{KS} s~plošnou platností (erga omnes) komprimují mzdové rozdíly a~zvyšují spodní část mzdové distribuce, čímž přispívají k~vyšší průměrné životní úrovni v~celé ekonomice.
+ČR se nachází nalevo od středu grafu (pokrytí $\approx 31\,\%$, HDP/ob.\ index~92): hypotetické přiblížení k~cílové hodnotě 80~\% by dle regresní přímky odpovídalo nárůstu indexu HDP/ob.\ o~přibližně 23~bodů, čímž by ČR překročila průměr EU27.
+Tento obrázek slouží jako ústřední vizualizace teze práce: posílení \ac{KV} pokrytí není jen otázkou pracovního práva, ale klíčovým makroekonomickým nástrojem pro zvýšení životní úrovně bez nutnosti přímé státní redistribuce.
+
+\input{texparts/python/coverage_income_scatter}
+
+\paragraph{Pokrytí \ac{KS} a Giniho koeficient}\label{par:gini_scatter}
+
+Bodový graf (obr.~\ref{fig:coverage_gini_scatter}) potvrzuje zápornou panelovou korelaci pokrytí \ac{KS} s~příjmovou nerovností ($r = -0{,}303$; $\hat{\beta} = -0{,}037$~bodu Gini na pp pokrytí).
+Mechanismus je přímočarý: odvětvové \ac{KS} závazné pro celý sektor stlačují spodní část mzdové distribuce, zvyšují mzdy pracovníků ve spodním kvartilem a~tím snižují Giniho koeficient.
+ČR s~pokrytím $\approx 31\,\%$ a~Gini~24 se nachází v~prostoru grafu, kde by hypotetické zvýšení pokrytí na~80~\% odpovídalo poklesu Gini o~přibližně 1,8~bodu --- změna, která by ČR přiblížila vzoru skandinávských zemí, a~to čistě tržní redistribucí bez zvyšování daní.
+Redistributivní efekt \ac{KV} institucí je empiricky prokazatelný i~bez zvyšování přímých daní nebo transferů: jde o~distribuci prostřednictvím primárních mezd.
+
+\input{texparts/python/coverage_gini_scatter}
+
+\paragraph{Pokrytí \ac{KS} a relativní příjem}\label{par:ratio_scatter}
+
+Bodový graf (obr.~\ref{fig:coverage_ratio_scatter}) zachycuje podíl čistého příjmu v~PPS na HDP/ob.~v~PPS jako funkci pokrytí \ac{KS} ($r = 0{,}210$; $R^2 = 0{,}04$).
+Slabá asociace je, jak bylo vysvětleno výše, z~velké části artefaktem endogenity jmenovatele: HDP/ob.~je sám středně korelováno s~pokrytím, čímž se efekt ve jmenovateli tlumí.
+Klíčovým přínosem tohoto grafu proto není sklon regresní přímky, ale vzájemná poloha zemí: státy s~nízkým podílem čistého příjmu na HDP \emph{a~zároveň} nízkým HDP (ČR, SK, HU) signalizují dvojí selhání trhu práce --- nízká produktivita doprovázená nízkým podílem práce na distribuci vytvořené hodnoty.
+Kombinace více hodin~$\times$~nižší mzda~$\times$~nižší podíl na HDP je symptomem ekonomiky postavené na modelu levné práce bez koordinace mezd.
+Minimální mzda a~\ac{KS} pokrytí jsou v~tomto kontextu substituty: v~zemích s~vysokým erga omnes pokrytím (DK, BE) zákonná minimální mzda prakticky neplní funkci, protože smluvní minima jsou nastavena výše; v~ČR naopak zákonné minimum plní roli poslední záchranné sítě pro pracovníky mimo dosah kolektivní smlouvy.
+
+\input{texparts/python/coverage_ratio_scatter}
+
+\paragraph{Predikce vlivu na hospodářství ČR: hypotetické pokrytí~80~\%}\label{par:predikce}
+
+Směrnice Evropského parlamentu a~Rady (EU) 2022/2041 o~přiměřených minimálních mzdách ukládá členským státům s~pokrytím \ac{KS} pod hranicí 80~\% povinnost vypracovat akční plán pro jeho zvýšení.
+ČR se svým pokrytím $\approx 31\,\%$ (2023) patří k~zemím s~největším potenciálním nárůstem v~EU --- potřebný nárůst $\Delta x = 80{,}0 - 30{,}7 = +49{,}3$~pp je po Litvě a~Polsku třetím největším v~EU26.
+
+Predikovaná změna výstupních proměnných při tomto nárůstu se dle rov.~\eqref{eq:delta_pred} vypočte jako:
+\begin{equation}\label{eq:model_cz}
+  \Delta\hat{y}_{\text{CZ}}
+    = \hat{\beta}\,(x_1 - x_0)
+    = \hat{\beta} \cdot 49{,}3\ \text{pp},
+\end{equation}
+kde $\hat{\beta}$ jsou panelové odhady dle rov.~\eqref{eq:ols} a~$x_0 = 30{,}7\,\%$, $x_1 = 80{,}0\,\%$.
+Výsledky jsou shrnuty v~tab.~\ref{tab:model_cz}.
+
+\begin{table}[htbp]
+\centering
+\caption{Modelový výpočet dle rov.~\eqref{eq:model_cz}: predikovaná změna ukazatelů ČR
+         při nárůstu pokrytí \ac{KS} na~80~\,\% (panelový $\hat{\beta}$, EU26, 2004--2024).}
+\label{tab:model_cz}
+\begin{tabular}{lrrrr}
+\toprule
+Ukazatel
+  & Aktuální $y_0$
+  & $\hat{\beta}$
+  & $\Delta\hat{y} = \hat{\beta}\cdot 49{,}3$
+  & Predikce $\hat{y}_1$ \\
+\midrule
+Průměrná prac.~doba (h/týden)    & $39{,}2$ & $-0{,}042$ & $-2{,}1$  & $37{,}1$ \\
+HDP/ob.~v~PPS (EU27\,=\,100)     & $92{,}4$ & $+0{,}476$ & $+23{,}5$ & $115{,}9$ \\
+Giniho koeficient (0--100)        & $24{,}0$ & $-0{,}037$ & $-1{,}8$  & $22{,}2$ \\
+Čistý příjem (EUR~PPS/rok) & \num{19556} & $+123{,}5$ & $+\num{6089}$ & \num{25645} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Výsledky je třeba interpretovat jako horní odhad korelovatelné části efektu, nikoliv jako kauzální predikci: $\hat{\beta}$ je odhadnut na průřezu zemí s~různými institucemi, historií a~ekonomickými strukturami a~nezachycuje zpětné vazby (general equilibrium) ani náklady přechodu.
+Přesto jsou závěry konzistentní s~tezí práce:
+\begin{itemize}
+  \item nárůst čistého příjmu o~$+\num{6089}$~EUR~PPS/rok ($+31\,\%$) by ČR přiblížil aktuální úrovni Slovinska nebo Španělska;
+  \item zkrácení průměrné pracovní doby o~$2{,}1$~h/týden při vyšším příjmu odpovídá přibližně jednomu dni volna za 14~dní;
+  \item pokles Gini o~1,8~bodu odpovídá zhruba pěti letům přirozené konvergence uvnitř EU.
+\end{itemize}
+Reforma \ac{KV} pokrytí (zavedení mechanismu erga omnes, revize zákona o~kolektivním vyjednávání č.\,2/1991~Sb.~\cite{zakon_kv_1991}) je z~pohledu dat jednou z~nejméně nákladných dostupných politik: nevyžaduje přímé státní výdaje a~generuje distribuční efekty srovnatelné s~rozsáhlými fiskálními programy.
