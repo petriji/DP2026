@@ -1,24 +1,25 @@
 r"""
 Comparative labour-market flexicurity table — CZ, DK, DE, AT, PL, SK.
 
-Indicator set (2024 / latest available):
+Indicator set (2025 / latest available):
 
   1.  GDP per capita [EUR PPS/yr]                – nama_10_pc
       ↳  CZ = 100 (normalised)                  – derived
-  2.  Average weekly hours worked [h/wk]         – lfsa_ewhun2
+  2.  Labour cost [PPS/h, total economy]         – lc_lci_lev ÷ prc_ppp_ind
       ↳  CZ = 100                                – derived
-  3.  Labour cost [PPS/h, total economy]         – lc_lci_lev ÷ prc_ppp_ind
+  3.  Average weekly hours worked [h/wk]         – lfsa_ewhun2
       ↳  CZ = 100                                – derived
-  4.  Tax wedge [%, 100 % AW, single, 0 child]   – earn_nt_taxwedge
-  5.  Disposable income [PPS/h]  ← derived       – row 3 × (1 − row 4 / 100)
+  4.  Tax wedge [%, 67 % AW, single, 0 child]    – earn_nt_taxwedge
+  5.  Disposable income [PPS/h]  ← derived       – row 2 × (1 − row 4 / 100)
       ↳  CZ = 100                                – derived
-  6.  Gini coefficient                           – ilc_di12
-  7.  Employment rate 20–64 [%]                  – lfsi_emp_a
-  8.  Job vacancy rate [%, B–S excl. O]          – jvs_a_nace2  (→ -- on 404)
-  9.  CB coverage [%]                            – ETUI static ≈ 2022–2024
-  10. Trade union density [%]                    – ETUI static ≈ 2022–2024
-  11. Active LMP spending [% GDP]                – OECD LMPEXP (→ -- on error)
-  12. Old-age dependency ratio (65+) [%]         – demo_pjanind OLDDEP1
+  6.  Low-wage earners [% employees, < 2/3 med.] – earn_ses_pub1s
+  7.  Gini coefficient                           – ilc_di12
+  8.  Employment rate 20–64 [%]                  – lfsi_emp_a
+  9.  Job vacancy rate [%, B–S excl. O]          – jvs_a_nace2  (→ -- on 404)
+  10. CB coverage [%]                            – ETUI static ≈ 2022–2024
+  11. Trade union density [%]                    – ETUI static ≈ 2022–2024
+  12. Active LMP spending [% GDP]                – OECD LMPEXP (→ -- on error)
+  13. Old-age dependency ratio (65+) [%]         – demo_pjanind OLDDEP1
 
 Row labels embed \cite{} for non-italic rows; caption contains year only.
 Sub-rows (↳) and the derived row 5 are wrapped in \textit{} via italic_rows.
@@ -237,6 +238,19 @@ try:
 except Exception as _e:
     print(f"  WARNING: APZ data unavailable ({_e}) — row 11 will show --")
 
+# Low-wage earners (% of all employees, < 2/3 national median gross hourly earnings)
+# earn_ses_pub1s dimensions: freq · sex · geo  (SES survey: latest round 2022)
+ds_lowwage: "Dataset | None" = None
+try:
+    ds_lowwage = Dataset.from_sdmx_csv(
+        fetch_eurostat("earn_ses_pub1s", f"A.T.{GEO}"),
+        name="Nízkopříjmoví zaměstnanci", unit="%",
+        source_url="Eurostat/earn_ses_pub1s",
+        filters={"sex": "T"},
+    )
+except Exception as _e:
+    print(f"  WARNING: earn_ses_pub1s unavailable ({_e}) — low-wage row will show --")
+
 print("Downloads complete.")
 
 # ── 2. Extract values for reference year ─────────────────────────────────────
@@ -250,6 +264,7 @@ v_emp,  _yr_emp  = _latest_by_geo(ds_emp,  YEAR)
 v_dep,  _yr_dep  = _latest_by_geo(ds_dep,  YEAR)
 v_jvr,  _yr_jvr  = _latest_by_geo(ds_jvr, YEAR) if ds_jvr else ({}, {})
 v_apz,  _yr_apz  = _latest_by_geo(ds_apz, YEAR) if ds_apz else ({}, {})
+v_lowwage, _yr_lowwage = _latest_by_geo(ds_lowwage, YEAR) if ds_lowwage else ({}, {})
 
 # Labour cost EUR/h → PPS/h  (÷ PLI/100)
 if ds_lc_eur is not None:
@@ -287,6 +302,7 @@ _year_map: dict[str, dict[str, int]] = {
     "JVR":               _yr_jvr,
     "Věk. závislost":    _yr_dep,
     "APZ výdaje":        _yr_apz,
+    "Nízkopříjm. zaměst.": _yr_lowwage,
 }
 
 _deviations: list[tuple[str, str, int]] = [
@@ -336,13 +352,14 @@ _SUB = r"\hspace{1.5em}↳ (ČR\,=\,100\,\%)"
 
 L_GDP      = _m(r"HDP [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_GDP_IDX  = _SUB
-L_HRS      = _m(r"Odpracované hodiny [h/týd.]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
-L_HRS_IDX  = _SUB
 L_LC       = _m(r"Úplné náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
 L_LC_IDX   = _SUB
-L_TAX      = _m(r"Daňový klín (50\,\% \ac{AW})~\cite{eurostat_earn_nt_taxwedge}↳(100\,\% \ac{AW})", "Daňový klín")
-L_DISP     = r"Disp. příjem [\ac{PPS}/h]"      # italic — derived, no \cite{}
+L_HRS      = _m(r"Odpracované hodiny [h/týd., průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
+L_HRS_IDX  = _SUB
+L_TAX      = _m(r"Daňový klín (67\,\% prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
+L_DISP     = r"Disponibilní příjem [\ac{PPS}/h, průměrný]"  # italic — derived, no \cite{}
 L_DISP_IDX = _SUB
+L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
 L_JVR      = _m(r"Volná prac. místa~\cite{eurostat_jvs_a_nace2}", "JVR")
@@ -354,18 +371,22 @@ L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}"
 # ── 4. Build table DataFrame ──────────────────────────────────────────────────
 
 rows = [
-    # ── Productivity group ────────────────────────────────────────────────────
+    # ── GDP ───────────────────────────────────────────────────────────────────
     _row(L_GDP,      v_gdp,      fmt="{:,.0f}", suffix=r"\,€"),
     _row(L_GDP_IDX,  v_gdp_idx,  fmt="{:.1f}"),
-    _row(L_HRS,      v_hrs,      fmt="{:.1f}",  suffix=r"\,h"),
-    _row(L_HRS_IDX,  v_hrs_idx,  fmt="{:.1f}"),
+    # ── Labour cost ───────────────────────────────────────────────────────────
     _row(L_LC,       v_lc_pps,   fmt="{:.1f}"),
     _row(L_LC_IDX,   v_lc_idx,   fmt="{:.1f}"),
+    # ── Working hours ─────────────────────────────────────────────────────────
+    _row(L_HRS,      v_hrs,      fmt="{:.1f}",  suffix=r"\,h"),
+    _row(L_HRS_IDX,  v_hrs_idx,  fmt="{:.1f}"),
     # ── Tax group ─────────────────────────────────────────────────────────────
     _row(L_TAX,      v_tax,      fmt="{:.1f}",  suffix=r"\,\%"),
     # ── Derived disposable income (italic, no \cite{}) ────────────────────────
     _row(L_DISP,     v_disp,     fmt="{:.1f}"),
     _row(L_DISP_IDX, v_disp_idx, fmt="{:.1f}"),
+    # ── Low-wage earners ──────────────────────────────────────────────────────
+    _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  suffix=r"\,\%"),
     # ── Inequality ────────────────────────────────────────────────────────────
     _row(L_GINI,     v_gini,     fmt="{:.1f}"),
     # ── Employment ────────────────────────────────────────────────────────────
@@ -387,12 +408,13 @@ df_table = df_table[[COUNTRY_LABELS[c] for c in COUNTRIES]]
 
 # ── 5. Structural parameters ──────────────────────────────────────────────────
 
-italic_rows = [L_GDP_IDX, L_HRS_IDX, L_LC_IDX, L_DISP, L_DISP_IDX]
+italic_rows = [L_GDP_IDX, L_LC_IDX, L_HRS_IDX, L_DISP, L_DISP_IDX]
 
 midrule_after = [
-    L_LC_IDX,   # end of productivity group
+    L_HRS_IDX,  # end of pay/work block (GDP, LC, HRS)
     L_TAX,      # end of tax group
     L_DISP_IDX, # end of derived income group
+    L_LOWWAGE,  # end of low-wage group
     L_GINI,     # end of inequality group
     L_JVR,      # end of employment group
     L_DENSITY,  # end of social-dialogue group
@@ -419,9 +441,10 @@ save_table_tex(
     ),
     label="tab:flexicurity",
     note=(
-        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,\div\,(PLI/100). "
-        r"Disp. příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
-        r"Zdroj statických dat (KS pokrytí, hustota odborů): ETUI, cca 2022--2024."
+        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,\div\,(\ac{PLI}/100). "
+        r"Disponibilní příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
+        r"Daňový klín pro bezdětnou svobodnou osobu (single, 0~dětí). "
+        r"Zdroj statických dat (pokrytí \ac{KS}, hustota odborů): ETUI, cca 2022--2024."
         + _deviation_note
     ),
     col_format="Xrrrrrr",
