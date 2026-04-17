@@ -1360,7 +1360,7 @@ if __name__ == "__main__":
             r"Čistý příjem, zaměstnanec vs.\ OSVČ, parametry 2026. "
             r"Zaměstnanec: čistý příjem = hrubá mzda\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO. "
             r"OSVČ s výdajovým paušálem: čistý příjem = základ daně (ZD)\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO, "
-            r"kde ZD\,=\,příjmy\,$\\times$\,(1\,$-$\,sazba paušálu); paušální výdaje nejsou "
+            r"kde ZD\,=\,příjmy\,$\times$\,(1\,$-$\,sazba paušálu); paušální výdaje nejsou "
             r"součástí čistého příjmu (jsou uvažovány jako skutečné obchodní náklady). "
             r"OSVČ paušální daň: čistý příjem = příjmy\,$-$\,celková pevná platba "
             r"(skutečné výdaje nejsou modelovány). "

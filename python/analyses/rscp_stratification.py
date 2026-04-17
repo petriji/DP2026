@@ -686,7 +686,7 @@ if has_sector_gpg or has_trend_gpg:
         )
     caption_gpg += (
         "vývoj nekorigovaného GPG v~6 srovnávaných zemích "
-        f"{START_YEAR}--{END_YEAR} (Eurostat earn_gr_gpgr2, pravý panel). "
+        f"{START_YEAR}--{END_YEAR} (Eurostat earn\_gr\_gpgr2, pravý panel). "
         "ČR se dlouhodobě nachází nad průměrem EU a odvětvový profil GPG "
         "ukazuje, že odvětví se silnějším kolektivním vyjednáváním vykazují "
         "nižší mzdové nerovnosti mezi pohlavími."
