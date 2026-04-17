@@ -182,18 +182,27 @@ ds_emp = Dataset.from_sdmx_csv(
     source_url="Eurostat/lfsi_emp_a",
 )
 
-# Job vacancy rate (B–S excl. O) — try; graceful fallback to --
-# jvs_a_nace2 dimensions: freq · nace_r2 · sizeclas · isco08 · indic_em · geo
+# Job vacancy rate (B–S excl. O) — try several filter variants; graceful fallback to --
+# jvs_a_nace2 dimensions: freq · nace_r2 · sizeclas · indic_em · geo
 # Note: startPeriod causes 400 on this dataset — omit it.
 ds_jvr: "Dataset | None" = None
-try:
-    ds_jvr = Dataset.from_sdmx_csv(
-        fetch_eurostat("jvs_a_nace2", f"A.B-S_X_O.GE10.TOTAL.JVR.{GEO}"),
-        name="Job vacancy rate", unit="%",
-        source_url="Eurostat/jvs_a_nace2",
-    )
-except Exception as _e:
-    print(f"  WARNING: job vacancy rate unavailable ({_e}) — row 8 will show --")
+for _jvr_filter in (
+    f"A.B-S_X_O.GE10.JVR.{GEO}",      # 5-dim (standard structure)
+    f"A.TOTAL.GE10.JVR.{GEO}",         # nace_r2=TOTAL fallback
+    f"A.B-S_X_O..JVR.{GEO}",           # all sizeclas
+):
+    try:
+        ds_jvr = Dataset.from_sdmx_csv(
+            fetch_eurostat("jvs_a_nace2", _jvr_filter),
+            name="Job vacancy rate", unit="%",
+            source_url="Eurostat/jvs_a_nace2",
+        )
+        print(f"  jvs_a_nace2: using filter={_jvr_filter}")
+        break
+    except Exception as _e:
+        print(f"  jvs_a_nace2/{_jvr_filter}: {_e}")
+if ds_jvr is None:
+    print("  WARNING: job vacancy rate unavailable — row 8 will show --")
 
 # Old-age dependency ratio (65+ per working-age 15–64)
 ds_dep = Dataset.from_sdmx_csv(
@@ -287,41 +296,60 @@ _deviations: list[tuple[str, str, int]] = [
     if yr != YEAR
 ]
 
+_caption_year = str(YEAR)
+
 if _deviations:
-    print(f"\nWARNING: no {YEAR} data for the following — using nearest prior year:")
+    print(f"\nNOTE: no {YEAR} data for the following — using nearest prior year:")
     for _ind, _geo, _yr in sorted(_deviations):
         print(f"  {_ind:<25}  {_geo}  →  {_yr}")
-    _fallback_years = sorted({yr for _, _, yr in _deviations})
-    _suggest = (
-        f"{_fallback_years[0]}\u2013{YEAR}"
-        if len(_fallback_years) > 1 or _fallback_years[0] != YEAR
-        else str(YEAR)
-    )
-    print(f"\nSuggested caption year: \"{_suggest} (nebo nejbližší dostupný)\"")
-    _caption_year = input(f"Caption year text [{_suggest}]: ").strip() or _suggest
-else:
-    _caption_year = str(YEAR)
+
+# Build footnote markers: one letter per deviation year, assigned in ascending order.
+from collections import defaultdict as _dd
+_yr_to_inds_set: dict[int, set[str]] = _dd(set)
+for _ind, _geo, _yr in _deviations:
+    _yr_to_inds_set[_yr].add(_ind)
+_MARK_CHARS = ["a", "b", "c", "d", "e"]
+_mark_for_yr: dict[int, str] = {
+    yr: _MARK_CHARS[i] for i, yr in enumerate(sorted(_yr_to_inds_set))
+}
+_ind_to_mark: dict[str, str] = {
+    ind: _mark_for_yr[yr]
+    for yr, inds in _yr_to_inds_set.items()
+    for ind in inds
+}
+
+
+def _m(label: str, ind_key: str) -> str:
+    """Append footnote marker to a row label if its data uses a fallback year."""
+    mark = _ind_to_mark.get(ind_key, "")
+    if not mark:
+        return label
+    sup = r"\textsuperscript{" + mark + r"}"
+    if r"~\cite{" in label:
+        return label.replace(r"~\cite{", sup + r"~\cite{", 1)
+    return label + sup
+
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
 _SUB = r"\hspace{1.5em}↳ (ČR\,=\,100\,\%)"
 
-L_GDP      = r"HDP/obyvatele [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}"
+L_GDP      = _m(r"HDP [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_GDP_IDX  = _SUB
-L_HRS      = r"Odpracované hodiny [h/týd.]~\cite{eurostat_lfsa_ewhun2}"
+L_HRS      = _m(r"Odpracované hodiny [h/týd.]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
 L_HRS_IDX  = _SUB
-L_LC       = r"Náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev}"
+L_LC       = _m(r"Úplné náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
 L_LC_IDX   = _SUB
-L_TAX      = r"Daňový klín (100\,\% AW)~\cite{eurostat_earn_nt_taxwedge}"
+L_TAX      = _m(r"Daňový klín (50\,\% \ac{AW})~\cite{eurostat_earn_nt_taxwedge}↳(100\,\% \ac{AW})", "Daňový klín")
 L_DISP     = r"Disp. příjem [\ac{PPS}/h]"      # italic — derived, no \cite{}
 L_DISP_IDX = _SUB
-L_GINI     = r"Giniho koeficient~\cite{eurostat_ilc_di12}"
-L_EMP      = r"Zaměstnanost 20--64\,\%~\cite{eurostat_lfsi_emp_a}"
-L_JVR      = r"Volná prac. místa [JVR\,\%]~\cite{eurostat_jvs_a_nace2}"
+L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
+L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
+L_JVR      = _m(r"Volná prac. místa~\cite{eurostat_jvs_a_nace2}", "JVR")
 L_CBA      = r"Pokrytí \ac{KS}\,\%~\cite{etui_cba}"
 L_DENSITY  = r"Hustota odborů\,\%~\cite{etui_density}"
-L_APZ      = r"Výdaje na \ac{APZ}\,[\%\,\ac{HDP}]~\cite{oecd_lmpexp}"
-L_DEP      = r"Věk. závislost (65+)~\cite{eurostat_demo_pjanind}"
+L_APZ      = _m(r"Výdaje na \ac{APZ}\,[\%\,\ac{HDP}]~\cite{oecd_lmpexp}", "APZ výdaje")
+L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 
 # ── 4. Build table DataFrame ──────────────────────────────────────────────────
 
@@ -372,25 +400,14 @@ midrule_after = [
 
 # ── 6. Write LaTeX table ──────────────────────────────────────────────────────
 
-# Build footnote: group year deviations by year → indicators (+ countries if partial)
-_deviation_parts: list[str] = []
-if _deviations:
-    from collections import defaultdict
-    _yr_to_inds: dict[int, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-    for _ind, _geo, _yr in _deviations:
-        _yr_to_inds[_yr][_ind].append(_geo)
-    for _yr in sorted(_yr_to_inds):
-        _pieces: list[str] = []
-        for _ind, _geos in sorted(_yr_to_inds[_yr].items()):
-            if set(_geos) == set(COUNTRIES):
-                _pieces.append(_ind)
-            else:
-                _pieces.append(f"{_ind} ({', '.join(_geos)})")
-        _deviation_parts.append(f"{', '.join(_pieces)}: {_yr}")
-_deviation_note = (
-    " Ukazatele za jiný rok (nejbližší dostupný): " + "; ".join(_deviation_parts) + "."
-    if _deviation_parts else ""
-)
+# Build footnote: one entry per fallback year with its letter marker.
+_deviation_note = ""
+if _mark_for_yr:
+    _note_parts = [
+        r"\textsuperscript{" + mark + r"}~nejnovější data " + str(yr)
+        for yr, mark in sorted(_mark_for_yr.items())
+    ]
+    _deviation_note = " " + "; ".join(_note_parts) + "."
 
 save_table_tex(
     df_table,
@@ -398,28 +415,7 @@ save_table_tex(
     caption=(
         f"Vybrané ukazatele trhu práce — "
         f"{', '.join(COUNTRY_LABELS[c] for c in COUNTRIES)}. "
-        f"Data za rok {_caption_year} (nebo nejbližší dostupný)."
-    ),
-    label="tab:flexicurity",
-    note=(
-        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,\div\,(PLI/100). "
-        r"Disp. příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
-        r"Zdroj statických dat (KS pokrytí, hustota odborů): ETUI, cca 2022--2024."
-        + _deviation_note
-                _pieces.append(f"{_ind} ({', '.join(_geos)})")
-        _deviation_parts.append(f"{', '.join(_pieces)}: {_yr}")
-_deviation_note = (
-    " Ukazatele za jiný rok (nejbližší dostupný): " + "; ".join(_deviation_parts) + "."
-    if _deviation_parts else ""
-)
-
-save_table_tex(
-    df_table,
-    "flexicurity_table",
-    caption=(
-        f"Vybrané ukazatele trhu práce — "
-        f"{', '.join(COUNTRY_LABELS[c] for c in COUNTRIES)}. "
-        f"Data za rok {_caption_year} (nebo nejbližší dostupný)."
+        f"Data za rok {_caption_year}."
     ),
     label="tab:flexicurity",
     note=(
