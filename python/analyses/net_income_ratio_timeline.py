@@ -123,7 +123,7 @@ fig = timeline(
     annotate_last=True,
 )
 
-fig.axes[0].set_xlim(START_YEAR, ds_ratio.years[-1])
+fig.axes[0].set_xlim(START_YEAR, max(2025, ds_ratio.years[-1]))
 
 # ── 6. Save ───────────────────────────────────────────────────────────────────
 savefig(fig, "net_income_ratio_timeline", out_dir=LATEX_PICS_DIR)
