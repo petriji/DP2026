@@ -257,6 +257,7 @@ def save_figure_tex(
     width: str = r"\columnwidth",
     cite_keys: Optional[Union[str, list]] = None,
     cite_key: Optional[str] = None,
+    footnote: Optional[str] = None,
 ) -> Path:
     r"""Write a LaTeX ``\begin{figure}`` environment that includes *name*.pdf.
 
@@ -303,13 +304,21 @@ def save_figure_tex(
     else:
         caption_full = title
 
+    if footnote:
+        caption_str = f"\\centering {caption_full}\\protect\\footnotemark"
+        footnote_line = f"\\footnotetext{{{footnote}}}\n"
+    else:
+        caption_str = f"\\centering {caption_full}"
+        footnote_line = ""
+
     tex = (
         f"\\begin{{figure}}[htbp]\n"
         f"  \\centering\n"
         f"  \\includegraphics[width={width}]{{{include_path}}}\n"
-        f"  \\caption{{\\centering {caption_full}}}\n"
+        f"  \\caption{{{caption_str}}}\n"
         f"  \\label{{{label}}}\n"
         f"\\end{{figure}}\n"
+        f"{footnote_line}"
     )
     out = directory / f"{name}.tex"
     out.write_text(tex, encoding="utf-8")
