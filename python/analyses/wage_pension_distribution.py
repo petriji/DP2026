@@ -123,14 +123,15 @@ MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.289/2024 S
 MIN_PENSION    =  5_170   # Kč/měsíc  (4 400 + 770 Kč)  zákon č.155/1995 Sb.
 
 # 2025 CZ employee statutory deductions (for gross-to-net conversion)
-_SP_EMPLOYEE_RATE   = 0.065        # sociální pojistění zaměstnanec
+# Import from cz_tax_model to keep rates consistent across all analyses
+from cz_tax_model import EMPLOYEE_SOCIAL_RATE as _SP_EMPLOYEE_RATE  # 7,1 % (důch. 6,5 % + nemoc. 0,6 %)
+from cz_tax_model import EMPLOYER_INS_RATE  # 33,8 % SP + ZP zaměstnavatele
 _ZP_EMPLOYEE_RATE   = 0.045        # zdravotní pojistění zaměstnanec
 _DPFO_RATE_LOW      = 0.15         # sazba DPFO – 1. pásmo (do 1 676 052 Kč/rok)
 _DPFO_RATE_HIGH     = 0.23         # sazba DPFO – 2. pásmo (nad 1 676 052 Kč/rok)
 _DPFO_THRESHOLD_YR  = 1_676_052    # Kč/rok (§ 16 ZDP, platné pro rok 2025)
 _DPFO_THRESHOLD_MO  = _DPFO_THRESHOLD_YR / 12  # ≈ 139 671 Kč/měsíc
 _SLEVA_POPLATNIK    = 2_570        # Kč/měsíc (sleva na poplatníka = 30 840 Kč/rok)
-EMPLOYER_INS_RATE   = 0.338        # SP + ZP zaměstnavatele (24,8 % + 9 %)
 
 # Colour assignments
 _COLOR_WAGE    = PALETTE[0]   # deep blue
@@ -244,9 +245,9 @@ def fit_lognormal(quantile_dict: dict[float, float]) -> tuple[float, float]:
 def gross_to_net_wage(gross: float | np.ndarray) -> float | np.ndarray:
     """Čistá měsíční mzda po odečtení zaměstnaneckých odvodů a DPFO.
 
-    CZ 2025: SP = 6,5 %, ZP = 4,5 %, DPFO 15 % do 139 671 Kč/měsíc
-    (= 1 676 052 Kč/rok), 23 % nad tuto hranici; sleva na poplatníka
-    = 2 570 Kč/měsíc.
+    CZ 2025: SP = 7,1 % (důch. 6,5 % + nemoc. 0,6 %), ZP = 4,5 %,
+    DPFO 15 % do 139 671 Kč/měsíc (= 1 676 052 Kč/rok), 23 % nad
+    tuto hranici; sleva na poplatníka = 2 570 Kč/měsíc.
 
     Základ daně DPFO je hrubá mzda (od 1. 1. 2021 bylo zrušeno
     zdanění ze „superhrubé mzdy"; zákon č. 586/1992 Sb., §6 odst. 12).
