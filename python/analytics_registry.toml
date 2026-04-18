@@ -173,11 +173,9 @@ pics     = []
 [sector_wages]
 script   = "analyses/sector_wages_net_pps.py"
 texparts = ["sector_wages_bar",
-            "sector_wages_map_C", "sector_wages_map_G",
-            "sector_wages_map_J", "sector_wages_map_K"]
+            "sector_wages_map_combined"]
 pics     = ["sector_wages_bar",
-            "sector_wages_map_C", "sector_wages_map_G",
-            "sector_wages_map_J", "sector_wages_map_K"]
+            "sector_wages_map_combined"]
 
 [cross_border_commuting]
 script   = "analyses/cross_border_commuting.py"

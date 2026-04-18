@@ -238,19 +238,30 @@ if "EU27_2020" in lc_pps.index:
     )
     print("Figure 2 saved.")
 
-# ── 6. Figures 3–6: choropleth maps per sector ────────────────────────────────
+# ── 6. Combined 2×2 choropleth map ────────────────────────────────────────────
 SECTOR_TITLES = {
     "C": "Průmysl (C)",
     "G": "Obchod (G)",
     "J": "ICT (J)",
     "K": "Finance (K)",
 }
-for sec_code, sec_title in SECTOR_TITLES.items():
+
+# Global vmin/vmax across all four sectors for a shared colour scale
+all_vals = pd.concat(
+    [lc_pps_all[s].dropna() for s in SECTOR_TITLES if s in lc_pps_all.columns]
+)
+vmin_global = all_vals.min()
+vmax_global = all_vals.max()
+
+fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(28, 22))
+panel_labels = iter("abcd")
+
+for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
     if sec_code not in lc_pps_all.columns:
-        print(f"  WARNING: sector {sec_code} not in all-EU data, skipping choropleth.")
+        print(f"  WARNING: sector {sec_code} not in all-EU data, skipping.")
+        ax_i.set_visible(False)
         continue
 
-    # Build Dataset for this sector map (single year, geo-value rows, absolute PPS/h)
     sector_series = lc_pps_all[sec_code].dropna()
     df_map = pd.DataFrame({
         "geo": sector_series.index,
@@ -264,28 +275,51 @@ for sec_code, sec_title in SECTOR_TITLES.items():
         source_url="Eurostat/lc_lci_lev",
     )
 
-    fig_map = choropleth(
+    choropleth(
         ds_map,
         year=int(ref_year),
-        title=f"Hodinové náklady práce – {sec_title} ({ref_year})",
+        title="",
         colorbar_label="[PPS/h]",
         cmap="RdYlGn",
-        vmin=None,
-        vmax=None,
+        vmin=vmin_global,
+        vmax=vmax_global,
+        ax=ax_i,
+        label_countries=True,
+        show_colorbar=False,
     )
+    lbl = next(panel_labels)
+    ax_i.set_title(f"({lbl}) {sec_title}", fontsize=FONT_SIZE, pad=4)
 
-    fig_name = f"sector_wages_map_{sec_code}"
-    savefig(fig_map, fig_name, out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
-        fig_name,
-        caption=(
-            f"Hodinové náklady práce v~odvětví {sec_title}, EU27, {ref_year}. "
-            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná."
-        ),
-        label=f"fig:{fig_name}",
-        width=r"0.85\linewidth",
-        cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-    )
-    print(f"Choropleth {sec_code} saved.")
+fig_maps.suptitle(
+    f"Hodinové náklady práce dle odvětví, EU27 ({ref_year})",
+    fontsize=plt.rcParams.get("axes.titlesize", 9),
+    y=0.98,
+)
+
+# Shared colorbar for all four panels
+import matplotlib as mpl_lib
+norm_shared = mpl_lib.colors.Normalize(vmin=vmin_global, vmax=vmax_global)
+sm_shared = mpl_lib.cm.ScalarMappable(cmap="RdYlGn", norm=norm_shared)
+sm_shared.set_array([])
+fig_maps.colorbar(sm_shared, ax=axes.ravel().tolist(), shrink=0.6,
+                  label="[PPS/h]", location="bottom", pad=0.04)
+
+# Prevent savefig's tight_layout from clobbering the colorbar positioning
+fig_maps._tight_layout_kwargs = {"pad": 1.0, "rect": [0, 0.08, 1, 0.95]}
+fig_maps._subplots_adjust_kwargs = {"top": 0.93}
+
+savefig(fig_maps, "sector_wages_map_combined", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
+    "sector_wages_map_combined",
+    caption=(
+        f"Hodinové náklady práce (PPS/h) v~odvětvích Průmysl~(C), Obchod~(G), ICT~(J) a~Finance~(K), EU27, {ref_year}. "
+        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná. "
+        f"Společná barevná škála umožňuje porovnání mezi panely."
+    ),
+    label="fig:sector_wages_map_combined",
+    width=r"\linewidth",
+    cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
+)
+print("Combined choropleth (2×2) saved.")
 
 print("Done.")
