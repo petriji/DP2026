@@ -181,7 +181,7 @@ lci_growth: dict[int, float] = {}
 try:
     path_lci = fetch_eurostat(
         "lc_lci_r2_a",
-        f"A.I20.B-S.D11.CZ",
+        f"A.I20.B-S.D1_D4_MD5.CZ",
         start_period=START_YEAR - 1,
     )
     ds_lci_raw = Dataset.from_sdmx_csv(
