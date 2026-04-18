@@ -39,6 +39,7 @@ ds = Dataset.from_oecd_csv(
     name="Hustota odborů",
     unit="%",
     source_url="OECD AIAS ICTWSS / TUD",
+    filters={"INDICATOR": "TUD"},
 )
 
 # Drop the OECD aggregate row
