@@ -99,6 +99,7 @@ def choropleth(
     colorbar_label: Optional[str] = None,
     fill_latest: bool = True,
     ylim_south: Optional[float] = None,
+    show_colorbar: bool = True,
 ) -> plt.Figure:
     """Draw a choropleth map of Europe coloured by *ds* values.
 
@@ -190,8 +191,9 @@ def choropleth(
 
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
-    cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
-    fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
+    if show_colorbar:
+        cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
+        fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
 
     if label_countries:
         for _, row_ in filled.iterrows():
