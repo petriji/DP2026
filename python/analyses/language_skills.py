@@ -44,31 +44,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import matplotlib.cm as mcm
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import pandas as pd
-import geopandas as gpd
 
-from config import FONT_SIZE, LATEX_PICS_DIR
-from stattool.fetch import fetch, fetch_eurostat
+from config import LATEX_PICS_DIR
+from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import apply_style, savefig, save_figure_tex
+from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
-_GISCO_NUTS_URL = (
-    "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
-    "NUTS_RG_20M_2021_3035.geojson"
-)
-_EU_XLIM = (2_500_000, 7_100_000)
-_EU_YLIM = (1_400_000, 5_500_000)
 
 apply_style()
-
-
-def _load_nuts0(nuts_path: Path) -> gpd.GeoDataFrame:
-    nuts_all = gpd.read_file(nuts_path)
-    return nuts_all[nuts_all["LEVL_CODE"] == 0].copy()
 
 
 def _filter_aes(df: pd.DataFrame, dim_keywords: dict[str, list[str]]) -> pd.DataFrame:
@@ -109,7 +96,6 @@ def _filter_aes(df: pd.DataFrame, dim_keywords: dict[str, list[str]]) -> pd.Data
 
 def _make_choropleth(
     snap: pd.DataFrame,
-    nuts0: gpd.GeoDataFrame,
     title: str,
     cbar_label: str,
     stem: str,
@@ -119,37 +105,20 @@ def _make_choropleth(
     vmin: float = 0,
     vmax: float | None = None,
 ) -> None:
-    """Merge snap (geo, value) onto NUTS0 and render a choropleth."""
+    """Render a Europe choropleth via statout.map_europe."""
     if vmax is None:
-        vmax = snap["value"].quantile(0.95)
+        vmax = float(snap["value"].quantile(0.95))
 
-    merged = nuts0.merge(snap[["geo", "value"]], left_on="NUTS_ID",
-                          right_on="geo", how="left")
-
-    fig, ax = plt.subplots(figsize=cm2in(15, 11))
-    cmap = plt.colormaps["YlOrRd"]
-    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
-
-    for _, row in merged.iterrows():
-        if row.geometry is None or row.geometry.is_empty:
-            continue
-        val = row["value"]
-        color = cmap(norm(val)) if pd.notna(val) else "#CCCCCC"
-        gpd.GeoSeries([row.geometry]).plot(
-            ax=ax, color=color, edgecolor="white", linewidth=0.4,
-        )
-
-    sm = mcm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
-    cbar = fig.colorbar(sm, ax=ax, fraction=0.03, pad=0.02)
-    cbar.set_label(cbar_label, fontsize=FONT_SIZE)
-    cbar.ax.tick_params(labelsize=FONT_SIZE - 1)
-    ax.set_xlim(_EU_XLIM)
-    ax.set_ylim(_EU_YLIM)
-    ax.axis("off")
-    ax.set_title(title, fontsize=FONT_SIZE)
-    fig.tight_layout()
-
+    ds = Dataset(snap, name=cbar_label, unit="")
+    fig = choropleth(
+        ds, year=year,
+        title=title,
+        cmap="YlOrRd",
+        vmin=vmin,
+        vmax=vmax,
+        colorbar_label=cbar_label,
+        label_countries=False,
+    )
     savefig(fig, stem, out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         stem,
@@ -160,11 +129,6 @@ def _make_choropleth(
     )
     print(f"  {stem} done ({year}).")
 
-
-# ── Fetch GISCO NUTS0 shapefile ───────────────────────────────────────────────
-print("Fetching NUTS0 shapefile …")
-nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")
-nuts0 = _load_nuts0(nuts_path)
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure A – edat_aes_l21: total population knowing 2+ languages (sex=T)
@@ -210,7 +174,7 @@ try:
     print(f"  {len(snap_l21)} countries, year={latest_l21}")
 
     _make_choropleth(
-        snap_l21, nuts0,
+        snap_l21,
         title=(
             f"Znalost alespoň 2 cizích jazyků — celková populace ({latest_l21})\n"
             "% osob s\\,2+ cizími jazyky"
@@ -281,7 +245,7 @@ try:
     print(f"  {len(snap_l22)} countries, year={latest_l22}")
 
     _make_choropleth(
-        snap_l22, nuts0,
+        snap_l22,
         title=(
             f"Znalost ≥2 cizích jazyků — věková skupina 25–54 let ({latest_l22})\n"
             "% věkové skupiny s\\,2+ cizími jazyky"
@@ -357,7 +321,7 @@ try:
     print(f"  {len(snap_l23)} countries, year={latest_l23}")
 
     _make_choropleth(
-        snap_l23, nuts0,
+        snap_l23,
         title=(
             f"Znalost ≥2 cizích jazyků — vysokoškolsky vzdělaní ({latest_l23})\n"
             "% osob s\\,ISCED\u00a05\u20138 znajících 2+ cizí jazyky"

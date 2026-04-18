@@ -37,7 +37,6 @@ Run
 from __future__ import annotations
 
 import sys
-import warnings
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -49,20 +48,14 @@ import numpy as np
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
-from stattool.fetch import fetch, fetch_eurostat
+from stattool.fetch import fetch_eurostat
+from stattool.dataset import Dataset
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 COUNTRY_LABELS = {"CZ": "CZ", "AT": "AT", "DE": "DE", "DK": "DK", "PL": "PL", "SK": "SK"}
-
-# NUTS2 GeoJSON (EPSG:3035)
-_GISCO_NUTS_URL = (
-    "https://gisco-services.ec.europa.eu/distribution/v2/nuts/"
-    "geojson/NUTS_RG_20M_2021_3035.geojson"
-)
-_EU_XLIM = (2_500_000, 7_100_000)
-_EU_YLIM = (1_400_000, 5_500_000)
 
 apply_style()
 
@@ -121,59 +114,23 @@ gpg_snap = (
 print(f"  GPG snapshot rows: {len(gpg_snap)}, median year: {gpg_snap['time'].median()}")
 snap_year = int(gpg_snap["time"].mode()[0]) if not gpg_snap.empty else 2022
 
-# Load NUTS0 GeoJSON
-try:
-    import geopandas as gpd
-    nuts_path = fetch(_GISCO_NUTS_URL)
-    nuts = gpd.read_file(nuts_path)
-    nuts0 = nuts[nuts["LEVL_CODE"] == 0].copy()
-    nuts0 = nuts0.merge(
-        gpg_snap.rename(columns={geo_col: "NUTS_ID", val_col: "gpg"}),
-        on="NUTS_ID", how="left",
-    )
-    _HAS_GPD = True
-except Exception as e:
-    warnings.warn(f"geopandas not available: {e}")
-    _HAS_GPD = False
+# Build Dataset for choropleth
+gpg_df = (
+    gpg_snap[[geo_col, "gpg", "time"]]
+    .rename(columns={geo_col: "geo", "gpg": "value"})
+    .copy()
+)
+ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
+                 source_url="Eurostat/earn_gr_gpgr2")
 
-fig_a, ax_a = plt.subplots(figsize=cm2in(15, 10))
-
-if _HAS_GPD:
-    nuts0_eu = nuts0.cx[_EU_XLIM[0]:_EU_XLIM[1], _EU_YLIM[0]:_EU_YLIM[1]]
-    nuts0_eu.plot(ax=ax_a, column="gpg", cmap="RdBu_r", linewidth=0.3,
-                  edgecolor="white", missing_kwds={"color": "lightgrey"},
-                  vmin=0, vmax=25)
-    # Country code labels on centroids
-    for _, row in nuts0_eu.iterrows():
-        if row.geometry is None or pd.isna(row.get("gpg", float("nan"))):
-            continue
-        c = row.geometry.centroid
-        if (_EU_XLIM[0] < c.x < _EU_XLIM[1] and _EU_YLIM[0] < c.y < _EU_YLIM[1]):
-            ax_a.annotate(
-                f"{row['NUTS_ID']}\n{row['gpg']:.1f}%",
-                xy=(c.x, c.y), ha="center", va="center",
-                fontsize=FONT_SIZE - 3.5, fontweight="normal",
-                color="black",
-            )
-    ax_a.set_xlim(_EU_XLIM)
-    ax_a.set_ylim(_EU_YLIM)
-    sm = plt.cm.ScalarMappable(cmap="RdBu_r",
-                                norm=plt.Normalize(vmin=0, vmax=25))
-    sm.set_array([])
-    cbar = fig_a.colorbar(sm, ax=ax_a, fraction=0.03, pad=0.04)
-    cbar.set_label("GPG (% mzdy mužů)", fontsize=FONT_SIZE)
-    cbar.ax.tick_params(labelsize=FONT_SIZE - 1)
-else:
-    # Fallback: bar chart
-    gpg_snap_sorted = gpg_snap.sort_values(val_col, ascending=False)
-    ax_a.barh(gpg_snap_sorted[geo_col], gpg_snap_sorted[val_col],
-              color="tomato", edgecolor="white", linewidth=0.4)
-    ax_a.set_xlabel("GPG (%)", fontsize=FONT_SIZE)
-
-ax_a.set_axis_off()
-ax_a.set_title(
-    f"Neupravený gender pay gap v~EU ({snap_year})\nNACE B–S, v~% hodinové mzdy mužů",
-    fontsize=FONT_SIZE,
+fig_a = choropleth(
+    ds_gpg, year=snap_year,
+    title=f"Neupravený gender pay gap v~EU ({snap_year})\nNACE B–S, v~% hodinové mzdy mužů",
+    cmap="RdBu_r",
+    vmin=0,
+    vmax=25,
+    colorbar_label="GPG (% mzdy mužů)",
+    label_countries=True,
 )
 
 savefig(fig_a, "gender_pay_gap_map", out_dir=LATEX_PICS_DIR)

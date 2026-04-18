@@ -48,8 +48,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import matplotlib.cm as mcm
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.patheffects as mpe
@@ -62,6 +60,7 @@ from stattool.dataset import Dataset
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from statout.timeline import timeline
 from statout.map_cz import choropleth_cz
+from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -74,9 +73,6 @@ _GISCO_NUTS_URL = (
     "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
     "NUTS_RG_20M_2021_3035.geojson"
 )
-# EPSG:3035 bounding box — EU overview map
-_EU_XLIM = (2_500_000, 7_100_000)
-_EU_YLIM = (1_400_000, 5_500_000)
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
@@ -258,45 +254,24 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
 # ── Figure B — EU map ─────────────────────────────────────────────────────────
 print("\nFigure B: EU map …")
 try:
-    nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")
-    nuts_all = gpd.read_file(nuts_path)
-    nuts0 = nuts_all[nuts_all["LEVL_CODE"] == 0].copy()
-
     nat2 = filt[filt["geo"].str.len() == 2].copy()
-    latest_nat = nat2["time"].max()
+    latest_nat = int(nat2["time"].max())
     snap_nat = nat2[nat2["time"] == latest_nat].copy()
 
-    merged_eu = nuts0.merge(snap_nat[["geo", "value"]], left_on="NUTS_ID",
-                            right_on="geo", how="left")
-
-    fig_b, ax_b = plt.subplots(figsize=cm2in(15, 11))
-    vmin_b, vmax_b = 0, snap_nat["value"].quantile(0.95)
-    cmap_b = plt.colormaps["YlOrRd"]
-    norm_b = mcolors.Normalize(vmin=vmin_b, vmax=vmax_b)
-
-    for _, row in merged_eu.iterrows():
-        if row.geometry is None or row.geometry.is_empty:
-            continue
-        val = row["value"]
-        color = cmap_b(norm_b(val)) if pd.notna(val) else "#CCCCCC"
-        gpd.GeoSeries([row.geometry]).plot(
-            ax=ax_b, color=color, edgecolor="white", linewidth=0.4,
-        )
-
-    sm_b = mcm.ScalarMappable(cmap=cmap_b, norm=norm_b)
-    sm_b.set_array([])
-    cbar_b = fig_b.colorbar(sm_b, ax=ax_b, fraction=0.03, pad=0.02)
-    cbar_b.set_label("% zaměstnaných pracujících v zahraničí", fontsize=FONT_SIZE)
-    cbar_b.ax.tick_params(labelsize=FONT_SIZE - 1)
-    ax_b.set_xlim(_EU_XLIM)
-    ax_b.set_ylim(_EU_YLIM)
-    ax_b.axis("off")
-    ax_b.set_title(
-        f"Přeshraniční pracovní dojíždění v\u00a0EU ({latest_nat})\n"
-        "% zaměstnaných pracujících v\u00a0zahraničí",
-        fontsize=FONT_SIZE,
+    ds_map = Dataset(snap_nat, name="Přeshraniční dojíždění", unit="% zaměstnaných",
+                     source_url="Eurostat/lfst_r_lfe2ecomm")
+    fig_b = choropleth(
+        ds_map, year=latest_nat,
+        title=(
+            f"Přeshraniční pracovní dojíždění v\u00a0EU ({latest_nat})\n"
+            "% zaměstnaných pracujících v\u00a0zahraničí"
+        ),
+        colorbar_label="% zaměstnaných pracujících v zahraničí",
+        cmap="YlOrRd",
+        vmin=0,
+        vmax=float(snap_nat["value"].quantile(0.95)),
+        label_countries=True,
     )
-    fig_b.tight_layout()
 
     savefig(fig_b, "cross_border_commuting_map", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
