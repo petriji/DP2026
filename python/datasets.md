@@ -6,25 +6,6 @@ Re-download with `force=True` in `fetch_*()` calls.
 
 ---
 
-## OECD Stats — SDMX API (`fetch_oecd`)
-
-### `CTS_CIT` — Corporate Tax Statistics (statutory CIT rates)
-
-Primary B2 source in the ternary model.
-
-| Dimension | Code | Meaning |
-|-----------|------|---------|
-| `CORP_TAX` | `COMB_CIT_RATE` | Combined statutory corporate income tax rate |
-| `UNIT_MEASURE` | `PC` | Percent |
-| Frequency | annual | OECD annual panel |
-
-| Script | Filter | Period |
-|--------|--------|--------|
-| `stav_korporatni_dan.py` | `CORP_TAX=COMB_CIT_RATE`, `UNIT_MEASURE=PC` | `2000`– |
-| `_ternary_calc.py` (B2) | same as above, fallback chain `CIT_RATE` → `CIT_RATE_LESS_SUB_NAT` → expert `CY=14.1` (2026) | `2000`– |
-
----
-
 ## Eurostat — SDMX 2.1 API (`fetch_eurostat`)
 
 Eurostat datasets use dot-separated SDMX dimension filters.
@@ -66,7 +47,6 @@ Nominal labour productivity per hour, PPS relative to EU27.
 | Script | Filter | Period |
 |--------|--------|--------|
 | `eu_konvergence.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
-| `eu_produktivita_prijem_trajektorie.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
 
 ---
 
@@ -105,7 +85,6 @@ Net earnings after tax and SSC for a single person without children at 100 % of 
 | `stav_prijem_pomer.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 | `eu_konvergence.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 | `korelace_analyza.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
-| `eu_produktivita_prijem_trajektorie.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 
 ---
 
@@ -137,7 +116,6 @@ Usual weekly hours in main job, employed persons 15–64.
 | Script | Filter | Period |
 |--------|--------|--------|
 | `korelace_analyza.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
-| `eu_produktivita_prijem_trajektorie.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
 | `prakticka_srovnani.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}` | — |
 | `stav_stavky.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
 
@@ -485,7 +463,6 @@ Days not worked due to strikes and lockouts per 1 000 workers (annual).
 | Script | Params | Notes |
 |--------|--------|-------|
 | `stav_stavky.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | DK missing → supplemented from Statistics Denmark |
-| `stav_socialni_mir_data.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | Builds B4 strike benchmark snapshot for ternary + social-peace choropleths; DK supplemented from Statistics Denmark |
 
 ---
 
