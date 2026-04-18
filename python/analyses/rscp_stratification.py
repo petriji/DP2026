@@ -782,90 +782,32 @@ else:
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding CZ NUTS3 regional wage choropleth (ISPV) …")
 
-import geopandas as gpd
-from shapely.geometry import box as _shapely_box
-
-_GISCO_NUTS_URL = (
-    "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
-    "NUTS_RG_20M_2021_3035.geojson"
-)
-# EPSG:3035 bounding box for CZ and immediate neighbours (in metres)
-_CZ_XLIM = (4_300_000, 5_100_000)
-_CZ_YLIM = (2_700_000, 3_300_000)
+from statout.map_cz import choropleth_cz
 
 try:
-    # ── 1. Download NUTS3 GeoJSON (cached) ───────────────────────────────
-    nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")
-    nuts = gpd.read_file(nuts_path)
-    nuts3 = nuts[nuts["LEVL_CODE"] == 3].copy()
-    nuts3["CNTR_CODE"] = nuts3["NUTS_ID"].str[:2]
-
-    # ── 2. Download 14 regional ISPV workbooks ────────────────────────────
+    # ── 1. Download 14 regional ISPV workbooks ────────────────────────────
     print("  Fetching 14 regional ISPV medians …")
     reg_medians = _fetch_ispv_regional_medians()
     if len(reg_medians) < 4:
         raise ValueError(f"Only {len(reg_medians)} ISPV regional files parseable")
     nat_avg = float(pd.Series(list(reg_medians.values())).median())
-    wage_df = pd.DataFrame(
-        [{"NUTS_ID": k, "wage_idx": v / nat_avg * 100}
-         for k, v in reg_medians.items()]
+
+    # ── 2. Build wage index series (NUTS_ID → index, CZ median = 100) ────
+    wage_series = pd.Series(
+        {k: v / nat_avg * 100 for k, v in reg_medians.items()},
+        dtype=float,
     )
 
-    # ── 3. Join to geometry ───────────────────────────────────────────────
-    merged = nuts3.merge(wage_df, on="NUTS_ID", how="left")
-
-    # ── 4. Draw map ───────────────────────────────────────────────────────
-    import matplotlib.colors as mcolors
-    import matplotlib.cm as mcm
-
-    fig_d, ax_d = plt.subplots(1, 1, figsize=cm2in(15, 11))
-
-    # Grey basemap for neighbours (NUTS3 of AT, DE, PL, SK)
-    neighbours = merged[merged["CNTR_CODE"].isin(["AT", "DE", "PL", "SK"])]
-    neighbours.plot(ax=ax_d, color="#DDDDDD", edgecolor="white", linewidth=0.4)
-
-    # CZ regions coloured by wage index
-    cz_regions = merged[merged["CNTR_CODE"] == "CZ"].copy()
-    bbox = _shapely_box(_CZ_XLIM[0], _CZ_YLIM[0], _CZ_XLIM[1], _CZ_YLIM[1])
-    cz_regions = cz_regions.copy()
-    cz_regions["geometry"] = cz_regions["geometry"].intersection(bbox)
-
-    cmap = plt.colormaps["RdYlGn"]
-    vmin, vmax = 70, 150
-    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
-    for _, row in cz_regions.iterrows():
-        if row.geometry is None or row.geometry.is_empty:
-            continue
-        val = row["wage_idx"]
-        color = cmap(norm(val)) if pd.notna(val) else "#CCCCCC"
-        gpd.GeoSeries([row.geometry]).plot(
-            ax=ax_d, color=color, edgecolor="white", linewidth=0.5,
-        )
-        centroid = row.geometry.centroid
-        if pd.notna(val):
-            ax_d.text(
-                centroid.x, centroid.y,
-                f"{val:.0f}",
-                ha="center", va="center",
-                fontsize=FONT_SIZE - 2.5, color="black",
-            )
-
-    # Colourbar
-    sm = mcm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
-    cbar = fig_d.colorbar(sm, ax=ax_d, fraction=0.03, pad=0.02)
-    cbar.set_label("Index (medián ČR = 100)", fontsize=FONT_SIZE)
-    cbar.ax.tick_params(labelsize=FONT_SIZE - 1)
-
-    ax_d.set_xlim(_CZ_XLIM)
-    ax_d.set_ylim(_CZ_YLIM)
-    ax_d.axis("off")
-    ax_d.set_title(
-        "ČR: mediánová mzda podle kraje (ISPV 2025/H1)\n"
-        "index (medián ČR = 100)",
-        fontsize=FONT_SIZE,
+    fig_d = choropleth_cz(
+        wage_series,
+        nuts_level_cz=3,
+        title="ČR: mediánová mzda podle kraje (ISPV 2025/H1) — index (medián ČR\u00a0=\u00a0100)",
+        cmap="RdYlGn",
+        vmin=70,
+        vmax=150,
+        colorbar_label="Index (medián ČR = 100)",
+        label_fmt="{:.0f}",
     )
-    fig_d.tight_layout()
 
     savefig(fig_d, "rscp_regional_wages_map", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
