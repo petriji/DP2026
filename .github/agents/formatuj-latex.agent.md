@@ -1,7 +1,8 @@
 ---
 name: "Formatuj LaTeX"
 description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries. Do NOT use for: generating new content, writing Python, building/compiling."
-tools: [read, search, edit]
+tools: [read, search, edit, agent]
+agents: ["Citace a zkratky"]
 argument-hint: "Paste raw text or a .tex fragment to format"
 ---
 

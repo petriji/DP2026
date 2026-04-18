@@ -1,0 +1,6 @@
+# Source PDFs (123 MB)
+sources/*.pdf
+sources/**/*.pdf
+
+# Cached Eurostat/OECD data (66 MB)
+python/data/
