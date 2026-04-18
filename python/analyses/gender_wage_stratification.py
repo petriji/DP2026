@@ -115,8 +115,8 @@ snap_year = int(gpg_snap["time"].mode()[0]) if not gpg_snap.empty else 2022
 
 # Build Dataset for choropleth
 gpg_df = (
-    gpg_snap[[geo_col, "gpg", "time"]]
-    .rename(columns={geo_col: "geo", "gpg": "value"})
+    gpg_snap[[geo_col, val_col, "time"]]
+    .rename(columns={geo_col: "geo", val_col: "value"})
     .copy()
 )
 ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
