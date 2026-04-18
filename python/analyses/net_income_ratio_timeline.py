@@ -13,7 +13,7 @@ wage actually receives as disposable (net) income.
 Data sources:
     Net annual earnings (PPS):      Eurostat ``earn_nt_net``
         (freq=A, currency=PPS, estruct=NET, ecase=P1_NCH_AW100)
-  GDP per capita (PPS EU27=100):  Eurostat ``nama_10_pc``   (CP_PPS_EU27_2020_HAB.B1GQ)
+  GDP per capita (PPS abs.):       Eurostat ``nama_10_pc``   (CP_PPS_EU27_2020_HAB.B1GQ)
 
 Output
 ------
@@ -58,7 +58,7 @@ path_net = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# GDP per capita in PPS (EU27_2020 = 100) – all geo
+# GDP per capita in PPS (absolute, current prices) – all geo
 path_gdp = fetch_eurostat(
     "nama_10_pc",
     "A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.",
