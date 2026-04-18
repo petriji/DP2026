@@ -80,6 +80,7 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from statout.timeline import timeline
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -580,126 +581,54 @@ if not regional_done:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B – Gender pay gap (sector CZ + cross-country trend)
+# Figure B – Gender pay gap: cross-country timeline (Eurostat earn_gr_gpgr2)
 # ════════════════════════════════════════════════════════════════════════════
-print("\nBuilding gender pay gap figures …")
+print("\nBuilding gender pay gap figure …")
 
-# ── B1: CZ GPG by sector from ISPV ───────────────────────────────────────
-ispv_gpg_sector: pd.DataFrame | None = None
-if ispv_path is not None:
-    ispv_gpg_sector = _parse_gender_sector(ispv_path)
-    if ispv_gpg_sector is not None:
-        print(f"  ISPV gender breakdown: {len(ispv_gpg_sector)} sectors")
-    else:
-        print("  ISPV gender columns not found in workbook")
-
-# ── B2: Cross-country GPG trend (Eurostat earn_gr_gpgr2) ─────────────────
-geo_6 = "+".join(COUNTRIES)
-gpg_trend: dict[str, pd.Series] = {}
+# Fetch GPG for all countries (trailing dot) so EU27 cloud works
 try:
     path_gpg = fetch_eurostat(
         "earn_gr_gpgr2",
-        f"A.PC.B-S_X_O.{geo_6}",
+        f"A.PC.B-S_X_O.",
         start_period=START_YEAR,
     )
     from stattool.dataset import Dataset
     ds_gpg = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
                                    source_url="Eurostat/earn_gr_gpgr2")
-    if not ds_gpg.df.empty:
-        for country in COUNTRIES:
-            sub = ds_gpg.df[ds_gpg.df["geo"] == country].copy()
-            sub["time"] = sub[ds_gpg.time_col].astype(int)
-            sub = sub.sort_values("time")
-            s = sub.set_index("time")[ds_gpg.value_col].dropna()
-            if len(s) >= 3:
-                gpg_trend[country] = s
-        print(f"  GPG trend countries: {sorted(gpg_trend.keys())}")
-    else:
-        print("  earn_gr_gpgr2 returned no data")
-except Exception as exc:
-    print(f"  earn_gr_gpgr2 fetch failed: {exc}")
 
-# ── Build Figure B ────────────────────────────────────────────────────────
-has_sector_gpg = ispv_gpg_sector is not None
-has_trend_gpg  = bool(gpg_trend)
-
-if has_sector_gpg or has_trend_gpg:
-    n_panels = (1 if has_sector_gpg else 0) + (1 if has_trend_gpg else 0)
-    fig_b, axes_b = plt.subplots(
-        1, n_panels, figsize=cm2in(16 * n_panels / 2 + 4, 10),
-        squeeze=False,
+    fig_b = timeline(
+        ds_gpg,
+        countries=COUNTRIES,
+        highlight=["CZ"],
+        background_eu=True,
+        annotate_last=True,
+        show_eu_avg=True,
+        ylabel="nekorigovaný GPG (%)",
+        title="",
     )
-    axes_b = axes_b.flatten()
-    panel = 0
-
-    if has_sector_gpg:
-        ax = axes_b[panel]; panel += 1
-        gpg_s = ispv_gpg_sector.sort_values("gpg_pct")
-        bar_clrs = [CZ_COLOR if v >= 0 else "#2CA02C" for v in gpg_s["gpg_pct"]]
-        ax.barh(gpg_s["sector"].values, gpg_s["gpg_pct"].values,
-                color=bar_clrs, alpha=0.82, height=0.7)
-        ax.axvline(0, color="gray", linewidth=0.8, linestyle="-")
-        ax.set_xlabel("Gender pay gap, muži − ženy (%)", fontsize=FONT_SIZE)
-        ax.set_title(
-            f"ČR: gender pay gap podle odvětví\n(ISPV {ispv_year}/H2)",
-            fontsize=FONT_SIZE,
-        )
-        ax.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, _: f"{x:.0f}\u00a0pp")
-        )
-
-    if has_trend_gpg:
-        ax = axes_b[panel]; panel += 1
-        for i, country in enumerate(COUNTRIES):
-            if country not in gpg_trend:
-                continue
-            s = gpg_trend[country]
-            lw  = 2.5 if country == "CZ" else 1.4
-            ls  = "-" if country == "CZ" else "--"
-            ax.plot(
-                s.index, s.values,
-                label=country, color=COUNTRY_COLORS.get(country, PALETTE[i]),
-                linewidth=lw, linestyle=ls,
-                marker="o" if country == "CZ" else None,
-                markersize=3.5,
-            )
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%")
-        )
-        ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=7))
-        ax.set_xlabel("rok", fontsize=FONT_SIZE)
-        ax.set_ylabel("Neupr. gender pay gap (%)", fontsize=FONT_SIZE)
-        ax.set_title(
-            "Nekorigovaný gender pay gap: 6 zemí",
-            fontsize=FONT_SIZE,
-        )
-        ax.legend(frameon=False, fontsize=FONT_SIZE - 1.5, ncol=2)
-
-    fig_b.tight_layout(pad=1.5)
-    savefig(fig_b, "rscp_gender_gap", out_dir=LATEX_PICS_DIR, tight=False)
-    caption_gpg = (
-        "Gender pay gap (GPG, rozdíl mediánových hrubých mezd mužů a žen v~\\%) "
+    ax_b = fig_b.axes[0]
+    ax_b.set_xlim(right=2025)
+    ax_b.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
     )
-    if has_sector_gpg:
-        caption_gpg += (
-            f"podle odvětví NACE v~ČR (ISPV {ispv_year}/H2, levý panel) a "
-        )
-    caption_gpg += (
-        "vývoj nekorigovaného GPG v~6 srovnávaných zemích "
-        f"{START_YEAR}--{END_YEAR} (Eurostat earn\\_gr\\_gpgr2, pravý panel). "
-        "ČR se dlouhodobě nachází nad průměrem EU a odvětvový profil GPG "
-        "ukazuje, že odvětví se silnějším kolektivním vyjednáváním vykazují "
-        "nižší mzdové nerovnosti mezi pohlavími."
-    )
+
+    savefig(fig_b, "rscp_gender_gap", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "rscp_gender_gap",
-        caption=caption_gpg,
+        caption=(
+            f"Nekorigovaný gender pay gap (GPG) v~\\% hrubého hodinového výdělku mužů, "
+            f"{START_YEAR}--{END_YEAR} "
+            "(Eurostat earn\\_gr\\_gpgr2, NACE B--S). "
+            "Šedé linie = ostatní členské státy EU; "
+            "přerušovaná černá = průměr EU27. "
+            "ČR se dlouhodobě nachází výrazně nad průměrem EU."
+        ),
         label="fig:rscp_gender_gap",
-        width=r"0.98\linewidth",
+        width=r"0.95\linewidth",
         cite_key="eurostat_gpg",
     )
-else:
-    print("Figure B (gender pay gap) skipped – no data available.")
+except Exception as exc:
+    print(f"Figure B (gender pay gap) failed: {exc}")
 
 
 # ════════════════════════════════════════════════════════════════════════════
