@@ -179,6 +179,33 @@ ses_raw[s_val] = pd.to_numeric(ses_raw[s_val], errors="coerce")
 ses_raw = ses_raw.dropna(subset=[s_val])
 ses_raw["time"] = ses_raw[s_time].astype(str).str[:4].astype(int)
 
+# ── Convert EUR → PPS using PLI (price level index, EU27=100) ────────────────
+print("Downloading prc_ppp_ind for EUR→PPS conversion …")
+_pli_path = fetch_eurostat("prc_ppp_ind", f"A.E011.{GEO_6}", start_period=2014)
+_pli_raw = pd.read_csv(_pli_path, comment="#")
+_pli_raw.columns = [c.strip().upper() for c in _pli_raw.columns]
+_pli_geo = next((c for c in _pli_raw.columns if c in ("GEO", "REF_AREA")), None)
+_pli_time = next((c for c in _pli_raw.columns if c in ("TIME_PERIOD", "TIME")), None)
+_pli_val = next((c for c in _pli_raw.columns if c in ("OBS_VALUE", "VALUE")), None)
+_pli = _pli_raw[[_pli_geo, _pli_time, _pli_val]].dropna(subset=[_pli_val]).copy()
+_pli.columns = ["_pli_geo", "_pli_time", "_pli"]
+_pli["_pli_time"] = _pli["_pli_time"].astype(str).str[:4].astype(int)
+_pli["_pli"] = pd.to_numeric(_pli["_pli"], errors="coerce") / 100.0  # EU27=1.0
+
+ses_raw = ses_raw.merge(
+    _pli,
+    left_on=[s_geo, "time"],
+    right_on=["_pli_geo", "_pli_time"],
+    how="left",
+)
+_has_pli = ses_raw["_pli"].notna().any()
+if _has_pli:
+    ses_raw[s_val] = ses_raw[s_val] / ses_raw["_pli"]
+    print("  EUR → PPS conversion applied")
+else:
+    print("  WARNING: PLI unavailable — keeping EUR values")
+ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
+
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)
 _INDIC_RANK = {"D1_E_EUR": 10, "MED_E_EUR": 50, "D9_E_EUR": 90}
 _INDIC_LABEL = {10: "D1\n(P10)", 50: "Med\n(P50)", 90: "D9\n(P90)"}
@@ -233,7 +260,7 @@ ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
 ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
 ax_b.set_xlabel("percentil mzdové distribuce", fontsize=FONT_SIZE - 1)
-ax_b.set_ylabel("hodinová mzda (EUR/PPS)", fontsize=FONT_SIZE - 1)
+ax_b.set_ylabel("hodinová mzda (PPS/h)", fontsize=FONT_SIZE - 1)
 ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax_b.set_title(
     f"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
