@@ -2,7 +2,7 @@ r"""
 Tax wedge choropleth map of Europe.
 
 Data source: Eurostat, earn_nt_taxwedge
-  Tax wedge at average wage (100 % AW), single person, no children.
+  Tax wedge at 67 % of average wage (AW), single person, no children.
   Unit: % of total labour costs.
 
 Output
@@ -49,7 +49,7 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Daňový klín na průměrnou mzdu ({ds.latest_year})",
+    title=f"Daňový klín (67 % prům. mzdy, {ds.latest_year})",
     colorbar_label="daňový klín [% mzdových nákladů]",
     cmap="RdYlGn_r",
     label_countries=True,
@@ -62,7 +62,7 @@ savefig(fig, "tax_wedge_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "tax_wedge_map",
     caption=(
-        f"Daňový klín na průměrnou mzdu, EU mapa ({ds.latest_year}), "
+        f"Daňový klín (67\\,\\% průměrné mzdy), EU mapa ({ds.latest_year}), "
         f"vyjadřuje \\% celkových nákladů práce – bez korekce v~PPS "
         f"(daňový klín je bezrozměrný poměr)."
     ),
