@@ -8,7 +8,7 @@ adequate income-support and re-skilling investment.
 Data source: Eurostat, ``lmp_expsumm``
   LMP summary expenditure by type of action.
   Dimensions: freq · exptype · unit · geo
-  Filter used: freq=A, exptype=LMP_TOT (total LMP), unit=PC_GDP.
+  Filter used: freq=A, programme=LMP_20T70 (active, cat. 2–7), unit=PC_GDP.
 
 Output
 ------
@@ -42,7 +42,7 @@ apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # OECD LMPEXP: Labour Market Policy expenditure by programme and country.
-# Programme _T = total LMP; UNIT_MEASURE PT_B1GQ = % of GDP.
+# Programme LMP_20T70 = active measures (cat. 2–7); UNIT_MEASURE PT_B1GQ = % of GDP.
 # (Eurostat lmp_expsumm was discontinued; OECD covers same EU countries.)
 path = fetch_oecd("LMPEXP", start_period=START_YEAR)
 
@@ -53,7 +53,7 @@ raw = pd.read_csv(path)
 raw = raw[
     (raw["MEASURE"] == "EXP") &
     (raw["UNIT_MEASURE"] == "PT_B1GQ") &
-    (raw["PROGRAMME"] == "_T")
+    (raw["PROGRAMME"] == "LMP_20T70")
 ].copy()
 raw = raw.rename(columns={"REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value"})
 from stattool.dataset import _OECD_ISO3_TO_ISO2  # reuse mapping

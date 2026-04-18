@@ -2,7 +2,7 @@ r"""
 Labour Market Policy (LMP) expenditure choropleth map of Europe.
 
 Data source: OECD LMPEXP (Labour Market Policy Expenditure)
-  Programme _T = total LMP; UNIT_MEASURE PT_B1GQ = % of GDP.
+  Programme LMP_20T70 = active measures (cat. 2–7); UNIT_MEASURE PT_B1GQ = % of GDP.
   (Eurostat lmp_expsumm was discontinued; OECD covers same EU countries.)
 
 Output
@@ -39,7 +39,7 @@ raw = pd.read_csv(path)
 raw = raw[
     (raw["MEASURE"] == "EXP") &
     (raw["UNIT_MEASURE"] == "PT_B1GQ") &
-    (raw["PROGRAMME"] == "_T")
+    (raw["PROGRAMME"] == "LMP_20T70")
 ].copy()
 raw = raw.rename(columns={"REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value"})
 raw["geo"] = raw["geo"].map(lambda x: _OECD_ISO3_TO_ISO2.get(str(x).upper(), str(x)))
@@ -61,7 +61,7 @@ fig = choropleth(
     colorbar_label="Výdaje na APZ (% HDP)",
     cmap="RdYlGn",
     vmin=0,
-    vmax=3.5,
+    vmax=2.0,
     label_countries=True,
 )
 
