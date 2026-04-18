@@ -9,7 +9,7 @@ Indicator set (2025 / latest available):
       ↳  CZ = 100                                – derived
   3.  Average weekly hours worked [h/wk]         – lfsa_ewhun2
       ↳  CZ = 100                                – derived
-  4.  Tax wedge [%, 67 % AW, single, 0 child]    – earn_nt_taxwedge
+  4.  Tax wedge [%, 100 % AW, single, 0 child]   – earn_nt_taxwedge
   5.  Disposable income [PPS/h]  ← derived       – row 2 × (1 − row 4 / 100)
       ↳  CZ = 100                                – derived
   6.  Low-wage earners [% employees, < 2/3 med.] – earn_ses_pub1s
@@ -228,7 +228,7 @@ try:
     _apz_raw = _apz_raw[
         (_apz_raw["MEASURE"] == "EXP") &
         (_apz_raw["UNIT_MEASURE"] == "PT_B1GQ") &
-        (_apz_raw["PROGRAMME"] == "_T")
+        (_apz_raw["PROGRAMME"] == "LMP_20T70")
     ].copy()
     _apz_raw = _apz_raw.rename(
         columns={"REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value"}
@@ -443,7 +443,7 @@ L_LC       = _m(r"Úplné náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev
 L_LC_IDX   = _SUB
 L_HRS      = _m(r"Odpracované hodiny [h/týd., průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
 L_HRS_IDX  = _SUB
-L_TAX      = _m(r"Daňový klín (67\,\% prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
+L_TAX      = _m(r"Daňový klín (100\,\% prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
 L_DISP     = r"Disponibilní příjem [\ac{PPS}/h, průměrný]"  # italic — derived, no \cite{}
 L_DISP_IDX = _SUB
 L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
