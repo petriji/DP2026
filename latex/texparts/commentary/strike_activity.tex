@@ -1,0 +1,38 @@
+% ── Stávková aktivita – podíl ztracené pracovní doby (strike_activity.py) ────
+
+Pracovní konflikty --- stávky a~výluky --- odrážejí ochotu stran kolektivního
+vyjednávání sáhnout ke~krajním prostředkům.
+Obr.~\ref{fig:strike_activity} zachycuje podíl ztracené pracovní doby
+vlivem pracovních konfliktů, odvozený z~dat \ac{ILO}
+(\texttt{STR\_DAYS\_ECO\_RT\_A}) s~doplněním národní statistiky Dánska
+(Statistics Denmark, ABST1), neboť DK svá data \ac{ILO} systematicky
+nereportuje.
+Zobrazeno je pouze devět zemí \ac{EU} s~dostatečně kontinuálním pokrytím:
+DE, DK, ES, FI, FR, HU, LV, PL a~SE.
+
+\input{texparts/python/strike_activity}
+
+Česká republika a~Slovensko v~datové sadě \ac{ILO} figurují jako prakticky
+nulové, což však nereflektuje skutečnou konfliktní aktivitu, nýbrž
+administrativní podreportování.
+Samotný fakt, že v~datech chybí například stávka učitelů z~listopadu 2023,
+dokládá, že \emph{absence záznamu} v~mezinárodní databázi nelze ztotožňovat
+s~\emph{absencí konfliktu}.
+
+Francie dlouhodobě vykazuje nejvyšší konfliktní aktivitu ze sledovaných zemí
+a~zároveň patří mezi země s~nejvyšším pokrytím \ac{KS}
+(viz obr.~\ref{fig:cb_coverage_timeline_2004}).
+Tato kombinace vyvracuje zjednodušenou tezi, že sociální mír je podmínkou
+efektivního \ac{KV}.
+
+Právní rámec stávky v~ČR je jedním z~nejrestriktivnějších v~\ac{EU}.
+Zákon č.~2/1991~Sb.\ o~kolektivním vyjednávání~\cite{zakon_kv_1991}
+definuje stávku jako \emph{krajní prostředek} (§~16) podmíněný neúspěšnou
+mediací a~hlasováním nadpoloviční většiny zaměstnanců (§~17); řada sektorů
+veřejných služeb je z~práva na~stávku vůbec vyloučena (§~20).
+Výsledkem je, že česká stávková neaktivita nereflektuje mzdovou spokojenost
+ani kvalitu sociálního dialogu, ale institucionální bariéry.
+
+Posílení práva na~kolektivní akci --- včetně snížení procesních bariér stávky
+a~zavedení sektorového erga omnes --- je součástí reformního návrhu
+v~kapitole~\ref{ch:inovace}.

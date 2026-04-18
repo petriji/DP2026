@@ -353,3 +353,82 @@ def fetch_eurostat(
     url = endpoint + "?" + _urlencode(qp)
     return fetch(url, suffix=".csv", force=force)
 
+
+def fetch_ilostat(
+    indicator: str,
+    params: Optional[dict] = None,
+    *,
+    force: bool = False,
+) -> Path:
+    """Download a dataset from the ILOSTAT REST API as CSV.
+
+    Uses the ``rplumber.ilo.org`` endpoint.  The indicator code uniquely
+    identifies the dataset (e.g. ``"STR_DAYS_ECO_RT_A"`` for strike days
+    per 1000 workers).
+
+    API reference::
+
+        https://rplumber.ilo.org/data/indicator/?id={indicator}&type=both&format=.csv
+
+    Optional query parameters (passed via *params*):
+
+    - ``ref_area``  – comma-separated ISO3 country codes, e.g. ``"CZE,DEU"``
+    - ``classif1``  – first classification filter, e.g. ``"ECO_AGGREGATE_TOTAL"``
+    - ``sex``       – e.g. ``"SEX_T"`` (total), ``"SEX_M"``, ``"SEX_F"``
+    - ``timefrom``  – start year as string, e.g. ``"2000"``
+    - ``timeto``    – end year as string
+
+    CSV columns returned:
+
+        ref_area, source, indicator, sex, classif1, classif2, time,
+        obs_value, obs_status, note_*
+
+    Parameters
+    ----------
+    indicator:
+        ILOSTAT indicator code, e.g. ``"STR_DAYS_ECO_RT_A"``.
+    params:
+        Optional dict of additional query parameters (see above).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns the local :class:`Path` to the cached CSV.
+    """
+    from urllib.parse import urlencode as _urlencode
+
+    base = "https://rplumber.ilo.org/data/indicator/"
+    qp: dict = {"id": indicator, "type": "both", "format": ".csv"}
+    if params:
+        qp.update(params)
+
+    # Build a stable cache key from indicator + sorted params (excluding format)
+    cache_params = {k: v for k, v in sorted(qp.items()) if k != "format"}
+    cache_key_str = indicator + "_" + "_".join(f"{k}-{v}" for k, v in cache_params.items() if k != "id")
+    url_hash = hashlib.sha1(cache_key_str.encode()).hexdigest()[:8]
+    dest = DATA_DIR / f"{indicator}_{url_hash}.csv"
+
+    if dest.exists() and not force:
+        log.info("Cache hit: %s", dest)
+        return dest
+
+    url = base + "?" + _urlencode(qp)
+    log.info("Downloading ILOSTAT %s → %s", indicator, dest)
+    response = requests.get(url, stream=True, timeout=_TIMEOUT)
+    response.raise_for_status()
+
+    total = int(response.headers.get("content-length", 0)) or None
+    with dest.open("wb") as fh, tqdm(
+        total=total,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        desc=dest.name,
+        leave=False,
+    ) as bar:
+        for chunk in response.iter_content(chunk_size=1 << 20):
+            fh.write(chunk)
+            bar.update(len(chunk))
+
+    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
+    return dest
+
