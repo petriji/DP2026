@@ -165,6 +165,7 @@ try:
         filters_l21["N_LANG"] = [n2_val]
     if sex_col:
         filters_l21["SEX"] = ["T", "TOTAL"]
+    filters_l21["AGE"] = ["Y25-64"]
 
     filt_l21 = _filter_aes(raw_l21, filters_l21)
     # National-level only (2-char geo)
@@ -176,13 +177,13 @@ try:
     _make_choropleth(
         snap_l21,
         title=(
-            f"Znalost alespoň 2 cizích jazyků — celková populace ({latest_l21})\n"
+            f"Znalost alespoň 2 cizích jazyků — populace 25–64 let ({latest_l21})\n"
             "% osob s\\,2+ cizími jazyky"
         ),
-        cbar_label="% populace",
+        cbar_label="% populace 25–64",
         stem="language_skills_total_map",
         caption=(
-            f"Podíl osob znajících alespoň 2 cizí jazyky v~populaci EU\\,27 "
+            f"Podíl osob ve věku 25--64 let znajících alespoň 2 cizí jazyky v~EU\\,27 "
             f"({latest_l21}; Eurostat edat\\_aes\\_l21, Adult Education Survey). "
             "Šedá = data nedostupná. "
             "CZ se nachází mírně pod průměrem EU, avšak výrazně nad V4 zeměmi "
@@ -219,8 +220,8 @@ try:
                 n2_val_22 = matches[0]
                 break
 
-    # Y25-54 prime working age
-    age_candidates_22 = ["Y25-54", "Y_25-54", "25-54", "Y25T54"]
+    # Y25-64 prime working age
+    age_candidates_22 = ["Y25-64", "Y25-54", "Y_25-64", "Y_25-54", "Y25T64", "Y25T54"]
     age_val_22 = None
     if age_col_22:
         vals_a = [str(v).upper() for v in raw_l22[age_col_22].unique()]
@@ -247,13 +248,13 @@ try:
     _make_choropleth(
         snap_l22,
         title=(
-            f"Znalost ≥2 cizích jazyků — věková skupina 25–54 let ({latest_l22})\n"
+            f"Znalost ≥2 cizích jazyků — věková skupina 25–64 let ({latest_l22})\n"
             "% věkové skupiny s\\,2+ cizími jazyky"
         ),
-        cbar_label="% věkové skupiny 25–54",
+        cbar_label="% věkové skupiny 25–64",
         stem="language_skills_age_map",
         caption=(
-            f"Podíl osob ve věku 25--54 let znajících alespoň 2 cizí jazyky "
+            f"Podíl osob ve věku 25--64 let znajících alespoň 2 cizí jazyky "
             f"({latest_l22}; Eurostat edat\\_aes\\_l22, Adult Education Survey). "
             "Tato pracovně aktivní věková skupina reprezentuje populaci "
             "s\\,největším potenciálem mezinárodní mobility. "
@@ -313,6 +314,7 @@ try:
         filters_l23["ISCED"] = [isced_val]
         if isced_col_23:
             filters_l23[isced_col_23] = [isced_val]
+    filters_l23["AGE"] = ["Y25-64"]
 
     filt_l23 = _filter_aes(raw_l23, filters_l23)
     filt_l23 = filt_l23[filt_l23["geo"].str.len() == 2]
@@ -340,7 +342,6 @@ try:
         ),
         label="fig:language_skills_isced_map",
         year=latest_l23,
-        vmin=50,
     )
 except Exception as exc:
     print(f"  Figure C skipped: {exc}")
