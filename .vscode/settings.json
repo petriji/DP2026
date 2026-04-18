@@ -25,6 +25,9 @@
     "latex-workshop.latex.autoClean.run": "onSucceeded",
     "latex-workshop.latex.recipe.default": "lastUsed",
 
+    // chktex linting — workspace override to onSave (machine-level has onType)
+    "latex-workshop.linting.run": "onSave",
+
     // LaTeX build tools
     "latex-workshop.latex.tools": [
         {
@@ -36,11 +39,22 @@
             ]
         },
         {
+            // Run Python analytics pipeline — regenerates missing figures/tables.
             "name": "stats-analytics",
             "command": "bash",
             "args": [
                 "-c",
-                "cd '%DIR%/..' && RUN_PYTHON_ANALYTICS=1 python/run.sh stats_analytics.py"
+                "cd '%DIR%/..' && python/run.sh stats_analytics.py"
+            ]
+        },
+        {
+            // Force-regenerate ALL figures/tables even when outputs already exist.
+            // Useful after changing plot styles, color palettes, or table formatting.
+            "name": "stats-analytics-force",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cd '%DIR%/..' && python/run.sh stats_analytics.py --force all"
             ]
         },
         {
@@ -94,21 +108,48 @@
                 "-c",
                 "set +H; cd '%DIR%'; SURNAME=$(git config user.name 2>/dev/null | awk '{print $NF}' | iconv -f UTF-8 -t ASCII//TRANSLIT | tr a-z A-Z | tr -cd A-Z); YEAR=$(date +%Y); BLOCK=$(sed -n '/documentclass\\[/,/CTUthesis/p' main.tex | grep -Ev '^[[:space:]]*%'); echo \"$BLOCK\" | grep -qE '\\bdraft\\b' && R=R || R=; echo \"$BLOCK\" | grep -qE '\\bdoctoral\\b' && T=Dis || { echo \"$BLOCK\" | grep -qE '\\bmaster\\b' && T=D || T=B; }; echo \"$BLOCK\" | grep -qE '\\benglish\\b' && L=T || L=P; NAME=\"${SURNAME}_${R}${T}${L}${YEAR}.pdf\"; cp build/main.pdf '%DIR%/../'\"${NAME}\" && echo \"Published: ${NAME}\""
             ]
+        },
+        {
+            // Remove all Python-generated outputs: figures (pics + local copies)
+            // and LaTeX texpart snippets. After this, stats-analytics will
+            // regenerate everything from scratch.
+            "name": "clean-generated",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cd '%DIR%/..' && rm -rf pics/python/* latex/texparts/python/* python/figures/* && echo 'Cleaned: pics/python, texparts/python, python/figures'"
+            ]
+        },
+        {
+            // Remove all cached data downloads (Eurostat, OECD, MPSV, etc.).
+            // Next stats-analytics run will re-fetch everything from source APIs.
+            "name": "clean-data",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cd '%DIR%/..' && rm -rf python/data/* && echo 'Cleaned: python/data (will re-download on next run)'"
+            ]
         }
     ],
     "latex-workshop.latex.recipes": [
         {
             // Quick update: latexmk only (git metadata + all checks + pdflatex + biber
             // as needed — latexmkrc handles the pre-flight computations automatically).
-            "name": "Update: latexmk",
+            "name": "Build",
             "tools": [
                 "latexmk"
             ]
         },
         {
-            // Regenerate Python figures/snippets, then rebuild with latexmk.
-            // Sets RUN_PYTHON_ANALYTICS=1 via the stats-analytics bash tool.
-            "name": "Analytics + latexmk",
+            // Single pdflatex pass: assumes tmp files exist and references are stable.
+            "name": "Build (fast)",
+            "tools": [
+                "pdflatex"
+            ]
+        },
+        {
+            // Regenerate missing Python figures/snippets, then rebuild with latexmk.
+            "name": "Build + Analytics",
             "tools": [
                 "setup-venv",
                 "stats-analytics",
@@ -116,28 +157,40 @@
             ]
         },
         {
-            // Full publish: regenerate figures, clean build, compile, copy PDF to root.
-            "name": "Publish: analytics + clean + latexmk",
+            // Force-regenerate ALL Python figures/snippets (even existing ones),
+            // then rebuild with latexmk. Use after changing plot styles or palettes.
+            "name": "Build + Force Analytics",
             "tools": [
-                "stats-analytics",
-                "clean",
-                "latexmk",
-                "publish"
-            ]
-        },
-        {
-            // Clean all build artefacts, then rebuild from scratch with latexmk.
-            "name": "Clean: clean -> latexmk",
-            "tools": [
-                "clean",
+                "setup-venv",
+                "stats-analytics-force",
                 "latexmk"
             ]
         },
         {
-            // Fast draft pass: assumes tmp files exist and references are roughly stable.
-            "name": "Fast: pdflatex (no references, previous build artefacts required)",
+            // Delete all generated outputs (pics, texparts, figures, build),
+            // regenerate everything from scratch, and rebuild PDF.
+            "name": "Clean + Build",
             "tools": [
-                "pdflatex",
+                "clean-generated",
+                "clean",
+                "setup-venv",
+                "stats-analytics",
+                "latexmk"
+            ]
+        },
+        {
+            // Full release build: delete cached data (force re-download from
+            // Eurostat/OECD), delete all generated outputs + build artefacts,
+            // regenerate everything, build PDF, and copy to project root.
+            "name": "Publish",
+            "tools": [
+                "clean-data",
+                "clean-generated",
+                "clean",
+                "setup-venv",
+                "stats-analytics",
+                "latexmk",
+                "publish"
             ]
         }
     ],
