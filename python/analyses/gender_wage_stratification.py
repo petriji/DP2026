@@ -41,7 +41,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -200,87 +199,74 @@ print(f"  SES snapshot rows: {len(ses_snap)}")
 ses_year = int(ses_snap["time"].mode()[0]) if not ses_snap.empty else 2022
 _HAS_SES_DATA = len(ses_snap) >= 4
 
-fig_b, axes_b = plt.subplots(
-    1, len(COUNTRIES),
-    figsize=cm2in(18, 8),
-    sharey=False,
-)
-
-def _sex_label(code: str) -> str:
-    c = str(code).upper()
-    if c in ("M", "MALE"):
-        return "muži"
-    if c in ("F", "FEMALE"):
-        return "ženy"
-    return code
-
-_MALE_COLOR   = "#2166ac"
-_FEMALE_COLOR = "#d6604d"
+fig_b, ax_b = plt.subplots(figsize=cm2in(15, 10))
 
 ses_ok = False
 if _HAS_SES_DATA and s_indic and s_sex and s_geo:
     ses_ok = True
 
-for idx, country in enumerate(COUNTRIES):
-    ax = axes_b[idx]
+for country in COUNTRIES:
+    color = COUNTRY_COLORS.get(country, "#888888")
     sub = ses_snap[ses_snap[s_geo] == country].sort_values("_rank") if s_geo else pd.DataFrame()
 
     if ses_ok and not sub.empty and s_sex:
-        sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"]
         sub_f = sub[sub[s_sex].astype(str).str.upper() == "F"]
+        sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"]
 
-        if not sub_m.empty:
-            ax.plot(sub_m["_rank"], sub_m[s_val],
-                    color=_MALE_COLOR, linewidth=2.0, marker="o", markersize=5,
-                    label="muži" if idx == 0 else "_")
         if not sub_f.empty:
-            ax.plot(sub_f["_rank"], sub_f[s_val],
-                    color=_FEMALE_COLOR, linewidth=2.0, marker="s", markersize=5,
-                    label="ženy" if idx == 0 else "_")
+            ax_b.plot(sub_f["_rank"], sub_f[s_val],
+                      color=color, linewidth=1.8, linestyle="-",
+                      marker="o", markersize=5, zorder=3)
+        if not sub_m.empty:
+            ax_b.plot(sub_m["_rank"], sub_m[s_val],
+                      color=color, linewidth=1.8, linestyle="--",
+                      marker="o", markersize=5, zorder=3)
 
-        ranks = sorted(_INDIC_RANK.values())
-        ax.set_xticks(ranks)
-        ax.set_xticklabels([_INDIC_LABEL[r] for r in ranks],
-                           fontsize=FONT_SIZE - 2.5)
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
-        )
-        ax.tick_params(axis="y", labelsize=FONT_SIZE - 2)
-    else:
-        ax.text(0.5, 0.5, "data\nnedostupná",
-                ha="center", va="center",
-                transform=ax.transAxes, fontsize=FONT_SIZE - 2, color="grey")
-        ax.set_xticks([])
-        ax.set_yticks([])
+if not ses_ok:
+    ax_b.text(0.5, 0.5, "data\nnedostupná",
+              ha="center", va="center",
+              transform=ax_b.transAxes, fontsize=FONT_SIZE, color="grey")
+    ax_b.set_xticks([])
+    ax_b.set_yticks([])
 
-    ax.set_title(country, fontsize=FONT_SIZE, pad=3)
-    ax.set_xlabel("percentil", fontsize=FONT_SIZE - 2)
-    if idx == 0:
-        ax.set_ylabel("hodinová mzda (EUR/PPS)", fontsize=FONT_SIZE - 1)
-
-handles = [
-    mpatches.Patch(color=_MALE_COLOR,   label="muži"),
-    mpatches.Patch(color=_FEMALE_COLOR, label="ženy"),
-]
-fig_b.legend(handles=handles, loc="lower center", ncol=2,
-             frameon=False, fontsize=FONT_SIZE - 1, bbox_to_anchor=(0.5, -0.05))
-fig_b.suptitle(
-    f"Mzdová distribuce podle pohlaví ({ses_year}): percentilové profily",
-    fontsize=FONT_SIZE, y=1.01,
+ranks = sorted(_INDIC_RANK.values())
+ax_b.set_xticks(ranks)
+ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
+ax_b.set_xlabel("percentil mzdové distribuce", fontsize=FONT_SIZE - 1)
+ax_b.set_ylabel("hodinová mzda (EUR/PPS)", fontsize=FONT_SIZE - 1)
+ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
+ax_b.set_title(
+    f"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
+    fontsize=FONT_SIZE,
 )
-fig_b.tight_layout()
+
+country_handles = [
+    plt.Line2D([0], [0], color=COUNTRY_COLORS.get(c, "#888888"),
+               linewidth=1.8, marker="o", markersize=5, label=c)
+    for c in COUNTRIES
+]
+style_handles = [
+    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="-",
+               marker="o", markersize=4, label="ženy"),
+    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="--",
+               marker="o", markersize=4, label="muži"),
+]
+ax_b.legend(handles=country_handles + style_handles,
+            ncol=len(COUNTRIES) + 2,
+            loc="lower center", bbox_to_anchor=(0.5, -0.18),
+            frameon=False, fontsize=FONT_SIZE - 1)
 
 savefig(fig_b, "gender_wage_stratification", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "gender_wage_stratification",
     caption=(
-        f"Hodinové mzdy podle pohlaví, EU, {ses_year}.. "
-        "Zobrazeny tři ukazatele: D1 (1. decil), medián a D9 (9. decil); "
-        "modrá = muži, červená = ženy. "
-        "Ve~všech zemích je celá distribuce žen níže než distribuce mužů; "
-        "vzdálenost je největší v~horním decilu (D9), "
-        "kde kolektivní smlouvy s~transparentními mzdovými tabulkami mají "
-        "největší potenciál ke snížení gender pay gap."
+        f"Hodinové mzdy podle pohlaví a percentilu, {ses_year}. "
+        "Plná čára = ženy, přerušovaná = muži; barvy odlišují země. "
+        "Zobrazeny tři ukazatele: D1 (1. decil), medián a D9 (9. decil). "
+        "Ve~všech zemích leží celá ženská distribuce níže než mužská; "
+        "rozdíl roste v~horním decilu (D9), kde transparentní mzdové "
+        "tabulky v~kolektivních smlouvách mají největší potenciál "
+        "snížit gender pay gap."
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:gender_wage_stratification",
