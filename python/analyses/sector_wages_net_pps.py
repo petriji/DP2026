@@ -186,7 +186,7 @@ save_figure_tex(
     "sector_wages_bar",
     caption=(
         f"Celkové hodinové náklady práce, klíčová odvětví, {ref_year}. [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
-        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\_ppp\_ind}}. "
+        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
         f"Plná čára s~zarážkami = průměr EU27 pro dané odvětví."
     ),
     label="fig:sector_wages_bar",
@@ -229,7 +229,7 @@ if "EU27_2020" in lc_pps.index:
         "sector_wages_deviation",
         caption=(
             f"Odchylka nákladů práce od průměru EU27, {ref_year}.. "
-            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\_ppp\_ind}}. "
+            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
             f"Záporné hodnoty = nižší náklady práce než průměr EU27."
         ),
         label="fig:sector_wages_deviation",
