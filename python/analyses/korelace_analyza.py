@@ -404,7 +404,7 @@ lines += [
 
 tex_dir = Path(LATEX_TEXPARTS_DIR)
 tex_dir.mkdir(parents=True, exist_ok=True)
-table_path = tex_dir / "coverage_correlation_table.tex"
+table_path = tex_dir / "korelace_tabulka.tex"
 table_path.write_text("\n".join(lines), encoding="utf-8")
 print(f"Correlation table written to {table_path}")
 

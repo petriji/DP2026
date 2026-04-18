@@ -1,11 +1,11 @@
 r"""Czech pension & tax figures – all matplotlib visualisation code.
 
-All calculation is delegated to cz_pension_model and cz_tax_model.
+All calculation is delegated to problemy_cz_duchod and cz_tax_model.
 This file only contains plot functions and the __main__ entry point.
 
 Run
 ---
-    python analyses/cz_figures.py
+    python analyses/problemy_cz_model.py
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from stattool.style import (
 )
 
 # ── Pension-model calc helpers ────────────────────────────────────────────────
-from cz_pension_model import (
+from problemy_cz_duchod import (
     INSURANCE_YEARS,
     MIN_TOTAL_PENSION,
     RH1,

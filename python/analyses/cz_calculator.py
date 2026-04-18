@@ -1,6 +1,6 @@
 r"""Czech old-age pension (starobní důchod) – individual calculator.
 
-Uses the statutory parameters and reduction formula from ``cz_pension_model``
+Uses the statutory parameters and reduction formula from ``problemy_cz_duchod``
 and the levy constants from ``cz_tax_model``.
 
 Reduction formula (§ 15 ZPDS, zákon č. 270/2023 Sb.):
@@ -35,7 +35,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from cz_pension_model import (
+from problemy_cz_duchod import (
     ZAKLADNI_VYMERA,
     RH1,
     RH2,
