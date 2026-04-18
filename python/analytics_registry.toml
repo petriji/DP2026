@@ -152,11 +152,8 @@ pics     = ["net_income_ratio_timeline"]
 
 [correlations]
 script   = "analyses/correlation_analyses.py"
-texparts = ["scatter_combined", "coverage_hours_scatter", "coverage_income_scatter",
-            "coverage_gini_scatter", "coverage_ratio_scatter",
-            "coverage_correlation_table"]
-pics     = ["scatter_combined", "coverage_hours_scatter", "coverage_income_scatter",
-            "coverage_gini_scatter", "coverage_ratio_scatter"]
+texparts = ["scatter_combined", "coverage_correlation_table"]
+pics     = ["scatter_combined"]
 
 [wealth_timeline]
 script   = "analyses/gini_wealth_timeline.py"
