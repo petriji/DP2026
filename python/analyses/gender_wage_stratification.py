@@ -181,7 +181,7 @@ ses_raw["time"] = ses_raw[s_time].astype(str).str[:4].astype(int)
 
 # ── Convert EUR → PPS using PLI (price level index, EU27=100) ────────────────
 print("Downloading prc_ppp_ind for EUR→PPS conversion …")
-_pli_path = fetch_eurostat("prc_ppp_ind", f"A.E011.{GEO_6}", start_period=2014)
+_pli_path = fetch_eurostat("prc_ppp_ind", f"A.PLI_EU27_2020.GDP.{GEO_6}", start_period=2014)
 _pli_raw = pd.read_csv(_pli_path, comment="#")
 _pli_raw.columns = [c.strip().upper() for c in _pli_raw.columns]
 _pli_geo = next((c for c in _pli_raw.columns if c in ("GEO", "REF_AREA")), None)
