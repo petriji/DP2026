@@ -26,10 +26,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import FONT_SIZE, LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.timeline import timeline
+from analyses._shared_data import load_lmp_active
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -40,29 +39,8 @@ HIGHLIGHT = ["CZ", "DK"]
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-# OECD LMPEXP: Labour Market Policy expenditure by programme and country.
-# Programme LMP_20T70 = active measures (cat. 2–7); UNIT_MEASURE PT_B1GQ = % of GDP.
-# (Eurostat lmp_expsumm was discontinued; OECD covers same EU countries.)
-path = fetch_oecd("LMPEXP", start_period=START_YEAR)
-
-# ── 2. Parse ──────────────────────────────────────────────────────────────────
-import pandas as pd
-raw = pd.read_csv(path)
-# Keep total programme, expenditure measure, % of GDP
-raw = raw[
-    (raw["MEASURE"] == "EXP") &
-    (raw["UNIT_MEASURE"] == "PT_B1GQ") &
-    (raw["PROGRAMME"] == "LMP_20T70")
-].copy()
-raw = raw.rename(columns={"REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value"})
-from stattool.dataset import _OECD_ISO3_TO_ISO2  # reuse mapping
-raw["geo"] = raw["geo"].map(lambda x: _OECD_ISO3_TO_ISO2.get(str(x).upper(), str(x)))
-raw = raw[["geo", "time", "value"]].dropna(subset=["value"])
-# Build ds_all (all countries) for grey cloud; ds_6 for highlighted lines
-ds_all = Dataset(raw, name="Výdaje na APZ", unit="% HDP", source_url="OECD/LMPEXP")
-# Filter OECD aggregate
-ds_all.df = ds_all.df[ds_all.df["geo"] != "OECD"].copy()
+# ── 1. Load data ──────────────────────────────────────────────────────────────
+ds_all = load_lmp_active(start_period=START_YEAR)
 
 print(f"All countries: {len(ds_all.countries)}  |  Years: {ds_all.years[0]}–{ds_all.years[-1]}")
 

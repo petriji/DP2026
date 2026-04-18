@@ -23,32 +23,15 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset, _OECD_ISO3_TO_ISO2
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
+from analyses._shared_data import load_lmp_active
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-path = fetch_oecd("LMPEXP")
-
-# ── 2. Parse ──────────────────────────────────────────────────────────────────
-raw = pd.read_csv(path)
-raw = raw[
-    (raw["MEASURE"] == "EXP") &
-    (raw["UNIT_MEASURE"] == "PT_B1GQ") &
-    (raw["PROGRAMME"] == "LMP_20T70")
-].copy()
-raw = raw.rename(columns={"REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value"})
-raw["geo"] = raw["geo"].map(lambda x: _OECD_ISO3_TO_ISO2.get(str(x).upper(), str(x)))
-raw = raw[["geo", "time", "value"]].dropna(subset=["value"])
-
-# Drop OECD aggregate
-raw = raw[raw["geo"] != "OECD"].copy()
-
-ds = Dataset(raw, name="Výdaje na APZ", unit="% HDP", source_url="OECD/LMPEXP")
+# ── 1. Load data ──────────────────────────────────────────────────────────────
+ds = load_lmp_active()
 
 print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")

@@ -21,10 +21,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.timeline import timeline
+from analyses._shared_data import load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -35,22 +34,8 @@ HIGHLIGHT = ["CZ"]
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-# Fetch full TUD dataset (no country filter — the old per-country filter
-# expression is no longer accepted by stats.oecd.org; filter in Python below).
-path = fetch_oecd("TUD", start_period=START_YEAR)
-
-# ── 2. Parse ──────────────────────────────────────────────────────────────────
-ds = Dataset.from_oecd_csv(
-    path,
-    name="Hustota odborů",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / TUD",
-    filters={"INDICATOR": "TUD"},
-)
-
-# Drop OECD aggregate; keep all countries for the EU grey cloud
-ds.df = ds.df[ds.df["geo"] != "OECD"].copy()
+# ── 1. Load data ──────────────────────────────────────────────────────────────
+ds = load_union_density(start_period=START_YEAR)
 
 print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}–{ds.years[-1]}")
 

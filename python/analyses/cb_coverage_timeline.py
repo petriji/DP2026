@@ -26,20 +26,14 @@ Run
 """
 
 import sys
-import csv
-import urllib.request
-from io import StringIO
 from pathlib import Path
-
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.timeline import timeline
+from analyses._shared_data import load_cb_coverage
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -47,77 +41,13 @@ COUNTRIES = ["CZ", "DK", "DE", "AT", "PL", "SK"]
 HIGHLIGHT = ["CZ"]
 START_YEAR = 1993   # grey cloud starts here; some EU27 countries go back to 1990
 
-ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
-
-# ISO3 → ISO2 for EU-27 countries
-_ISO3_TO_ISO2: dict[str, str] = {
-    "AUT": "AT", "BEL": "BE", "BGR": "BG", "HRV": "HR", "CYP": "CY",
-    "CZE": "CZ", "DNK": "DK", "EST": "EE", "FIN": "FI", "FRA": "FR",
-    "DEU": "DE", "GRC": "GR", "HUN": "HU", "IRL": "IE", "ITA": "IT",
-    "LVA": "LV", "LTU": "LT", "LUX": "LU", "MLT": "MT", "NLD": "NL",
-    "POL": "PL", "PRT": "PT", "ROU": "RO", "SVK": "SK", "SVN": "SI",
-    "ESP": "ES", "SWE": "SE",
-}
-
-EU27_ISO3 = set(_ISO3_TO_ISO2.keys())
-
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download ICTWSS v2 CSV (AdjCov for all EU27 except DE) ────────────────
-print("Downloading ICTWSS v2 CSV …")
-with urllib.request.urlopen(ICTWSS_URL, timeout=60) as response:
-    raw = response.read().decode("utf-8-sig")
-
-reader = csv.DictReader(StringIO(raw))
-ictwss_rows = list(reader)
-
-# Extract AdjCov for EU27 (skip DEU and SVK — both replaced by CBC/ERB below)
-adjcov_records = []
-for row in ictwss_rows:
-    iso3 = row.get("iso3", "").strip().upper()
-    if iso3 not in EU27_ISO3 or iso3 in ("DEU", "SVK"):
-        continue
-    val = row.get("AdjCov", "").strip()
-    if not val:
-        continue
-    year = row.get("year", "").strip()
-    if not year:
-        continue
-    adjcov_records.append({
-        "geo":   _ISO3_TO_ISO2[iso3],
-        "time":  int(year),
-        "value": float(val),
-    })
-
-df_adjcov = pd.DataFrame(adjcov_records)
-print(f"  AdjCov: {df_adjcov['geo'].nunique()} EU27 countries (exc. DE, SK), "
-      f"years {df_adjcov['time'].min()}–{df_adjcov['time'].max()}")
-
-# ── 2. Download CBC API (ERB) – DE and SK ──────────────────────────────
-print("Downloading OECD CBC API (ERB) for DE and SK …")
-path_cbc = fetch_oecd("CBC", start_period=START_YEAR)
-ds_cbc = Dataset.from_oecd_csv(
-    path_cbc,
-    name="Pokrytí KV",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / CBC (ERB)",
-    filters={"MEASURE": "ERB"},
-)
-df_erb = ds_cbc.df[ds_cbc.df["geo"].isin(["DE", "SK"])][["geo", "time", "value"]].copy()
-print(f"  CBC ERB/DE+SK: years {df_erb['time'].min()}–{df_erb['time'].max()}, "
-      f"{len(df_erb)} data points")
-
-# ── 3. Merge ──────────────────────────────────────────────────────────────────
-df_merged = pd.concat([df_adjcov, df_erb], ignore_index=True)
-df_merged = df_merged[df_merged["time"] >= START_YEAR]
-
-ds = Dataset(
-    df_merged,
-    name="Pokrytí kolektivním vyjednáváním",
-    unit="%",
-    source_url="ICTWSS AdjCov; OECD CBC ERB (DE, SK)",
-)
+# ── 1. Load CB coverage data ──────────────────────────────────────────────────
+print("Loading CB coverage data …")
+ds = load_cb_coverage(start_period=START_YEAR)
+ds.name = "Pokrytí kolektivním vyjednáváním"
 print(f"Merged: {ds.df['geo'].nunique()} countries, years {ds.years[0]}–{ds.years[-1]}")
 
 # ── 4. Long-run figure (1993–latest, xlim up to 2025) ────────────────────────
