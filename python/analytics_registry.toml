@@ -210,3 +210,20 @@ pics     = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
 script   = "analyses/vyhled_porodnost.py"
 texparts = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
 pics     = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
+
+[employer_density]
+script   = "analyses/stav_zamestnavatele_hustota.py"
+texparts = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+pics     = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+
+[tertiary_education]
+script   = "analyses/vyhled_vzdelani.py"
+texparts = ["vyhled_vzdelani_vyvoj"]
+pics     = ["vyhled_vzdelani_vyvoj"]
+
+[digital_skills]
+script   = "analyses/vyhled_digit_dovednosti.py"
+texparts = ["vyhled_digit_dovednosti_mapa"]
+pics     = ["vyhled_digit_dovednosti_mapa"]
