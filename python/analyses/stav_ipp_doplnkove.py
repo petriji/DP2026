@@ -4,20 +4,9 @@ Supplementary figures for the IPP/collective-bargaining analysis.
 Three additional figures that support argumentation about the
 effectiveness and role of collective agreements in Czech wage setting:
 
-Figure A – ``ipp_neg_vs_inflation``
-    CZ negotiated basic-wage increase (IPP/KS) vs. CZ HICP inflation.
-    Green shading = years where collective agreements outpaced inflation
-    (real wage gain); red shading = years where inflation exceeded the
-    negotiated increase (real wage erosion).
-
-    Argumentation: Collective agreements provided consistent real-wage
-    gains in 2016–2021; the 2022–2023 inflation shock exposed a lag in
-    the negotiation cycle; 2024–2025 returned to a surplus.
-
 Figure B – ``ipp_cumulative_real``
-    Cumulative index (2016 = 100) tracking four series:
-    nominal actual (Eurostat LCI), nominal negotiated (IPP),
-    HICP price level, and real actual / real negotiated (deflated by HICP).
+    Cumulative wage growth normalized to HICP (HICP = 100):
+    actual growth (Eurostat LCI / HICP) and negotiated growth (IPP / HICP).
 
     Argumentation: Despite large nominal increases, CZ workers saw
     their real negotiated wage eroded during 2022–2023; both series
@@ -42,10 +31,8 @@ Actual wages:  Eurostat ``lc_lci_r2`` (Labour Cost Index, B-S, I15=100).
 
 Output
 ------
-  pics/python/stav_ipp_inflace.pdf
   pics/python/stav_ipp_kumulativ.pdf
   pics/python/stav_ipp_mezera.pdf
-  latex/texparts/python/stav_ipp_inflace.tex
   latex/texparts/python/stav_ipp_kumulativ.tex
   latex/texparts/python/stav_ipp_mezera.tex
 
@@ -164,62 +151,7 @@ def _common_years(*dicts: dict) -> list[int]:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Figure A – Negotiated wage increase vs. HICP inflation
-# ══════════════════════════════════════════════════════════════════════════════
-years_ah = _common_years(ipp, hicp)
-if years_ah:
-    neg_vals  = [ipp[y]  for y in years_ah]
-    inf_vals  = [hicp[y] for y in years_ah]
-
-    fig_a, ax_a = plt.subplots(figsize=cm2in(15, 9))
-
-    ax_a.plot(years_ah, neg_vals,
-              label="Sjednaný nárůst základní mzdy (IPP/KS)",
-              color=CZ_RED, linewidth=2.5, linestyle="-", marker="o", markersize=4, zorder=4)
-    ax_a.plot(years_ah, inf_vals,
-              label="Inflace HICP – průměr roku (Eurostat)",
-              color=GRAY, linewidth=2.0, linestyle="--", marker="s", markersize=3.5, zorder=3)
-
-    # Shading: green where negotiated > inflation, red otherwise
-    ax_a.fill_between(
-        years_ah, neg_vals, inf_vals,
-        where=[n >= h for n, h in zip(neg_vals, inf_vals)],
-        alpha=0.12, color="#2CA02C",
-        label="Reálný nárůst mzdy (sjednaný > inflace)",
-    )
-    ax_a.fill_between(
-        years_ah, neg_vals, inf_vals,
-        where=[n < h for n, h in zip(neg_vals, inf_vals)],
-        alpha=0.12, color="#D62728",
-        label="Reálný pokles kupní síly (inflace > sjednaný nárůst)",
-    )
-
-    ax_a.axhline(0, color="gray", linewidth=0.7, linestyle=":", alpha=0.5)
-    ax_a.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%"))
-    ax_a.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-    ax_a.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_a.set_ylabel("(%)", fontsize=FONT_SIZE)
-    ax_a.set_title(
-        "CZ: sjednaný nárůst základní mzdy v KS vs. inflace HICP",
-        fontsize=FONT_SIZE,
-    )
-    ax_a.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="upper left")
-    ax_a.set_xlim(years_ah[0] - 0.4, years_ah[-1] + 0.4)
-
-    savefig(fig_a, "stav_ipp_inflace", out_dir=LATEX_PICS_DIR)
-    year_range_ah = f"{years_ah[0]}–{years_ah[-1]}"
-    save_figure_tex(
-        "stav_ipp_inflace",
-        caption=f"Sjednané mzdové nárůsty v~KS versus inflace HICP, {year_range_ah}.",
-        label="fig:stav_ipp_inflace",
-        width=r"0.95\linewidth",
-        cite_keys=["mpsv_ipp", "eurostat_hicp"],
-    )
-else:
-    print("Figure A skipped – no overlapping IPP + HICP years.")
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Figure B – Cumulative real/nominal wage index (CZ, 2016 = 100)
+# Figure B – Cumulative wage growth normalized to HICP (HICP = 100)
 # ══════════════════════════════════════════════════════════════════════════════
 years_bc = _common_years(ipp, hicp, lci_growth)
 if years_bc:
@@ -232,30 +164,40 @@ if years_bc:
         return idx
 
     nom_actual = _cumulative(lci_growth, years_bc)
-    nom_negot  = _cumulative(ipp,        years_bc)
-    price_lvl  = _cumulative(hicp,       years_bc)
-    real_actual = [n / p * 100 for n, p in zip(nom_actual, price_lvl)]
-    real_negot  = [n / p * 100 for n, p in zip(nom_negot,  price_lvl)]
+    nom_negot = _cumulative(ipp, years_bc)
+    price_lvl = _cumulative(hicp, years_bc)
+    hicp_norm_actual = [n / p * 100 for n, p in zip(nom_actual, price_lvl)]
+    hicp_norm_negot = [n / p * 100 for n, p in zip(nom_negot, price_lvl)]
+    hicp_ref = [100.0 for _ in years_bc]
 
     fig_b, ax_b = plt.subplots(figsize=cm2in(15, 9))
 
-    ax_b.plot(years_bc, nom_actual,
-              label="Nominální – skutečný nárůst (Eurostat LCI)",
-              color=CZ_RED,       linewidth=1.8, linestyle="--")
-    ax_b.plot(years_bc, nom_negot,
-              label="Nominální – sjednáno v KS (IPP)",
-              color=CZ_RED,       linewidth=2.2, linestyle="-",
-              marker="o", markersize=3)
-    ax_b.plot(years_bc, price_lvl,
-              label="Cenová hladina HICP",
-              color=GRAY,         linewidth=1.5, linestyle=":")
-    ax_b.plot(years_bc, real_actual,
-              label="Reálný – skutečný nárůst (LCI / HICP)",
-              color="#009E73",    linewidth=1.8, linestyle="--")
-    ax_b.plot(years_bc, real_negot,
-              label="Reálný – sjednáno v KS (IPP / HICP)",
-              color="#D55E00",    linewidth=2.2, linestyle="-",
-              marker="o", markersize=3)
+    ax_b.plot(
+        years_bc,
+        hicp_norm_actual,
+        label="Skutečný nárůst (Eurostat LCI / HICP)",
+        color="#009E73",
+        linewidth=1.8,
+        linestyle="--",
+    )
+    ax_b.plot(
+        years_bc,
+        hicp_norm_negot,
+        label="Sjednaný nárůst (IPP / HICP)",
+        color="#D55E00",
+        linewidth=2.2,
+        linestyle="-",
+        marker="o",
+        markersize=3,
+    )
+    ax_b.plot(
+        years_bc,
+        hicp_ref,
+        label="HICP = 100",
+        color=GRAY,
+        linewidth=1.2,
+        linestyle=":",
+    )
 
     ax_b.axhline(100, color="gray", linewidth=0.7, linestyle=":", alpha=0.5)
     ax_b.yaxis.set_major_formatter(
@@ -263,22 +205,22 @@ if years_bc:
     )
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_b.set_ylabel(f"Index ({years_bc[0]} = 100)", fontsize=FONT_SIZE)
+    ax_b.set_ylabel("Index [HICP = 100]", fontsize=FONT_SIZE)
     ax_b.set_title(
-        f"CZ: kumulativní nominální a reálný nárůst mezd od {years_bc[0]}",
+        "CZ: kumulativní mzdový nárůst normovaný na HICP",
         fontsize=FONT_SIZE,
     )
-    ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.5, loc="upper left", ncol=2)
-    ax_b.set_xlim(years_bc[0] - 0.4, years_bc[-1] + 0.4)
+    ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
+    ax_b.set_xlim(START_YEAR, END_YEAR)
 
     savefig(fig_b, "stav_ipp_kumulativ", out_dir=LATEX_PICS_DIR)
     yr0, yr1 = years_bc[0], years_bc[-1]
     save_figure_tex(
         "stav_ipp_kumulativ",
-        caption=f"Kumulativní index mezd a~reálné kupní síly, ČR, {yr0}\u2013{yr1}.",
+        caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), ČR, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_kumulativ",
         width=r"0.95\linewidth",
-        cite_keys=["mpsv_ipp", "eurostat_lci"],
+        cite_keys=["mpsv_ipp", "eurostat_lci", "eurostat_hicp"],
     )
 else:
     print("Figure B skipped – insufficient overlapping data.")

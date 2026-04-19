@@ -62,6 +62,8 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 GEO_6 = "+".join(COUNTRIES)
 START_YEAR = 2007   # first year with available IPP odmenovani data
 END_YEAR = 2025     # most recent complete survey year
+LBL_ACTUAL = "skutečný nárůst (Eurostat LCI)"
+LBL_NEGOTIATED = "sjednaný nárůst (IPP/KS)"
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
@@ -134,7 +136,7 @@ for geo in COUNTRIES:
     ax.plot(
         series.index,
         series.values,
-        label=f"{geo} (skutečná)",
+        label=f"{geo} ({LBL_ACTUAL})",
         color=color,
         linewidth=lw,
         linestyle="--",
@@ -147,7 +149,7 @@ if ipp_records:
     ax.plot(
         df_ipp.index,
         df_ipp.values,
-        label="CZ (KS – sjednaný nárůst)",
+        label=f"CZ ({LBL_NEGOTIATED})",
         color=COUNTRY_COLORS["CZ"],
         linewidth=2.5,
         linestyle="-",
@@ -163,9 +165,9 @@ ax.axhline(0, color="gray", linewidth=0.7, linestyle=":", alpha=0.5)
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%"))
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
 ax.set_xlabel("rok", fontsize=FONT_SIZE)
-ax.set_ylabel("Meziroční nárůst (%)", fontsize=FONT_SIZE)
+ax.set_ylabel("Meziroční nárůst [\%]", fontsize=FONT_SIZE)
 ax.set_title(
-    "Sjednaný nárůst mzdy v KS (CZ) a skutečný nárůst mzdových nákladů",
+    "CZ: sjednaný nárůst v kolektivních smlouvách vs. skutečný nárůst mzdových nákladů",
     fontsize=FONT_SIZE,
 )
 
@@ -182,7 +184,7 @@ all_years = sorted(
     | {r["time"] for r in ipp_records}
 )
 if all_years:
-    ax.set_xlim(all_years[0] - 0.3, all_years[-1] + 0.3)
+    ax.set_xlim(START_YEAR, END_YEAR)
 
 # ── 5. Save figure ────────────────────────────────────────────────────────────
 savefig(fig, "stav_ipp_mzdy", out_dir=LATEX_PICS_DIR)
