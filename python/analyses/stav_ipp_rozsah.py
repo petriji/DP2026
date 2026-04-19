@@ -12,9 +12,11 @@ Figure A – ``ipp_ca_breadth``
        monthly TS.  Documents whether CAs establish a hierarchical wage
        structure, not just agree to a flat % increase.
 
-    2. **Union dues deduction** (``spoluprace_smluvnich_stran`` A19a,
-       "Výběr členských příspěvků srážkou") — employer deducts union membership
-       fees from payroll.  Indicator of union administrative entrenchment.
+     2. **Concretized union operating conditions**
+         (``spoluprace_smluvnich_stran`` A19a,
+         "Konkretizovány podmínky pro výkon činnosti odborové organizace")
+         — share of CAs that explicitly define operating conditions for union
+         activity. Indicator of procedural quality and enforceability.
 
     3. **Union release time** (``spoluprace_smluvnich_stran`` A19a,
        "Sjednán časový rozsah uvolnění pro výkon") — paid time off for union
@@ -25,8 +27,8 @@ Figure A – ``ipp_ca_breadth``
     - Tariff scale coverage has fallen steadily (~58 % in 2009 → ~38 % in
       2025), signalling that CAs increasingly function as wage-increase
       instruments rather than comprehensive wage-governance frameworks.
-    - Union facility provisions (dues deduction ~86 %, release time rising
-      34 % → 57 %) demonstrate stable or growing institutional
+        - Union operating-conditions and release-time provisions demonstrate
+            stable or growing institutional
       entrenchment of unions within enterprises.
     - Together these trends suggest that Czech CAs retain their procedural
       union-rights architecture while losing their wage-setting infrastructure
@@ -123,11 +125,12 @@ def _extract_tariff_coverage(path: Path, year: int) -> float | None:
 
 
 def _extract_spoluprace(path: Path, year: int) -> tuple[float | None, float | None]:
-    """Return (dues_pct, release_time_pct) from spoluprace A19a.
+    """Return (conditions_pct, release_time_pct) from spoluprace A19a.
 
     Column mapping (consistent 2007–2025):
-      col 3  = % KS with union dues deduction ('Výběr čl. příspěvků srážkou')
-      col 7  = % KS with agreed union release time ('Sjednán čas. rozsah uvolnění')
+        col 9  = % KS with concretized union operating conditions
+                         ('Konkretizovány podmínky pro výkon činnosti odborové organizace')
+        col 7  = % KS with agreed union release time ('Sjednán čas. rozsah uvolnění')
     """
     try:
         df = pd.read_excel(path, sheet_name="A19a", header=None)
@@ -147,7 +150,7 @@ def _extract_spoluprace(path: Path, year: int) -> tuple[float | None, float | No
         except IndexError:
             return None
 
-    return safe(3), safe(7)
+    return safe(9), safe(7)
 
 
 # ── 1. Download and parse mzda_tarify ─────────────────────────────────────────
@@ -167,29 +170,29 @@ for yr in range(START_YEAR, END_YEAR + 1):
 
 # ── 2. Download and parse spoluprace_smluvnich_stran ──────────────────────────
 print(f"\nFetching spoluprace {START_YEAR}–{END_YEAR} …")
-dues: dict[int, float] = {}
+conditions: dict[int, float] = {}
 release: dict[int, float] = {}
 for yr in range(START_YEAR, END_YEAR + 1):
     try:
         path_sp = fetch_ipp(yr, "spoluprace_smluvnich_stran")
-        d, r = _extract_spoluprace(path_sp, yr)
-        if d is not None:
-            dues[yr] = d
+        c, r = _extract_spoluprace(path_sp, yr)
+        if c is not None:
+            conditions[yr] = c
         if r is not None:
             release[yr] = r
-        d_str = f"{d:.1f}" if d is not None else "N/A"
+        c_str = f"{c:.1f}" if c is not None else "N/A"
         r_str = f"{r:.1f}" if r is not None else "N/A"
-        print(f"  spoluprace {yr}: dues={d_str} %  release={r_str} %")
+        print(f"  spoluprace {yr}: conditions={c_str} %  release={r_str} %")
     except Exception as exc:
         print(f"  spoluprace {yr}: skipped ({exc})")
 
-if not (tariff or dues or release):
+if not (tariff or conditions or release):
     print("\nNo IPP breadth data available — exiting without figures.")
     sys.exit(0)
 
 # ── 3. Build figure ────────────────────────────────────────────────────────────
 all_years = sorted(
-    set(tariff) | set(dues) | set(release)
+    set(tariff) | set(conditions) | set(release)
 )
 
 fig, ax = plt.subplots(figsize=cm2in(15, 8))
@@ -202,11 +205,11 @@ if tariff:
             color=colors[0], linewidth=1.6, markersize=4,
             label="Formální mzdová tarifní soustava")
 
-if dues:
-    ys = sorted(dues)
-    ax.plot(ys, [dues[y] for y in ys], "s--",
+if conditions:
+    ys = sorted(conditions)
+    ax.plot(ys, [conditions[y] for y in ys], "s--",
             color=colors[1], linewidth=1.6, markersize=4,
-            label="Srážka členských příspěvků z mzdy")
+            label="Konkretizované podmínky činnosti odborové organizace")
 
 if release:
     ys = sorted(release)
@@ -227,15 +230,15 @@ for yr, (label, va) in _EVENTS.items():
         ax.text(yr + 0.15, y_pos, label, fontsize=FONT_SIZE - 2,
                 color="grey", va="bottom", rotation=0)
 
-ax.set_xlabel("Rok")
-ax.set_ylabel("Podíl KS [%]")
-ax.set_xlim(START_YEAR - 0.5, END_YEAR + 0.5)
+ax.set_xlabel("rok")
+ax.set_ylabel("Podíl \acs{KS} [\%]")
+ax.set_xlim(START_YEAR, END_YEAR)
 ax.set_ylim(0, 100)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
 ax.legend(loc="center left", fontsize=FONT_SIZE - 1, frameon=False)
 ax.set_title(
-    "Institucionální obsah kolektivních smluv — vybrané dimenze (CZ, 2007–2025)",
+    "Institucionální obsah kolektivních smluv (ČR)",
     fontsize=FONT_SIZE,
 )
 
@@ -249,8 +252,9 @@ out_tex = save_figure_tex(
         r"\emph{Mzdová stupnice} (plná čára) -- podíl KS "
         r"se sjednanou hierarchickou mzdovou stupnicí (12ti-stupňový nebo jiný "
         r"tarifní systém); zdroj: IPP Mzdový tarify A1a. "
-        r"\emph{Srážka členských příspěvků} (přerušovaná čára) -- podíl KS, "
-        r"v nichž zaměstnavatel strhává odborové příspěvky ze mzdy. "
+        r"\emph{Konkretizované podmínky činnosti odborové organizace} "
+        r"(přerušovaná čára) -- podíl KS s explicitně vymezenými pravidly "
+        r"pro výkon odborové činnosti. "
         r"\emph{Uvolnění odborového zástupce} (tečkovaná čára) -- podíl KS "
         r"se sjednaným časovým rozsahem uvolnění pro odborovou práci; "
         r"zdroj: IPP Spolupráce smluvních stran A19a."
