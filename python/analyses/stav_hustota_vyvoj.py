@@ -50,6 +50,7 @@ fig = timeline(
     show_eu_avg=False,
     background_eu=True,
 )
+fig.axes[0].set_xlim(START_YEAR, 2025)
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
 savefig(fig, "stav_hustota_vyvoj", out_dir=LATEX_PICS_DIR)
@@ -80,7 +81,7 @@ fig2 = timeline(
     show_eu_avg=False,
     background_eu=True,
 )
-fig2.axes[0].set_xlim(2004, ds.years[-1])
+fig2.axes[0].set_xlim(2004, 2025)
 fig2.axes[0].set_ylim(0, 80)
 
 savefig(fig2, "stav_hustota_vyvoj_2004", out_dir=LATEX_PICS_DIR)

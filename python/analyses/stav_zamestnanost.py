@@ -2,7 +2,7 @@ r"""
 Employment rate (ages 20–64) timeline – CZ, AT, DE, DK, PL, SK.
 
 Shows the trend in total employment rates across the six reference countries
-from 2000 to the latest available year.  CZ's high employment rate relative
+from the first available year to the latest available year. CZ's high employment rate relative
 to its wage level is a key protiargument that the thesis addresses.
 
 Data source: Eurostat, ``lfsi_emp_a``
@@ -68,6 +68,7 @@ fig = timeline(
     ylabel="Míra zaměstnanosti (% populace 20–64)",
     highlight=HIGHLIGHT,
     annotate_last=True,
+    background_eu=True,
     show_eu_avg=True,
 )
 
@@ -78,7 +79,7 @@ savefig(fig, "stav_zamestnanost", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "stav_zamestnanost",
     caption=(
-        f"Míra zaměstnanosti (20--64 let), {START_YEAR}--{ds.years[-1]}."
+        f"Míra zaměstnanosti (20--64 let), {ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_zamestnanost",
     width=r"0.95\linewidth",
