@@ -110,6 +110,25 @@ def _row(label: str, values: dict[str, float], fmt: str = "{:.1f}",
     return {"Indikátor": label, **{COUNTRY_LABELS[c]: _cell(c) for c in COUNTRIES}}
 
 
+def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, float],
+                fmt: str = "{:.1f}", suffix: str = "") -> dict:
+    r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (idx\,\%)``.
+
+    When the whole row is italic (derived indicator), the caller wraps via italic_rows
+    in table.py — \textit{} around the cell content preserves the \newline.
+    """
+    def _cell(c: str) -> str:
+        v = values.get(c)
+        idx = idx_values.get(c)
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return "--"
+        abs_str = fmt.format(v) + suffix
+        if idx is None or (isinstance(idx, float) and pd.isna(idx)):
+            return abs_str
+        return abs_str + r" \newline " + f"({idx:.1f}" + r"\,\%)"
+    return {"Indikátor": label, **{COUNTRY_LABELS[c]: _cell(c) for c in COUNTRIES}}
+
+
 def _row_str(label: str, values: dict[str, str]) -> dict:
     return {"Indikátor": label,
             **{COUNTRY_LABELS[c]: values.get(c, "--") for c in COUNTRIES}}
@@ -436,17 +455,11 @@ def _m(label: str, ind_key: str) -> str:
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
-_SUB = r"\hspace{1.5em} (ČR\,=\,100\,\%)"
-
 L_GDP      = _m(r"HDP [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
-L_GDP_IDX  = _SUB
 L_LC       = _m(r"Úplné náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
-L_LC_IDX   = _SUB
 L_HRS      = _m(r"Odpracované hodiny [h/týd., průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
-L_HRS_IDX  = _SUB
 L_TAX      = _m(r"Daňový klín (67\,\% prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
 L_DISP     = r"Disponibilní příjem [\ac{PPS}/h, průměrný]"  # italic — derived, no \cite{}
-L_DISP_IDX = _SUB
 L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
@@ -459,20 +472,16 @@ L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}"
 # ── 4. Build table DataFrame ──────────────────────────────────────────────────
 
 rows = [
-    # ── GDP ───────────────────────────────────────────────────────────────────
-    _row(L_GDP,      v_gdp,      fmt="{:,.0f}", suffix=r"\,€"),
-    _row(L_GDP_IDX,  v_gdp_idx,  fmt="{:.1f}"),
-    # ── Labour cost ───────────────────────────────────────────────────────────
-    _row(L_LC,       v_lc_pps,   fmt="{:.1f}"),
-    _row(L_LC_IDX,   v_lc_idx,   fmt="{:.1f}"),
-    # ── Working hours ─────────────────────────────────────────────────────────
-    _row(L_HRS,      v_hrs,      fmt="{:.1f}",  suffix=r"\,h"),
-    _row(L_HRS_IDX,  v_hrs_idx,  fmt="{:.1f}"),
+    # ── GDP (absolute + CZ=100 index) ────────────────────────────────────────
+    _row_merged(L_GDP, v_gdp, v_gdp_idx, fmt="{:,.0f}", suffix=r"\,€"),
+    # ── Labour cost (absolute + CZ=100 index) ────────────────────────────────
+    _row_merged(L_LC, v_lc_pps, v_lc_idx, fmt="{:.1f}"),
+    # ── Working hours (absolute + CZ=100 index) ──────────────────────────────
+    _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", suffix=r"\,h"),
     # ── Tax group ─────────────────────────────────────────────────────────────
     _row(L_TAX,      v_tax,      fmt="{:.1f}",  suffix=r"\,\%"),
-    # ── Derived disposable income (italic, no \cite{}) ────────────────────────
-    _row(L_DISP,     v_disp,     fmt="{:.1f}"),
-    _row(L_DISP_IDX, v_disp_idx, fmt="{:.1f}"),
+    # ── Derived disposable income (italic, no \cite{}) + CZ=100 index ────────
+    _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}"),
     # ── Low-wage earners ──────────────────────────────────────────────────────
     _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  suffix=r"\,\%"),
     # ── Inequality ────────────────────────────────────────────────────────────
@@ -480,7 +489,7 @@ rows = [
     # ── Employment ────────────────────────────────────────────────────────────
     _row(L_EMP,      v_emp,      fmt="{:.1f}",  suffix=r"\,\%"),
     _row(L_JVR,      v_jvr,      fmt="{:.1f}",  suffix=r"\,\%"),
-    # ── Social dialogue (OECD AIAS ICTWSS) ─────────────────────────────────────────
+    # ── Social dialogue (OECD AIAS ICTWSS) ───────────────────────────────────
     _row(L_CBA,     v_cba,     fmt="{:.0f}", suffix=r"\,\%"),
     _row(L_DENSITY, v_density, fmt="{:.0f}", suffix=r"\,\%"),
     # ── Policy / demographics ─────────────────────────────────────────────────
@@ -496,17 +505,7 @@ df_table = df_table[[COUNTRY_LABELS[c] for c in COUNTRIES]]
 
 # ── 5. Structural parameters ──────────────────────────────────────────────────
 
-italic_rows = [L_GDP_IDX, L_LC_IDX, L_HRS_IDX, L_DISP, L_DISP_IDX]
-
-midrule_after = [
-    L_HRS_IDX,  # end of pay/work block (GDP, LC, HRS)
-    L_TAX,      # end of tax group
-    L_DISP_IDX, # end of derived income group
-    L_LOWWAGE,  # end of low-wage group
-    L_GINI,     # end of inequality group
-    L_JVR,      # end of employment group
-    L_DENSITY,  # end of social-dialogue group
-]
+italic_rows = [L_DISP]  # derived row — whole row italic
 
 # ── 6. Write LaTeX table ──────────────────────────────────────────────────────
 
@@ -529,6 +528,7 @@ save_table_tex(
     ),
     label="tab:flexicurity",
     note=(
+        r"V~závorkách normovaná hodnota (ČR\,=\,100\,\%). "
         r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,$\div$\,(\ac{PLI}/100). "
         r"Disponibilní příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
         r"Daňový klín pro bezdětnou svobodnou osobu (single, 0~dětí). "
@@ -537,11 +537,12 @@ save_table_tex(
         r"Hustota odborů: ICTWSS \textit{TUD}."
         + _deviation_note
     ),
-    col_format="Xrrrrrr",
+    col_format="@{}p{4cm}CCCCCC@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
-    midrule_after=midrule_after,
     italic_rows=italic_rows,
     long_table=True,
+    arraystretch=1.3,
+    sans_serif=False,
 )
 print("Done.")
