@@ -1716,6 +1716,10 @@
 % ==============================================================================
 % xcolor: color definitions — also required internally by tikz and pgfplots.
 \RequirePackage{xcolor}
+% contour: white outline around text for readability on coloured map backgrounds.
+%   Used via \contour{white}{...} on country-code labels in PGF figures.
+\RequirePackage[pdftex]{contour}
+\contourlength{0.6pt}
 % tikz: PGF/TikZ vector graphics engine.
 \RequirePackage{tikz}
 % pgfplots: data-driven plots (frequency responses, curves etc.).
@@ -2135,6 +2139,33 @@
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
   \fi}
+
+% ==============================================================================
+% \inputpgffigure{name} — include a matplotlib PGF figure
+% ==============================================================================
+% Includes the editable figure definition from texparts/figures/<name>.tex.
+% The PGF file is expected at ../python/figures/<name>.pgf (relative to the
+% latex/ directory, matching \graphicspath{{../python/figures/}}).
+%
+% If the .pgf file does not exist (script not yet run), a visible warning box
+% is shown in the PDF instead of a hard compilation error.
+%
+% Usage in commentary files:  \inputpgffigure{vyhled_porodnost_vyvoj}
+\newcommand{\inputpgffigure}[1]{%
+  \IfFileExists{../python/figures/#1.pgf}{%
+    \input{texparts/figures/#1}%
+  }{%
+    \begin{center}
+      \fboxsep=8pt
+      \colorbox{yellow!40}{%
+        \parbox{0.85\linewidth}{%
+          \color{red!70!black}\bfseries
+          \texttt{[#1.pgf]} chybí --- spusťte odpovídající Python skript.%
+        }%
+      }%
+    \end{center}%
+  }%
+}
 
 \endinput
 %%

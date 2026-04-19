@@ -97,6 +97,12 @@
 %   keywords files    — language-dependent (CZ/EN) PDF keywords metadata
 % ==============================================================================
 
+% PGF figures reference companion raster images (e.g. choropleth -img0.png)
+% by bare filename.  graphicspath tells LaTeX where to find them.
+\graphicspath{{../python/figures/}}
+% Demo: multiple search paths are allowed (each path must be wrapped in braces)
+% \graphicspath{{../python/figures/}{../pics/python/}{../assets/figures/}}
+
 \begin{document}
 \extrafloats{100}
 %TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
