@@ -131,13 +131,13 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 ```latex
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\columnwidth]{../pics/python/filename}
+  \includegraphics[width=\columnwidth]{../python/figures/filename}
   \caption{Popis obrázku.\label{fig:filename}}
 \end{figure}
 ```
 - Caption ends with `.` before `\label{}`.
 - Use `[htbp]` placement unless section context requires `[H]` (forced position).
-- Reference image path relative to the `.tex` file location (usually `../pics/python/`).
+- Reference image path relative to the `.tex` file location (always `../python/figures/`).
 
 ### 7. Tables
 
@@ -176,6 +176,31 @@ Always use `\SI{value}{unit}` for physical quantities with units:
 - `\SI{75}{\percent}`, `\SI{40}{\degreeCelsius}`, `\SI{5}{\kelvin\per\metre}`
 - Decimal separator in Czech: comma inside `\SI{}{}` is fine — siunitx handles it.
 - Bare percentages in text (without `\SI`): `11{,}4~\%` (note `{,}` for comma as decimal separator).
+
+**Project-specific custom units** (defined in `latex/texparts/references/acro_variables.tex`):
+
+| LaTeX command | Renders as | Usage example |
+|---------------|------------|---------------|
+| `\eur` | € | `\SI{1200}{\eur}` |
+| `\czk` | Kč | `\SI{45000}{\czk}` |
+| `\pps` | PPS | `\SI{12{,}5}{\pps}` |
+| `\week` | týd. | `\SI{40}{\week}` |
+| `\month` | měs. | `\SI{6}{\month}` |
+| `\person` | os. | `\SI{500}{\person}` |
+
+**Compound units** — combine with siunitx `\per` and built-in units (`\hour`, `\year`, `\metre`, etc.):
+
+| Pattern | LaTeX | Renders as |
+|---------|-------|------------|
+| PPS per hour | `\SI{12{,}5}{\pps\per\hour}` | `12,5 PPS/h` |
+| € per hour | `\SI{18}{\eur\per\hour}` | `18 €/h` |
+| Kč per month | `\SI{45000}{\czk\per\month}` | `45 000 Kč/měs.` |
+| persons per year | `\SI{200}{\person\per\year}` | `200 os./rok` |
+
+Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_variables.tex`.
+
+- Never use bare `€`, `Kč`, `EUR`, `PPS` as units next to numbers — always wrap with `\SI{}{}` using the custom command.
+- `\eur` not `\EUR` — the project defines lowercase.
 
 ### 10. Typography & csquotes
 
