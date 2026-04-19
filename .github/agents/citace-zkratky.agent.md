@@ -1,6 +1,6 @@
 ---
 name: "Citace a zkratky"
-description: "Use when: finding a bib key, checking if a citation exists, adding a new \\DeclareAcronym entry, checking if an acronym ID is declared, looking up the correct \\ac{} ID for an abbreviation, adding missing citations to socialnidialog.bib. Use for: cite, bib key, acronym, zkratka, DeclareAcronym, \\ac{} ID lookup. Do NOT use for: writing commentary prose (use Komentuj analýzu), formatting LaTeX (use Formatuj LaTeX)."
+description: "Use when: finding a bib key, checking if a citation exists, adding a new \\DeclareAcronym entry, checking if an acronym ID is declared, looking up the correct \\ac{} ID for an abbreviation, adding missing citations to socialnidialog.bib, adding Czech declension forms for an acronym, adding a country code geo entry. Use for: cite, bib key, acronym, zkratka, DeclareAcronym, \\ac{} ID lookup, declension, genitive, dative, geo code. Do NOT use for: writing commentary prose (use Komentuj analýzu), formatting LaTeX (use Formatuj LaTeX)."
 tools: [read, search, edit]
 user-invocable: false
 argument-hint: "Acronym to look up or citation need (author, year, topic)"
@@ -41,16 +41,52 @@ Template to follow (copy from existing entries in `acro.tex`):
 	long-plural-form = Czech plural,   % omit if regular
 	single = false,
 	single-style = long-short,
+	tag			= zkr
 }
 ```
 Rules:
 - ID is the canonical short form in uppercase (e.g. `KS`, `EU`, `HDP`)
 - `long` is the Czech expansion
 - `foreign` is the English equivalent (omit if same language)
+- **tag** must be `zkr` for abbreviations, `vel` for variables, `geo` for country codes
 - Insert alphabetically by ID within the file
 - After adding, confirm the ID to the caller
 
-### 4. Add a new bib entry
+### 4. Add Czech declension forms
+Czech has 7 grammatical cases. The project uses `\DeclareAcroEnding` for 5 oblique cases.
+When a new abbreviation needs declined long forms, add them via `\AcroPropertiesSet`:
+```latex
+\AcroPropertiesSet{ID}{
+	long-genitive-form      = genitiv,
+	long-dative-form        = dativ,
+	long-accusative-form    = akuzativ,
+	long-locative-form      = lokál,
+	long-instrumental-form  = instrumentál
+}
+```
+Declension commands available in prose:
+
+| Command | Case | Example (`EU`) |
+|---------|------|----------------|
+| `\acgen{EU}` | genitive (2. pád) | Evropské unie |
+| `\acdat{EU}` | dative (3. pád) | Evropské unii |
+| `\acacc{EU}` | accusative (4. pád) | Evropskou unii |
+| `\acloc{EU}` | locative (6. pád) | Evropské unii |
+| `\acins{EU}` | instrumental (7. pád) | Evropskou unií |
+| `\aclgen{EU}` | genitive (long only) | Evropské unie |
+
+Already-declared declension forms: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV.
+Add forms for new acronyms when requested.
+
+### 5. Add a country-code `geo` entry
+Country codes use `tag = geo` and are excluded from printed lists:
+```latex
+\DeclareAcronym{geo-XX}{short=XX, long=Czech country name, tag=geo}
+```
+Usage: `\acs{geo-CZ}` in figures/tables. All EU-27 + EL/GR are already declared.
+Add non-EU codes only when needed for a specific figure.
+
+### 6. Add a new bib entry
 If asked to add a missing citation, ask the user for: author(s), year, title, journal/publisher, DOI/URL. Then add to `socialnidialog.bib` following existing entry format.
 
 ## Rules
