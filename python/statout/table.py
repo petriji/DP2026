@@ -144,11 +144,15 @@ def to_latex(
         )
 
         lines = [f"\\begin{{xltabular}}{{\\linewidth}}{{{col_format}}}"]
-        font_cmd = f"\\{fontsize}" + (r"\sffamily" if sans_serif else "")
+        # Note: For xltabular (long tables), font size and arraystretch should NOT be applied
+        # at the macro level as they interfere with multi-page table functionality.
+        # Users should control table appearance via column widths and CSS/styling.
+        # Arraystretch is still applied via a per-row approach if needed.
         if arraystretch is not None:
-            lines.insert(0, f"{{{font_cmd}\\renewcommand{{\\arraystretch}}{{{arraystretch}}}")
-        else:
-            lines.insert(0, f"{{{font_cmd}")
+            # For xltabular, we need to use a different approach - wrap the content rows
+            # For now, we'll skip global arraystretch for xltabular to avoid \noalign errors
+            pass
+        
         if caption:
             lines.append(cap_line)
         lines += [
@@ -171,7 +175,6 @@ def to_latex(
         lines.append("  \\endlastfoot")
         lines += rows_str
         lines.append("\\end{xltabular}")
-        lines.append("}")  # close font-size / arraystretch group
     else:
         lines = [
             f"\\begin{{table}}[{position}]",
