@@ -207,6 +207,110 @@
 	tag     = zkr
 }
 % ---------------------------------------------------------------------------
+%  Czech declension support (acro endings)
+% ---------------------------------------------------------------------------
+% Czech has 7 grammatical cases.  We define custom endings for the 4 most
+% common oblique cases needed in economic/legal prose.  The default ending
+% is empty because each acronym sets its own full form via the -form property.
+%
+% Usage:  \acgen{EU}  → "Evropské unie"  (genitive)
+%         \acdат{EU}  → "Evropské unii"  (dative)
+%         \acloc{EU}  → "Evropské unii"  (locative)
+%         \acacc{EU}  → "Evropskou unii" (accusative)
+%         \acins{EU}  → "Evropskou unií" (instrumental)
+%
+% The short form is always the same abbreviation; only the long form changes.
+% On first use: "long-<case>-form (SHORT)" — subsequent: just "SHORT".
+% ---------------------------------------------------------------------------
+\DeclareAcroEnding{genitive}{}{}
+\DeclareAcroEnding{dative}{}{}
+\DeclareAcroEnding{accusative}{}{}
+\DeclareAcroEnding{locative}{}{}
+\DeclareAcroEnding{instrumental}{}{}
+
+% Commands for each case — first occurrence shows "long-case (SHORT)"
+\NewAcroCommand\acgen{m}{\acrogenitive\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acdat{m}{\acrodative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acacc{m}{\acroaccusative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acloc{m}{\acrolocative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acins{m}{\acroinstrumental\UseAcroTemplate{first}{#1}}
+
+% Long-only variants (always expand to the long form in given case)
+\NewAcroCommand\aclgen{m}{\acrogenitive\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\acldat{m}{\acrodative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclacc{m}{\acroaccusative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclloc{m}{\acrolocative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclins{m}{\acroinstrumental\UseAcroTemplate{long}{#1}}
+
+% ---------------------------------------------------------------------------
+%  Declension forms for existing acronyms
+% ---------------------------------------------------------------------------
+% EU – Evropská unie (f.)
+\acsetup{} % reset context
+\AcroPropertiesSet{EU}{
+	long-genitive-form      = Evropské unie,
+	long-dative-form        = Evropské unii,
+	long-accusative-form    = Evropskou unii,
+	long-locative-form      = Evropské unii,
+	long-instrumental-form  = Evropskou unií
+}
+% HDP – hrubý domácí produkt (m.)
+\AcroPropertiesSet{HDP}{
+	long-genitive-form      = hrubého domácího produktu,
+	long-dative-form        = hrubému domácímu produktu,
+	long-accusative-form    = hrubý domácí produkt,
+	long-locative-form      = hrubém domácím produktu,
+	long-instrumental-form  = hrubým domácím produktem
+}
+% TFR – úhrnná plodnost (f.)
+\AcroPropertiesSet{TFR}{
+	long-genitive-form      = úhrnné plodnosti,
+	long-dative-form        = úhrnné plodnosti,
+	long-accusative-form    = úhrnnou plodnost,
+	long-locative-form      = úhrnné plodnosti,
+	long-instrumental-form  = úhrnnou plodností
+}
+% KV – kolektivní vyjednávání (n.)
+\AcroPropertiesSet{KV}{
+	long-genitive-form      = kolektivního vyjednávání,
+	long-dative-form        = kolektivnímu vyjednávání,
+	long-accusative-form    = kolektivní vyjednávání,
+	long-locative-form      = kolektivním vyjednávání,
+	long-instrumental-form  = kolektivním vyjednáváním
+}
+% KS – kolektivní smlouva (f.)
+\AcroPropertiesSet{KS}{
+	long-genitive-form      = kolektivní smlouvy,
+	long-dative-form        = kolektivní smlouvě,
+	long-accusative-form    = kolektivní smlouvu,
+	long-locative-form      = kolektivní smlouvě,
+	long-instrumental-form  = kolektivní smlouvou
+}
+% KSVS – kolektivní smlouva vyššího stupně (f.)
+\AcroPropertiesSet{KSVS}{
+	long-genitive-form      = kolektivní smlouvy vyššího stupně,
+	long-dative-form        = kolektivní smlouvě vyššího stupně,
+	long-accusative-form    = kolektivní smlouvu vyššího stupně,
+	long-locative-form      = kolektivní smlouvě vyššího stupně,
+	long-instrumental-form  = kolektivní smlouvou vyššího stupně
+}
+% APZ – aktivní politika zaměstnanosti (f.)
+\AcroPropertiesSet{APZ}{
+	long-genitive-form      = aktivní politiky zaměstnanosti,
+	long-dative-form        = aktivní politice zaměstnanosti,
+	long-accusative-form    = aktivní politiku zaměstnanosti,
+	long-locative-form      = aktivní politice zaměstnanosti,
+	long-instrumental-form  = aktivní politikou zaměstnanosti
+}
+% MPSV – Ministerstvo práce a sociálních věcí (n.)
+\AcroPropertiesSet{MPSV}{
+	long-genitive-form      = Ministerstva práce a sociálních věcí,
+	long-dative-form        = Ministerstvu práce a sociálních věcí,
+	long-accusative-form    = Ministerstvo práce a sociálních věcí,
+	long-locative-form      = Ministerstvu práce a sociálních věcí,
+	long-instrumental-form  = Ministerstvem práce a sociálních věcí
+}
+% ---------------------------------------------------------------------------
 %  ISO country codes  (tag = geo — NOT printed in abbreviation/variable lists)
 % ---------------------------------------------------------------------------
 % These entries allow \acs{geo-CZ} in figures/tables for consistent rendering.
