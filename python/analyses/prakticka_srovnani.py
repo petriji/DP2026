@@ -101,18 +101,21 @@ def _normed_cz100(values: dict[str, float]) -> dict[str, float]:
 
 
 def _row(label: str, values: dict[str, float], fmt: str = "{:.1f}",
-         suffix: str = "") -> dict:
+         unit: str = "") -> dict:
     def _cell(c: str) -> str:
         v = values.get(c)
         if v is None or (isinstance(v, float) and pd.isna(v)):
             return "--"
-        return fmt.format(v) + suffix
+        num = fmt.format(v)
+        if unit:
+            return rf"\SI{{{num}}}{{{unit}}}"
+        return rf"\num{{{num}}}"
     return {"Indikátor": label, **{COUNTRY_LABELS[c]: _cell(c) for c in COUNTRIES}}
 
 
 def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, float],
-                fmt: str = "{:.1f}", suffix: str = "") -> dict:
-    r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (idx\,\%)``.
+                fmt: str = "{:.1f}", unit: str = "") -> dict:
+    r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (\SI{idx}{\percent})``.
 
     When the whole row is italic (derived indicator), the caller wraps via italic_rows
     in table.py — \textit{} around the cell content preserves the \newline.
@@ -122,10 +125,11 @@ def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, floa
         idx = idx_values.get(c)
         if v is None or (isinstance(v, float) and pd.isna(v)):
             return "--"
-        abs_str = fmt.format(v) + suffix
+        num = fmt.format(v)
+        abs_str = rf"\SI{{{num}}}{{{unit}}}" if unit else rf"\num{{{num}}}"
         if idx is None or (isinstance(idx, float) and pd.isna(idx)):
             return abs_str
-        return abs_str + r" \newline " + f"({idx:.1f}" + r"\,\%)"
+        return abs_str + r" \newline " + rf"(\SI{{{idx:.1f}}}{{\percent}})"
     return {"Indikátor": label, **{COUNTRY_LABELS[c]: _cell(c) for c in COUNTRIES}}
 
 
@@ -455,11 +459,11 @@ def _m(label: str, ind_key: str) -> str:
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
-L_GDP      = _m(r"HDP [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
-L_LC       = _m(r"Úplné náklady práce [\ac{PPS}/h]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
-L_HRS      = _m(r"Odpracované hodiny [h/týd., průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
-L_TAX      = _m(r"Daňový klín (67\,\% prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
-L_DISP     = r"Disponibilní příjem [\ac{PPS}/h, průměrný]"  # italic — derived, no \cite{}
+L_GDP      = _m(r"HDP [\si{\pps\per\person\per\rok}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
+L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
+L_HRS      = _m(r"Odpracované hodiny [\si{\hour\per\week}, průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
+L_TAX      = _m(r"Daňový klín (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
+L_DISP     = r"Disponibilní příjem [\si{\pps\per\hour}, průměrný]"  # italic — derived, no \cite{}
 L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
@@ -473,28 +477,28 @@ L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}"
 
 rows = [
     # ── GDP (absolute + CZ=100 index) ────────────────────────────────────────
-    _row_merged(L_GDP, v_gdp, v_gdp_idx, fmt="{:,.0f}", suffix=r"\,€"),
+    _row_merged(L_GDP, v_gdp, v_gdp_idx, fmt="{:.0f}", unit=r"\eur"),
     # ── Labour cost (absolute + CZ=100 index) ────────────────────────────────
     _row_merged(L_LC, v_lc_pps, v_lc_idx, fmt="{:.1f}"),
     # ── Working hours (absolute + CZ=100 index) ──────────────────────────────
-    _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", suffix=r"\,h"),
+    _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", unit=r"\hour"),
     # ── Tax group ─────────────────────────────────────────────────────────────
-    _row(L_TAX,      v_tax,      fmt="{:.1f}",  suffix=r"\,\%"),
+    _row(L_TAX,      v_tax,      fmt="{:.1f}",  unit=r"\percent"),
     # ── Derived disposable income (italic, no \cite{}) + CZ=100 index ────────
     _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}"),
     # ── Low-wage earners ──────────────────────────────────────────────────────
-    _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  suffix=r"\,\%"),
+    _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  unit=r"\percent"),
     # ── Inequality ────────────────────────────────────────────────────────────
     _row(L_GINI,     v_gini,     fmt="{:.1f}"),
     # ── Employment ────────────────────────────────────────────────────────────
-    _row(L_EMP,      v_emp,      fmt="{:.1f}",  suffix=r"\,\%"),
-    _row(L_JVR,      v_jvr,      fmt="{:.1f}",  suffix=r"\,\%"),
+    _row(L_EMP,      v_emp,      fmt="{:.1f}",  unit=r"\percent"),
+    _row(L_JVR,      v_jvr,      fmt="{:.1f}",  unit=r"\percent"),
     # ── Social dialogue (OECD AIAS ICTWSS) ───────────────────────────────────
-    _row(L_CBA,     v_cba,     fmt="{:.0f}", suffix=r"\,\%"),
-    _row(L_DENSITY, v_density, fmt="{:.0f}", suffix=r"\,\%"),
+    _row(L_CBA,     v_cba,     fmt="{:.0f}", unit=r"\percent"),
+    _row(L_DENSITY, v_density, fmt="{:.0f}", unit=r"\percent"),
     # ── Policy / demographics ─────────────────────────────────────────────────
-    _row(L_APZ,      v_apz,      fmt="{:.2f}",  suffix=r"\,\%"),
-    _row(L_DEP,      v_dep,      fmt="{:.1f}",  suffix=r"\,\%"),
+    _row(L_APZ,      v_apz,      fmt="{:.2f}",  unit=r"\percent"),
+    _row(L_DEP,      v_dep,      fmt="{:.1f}",  unit=r"\percent"),
 ]
 
 df_table = (
@@ -528,8 +532,8 @@ save_table_tex(
     ),
     label="tab:flexicurity",
     note=(
-        r"V~závorkách normovaná hodnota (ČR\,=\,100\,\%). "
-        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,$\div$\,(\ac{PLI}/100). "
+        r"V~závorkách normovaná hodnota (ČR\,=\,\SI{100}{\percent}). "
+        r"Náklady práce v \si{\pps\per\hour}\,=\,\si{\eur\per\hour}\,$\div$\,(\ac{PLI}/100). "
         r"Disponibilní příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
         r"Daňový klín pro bezdětnou svobodnou osobu (single, 0~dětí). "
         r"Pokrytí \ac{KS}: OECD / AIAS ICTWSS \textit{AdjCov} (CZ, DK, AT, PL), "

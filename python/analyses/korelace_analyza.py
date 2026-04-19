@@ -292,13 +292,13 @@ _PAIRS = [
         "y_name": "GPG (%)",
     },
     {
-        "label": r"Pokrytí KV vs. hod. příjem (PPS/h)",
+        "label": r"Pokrytí KV vs. hod. příjem (\si{\pps\per\hour})",
         "ds_x": ds_cbc,
         "ds_y": ds_netpps,
         "y_name": "Čistý příjem (PPS/h)",
     },
     {
-        "label": r"Pokrytí KV vs. produktivita (PPS/h)",
+        "label": r"Pokrytí KV vs. produktivita (\si{\pps\per\hour})",
         "ds_x": ds_cbc,
         "ds_y": ds_prod,
         "y_name": "Produktivita (EU27=100)",
