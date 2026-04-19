@@ -117,7 +117,7 @@
             "command": "bash",
             "args": [
                 "-c",
-                "cd '%DIR%/..' && rm -rf pics/python/* latex/texparts/python/* python/figures/* && echo 'Cleaned: pics/python, texparts/python, python/figures'"
+                "cd '%DIR%/..' && rm -rf python/figures/* latex/texparts/python/* && echo 'Cleaned: python/figures, texparts/python'"
             ]
         },
         {

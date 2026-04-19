@@ -21,15 +21,15 @@ DATA_DIR = PYTHON_DIR / "data"
 FIGURES_DIR = PYTHON_DIR / "figures"
 
 # LaTeX integration
-# Figures saved here are directly referenceable as '../pics/python/<name>' from latex/
-LATEX_PICS_DIR = PYTHON_DIR.parent / "pics" / "python"
+# Figures saved here are directly referenceable as '../python/figures/<name>' from latex/
+LATEX_PICS_DIR = FIGURES_DIR
 # Generated .tex snippets (figure/table environments) land here
 LATEX_TEXPARTS_DIR = PYTHON_DIR.parent / "latex" / "texparts" / "python"
 
 # Create dirs on import so scripts never have to think about it
 DATA_DIR.mkdir(exist_ok=True)
 FIGURES_DIR.mkdir(exist_ok=True)
-LATEX_PICS_DIR.mkdir(parents=True, exist_ok=True)
+# LATEX_PICS_DIR == FIGURES_DIR, no extra mkdir needed
 LATEX_TEXPARTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Figure output format ─────────────────────────────────────────────────────

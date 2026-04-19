@@ -53,7 +53,7 @@ python/**/*.pyc
 python/**/*.pyo
 
 -- Python-generated outputs (reproducible from scripts) --
-pics/python/
+python/figures/
 latex/texparts/python/
 
 -- 
