@@ -72,8 +72,8 @@ pics     = ["stav_ipp_mzdy"]
 
 [ipp_supplementary]
 script   = "analyses/stav_ipp_doplnkove.py"
-texparts = ["stav_ipp_inflace", "stav_ipp_kumulativ", "stav_ipp_mezera"]
-pics     = ["stav_ipp_inflace", "stav_ipp_kumulativ", "stav_ipp_mezera"]
+texparts = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
+pics     = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
 
 [ipp_ca_breadth]
 script   = "analyses/stav_ipp_rozsah.py"

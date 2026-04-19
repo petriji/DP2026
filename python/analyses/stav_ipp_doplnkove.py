@@ -4,22 +4,22 @@ Supplementary figures for the IPP/collective-bargaining analysis.
 Three additional figures that support argumentation about the
 effectiveness and role of collective agreements in Czech wage setting:
 
-Figure B -- ``ipp_cumulative_real``
+Figure B – ``ipp_cumulative_real``
     Cumulative wage growth normalized to HICP (HICP = 100):
     actual growth (Eurostat LCI / HICP) and negotiated growth (IPP / HICP).
 
     Argumentation: Despite large nominal increases, CZ workers saw
-    their real negotiated wage eroded during 2022--2023; both series
+    their real negotiated wage eroded during 2022–2023; both series
     converge again by 2025, illustrating the limits of annual bargaining
     rounds in fast-inflation environments.
 
-Figure C -- ``ipp_actual_vs_neg_gap``
+Figure C – ``ipp_actual_vs_neg_gap``
     Bar chart: CZ actual LCI wage growth (Eurostat) minus the IPP
     negotiated increase, per year.
 
     Argumentation: A consistently positive gap (employers pay above what
     was agreed) indicates that collective agreements act as a floor, not a
-    ceiling --- labour-market competition drives wages above the negotiated
+    ceiling — labour-market competition drives wages above the negotiated
     minimum.  A negative gap would signal non-compliance or insufficient
     bargaining power.
 
@@ -55,16 +55,16 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, cm2in, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style_pgf()
+apply_style()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -73,14 +73,14 @@ END_YEAR   = 2025
 
 
 # ── 1. Load IPP negotiated increases ─────────────────────────────────────────
-print(f"Loading IPP odmenovani {START_YEAR}--{END_YEAR} …")
+print(f"Loading IPP odmenovani {START_YEAR}–{END_YEAR} …")
 ipp = extract_ipp_negotiated(START_YEAR, END_YEAR)
 for yr, val in sorted(ipp.items()):
     print(f"  IPP {yr}: {val:.1f} %")
 
 if not ipp:
     print(
-        "\nNote: No IPP data available -- network unavailable or files not yet published.\n"
+        "\nNote: No IPP data available – network unavailable or files not yet published.\n"
         "Supplementary figures will be skipped (require both IPP and HICP/LCI).\n"
     )
     print("Done.")
@@ -151,7 +151,7 @@ def _common_years(*dicts: dict) -> list[int]:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Figure B -- Cumulative wage growth normalized to HICP (HICP = 100)
+# Figure B – Cumulative wage growth normalized to HICP (HICP = 100)
 # ══════════════════════════════════════════════════════════════════════════════
 years_bc = _common_years(ipp, hicp, lci_growth)
 if years_bc:
@@ -204,30 +204,29 @@ if years_bc:
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
     )
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-    ax_b.set_xlabel("rok", fontsize=FIGURE_LABEL_SIZE)
-    ax_b.set_ylabel("index [HICP = 100]", fontsize=FIGURE_LABEL_SIZE)
-    STRINGS_B = {
-        "title": r"Kumulativní mzdový nárůst (HICP = 100), \acs{geo-CZ}",
-    }
-    ax_b.set_title(STRINGS_B["title"], fontsize=FIGURE_TEXT_SIZE)
-    ax_b.legend(frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="upper left")
+    ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
+    ax_b.set_ylabel("Index [HICP = 100]", fontsize=FONT_SIZE)
+    ax_b.set_title(
+        "CZ: kumulativní mzdový nárůst normovaný na HICP",
+        fontsize=FONT_SIZE,
+    )
+    ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
     ax_b.set_xlim(START_YEAR, END_YEAR)
 
-    savefig_pgf(fig_b, "stav_ipp_kumulativ", strings=STRINGS_B)
+    savefig(fig_b, "stav_ipp_kumulativ", out_dir=LATEX_PICS_DIR)
     yr0, yr1 = years_bc[0], years_bc[-1]
-    save_figure_tex_pgf(
+    save_figure_tex(
         "stav_ipp_kumulativ",
-        caption=f"Kumulativní mzdový nárůst normovaný na~\\acs{{HICP}} (\\acs{{HICP}}\\,=\\,100), \\acs{{geo-CZ}}, {yr0}--{yr1}.",
+        caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), ČR, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_kumulativ",
-        resizebox_width=r"\linewidth",
+        width=r"0.95\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci", "eurostat_hicp"],
-        strings=STRINGS_B,
     )
 else:
-    print("Figure B skipped -- insufficient overlapping data.")
+    print("Figure B skipped – insufficient overlapping data.")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Figure C -- Gap: actual CZ LCI wage growth minus IPP negotiated increase
+# Figure C – Gap: actual CZ LCI wage growth minus IPP negotiated increase
 # ══════════════════════════════════════════════════════════════════════════════
 years_c = _common_years(ipp, lci_growth)
 if years_c:
@@ -250,42 +249,42 @@ if years_c:
             bar.get_x() + bar.get_width() / 2,
             val + offset,
             f"{val:+.1f}",
-            ha="center", va=va, fontsize=FIGURE_COMPACT_LABEL_SIZE,
+            ha="center", va=va, fontsize=FONT_SIZE - 1.5,
         )
 
     ax_c.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, _: f"\\SI{{{y:+.0f}}}{{\\pp}}")
+        ticker.FuncFormatter(lambda y, _: f"{y:+.0f}\u00a0p.p.")
     )
     ax_c.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-    ax_c.set_xlabel("rok", fontsize=FIGURE_LABEL_SIZE)
-    ax_c.set_ylabel(r"skutečný − sjednaný nárůst [\si{\pp}]", fontsize=FIGURE_LABEL_SIZE)
-    STRINGS_C = {
-        "title": r"Rozdíl skutečného a~sjednaného mzdového nárůstu, \acs{geo-CZ}",
-    }
-    ax_c.set_title(STRINGS_C["title"], fontsize=FIGURE_TEXT_SIZE)
+    ax_c.set_xlabel("rok", fontsize=FONT_SIZE)
+    ax_c.set_ylabel("Skutečný nárůst − sjednaný nárůst (p.p.)", fontsize=FONT_SIZE)
+    ax_c.set_title(
+        "CZ: rozdíl mezi skutečným nárůstem mzdových nákladů (Eurostat LCI)\n"
+        "a sjednaným nárůstem v kolektivních smlouvách (IPP/MPSV)",
+        fontsize=FONT_SIZE,
+    )
 
     green_patch = mpatches.Patch(
         color="#2CA02C", alpha=0.75,
-        label=r"Trh platí více, než bylo sjednáno v \acs{KS}",
+        label="Trh platí více, než bylo sjednáno v KS",
     )
     red_patch = mpatches.Patch(
         color="#D62728", alpha=0.75,
-        label=r"Sjednáno více, než skutečný nárůst trhu",
+        label="Sjednáno více, než skutečný nárůst trhu",
     )
-    ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE)
+    ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FONT_SIZE - 1)
     ax_c.set_xlim(years_c[0] - 0.5, years_c[-1] + 0.5)
 
-    savefig_pgf(fig_c, "stav_ipp_mezera", strings=STRINGS_C)
+    savefig(fig_c, "stav_ipp_mezera", out_dir=LATEX_PICS_DIR)
     yr0, yr1 = years_c[0], years_c[-1]
-    save_figure_tex_pgf(
+    save_figure_tex(
         "stav_ipp_mezera",
-        caption=f"Rozdíl skutečného (\\acs{{LCI}}) a~sjednaného mzdového nárůstu v~\\acs{{KS}}, \\acs{{geo-CZ}}, {yr0}--{yr1}.",
+        caption=f"Rozdíl LCI a~sjednaného nárůstu v~KS, ČR, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_mezera",
-        resizebox_width=r"\linewidth",
+        width=r"0.95\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci"],
-        strings=STRINGS_C,
     )
 else:
-    print("Figure C skipped -- no overlapping IPP + LCI years.")
+    print("Figure C skipped – no overlapping IPP + LCI years.")
 
 print("Done.")
