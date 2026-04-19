@@ -15,6 +15,7 @@ Typical usage
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Optional, Union
 
@@ -37,6 +38,8 @@ def to_latex(
     midrule_after: Optional[list[str]] = None,
     italic_rows: Optional[list[str]] = None,
     long_table: bool = False,
+    arraystretch: Optional[float] = None,
+    sans_serif: bool = False,
 ) -> str:
     r"""Generate a LaTeX ``table`` + ``tabular`` environment in *booktabs* style.
 
@@ -119,9 +122,9 @@ def to_latex(
     note_block = ""
     if note:
         # Span all columns using \multicolumn
-        escaped_note = note.replace("%", r"\%")
+        escaped_note = re.sub(r"(?<!\\)%", r"\\%", note)
         note_block = (
-            f"  \\multicolumn{{{n_cols}}}{{l}}{{"
+            f"  \\multicolumn{{{n_cols}}}{{@{{}}p{{\\linewidth}}@{{}}}}{{"
             f"\\footnotesize {escaped_note}"
             f"}} \\\\\n"
         )
@@ -141,6 +144,11 @@ def to_latex(
         )
 
         lines = [f"\\begin{{xltabular}}{{\\linewidth}}{{{col_format}}}"]
+        font_cmd = f"\\{fontsize}" + (r"\sffamily" if sans_serif else "")
+        if arraystretch is not None:
+            lines.insert(0, f"{{{font_cmd}\\renewcommand{{\\arraystretch}}{{{arraystretch}}}")
+        else:
+            lines.insert(0, f"{{{font_cmd}")
         if caption:
             lines.append(cap_line)
         lines += [
@@ -163,6 +171,7 @@ def to_latex(
         lines.append("  \\endlastfoot")
         lines += rows_str
         lines.append("\\end{xltabular}")
+        lines.append("}")  # close font-size / arraystretch group
     else:
         lines = [
             f"\\begin{{table}}[{position}]",
@@ -174,8 +183,8 @@ def to_latex(
         if label:
             lines.append(f"  \\label{{{label}}}")
 
-        # Use tabularx when column spec contains X columns (requires \linewidth arg)
-        use_tabularx = "X" in col_format
+        # Use tabularx when column spec contains X-based columns (X, R, L, C, s)
+        use_tabularx = bool(re.search(r'[XRLCs]', col_format))
         if use_tabularx:
             tabular_begin = f"  \\begin{{tabularx}}{{\\linewidth}}{{{col_format}}}"
             tabular_end   = "  \\end{tabularx}"
