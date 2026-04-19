@@ -75,7 +75,7 @@ fig = scatter_xy(
     ds_gini,
     title="Korelace: hustota odborů a Giniho koeficient (EU27)",
     xlabel="hustota odborů [%]",
-    ylabel="Giniho koeficient (disponibilní příjem, 0–100)",
+    ylabel="Giniho koeficient [0\u2013100]",
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,

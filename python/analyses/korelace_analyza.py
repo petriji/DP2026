@@ -5,9 +5,9 @@ Produces a combined 2×2 scatter figure (latest available year) and a
 correlation table (Pearson r and Spearman ρ).
 
 Combined scatter (CB coverage on x, x_min=0, 8 countries highlighted):
-  (a) CB coverage vs avg weekly hours worked
-  (b) CB coverage vs GDP per capita (PPS, EU27=100)
-  (c) CB coverage vs net annual earnings (PPS)
+  (a) CB coverage vs avg actual weekly hours worked
+  (b) CB coverage vs gender pay gap (%)
+  (c) CB coverage vs net hourly earnings (PPS/h)
   (d) CB coverage vs labour productivity per hour (PPS, EU27=100)
 
 Correlation table (LaTeX):
@@ -17,9 +17,10 @@ Correlation table (LaTeX):
 
 Data sources:
   CB coverage (%):            ICTWSS AdjCov + OECD CBC ERB (DE, SK)
-  Avg weekly hours (HR):      Eurostat lfsa_ewhun2
-  Net annual earnings (PPS):  Eurostat earn_nt_net
-  GDP PPS/cap (EU27=100):     Eurostat nama_10_pc
+  Avg actual weekly hours:    Eurostat lfsa_ewhan2
+  Net annual earnings (PPS):  Eurostat earn_nt_net  (divided by hours×52.18
+                              to get hourly rate)
+  Gender pay gap (%):         Eurostat earn_gr_gpgr2
   Labour productivity (PPS/h): Eurostat nama_10_lp_ulc
   Income Gini:                Eurostat ilc_di12
   Union density (%):          OECD AIAS ICTWSS TUD
@@ -81,9 +82,9 @@ apply_style()
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading data …")
 
-# Avg weekly hours worked
+# Avg actual weekly hours worked
 path_hours = fetch_eurostat(
-    "lfsa_ewhun2",
+    "lfsa_ewhan2",
     "A.TOTAL.EMP.TOTAL.Y15-64.T.HR.",
     start_period=START_YEAR,
 )
@@ -95,10 +96,10 @@ path_net = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# GDP per capita in PPS (EU27_2020 index)
-path_gdp = fetch_eurostat(
-    "nama_10_pc",
-    "A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.",
+# Gender pay gap (%) – total economy B-S_X_O
+path_gpg = fetch_eurostat(
+    "earn_gr_gpgr2",
+    "A.PC.B-S_X_O.",
     start_period=START_YEAR,
 )
 
@@ -126,9 +127,9 @@ ds_cbc = load_cb_coverage(start_period=START_YEAR)
 
 ds_hours = Dataset.from_sdmx_csv(
     path_hours,
-    name="Průměrný týdenní pracovní úvazek",
+    name="Průměrná skutečná týdenní pracovní doba",
     unit="h/týden",
-    source_url="Eurostat/lfsa_ewhun2",
+    source_url="Eurostat/lfsa_ewhan2",
 )
 
 ds_gini = Dataset.from_sdmx_csv(
@@ -144,12 +145,12 @@ raw_net["time"] = raw_net["time"].astype(int)
 
 ds_tud = load_union_density(start_period=START_YEAR)
 
-# GDP per capita index (EU27=100) as a standalone dataset for scatter
-ds_gdp_idx = Dataset.from_sdmx_csv(
-    path_gdp,
-    name="HDP na obyvatele (EU27=100)",
-    unit="EU27=100",
-    source_url="Eurostat/nama_10_pc",
+# Gender pay gap (%)
+ds_gpg = Dataset.from_sdmx_csv(
+    path_gpg,
+    name="Gender pay gap",
+    unit="%",
+    source_url="Eurostat/earn_gr_gpgr2",
 )
 
 # Labour productivity per hour worked (PPS, EU27=100)
@@ -162,45 +163,55 @@ ds_prod = Dataset.from_sdmx_csv(
 
 # ── 3. Compute derived series ─────────────────────────────────────────────────
 
-# net income is already in PPS
+# Average weeks in a Gregorian year: 365.2425 / 7 ≈ 52.1775, rounded to 52.18
+WEEKS_PER_YEAR = 52.18
+
+# Hourly net income = annual PPS / (actual hours/week × weeks/year)
 df_net = raw_net.copy()
+df_hrs = ds_hours.df[[ds_hours.geo_col, ds_hours.time_col, ds_hours.value_col]].rename(
+    columns={ds_hours.geo_col: "geo", ds_hours.time_col: "time", ds_hours.value_col: "hrs"}
+)
+df_hourly = df_net.merge(df_hrs, on=["geo", "time"])
+df_hourly["value"] = df_hourly["net_pps"] / (df_hourly["hrs"] * WEEKS_PER_YEAR)
 ds_netpps = Dataset(
-    df_net[["geo", "time", "net_pps"]].rename(columns={"net_pps": "value"}),
-    name="Čistý příjem (PPS)",
-    unit="PPS/rok",
-    source_url="Eurostat/earn_nt_net",
+    df_hourly[["geo", "time", "value"]],
+    name="Čistý hodinový příjem (PPS/h)",
+    unit="PPS/h",
+    source_url="Eurostat/earn_nt_net + lfsa_ewhan2",
 )
 
 # ── 4. Combined 2×2 subplot figure ────────────────────────────────────────────
 
 _SCATTER_SPECS = [
+    # Left column: negative correlations
     {
         "name": "coverage_hours",
         "ds_x": ds_cbc,
         "ds_y": ds_hours,
-        "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "průměrná týdenní pracovní doba [h]",
+        "xlabel": "pokrytí KV [%]",
+        "ylabel": "průměrná skutečná týdenní\npracovní doba [h]",
     },
-    {
-        "name": "coverage_gdp",
-        "ds_x": ds_cbc,
-        "ds_y": ds_gdp_idx,
-        "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "HDP na obyvatele v PPS (EU27 = 100)",
-    },
+    # Right column: positive correlations
     {
         "name": "coverage_netincome",
         "ds_x": ds_cbc,
         "ds_y": ds_netpps,
-        "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "čistý roční příjem [PPS]",
+        "xlabel": "pokrytí KV [%]",
+        "ylabel": "čistý hodinový příjem [PPS/h]",
+    },
+    {
+        "name": "coverage_gpg",
+        "ds_x": ds_cbc,
+        "ds_y": ds_gpg,
+        "xlabel": "pokrytí KV [%]",
+        "ylabel": "gender pay gap [%]",
     },
     {
         "name": "coverage_productivity",
         "ds_x": ds_cbc,
         "ds_y": ds_prod,
-        "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "produktivita práce na hod. (EU27 = 100)",
+        "xlabel": "pokrytí KV [%]",
+        "ylabel": "produktivita práce [PPS/h, EU27 = 100]",
     },
 ]
 
@@ -229,7 +240,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         x_min=0,
         ax=ax,
         countries=EU27_LIST,
-        year_tolerance=3,
+        year_tolerance=9,
     )
     # Subcaption label
     ax.text(
@@ -257,8 +268,8 @@ save_figure_tex(
     caption="Korelace pokrytí KV a veličin trhu práce, EU27.",
     label="fig:korelace_scatter",
     width=r"0.98\linewidth",
-    cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhun2_HR_weekly",
-               "eurostat_nama_10_pc_PPS_EU27eq100", "eurostat_earn_nt_net_PPS_AW100",
+    cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
+               "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
     footnote=_EXCL_NOTE,
 )
@@ -272,19 +283,19 @@ _PAIRS = [
         "label": r"Pokrytí KV vs. prac.~doba",
         "ds_x": ds_cbc,
         "ds_y": ds_hours,
-        "y_name": "Prům. hodin./týden",
+        "y_name": "Prům. skut. hodin./týden",
     },
     {
-        "label": r"Pokrytí KV vs. HDP/ob. (PPS)",
+        "label": r"Pokrytí KV vs. gender pay gap",
         "ds_x": ds_cbc,
-        "ds_y": ds_gdp_idx,
-        "y_name": "HDP/ob. (EU27=100)",
+        "ds_y": ds_gpg,
+        "y_name": "GPG (%)",
     },
     {
-        "label": r"Pokrytí KV vs. čistý příjem (PPS)",
+        "label": r"Pokrytí KV vs. hod. příjem (PPS/h)",
         "ds_x": ds_cbc,
         "ds_y": ds_netpps,
-        "y_name": "Čistý příjem (PPS)",
+        "y_name": "Čistý příjem (PPS/h)",
     },
     {
         "label": r"Pokrytí KV vs. produktivita (PPS/h)",
