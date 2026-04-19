@@ -122,21 +122,29 @@ def _recenter_on_visual(fig: plt.Figure) -> None:
     if not has_suptitle and not has_legends:
         return
 
+    fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
 
     # ── snug suptitle down to just above axes content ──────────────────────
     if has_suptitle:
         st = fig._suptitle
+        was_visible = st.get_visible()
         # Temporarily hide suptitle so it doesn't inflate the bbox
         st.set_visible(False)
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
         # Get top of all remaining content (axes, annotations, legends…)
         bb_content = fig.get_tightbbox(renderer)
-        st.set_visible(True)
+        st.set_visible(was_visible)
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
         if bb_content is not None:
             fig_h = fig.get_figheight()
-            gap_pt = 6                                    # points above content
+            gap_pt = getattr(fig, '_suptitle_gap_pt', 6)
             content_top_frac = bb_content.y1 / fig_h
-            new_y = content_top_frac + gap_pt / 72 / fig_h
+            st_bb = st.get_window_extent(renderer=renderer).transformed(fig.transFigure.inverted())
+            anchor_offset = st.get_position()[1] - st_bb.y0
+            new_y = content_top_frac + gap_pt / 72 / fig_h + anchor_offset
             st.set_position((st.get_position()[0], new_y))
 
     # ── horizontal centring on the visual crop ─────────────────────────────
