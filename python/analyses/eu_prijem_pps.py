@@ -63,8 +63,8 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"HDP na obyvatele ({ds.latest_year})",
-    colorbar_label="HDP/obyvatele (EU27 = 100)",
+    title=f"HDP na obyvatele v PPS ({ds.latest_year})",
+    colorbar_label="HDP na obyvatele [PPS, EU27 = 100]",
     cmap="RdYlGn",
     vmin=40,
     vmax=160,
@@ -78,7 +78,7 @@ savefig(fig, "eu_prijem_pps", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_prijem_pps",
     caption=(
-        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), {ds.latest_year}."
+        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_prijem_pps",
     width=r"0.92\linewidth",

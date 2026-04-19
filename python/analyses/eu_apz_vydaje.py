@@ -48,8 +48,8 @@ print(f"All countries: {len(ds_all.countries)}  |  Years: {ds_all.years[0]}–{d
 fig = timeline(
     ds_all,
     countries=COUNTRIES,
-    title="Výdaje na aktivní politiku zaměstnanosti",
-    ylabel="výdaje na aktivní politiku zaměstnanosti [% HDP]",
+    title="Výdaje na APZ",
+    ylabel="výdaje na APZ [% HDP]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets={"SK": (4, 5), "PL": (4, -5)},
@@ -74,9 +74,9 @@ savefig(fig, "eu_apz_vydaje", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_apz_vydaje",
     caption=(
-        f"Výdaje na APZ jako podíl HDP, vývoj do {ds_all.years[-1]}, "
-        f"bez korekce v~PPS (podíl HDP je bezrozměrný poměr), "
-        f"{START_YEAR}--{ds_all.years[-1]}. Šedé linie = ostatní evropské země."
+        f"Výdaje na APZ (% HDP), vybrané země EU, "
+        f"{START_YEAR}--{ds_all.years[-1]}. "
+        f"Šedé linie~= ostatní evropské země."
     ),
     label="fig:eu_apz_vydaje",
     width=r"0.95\linewidth",
@@ -89,8 +89,8 @@ YEAR_2004 = 2004
 fig2 = timeline(
     ds_all,
     countries=COUNTRIES,
-    title=f"Výdaje na aktivní politiku zaměstnanosti ({YEAR_2004}–{ds_all.years[-1]})",
-    ylabel="výdaje na aktivní politiku zaměstnanosti [% HDP]",
+    title=f"Výdaje na APZ ({YEAR_2004}–{ds_all.years[-1]})",
+    ylabel="výdaje na APZ [% HDP]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets={"SK": (4, 5), "PL": (4, -5)},
@@ -108,9 +108,9 @@ savefig(fig2, "eu_apz_vydaje_2004", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_apz_vydaje_2004",
     caption=(
-        f"Výdaje na aktivní politiku zaměstnanosti jako podíl HDP (\\%), "
-        f"bez korekce v~PPS (podíl HDP je bězrozměrný poměr), "
-        f"2004--{ds_all.years[-1]}. Šedé linie = ostatní evropské země."
+        f"Výdaje na APZ (% HDP), vybrané země EU, "
+        f"2004--{ds_all.years[-1]}. "
+        f"Šedé linie~= ostatní evropské země."
     ),
     label="fig:eu_apz_vydaje_2004",
     width=r"0.95\linewidth",

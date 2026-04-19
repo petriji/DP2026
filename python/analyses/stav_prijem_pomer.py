@@ -118,7 +118,7 @@ fig = timeline(
     ds_ratio,
     countries=COUNTRIES,
     title="Čistý příjem jako podíl HDP na obyvatele",
-    ylabel="čistý příjem / HDP na ob. (EU27 = 100)",
+    ylabel="čistý příjem / HDP na obyvatele [EU27 = 100]",
     background_eu=True,
     annotate_last=True,
 )

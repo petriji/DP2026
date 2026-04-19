@@ -63,7 +63,7 @@ fig = choropleth(
     ds,
     year=ds.latest_year,
     title=f"Koeficient ekonomického zatížení seniory ({ds.latest_year})",
-    colorbar_label="Osoby 65+ / osoby 20–64 (%)",
+    colorbar_label="osoby 65+ / osoby 20–64 [%]",
     cmap="RdYlGn_r",
     vmin=20,
     vmax=60,
@@ -77,7 +77,7 @@ savefig(fig, "vyhled_zavislost_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "vyhled_zavislost_mapa",
     caption=(
-        f"Koeficient ekonomického zatížení seniory, EU, {ds.latest_year}."
+        f"Koeficient ekonomického zatížení seniory, evropské země, {ds.latest_year}."
     ),
     label="fig:vyhled_zavislost_mapa",
     width=r"0.92\linewidth",

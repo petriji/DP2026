@@ -54,8 +54,8 @@ print(f"Merged: {ds.df['geo'].nunique()} countries, years {ds.years[0]}–{ds.ye
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Pokrytí kolektivním vyjednáváním – vývoj",
-    ylabel="podíl zaměstnanců pokrytých KV [%]",
+    title="Pokrytí KV",
+    ylabel="pokrytí KV [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     show_eu_avg=False,
@@ -88,8 +88,8 @@ YEAR_START2 = 2004
 fig2 = timeline(
     ds,
     countries=COUNTRIES,
-    title=f"Pokrytí kolektivním vyjednáváním ({YEAR_START2}–{latest_yr})",
-    ylabel="podíl zaměstnanců pokrytých KV [%]",
+    title=f"Pokrytí KV ({YEAR_START2}–{latest_yr})",
+    ylabel="pokrytí KV [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets={"PL": (4, -10)},

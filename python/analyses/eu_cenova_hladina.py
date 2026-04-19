@@ -72,7 +72,7 @@ fig = choropleth(
     ds,
     year=ds.latest_year,
     title=f"Index cenové hladiny HDP ({ds.latest_year})",
-    colorbar_label="PLI (EU27 = 100)",
+    colorbar_label="PLI [EU27 = 100]",
     cmap="RdYlGn_r",   # red = expensive, green = cheap
     vmin=40,
     vmax=160,

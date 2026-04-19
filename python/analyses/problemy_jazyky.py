@@ -178,16 +178,13 @@ try:
         snap_l21,
         title=(
             f"Znalost alespoň 2 cizích jazyků — populace 25–64 let ({latest_l21})\n"
-            "% osob s\\,2+ cizími jazyky"
+            "% osob s\u00a02+ cizími jazyky"
         ),
         cbar_label="% populace 25–64",
         stem="problemy_jazyky_celkem",
         caption=(
-            f"Podíl osob ve věku 25--64 let znajících alespoň 2 cizí jazyky v~EU\\,27 "
-            f"({latest_l21}; Eurostat edat\\_aes\\_l21, Adult Education Survey). "
-            "Šedá = data nedostupná. "
-            "CZ se nachází mírně pod průměrem EU, avšak výrazně nad V4 zeměmi "
-            "v~témže regionu, zejména v\\,pracovně aktivní věkové skupině."
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
+            f"{latest_l21}"
         ),
         label="fig:problemy_jazyky_celkem",
         year=latest_l21,
@@ -249,17 +246,13 @@ try:
         snap_l22,
         title=(
             f"Znalost ≥2 cizích jazyků — věková skupina 25–64 let ({latest_l22})\n"
-            "% věkové skupiny s\\,2+ cizími jazyky"
+            "% věkové skupiny s\u00a02+ cizími jazyky"
         ),
         cbar_label="% věkové skupiny 25–64",
         stem="problemy_jazyky_vek",
         caption=(
-            f"Podíl osob ve věku 25--64 let znajících alespoň 2 cizí jazyky "
-            f"({latest_l22}; Eurostat edat\\_aes\\_l22, Adult Education Survey). "
-            "Tato pracovně aktivní věková skupina reprezentuje populaci "
-            "s\\,největším potenciálem mezinárodní mobility. "
-            "Vyšší hodnoty v\\,severských státech korelují s\\,otevřeností "
-            "pracovního trhu a vyšší mírou zahraničních zkušeností."
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
+            f"{latest_l22}"
         ),
         label="fig:problemy_jazyky_vek",
         year=latest_l22,
@@ -326,19 +319,13 @@ try:
         snap_l23,
         title=(
             f"Znalost ≥2 cizích jazyků — vysokoškolsky vzdělaní ({latest_l23})\n"
-            "% osob s\\,ISCED\u00a05\u20138 znajících 2+ cizí jazyky"
+            "% osob s\u00a0ISCED\u00a05\u20138 znajících 2+ cizí jazyky"
         ),
         cbar_label="% terciárně vzdělané populace",
         stem="problemy_jazyky_isced",
         caption=(
-            f"Podíl vysokoškolsky vzdělaných osob (ISCED\\,5--8) "
-            f"znajících alespoň 2 cizí jazyky ({latest_l23}; "
-            "Eurostat edat\\_aes\\_l23, Adult Education Survey). "
-            "Terciárně vzdělaní pracovníci s\\,jazykovými kompetencemi "
-            "představují klíčový potenciál mozkoviny: vyšší jazyková "
-            "vybavenost v\\,kombinaci s\\,nízkými mzdami v\\,CZ a "
-            "nedostatečnou APZ zvyšuje riziko odchodu kvalifikovaných "
-            "pracovníků do DE a AT."
+            f"Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) "
+            f"znajících alespoň 2~cizí jazyky, EU27, {latest_l23}"
         ),
         label="fig:problemy_jazyky_isced",
         year=latest_l23,

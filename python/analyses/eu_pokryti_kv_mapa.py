@@ -55,7 +55,7 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Pokrytí kolektivním vyjednáváním ({ds.latest_year})",
+    title=f"Pokrytí KV ({ds.latest_year})",
     colorbar_label="pokrytí KV [% zaměstnanců]",
     cmap="RdYlGn",
     vmin=0,
@@ -70,7 +70,7 @@ savefig(fig, "eu_pokryti_kv_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_pokryti_kv_mapa",
     caption=(
-        f"Pokrytí kolektivním vyjednáváním, EU, {ds.latest_year}."
+        f"Pokrytí KV, EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_pokryti_kv_mapa",
     width=r"0.92\linewidth",

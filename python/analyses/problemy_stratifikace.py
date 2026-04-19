@@ -603,7 +603,7 @@ try:
         background_eu=True,
         annotate_last=True,
         show_eu_avg=True,
-        ylabel="nekorigovaný GPG (%)",
+        ylabel="nekorigovaný GPG [%]",
         title="",
     )
     ax_b = fig_b.axes[0]
@@ -616,12 +616,10 @@ try:
     save_figure_tex(
         "problemy_gpg_sektor",
         caption=(
-            f"Nekorigovaný gender pay gap (GPG) v~\\% hrubého hodinového výdělku mužů, "
-            f"{START_YEAR}--{END_YEAR} "
-            "(Eurostat earn\\_gr\\_gpgr2, NACE B--S). "
+            f"Nekorigovaný GPG, vybrané země EU, "
+            f"{START_YEAR}--{END_YEAR}. "
             "Šedé linie = ostatní členské státy EU; "
-            "přerušovaná černá = průměr EU27. "
-            "ČR se dlouhodobě nachází výrazně nad průměrem EU."
+            "přerušovaná černá = průměr EU27"
         ),
         label="fig:problemy_gpg_sektor",
         width=r"0.95\linewidth",
@@ -682,7 +680,7 @@ if pct_df is not None and "p50" in pct_df.columns:
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
-    ax_c.set_xlabel("Hrubá měsíční mzda (Kč)", fontsize=FONT_SIZE)
+    ax_c.set_xlabel("hrubá měsíční mzda [Kč]", fontsize=FONT_SIZE)
     ax_c.set_title(
         f"ČR: rozložení mezd podle odvětví NACE (ISPV {ispv_year}/H2)\n"
         "mezikvartilový rozsah P25–P75 a medián",
@@ -694,8 +692,7 @@ if pct_df is not None and "p50" in pct_df.columns:
     save_figure_tex(
         "problemy_sektor_percentily",
         caption=(
-            f"Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, {ispv_year}.okým IQR vyžadují "
-            "flexibilnější přístupy nebo individuální sjednávání mzdy."
+            f"Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, {ispv_year}"
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_sektor_percentily",

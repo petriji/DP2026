@@ -233,8 +233,8 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
     fig_a = timeline(
         ds_nat,
         countries=COUNTRIES,
-        title="Přeshraniční pracovní dojíždění do zahraničí",
-        ylabel="% zaměstnaných pracujících v\u00a0zahraničí",
+        title="Přeshraniční pracovní dojíždění",
+        ylabel="podíl pracujících v\u00a0zahraničí [%]",
         highlight=HIGHLIGHT,
         annotate_last=True,
         show_eu_avg=False,
@@ -245,7 +245,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
     yr_max = nat["time"].max()
     save_figure_tex(
         "problemy_dojezdeni_vyvoj",
-        caption=f"Přeshraniční pracovní dojíždění, vývoj {yr_min}--{yr_max}.",
+        caption=f"Přeshraniční pracovní dojíždění, vybrané země EU, {yr_min}--{yr_max}",
         label="fig:problemy_dojezdeni_vyvoj",
         width=r"0.95\linewidth",
         cite_keys="eurostat_lfst_r_lfe2ecomm",

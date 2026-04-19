@@ -153,7 +153,7 @@ savefig(fig_map, "vyhled_porodnost_mapa", out_dir=LATEX_PICS_DIR)
 
 save_figure_tex(
     "vyhled_porodnost_mapa",
-    caption=f"Úhrnná plodnost (TFR), EU mapa, {ds.latest_year}.",
+    caption=f"Úhrnná plodnost (TFR), evropské země, {ds.latest_year}.",
     label="fig:vyhled_porodnost_mapa",
     width=r"0.85\linewidth",
     cite_keys="eurostat_demo_find",

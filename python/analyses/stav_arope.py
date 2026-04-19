@@ -53,7 +53,7 @@ map_name = f"stav_arope_mapa_{ds.latest_year}"
 fig_a = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"AROPE – ohrožení chudobou nebo sociálním vyloučením ({ds.latest_year})",
+    title=f"Míra AROPE ({ds.latest_year})",
     colorbar_label="AROPE [%]",
     cmap="RdYlGn_r",
     vmin=0,
@@ -74,8 +74,8 @@ V4_AND_NEIGHBOURS = ["CZ", "SK", "PL", "HU", "AT", "DE", "SI", "HR"]
 fig_b = timeline(
     ds,
     countries=V4_AND_NEIGHBOURS,
-    title="AROPE – vývoj ve střední Evropě",
-    ylabel="AROPE [%]",
+    title="Míra AROPE",
+    ylabel="míra AROPE [%]",
     highlight=["CZ"],
     background_eu=True,
 )
@@ -96,8 +96,8 @@ GROUPS = {
 fig_c = timeline_groups(
     ds,
     GROUPS,
-    title="AROPE – průměr podle skupin zemí",
-    ylabel="AROPE [%]",
+    title="Míra AROPE podle skupin zemí",
+    ylabel="míra AROPE [%]",
 )
 savefig(fig_c, "stav_arope_skupiny", out_dir=LATEX_PICS_DIR)
 save_figure_tex(

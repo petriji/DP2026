@@ -71,7 +71,7 @@ fig = choropleth(
     ds,
     year=ds.latest_year,
     title=f"Podíl OSVČ na zaměstnanosti ({ds.latest_year})",
-    colorbar_label="Podíl OSVČ (%)",
+    colorbar_label="podíl OSVČ [%]",
     cmap="RdYlGn_r",
     vmin=5,
     vmax=35,

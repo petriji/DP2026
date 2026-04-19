@@ -185,9 +185,9 @@ ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
 ax.set_xlabel("rok")
-ax.set_ylabel("index (EU27 = 100) [%]")
+ax.set_ylabel("index [EU27 = 100]")
 ax.set_title(
-    "Konvergence produktivity práce a čistého disponibilního příjmu (obě v PPS)"
+    "Konvergence produktivity práce a čistého příjmu (PPS, EU27 = 100)"
 )
 ax.set_xlim(START_YEAR, lp_years[-1])
 
@@ -206,7 +206,7 @@ savefig(fig, "eu_konvergence", out_dir=LATEX_PICS_DIR)
 last_year = lp_years[-1]
 save_figure_tex(
     "eu_konvergence",
-    caption=f"Konvergence reálné produktivity a~čistých příjmů k~EU27, {START_YEAR}--{last_year}.",
+    caption=f"Konvergence produktivity práce a~čistého příjmu k~EU27, vybrané země EU, {START_YEAR}--{last_year}.",
     cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:eu_konvergence",
     width=r"0.95\linewidth",

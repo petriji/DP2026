@@ -163,9 +163,9 @@ ax.yaxis.set_major_formatter(
 )
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
 ax.set_xlabel("rok", fontsize=FONT_SIZE)
-ax.set_ylabel("Počet emigrantů (tisíce)", fontsize=FONT_SIZE)
+ax.set_ylabel("počet emigrantů [tis.]", fontsize=FONT_SIZE)
 ax.set_title(
-    "Emigrace českých státních příslušníků z\u00a0ČR\npodle věkové skupiny",
+    "Emigrace občanů ČR podle věkové skupiny",
     fontsize=FONT_SIZE,
 )
 ax.legend(frameon=False, fontsize=FONT_SIZE - 1)

@@ -205,9 +205,9 @@ if years_bc:
     )
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_b.set_ylabel("Index [HICP = 100]", fontsize=FONT_SIZE)
+    ax_b.set_ylabel("index [HICP = 100]", fontsize=FONT_SIZE)
     ax_b.set_title(
-        "CZ: kumulativní mzdový nárůst normovaný na HICP",
+        "Kumulativní mzdový nárůst (HICP = 100), ČR",
         fontsize=FONT_SIZE,
     )
     ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
@@ -257,10 +257,9 @@ if years_c:
     )
     ax_c.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_c.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_c.set_ylabel("Skutečný nárůst − sjednaný nárůst (p.p.)", fontsize=FONT_SIZE)
+    ax_c.set_ylabel("skutečný − sjednaný nárůst [p.b.]", fontsize=FONT_SIZE)
     ax_c.set_title(
-        "CZ: rozdíl mezi skutečným nárůstem mzdových nákladů (Eurostat LCI)\n"
-        "a sjednaným nárůstem v kolektivních smlouvách (IPP/MPSV)",
+        "Rozdíl skutečného a sjednaného mzdového nárůstu, ČR",
         fontsize=FONT_SIZE,
     )
 

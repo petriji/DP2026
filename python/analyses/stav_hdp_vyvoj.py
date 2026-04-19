@@ -62,7 +62,7 @@ fig = timeline(
     ds,
     countries=COUNTRIES,
     title="HDP na obyvatele",
-    ylabel="HDP/obyvatele (EU27 = 100)",
+    ylabel="HDP na obyvatele [PPS, EU27 = 100]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     show_eu_avg=False,    background_eu=True,)
@@ -88,8 +88,7 @@ savefig(fig, "stav_hdp_vyvoj", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "stav_hdp_vyvoj",
     caption=(
-        "HDP na obyvatele v~PPS, index EU27\\,=\\,100 "
-        "(kód \\texttt{PC\\_EU27\\_2020\\_HAB\\_MPPS\\_CP}), "
+        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), vybrané země EU, "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_hdp_vyvoj",

@@ -259,8 +259,8 @@ latest_yr = ds.years[-1]
 fig = timeline(
     ds,
     countries=countries_present,
-    title="Podíl ztracené pracovní doby vlivem pracovních konfliktů",
-    ylabel="ztracená pracovní doba (stávky a výluky) [%]",
+    title="Ztracená pracovní doba vlivem pracovních konfliktů",
+    ylabel="ztracená pracovní doba [%]",
     highlight=highlight_present,
     annotate_last=True,
     background_eu=True,

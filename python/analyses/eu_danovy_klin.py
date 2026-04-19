@@ -49,7 +49,7 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Daňový klín (67 % prům. mzdy, {ds.latest_year})",
+    title=f"Daňový klín (67 % průměrné mzdy, {ds.latest_year})",
     colorbar_label="daňový klín [% mzdových nákladů]",
     cmap="RdYlGn_r",
     label_countries=True,
@@ -62,9 +62,8 @@ savefig(fig, "eu_danovy_klin", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_danovy_klin",
     caption=(
-        f"Daňový klín (67\\,\\% průměrné mzdy), EU mapa ({ds.latest_year}), "
-        f"vyjadřuje \\% celkových nákladů práce – bez korekce v~PPS "
-        f"(daňový klín je bezrozměrný poměr)."
+        f"Daňový klín (67\\,\\% průměrné mzdy, \\% celkových nákladů práce), "
+        f"EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_danovy_klin",
     width=r"0.92\linewidth",

@@ -522,7 +522,7 @@ save_table_tex(
     df_table,
     "prakticka_srovnani",
     caption=(
-        f"Vybrané ukazatele trhu práce — "
+        f"Vybrané ukazatele trhu práce -- "
         f"{', '.join(COUNTRY_LABELS[c] for c in COUNTRIES)}. "
         f"Data za rok {_caption_year}."
     ),

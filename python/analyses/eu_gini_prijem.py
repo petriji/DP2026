@@ -66,7 +66,7 @@ fig = timeline(
     ds,
     countries=COUNTRIES,
     title="Giniho koeficient příjmové nerovnosti",
-    ylabel="Giniho koeficient (disponibilní příjem, 0–100)",
+    ylabel="Giniho koeficient [0–100]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
@@ -83,7 +83,7 @@ savefig(fig, "eu_gini_prijem", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_gini_prijem",
     caption=(
-        f"Vývoj Giniho koeficientu disponibilního příjmu, {START_YEAR}--{ds.years[-1]}."
+        f"Giniho koeficient disponibilního příjmu, vybrané země EU, {START_YEAR}--{ds.years[-1]}."
     ),
     label="fig:eu_gini_prijem",
     width=r"0.95\linewidth",

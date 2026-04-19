@@ -319,7 +319,7 @@ ax_a.set_yticklabels(
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
-ax_a.set_xlabel("Hrubá měsíční mzda / plat – medián (tis.\u00a0Kč)", fontsize=FONT_SIZE)
+ax_a.set_xlabel("hrubá měsíční mzda/plat – medián [tis.\u00a0Kč]", fontsize=FONT_SIZE)
 ax_a.set_title(
     f"ČR: mediánová mzda/plat podle odvětví CZ-NACE ({ISPV_YEAR})\n"
     "Chybové úsečky = mezikvartilový rozsah P25–P75",
@@ -455,7 +455,7 @@ ax_b.annotate(
 
 ax_b.set_xticks(x_pos)
 ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FONT_SIZE - 0.5)
-ax_b.set_ylabel("Hrubá měsíční mzda / plat (tis.\u00a0Kč)", fontsize=FONT_SIZE)
+ax_b.set_ylabel("hrubá měsíční mzda/plat [tis.\u00a0Kč]", fontsize=FONT_SIZE)
 ax_b.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.\u00a0Kč")
 )

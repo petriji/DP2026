@@ -38,8 +38,8 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Hustota odborových organizací ({ds.latest_year})",
-    colorbar_label="hustota odborů [% zaměstnaných]",
+    title=f"Hustota odborů ({ds.latest_year})",
+    colorbar_label="hustota odborů [% zaměstnanců]",
     cmap="RdYlGn",
     vmin=0,
     vmax=80,
@@ -53,7 +53,7 @@ savefig(fig, "eu_hustota_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_hustota_mapa",
     caption=(
-        f"Hustota odborových organizací, EU mapa, {ds.latest_year}."
+        f"Hustota odborů, EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_hustota_mapa",
     width=r"0.92\linewidth",

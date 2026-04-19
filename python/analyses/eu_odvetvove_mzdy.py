@@ -173,7 +173,7 @@ ax1.hlines([], [], [], colors="#222222", linewidth=1.8, linestyle="-", label="EU
 ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
 ax1.set_ylabel("hodinové náklady práce [PPS/h]")
-ax1.set_title(f"Náklady práce ve vybraných odvětvích a zemích EU27 ({ref_year})")
+ax1.set_title(f"Hodinové náklady práce dle odvětví ({ref_year})")
 ax1.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
@@ -185,9 +185,9 @@ savefig(fig1, "eu_odvetvove_mzdy_bar", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_odvetvove_mzdy_bar",
     caption=(
-        f"Celkové hodinové náklady práce [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
-        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
-        f"Plná čára s~zarážkami = průměr EU27 pro dané odvětví."
+        f"Hodinové náklady práce (PPS/h) v~klíčových odvětvích NACE, "
+        f"vybrané země EU, {ref_year}. "
+        f"Plná čára se~zarážkami~= průměr EU27."
     ),
     label="fig:eu_odvetvove_mzdy_bar",
     width=r"0.95\linewidth",
@@ -216,8 +216,8 @@ if "EU27_2020" in lc_pps.index:
     ax2.axvline(0, color="black", linewidth=0.9, zorder=2)
     ax2.set_yticks(y)
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
-    ax2.set_xlabel("odchylka od průměru EU27 [p.\\,b., EU27 = 100]")
-    ax2.set_title(f"Srovnání nákladů práce ve vybraných odvětvích a zemích EU27 ({ref_year})")
+    ax2.set_xlabel("odchylka od průměru EU27 [p.\\,b.]")
+    ax2.set_title(f"Odchylka nákladů práce od průměru EU27 ({ref_year})")
     ax2.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))

@@ -604,9 +604,9 @@ ax.axvline(
     label=f"Minimální důchod {MIN_PENSION:,} Kč",
 )
 
-ax.set_xlabel("Čistá mzda / výše důchodu (tis. Kč/měsíc)", fontsize=FONT_SIZE)
+ax.set_xlabel("čistá mzda / výše důchodu [tis. Kč/měsíc]", fontsize=FONT_SIZE)
 ax.set_ylabel(
-    "Počet osob (tis.) na interval 1 tis. Kč",
+    "počet osob na 1\u00a0tis.\u00a0Kč [tis.]",
     fontsize=FONT_SIZE,
 )
 ax.xaxis.set_major_formatter(
@@ -632,8 +632,9 @@ savefig(fig, "problemy_mzda_duchod", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "problemy_mzda_duchod",
     caption=(
-        f"Distribuce čistých mezd a~starobních důchodů, ČR, {wage_year}.N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
-        f"a starobních důchodů (CSSZ {pension_year}; "
+        f"Distribuce čistých mezd a~starobních důchodů, ČR, {wage_year}/{pension_year}. "
+        f"Čisté mzdy (ISPV~{wage_year}; N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
+        f"a~starobní důchody (CSSZ~{pension_year}; "
         f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
         "Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\\,\\%), "
         "ZP (4{{,}}5\\,\\%) a daně z příjmů fyzických osob "

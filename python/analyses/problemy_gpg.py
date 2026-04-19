@@ -124,11 +124,11 @@ ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
 
 fig_a = choropleth(
     ds_gpg, year=snap_year,
-    title=f"Neupravený gender pay gap v~EU ({snap_year})\nNACE B–S, v~% hodinové mzdy mužů",
+    title=f"Nekorigovaný GPG v\u00a0EU ({snap_year})\nNACE B–S, v\u00a0% hodinové mzdy mužů",
     cmap="RdBu_r",
     vmin=0,
     vmax=25,
-    colorbar_label="GPG (% mzdy mužů)",
+    colorbar_label="nekorigovaný GPG [%]",
     label_countries=True,
 )
 
@@ -136,13 +136,9 @@ savefig(fig_a, "problemy_gpg_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "problemy_gpg_mapa",
     caption=(
-        f"Neupravený gender pay gap, EU27, {snap_year}. "
-        r"(Eurostat \texttt{earn\_gr\_gpgr2}, NACE B--S). "
+        f"Nekorigovaný gender pay gap (NACE B--S), EU27, {snap_year}. "
         "Hodnota udává, o~kolik procent jsou průměrné hodinové výdělky žen nižší "
-        "než výdělky mužů. ČR se pohybuje výrazně nad průměrem EU\\@. "
-        "Transparentnost odměňování zakotvená v~kolektivních smlouvách "
-        "(viz EU Pay Transparency Directive 2023/970) je klíčovým nástrojem "
-        "ke snížení tohoto diferenciálu."
+        "než výdělky mužů"
     ),
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
@@ -260,7 +256,7 @@ ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
 ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
 ax_b.set_xlabel("percentil mzdové distribuce", fontsize=FONT_SIZE - 1)
-ax_b.set_ylabel("hodinová mzda (PPS/h)", fontsize=FONT_SIZE - 1)
+ax_b.set_ylabel("hodinová mzda [PPS/h]", fontsize=FONT_SIZE - 1)
 ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax_b.set_title(
     f"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
@@ -287,13 +283,9 @@ savefig(fig_b, "problemy_gpg_stratifikace", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "problemy_gpg_stratifikace",
     caption=(
-        f"Hodinové mzdy podle pohlaví a percentilu, {ses_year}. "
+        f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země EU, {ses_year}. "
         "Plná čára = ženy, přerušovaná = muži; barvy odlišují země. "
-        "Zobrazeny tři ukazatele: D1 (1. decil), medián a D9 (9. decil). "
-        "Ve~všech zemích leží celá ženská distribuce níže než mužská; "
-        "rozdíl roste v~horním decilu (D9), kde transparentní mzdové "
-        "tabulky v~kolektivních smlouvách mají největší potenciál "
-        "snížit gender pay gap."
+        "Zobrazeny tři ukazatele: D1 (1.~decil), medián a~D9 (9.~decil)"
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",

@@ -328,10 +328,9 @@ if ispv_wages is not None:
     ax_a.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
     )
-    ax_a.set_xlabel(f"Index (medián ekonomiky = 100)", fontsize=FONT_SIZE)
+    ax_a.set_xlabel(f"index (medián ekonomiky = 100)", fontsize=FONT_SIZE)
     ax_a.set_title(
-        f"ČR: mediánová mzda podle odvětví (ISPV {ispv_year}/H2)\n"
-        "relativně k celkové mediánové mzdě",
+        f"ČR: mediánová mzda podle odvětví NACE (ISPV {ispv_year})",
         fontsize=FONT_SIZE,
     )
     above = mpatches.Patch(color=CZ_COLOR, alpha=0.8, label="Nadprůměrné mzdy (≥ průměr ekonomiky)")
@@ -342,10 +341,7 @@ if ispv_wages is not None:
     save_figure_tex(
         "problemy_sektor_mzdy_cz",
         caption=(
-            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}., normovaná na celkový medián ekonomiky\u00a0= 100. "
-            "Červené sloupce\u00a0= odvětví s~nadprůměrnými mzdami; "
-            "modré\u00a0= podprůměrná odvětví, kde kolektivní smlouvy plní "
-            "silnější stabilizační roli mzdového minima."
+            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}, normovaná na celkový medián ekonomiky~= 100"
         ),
         label="fig:problemy_sektor_mzdy_cz",
         width=r"0.95\linewidth",
@@ -383,7 +379,7 @@ if lci_by_nace:
     )
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_b.set_ylabel("Meziroční nárůst mzdových nákladů (%)", fontsize=FONT_SIZE)
+    ax_b.set_ylabel("meziroční nárůst LCI [%]", fontsize=FONT_SIZE)
     ax_b.set_title(
         "ČR: růst indexu mzdových nákladů (LCI) podle odvětví NACE",
         fontsize=FONT_SIZE,
@@ -399,7 +395,7 @@ if lci_by_nace:
     savefig(fig_b, "problemy_sektor_lci", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "problemy_sektor_lci",
-        caption=f"ČR: meziroční nárůst LCI podle odvětví NACE, {yr0}\u2013{yr1}.",
+        caption=f"Meziroční nárůst LCI podle odvětví NACE, ČR, {yr0}--{yr1}",
         label="fig:problemy_sektor_lci",
         width=r"0.95\linewidth",
         cite_keys="eurostat_lci",
@@ -459,9 +455,9 @@ if cv_by_country:
             ha="center", va="bottom", fontsize=FONT_SIZE - 1.5,
         )
 
-    ax_c.set_ylabel("Variační koeficient nárůstu LCI napříč odvětvími (%)", fontsize=FONT_SIZE)
+    ax_c.set_ylabel("variační koeficient nárůstu LCI [%]", fontsize=FONT_SIZE)
     ax_c.set_title(
-        f"Heterogenita odvětvového vývoje mezd: 6 zemí ({latest_yr})",
+        f"Variace nárůstu LCI napříč odvětvími, vybrané země EU ({latest_yr})",
         fontsize=FONT_SIZE,
     )
     ax_c.yaxis.set_major_formatter(
@@ -471,7 +467,7 @@ if cv_by_country:
     savefig(fig_c, "problemy_sektor_disperze", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "problemy_sektor_disperze",
-        caption=f"Variace nárůstu LCI napříč odvětvími (6 zemí), {latest_yr}.",
+        caption=f"Variace nárůstu LCI napříč odvětvími, vybrané země EU, {latest_yr}",
         cite_keys="eurostat_lci",
         label="fig:problemy_sektor_disperze",
         width=r"0.95\linewidth",

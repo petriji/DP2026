@@ -40,8 +40,8 @@ print(f"Display year: {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Výdaje na aktivní politiku zaměstnanosti ({ds.latest_year})",
-    colorbar_label="Výdaje na APZ (% HDP)",
+    title=f"Výdaje na APZ ({ds.latest_year})",
+    colorbar_label="výdaje na APZ [% HDP]",
     cmap="RdYlGn",
     vmin=0,
     vmax=2.0,
@@ -54,7 +54,7 @@ savefig(fig, "eu_apz_mapa", out_dir=LATEX_PICS_DIR)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex(
     "eu_apz_mapa",
-    caption=f"Výdaje na APZ jako podíl HDP, EU mapa, {ds.latest_year}.",
+    caption=f"Výdaje na APZ (% HDP), EU mapa, {ds.latest_year}.",
     label="fig:eu_apz_mapa",
     width=r"0.92\linewidth",
     cite_keys="oecd_lmpexp",

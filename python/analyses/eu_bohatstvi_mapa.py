@@ -54,8 +54,8 @@ print(f"Display year (latest): {ds.latest_year}")
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Podíl top 10\\,% domácností na čistém jmění (do {ds.latest_year})",
-    colorbar_label="top 10 % podíl na čistém jmění [%]",
+    title=f"Podíl top 10 % domácností na čistém jmění (do {ds.latest_year})",
+    colorbar_label="podíl top 10 % na čistém jmění [%]",
     cmap="RdYlGn_r",
     vmin=30,
     vmax=80,
@@ -70,8 +70,8 @@ savefig(fig, "eu_bohatstvi_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_bohatstvi_mapa",
     caption=(
-        f"Majetkové nerovnosti: top 10\,\%, EU, do {ds.latest_year}). "
-        "Šedá = data nedostupná."
+        f"Podíl top 10\,\% domácností na čistém jmění, EU mapa, do {ds.latest_year}. "
+        "Šedá~= data nedostupná."
     ),
     label="fig:eu_bohatstvi_mapa",
     width=r"0.95\linewidth",

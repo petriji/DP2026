@@ -165,9 +165,9 @@ ax.axhline(0, color="gray", linewidth=0.7, linestyle=":", alpha=0.5)
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%"))
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
 ax.set_xlabel("rok", fontsize=FONT_SIZE)
-ax.set_ylabel("Meziroční nárůst [\%]", fontsize=FONT_SIZE)
+ax.set_ylabel("meziroční nárůst [%]", fontsize=FONT_SIZE)
 ax.set_title(
-    "CZ: sjednaný nárůst v kolektivních smlouvách vs. skutečný nárůst mzdových nákladů",
+    "Sjednaný vs. skutečný mzdový nárůst, ČR",
     fontsize=FONT_SIZE,
 )
 
