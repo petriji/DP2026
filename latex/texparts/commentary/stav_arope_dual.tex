@@ -1,0 +1,23 @@
+Míra \ac{AROPE} v~\acl{geo-CZ} dlouhodobě patří k~nejnižším v~\ac{EU}; v~roce~2024 činila \SI{11,3}{\percent} proti průměru \ac{EU}27 na úrovni \SI{21}{\percent}~\cite{eurostat_ilc_peps01n_PC_pop}.
+Horní panel obrázku~\ref{fig:stav_arope_dual} ukazuje, že tato pozice je dlouhodobě stabilní a~v~rámci vybraného srovnání (\acl{geo-AT}, \acl{geo-DE}, \acl{geo-DK}, \acl{geo-PL}, \acl{geo-SK}) se \acs{geo-CZ} pohybuje nejníže po celé období 2015--2024.
+Pozoruhodný je souběžný vývoj \acs{geo-PL}, kde \ac{AROPE} poklesla z~\SI{22,5}{\percent} v~roce~2015 na \SI{16,0}{\percent} v~roce~2024~\cite{eurostat_ilc_peps01n_PC_pop} --- jedná se o~nejvýraznější konvergenční posun ve skupině.
+Oproti tomu \acs{geo-SK} vykazuje mírně stoupající trajektorii (\SIrange{17,3}{18,3}{\percent}), \acs{geo-DE} setrvale osciluje kolem \SI{21}{\percent} a~\acs{geo-DK} pozvolna roste nad \SI{18}{\percent}~\cite{eurostat_ilc_peps01n_PC_pop}.
+
+Nízká míra \ac{AROPE} v~\acs{geo-CZ} je však ukazatelem výhradně relativním: operuje s~národní hranicí chudoby odvozenou z~mediánu domácího příjmu a~nereflektuje absolutní úroveň životního standardu v~mezinárodním srovnání~\cite{eurostat_ilc_peps01n_PC_pop}.
+Spodní panel obrázku~\ref{fig:stav_arope_dual} tuto mezeru doplňuje: zobrazuje horní hranici třetího decilu (\acs{var-D3}) čistého ekvivalizovaného příjmu domácností v~\ac{PPS} jako podíl vůči mediánu \ac{EU}27, přičemž hodnota~100 odpovídá evropskému mediánu.
+Hodnoty pod touto referencí znamenají, že prahový příjem oddělující chudší třetinu domácností od bohatší většiny leží pod celoevropským mediánem --- jde tedy o~\emph{absolutní}, nikoli pouze národně-relativní ukazatel expozice nízkým příjmům.
+
+Porovnání obou panelů odhaluje paradox \acs{geo-CZ}: přestože míra \ac{AROPE} patří k~nejnižším v~\ac{EU}, hranice \acs{var-D3} dosahuje pouze \SI{66}{\percent} mediánu \ac{EU}27 v~roce~2024~\cite{eurostat_ilc_di01_D3_PPS}.
+Česká spodní třetina domácností se tedy nachází hluboko pod evropským mediánem, přičemž její domácí postavení --- a~tudíž i~vykazovaná míra \ac{AROPE} --- zůstává příznivé výhradně proto, že i~národní medián je v~absolutních jednotkách nízký.
+V~\acs{geo-AT} leží \acs{var-D3} nad evropským mediánem (\SI{111}{\percent} v~roce~2024), v~\acs{geo-DE} a~\acs{geo-DK} se pohybuje kolem \SI{92}{\percent}; oproti tomu \acs{geo-SK} dosahuje pouhých \SI{45}{\percent} a~\acs{geo-PL} \SI{67}{\percent}~\cite{eurostat_ilc_di01_D3_PPS}.
+
+Dvě diametrálně odlišné trajektorie zemí \ac{V4} dokládají, že konvergence v~\ac{AROPE} a~konvergence v~absolutní kupní síle dolních decilů probíhají nezávisle.
+\Acl{geo-PL} během sledovaného období posunulo \acs{var-D3} z~\SI{49}{\percent} na \SI{67}{\percent} mediánu \ac{EU}27, což v~kombinaci s~poklesem \ac{AROPE} představuje skutečný konvergenční vzorec~\cite{eurostat_ilc_di01_D3_PPS,eurostat_ilc_peps01n_PC_pop}.
+\Acl{geo-SK} naopak zaznamenalo pokles \acs{var-D3} z~\SI{54}{\percent} na \SI{45}{\percent} při současném růstu \ac{AROPE}; jedná se o~divergenční trajektorii, v~níž se relativní i~absolutní postavení slabších domácností zhoršuje.
+Paralelně \acs{geo-DK} a~\acs{geo-DE} ztrácejí absolutní přednost --- jejich \acs{var-D3} klesla v~letech 2015--2024 přibližně o~\numrange{10}{13}~procentních bodů~\cite{eurostat_ilc_di01_D3_PPS} ---, aniž by se však jejich \ac{AROPE} výrazně zvýšila, neboť silné domácí instituce \ac{KS} a~indexační mechanismy~\cite{etui_cba} tlumí nárůst národně-relativní chudoby.
+
+Z~výše uvedeného vyplývá, že samotný ukazatel \ac{AROPE} není pro hodnocení absolutní životní úrovně dolní třetiny domácností postačující.
+\Acl{geo-CZ} tak těží z~\enquote{dvojí statistické privilegovanosti} --- nízký národní medián generuje nízkou míru \ac{AROPE}, avšak zároveň udržuje absolutní kupní sílu spodního decilu na zlomku \acs{geo-AT} či \acs{geo-DE}.
+Dlouhodobá udržitelnost této pozice závisí na schopnosti posouvat \acs{var-D3} směrem k~evropskému mediánu, což vyžaduje institucionální kapacitu \ac{KS} a~účinnou \ac{APZ} schopnou sdílet produktivitní přebytek s~pracovníky v~dolní části příjmové distribuce.
+
+\input{texparts/python/stav_arope_dual}
