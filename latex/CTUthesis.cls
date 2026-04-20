@@ -1720,6 +1720,8 @@
   exponent-product       = \cdot,
   product-units          = repeat,
   product-symbol         = \cdot,
+  range-phrase           = {--},
+  range-units            = single,
 }
 % Custom calligraphic font family for math mode: \xmcal{H}, \xmcal{L} etc.
 % (Integral/Laplace transform notation — @ is already a letter here.)
