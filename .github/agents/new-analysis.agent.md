@@ -121,6 +121,13 @@ for child in ax.get_children():
 ```
 Only replace codes that have a `geo-XX` entry declared in `acro.tex` (all EU-27 + GR).
 
+**Note:** `\acs{geo-XX}` renders as a hover tooltip with the full country name but is **not clickable** (tag=geo entries are excluded from `\printacronyms`, so no link target exists). The CTUthesis acro template detects `tag=geo` and emits `\pdftooltip` only — clicking does nothing by design. Do not document `\acs{geo-XX}` as a hyperlink.
+
+**Choropleth defaults (`stattool.map_europe.choropleth`):**
+- `cmap`: prefer `CMAP_SEQUENTIAL` (`"RdYlGn_r"`, green→yellow→red). Avoid `YlOrRd` for cross-figure consistency.
+- `highlight_colorbar`: defaults to `["CZ","SK","PL","DE","AT","DK"]` (the six thesis comparators) when not specified.
+- Do NOT pre-clip with `vmin/vmax=quantile(...)` unless explicitly justified — let the full color range cover the data.
+
 ### Phase 4 — Register in analytics_registry.toml
 Read `python/analytics_registry.toml` to understand the format, then append the new entry:
 ```toml
