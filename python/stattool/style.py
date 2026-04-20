@@ -132,10 +132,10 @@ PGF_PREAMBLE = r"""
 % Stub \pdftooltip for the PGF metrics pass (real one from CTUthesis.cls).
 % Falls back to showing the displayed text only, so figures degrade gracefully.
 \providecommand{\pdftooltip}[2]{#1}
-% Stub \CTUtooltiplink (user-level alias used in PGF annotations) for the
-% metrics pass.  Falls back to showing the visible text only (arg #2).
-% \CTU@tooltiplink (the internal @-command) is NOT used directly in PGF
-% annotations because \makeatletter inside a tokenised group has no effect.
+% Stub \CTUtooltiplink for the PGF metrics pass.
+% CTUthesis.cls defines \CTUtooltiplink as the public alias for \CTU@tooltiplink.
+% Using the public (no-@) name avoids catcode issues when the text is typeset
+% after the preamble (where @  has catcode 12, not 11).
 \providecommand{\CTUtooltiplink}[3]{#2}
 % Stub acro commands so PGF text-metric pass can measure them.
 % The real acro package resolves them when \input{} into main.tex.
@@ -243,15 +243,14 @@ def apply_geo_labels_pgf(
         if txt not in codes:
             continue
         if values is not None and txt in values:
-            # Country code labels never become hyperlinks: their acro entries
-            # use tag=geo which is excluded from the printed acronym list, so
-            # no \hypertarget{geo-XX} exists.  A GoTo link to a missing
-            # destination falls back to page 1 in Acrobat.  Use \pdftooltip
-            # (annotation only, no link) so hover shows the long Czech name.
+            # Use \CTUtooltiplink (public alias for \CTU@tooltiplink) so that
+            # the label text can be typeset after the preamble where @ has
+            # catcode 12 (not a letter).  CTUthesis.cls defines
+            # \CTUtooltiplink as \CTU@tooltiplink{#1}{#2}{#3}.
             display = rf"\contour{{white}}{{{txt}}}" if halo else txt
             val_str = tooltip_fmt.format(values[txt])
             long = GEO_LONG_NAMES.get(txt, txt)
-            label = rf"\pdftooltip{{{display}}}{{{long}: {val_str}}}"
+            label = rf"\CTUtooltiplink{{geo-{txt}}}{{{display}}}{{{long}: {val_str}}}"
         else:
             label = rf"\acs{{geo-{txt}}}"
             if halo:
@@ -288,17 +287,17 @@ def add_pgf_tooltips(
         Python format string for the numeric value (e.g. ``"{:.1f}"`` or
         ``"{:.2f}"``).  Default ``"{:.1f}"``.
     """
-    import pandas as pd  # noqa: F401 — guard if not yet imported at module top
+    import pandas as pd  # noqa: F401 --- guard if not yet imported at module top
     if mpl.get_backend() != "pgf":
         return
+    x_min, x_max = ax.get_xlim()
     for geo in pivot.columns:
         series = pivot[geo].dropna()
         for year, val in series.items():
+            if not (x_min <= float(year) <= x_max):
+                continue
             long = GEO_LONG_NAMES.get(str(geo), str(geo))
-            tooltip_text = (
-                f"{long} {int(year)}: {fmt.format(val)}"
-                .replace('%', r'\%').replace('&', r'\&').replace('#', r'\#')
-            )
+            tooltip_text = f"{long} {int(year)}: {fmt.format(val)}"
             ax.text(
                 float(year),
                 float(val),
@@ -317,11 +316,8 @@ def add_pgf_tooltips(
 
 def add_pgf_tooltips_scatter(
     ax: "plt.Axes",
-    points: "pd.DataFrame",
+    merged: "pd.DataFrame",
     *,
-    geo_col: str = "geo",
-    x_col: str = "x",
-    y_col: str = "y",
     fmt_x: str = "{:.1f}",
     fmt_y: str = "{:.1f}",
     label_x: str = "x",
@@ -329,25 +325,46 @@ def add_pgf_tooltips_scatter(
 ) -> None:
     r"""Overlay invisible ``\pdftooltip`` annotations at every scatter point.
 
-    Each row of *points* yields one tooltip showing
-    ``"<long-name> | <label_x>: N | <label_y>: N"`` on hover (Acrobat/Foxit).
-    No-op when the active matplotlib backend is not ``pgf``.
+    Each annotation is a zero-width phantom node that hover-capable PDF
+    viewers (Adobe Acrobat, Foxit) render as a tooltip showing the country
+    name and the x/y values.  In other viewers the annotation is completely
+    invisible.
+
+    This function is a **no-op** when the active matplotlib backend is not
+    ``pgf``; it can therefore be called unconditionally in scripts that
+    support both PGF and raster output.
+
+    Parameters
+    ----------
+    ax:
+        Axes containing the plotted scatter data.
+    merged:
+        DataFrame with at minimum columns ``geo``, ``x``, ``y`` as produced
+        by :func:`statout.scatter.scatter_xy` and stored on
+        ``fig._scatter_merged``.
+    fmt_x:
+        Python format string for the x value (default ``"{:.1f}"``).
+    fmt_y:
+        Python format string for the y value (default ``"{:.1f}"``).
+    label_x:
+        Short label for the x axis used in the tooltip text.
+    label_y:
+        Short label for the y axis used in the tooltip text.
     """
     if mpl.get_backend() != "pgf":
         return
-    for _, row in points.iterrows():
-        geo = str(row[geo_col])
+    for _, row in merged.iterrows():
+        geo = str(row["geo"])
         long = GEO_LONG_NAMES.get(geo, geo)
-        x_str = fmt_x.format(float(row[x_col]))
-        y_str = fmt_y.format(float(row[y_col]))
+        # Keep tooltip short to prevent matplotlib PGF backend from splitting
+        # the text across multiple pgftext nodes (which breaks brace matching).
+        # Format: "Country: xval / yval"
         tooltip_text = (
-            f"{long} | {label_x}: {x_str} | {label_y}: {y_str}"
-            .replace('%', r'\%').replace('&', r'\&').replace('#', r'\#')
-            .replace('_', r'\_').replace('^', r'\^{}').replace('~', r'\textasciitilde{}')
+            f"{long}: {fmt_x.format(row['x'])} / {fmt_y.format(row['y'])}"
         )
         ax.text(
-            float(row[x_col]),
-            float(row[y_col]),
+            float(row["x"]),
+            float(row["y"]),
             r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tooltip_text + r"}",
             fontsize=FONT_SIZE,
             ha="center",
@@ -512,7 +529,7 @@ def savefig(
         try:
             fig.tight_layout(**_tl_kwargs)
         except Exception:
-            pass  # some constrained-layout figures raise here — safe to ignore
+            pass  # some constrained-layout figures raise here --- safe to ignore
         # Re-apply any subplots_adjust overrides (tight_layout may clobber hspace etc.)
         _spa = getattr(fig, '_subplots_adjust_kwargs', None)
         if _spa:
@@ -672,7 +689,7 @@ def savefig_pgf(
     r"""Save *fig* as a ``.pgf`` file for inclusion via ``\input{}`` in LaTeX.
 
     The PGF backend must be active (call ``apply_style_pgf()`` first).
-    Unlike ``savefig()``, this does **not** produce a standalone PDF —
+    Unlike ``savefig()``, this does **not** produce a standalone PDF ---
     the ``.pgf`` file is compiled inside the host document.
 
     If *strings* is given (``{key: literal_value}``), the saved ``.pgf`` is
@@ -788,7 +805,7 @@ def save_figure_tex(
     directory = Path(out_dir) if out_dir else LATEX_TEXPARTS_DIR
     include_path = include_path or f"../python/figures/{name}"
 
-    # Resolve cite keys — cite_keys takes priority over deprecated cite_key
+    # Resolve cite keys --- cite_keys takes priority over deprecated cite_key
     raw = cite_keys if cite_keys is not None else cite_key
     keys: list = []
     if raw is not None:
@@ -881,9 +898,7 @@ def save_figure_tex_pgf(
         footnote_line = ""
 
     # ── Editable figure tex file (written once, never overwritten) ────────
-    # strings={} (empty dict) is treated as "create editable file with caption
-    # macro only"; strings=None (default) falls through to inline figure env.
-    if strings is not None:
+    if strings:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
         strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
@@ -892,7 +907,7 @@ def save_figure_tex_pgf(
             caption_macro = _macro_name(prefix, "caption")
             lines = [
                 f"% Editable figure definition for {name}",
-                f"% Edit freely — Python will NOT overwrite this file.",
+                f"% Edit freely --- Python will NOT overwrite this file.",
                 f"% To regenerate defaults, delete this file and re-run the script.",
             ]
             for key, value in strings.items():
@@ -916,7 +931,7 @@ def save_figure_tex_pgf(
         else:
             print(f"  Figure tex exists (kept): {strings_file}")
 
-        # Wrapper is a one-line macro call — always regenerated, no user content.
+        # Wrapper is a one-line macro call --- always regenerated, no user content.
         # Commentary files that haven't migrated to \inputpgffigure{} yet
         # can still use \input{texparts/python/name}.
         tex = f"\\inputpgffigure{{{name}}}\n"
@@ -940,8 +955,8 @@ def save_figure_tex_pgf(
 # ── CZ figure annotation helpers ─────────────────────────────────────────────
 
 def _fmt_czk(amount: int) -> str:
-    """Formátuje celé číslo jako CZK s úzkými mezerami jako oddělovači tisíců."""
-    return f"{amount:,}".replace(",", "\u202f") + "\u202fKč"
+    """Formátuje celé číslo jako CZK s LaTeX thin-space oddělovači tisíců."""
+    return f"{amount:,}".replace(",", "\\,") + "\\,Kč"
 
 
 def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
@@ -1009,7 +1024,7 @@ def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
         Line2D([0], [0], color="#888888", linewidth=1.0, linestyle=(0, (3, 1.5)), alpha=0.7,
                label="bez\u00a0výdajů"),
         Line2D([0], [0], color="#888888", linewidth=1.2, linestyle=svarc_linestyle, alpha=0.85,
-               label="16\u202f%\u00a0výdaje\u00a0(PAQ)"),
+               label="16\\,\\%~výdaje~(PAQ)"),
     ]
     fig._tight_layout_kwargs = {"pad": 1.5}
     spa = {"right": 0.78}
