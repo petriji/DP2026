@@ -36,7 +36,7 @@ import matplotlib.ticker as ticker
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.timeline import EU27
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ EXCLUDE_OUTLIERS = {"LU", "IE"}   # extreme outliers: ~270 and ~175 EU27=100
 START_YEAR = 2004
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading Eurostat data …")
@@ -200,16 +200,17 @@ ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
 ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
 
 # ── 7. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_konvergence", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_konvergence")
 
 # ── 8. Write LaTeX snippet ────────────────────────────────────────────────────
 last_year = lp_years[-1]
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_konvergence",
     caption=f"Konvergence produktivity práce a~čistého příjmu k~EU27, vybrané země EU, {START_YEAR}--{last_year}.",
     cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:eu_konvergence",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
+    strings={},
 )
 
 print("Done.")

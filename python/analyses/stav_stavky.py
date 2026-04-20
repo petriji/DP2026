@@ -40,8 +40,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_ilostat, fetch_eurostat, fetch
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -79,7 +79,7 @@ EU27_ISO3 = {
 }
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ILOSTAT STR_DAYS_ECO_RT_A ────────────────────────────────────
 print("Downloading ILOSTAT STR_DAYS_ECO_RT_A …")
@@ -269,9 +269,27 @@ fig = timeline(
 fig.axes[0].set_xlim(START_YEAR - 1, 2025)
 fig.axes[0].set_ylim(0, 1.0)   # cap at 1 %; LT 2008 outlier (~10 %) is clipped
 
-savefig(fig, "stav_stavky", out_dir=LATEX_PICS_DIR)
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_pivot_str = (
+    ds.df[ds.df["geo"].isin(countries_present)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_str, fmt="{:.3f}")
+_bg_str = sorted(set(_EU27) - set(countries_present))
+_pivot_str_bg = (
+    ds.df[ds.df["geo"].isin(_bg_str)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_str_bg, fmt="{:.3f}")
+for _child in fig.axes[0].get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in countries_present:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-save_figure_tex(
+savefig_pgf(fig, "stav_stavky")
+
+save_figure_tex_pgf(
     "stav_stavky",
     caption=(
         r"Podíl ztracené pracovní doby vlivem pracovních konfliktů (stávky a~výluky), "
@@ -284,8 +302,9 @@ save_figure_tex(
         r"(LT 2008 dosahuje cca \SI{10}{\percent} --- jednorázový spor ve veřejném sektoru)."
     ),
     label="fig:stav_stavky",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "dst_abst1", "eurostat_lfsa_ewhun2"],
+    strings={},
 )
 
 print("Done.")

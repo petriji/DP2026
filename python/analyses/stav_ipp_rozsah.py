@@ -64,12 +64,12 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_ipp
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 START_YEAR = 2007
@@ -244,8 +244,8 @@ ax.set_title(
 
 fig.tight_layout()
 
-out_pdf = savefig(fig, "stav_ipp_rozsah", out_dir=LATEX_PICS_DIR)
-out_tex = save_figure_tex(
+out_pdf = savefig_pgf(fig, "stav_ipp_rozsah")
+out_tex = save_figure_tex_pgf(
     "stav_ipp_rozsah",
     caption=(
         r"Institucionální obsah kolektivních smluv, ČR, 2007--2025. "
@@ -261,6 +261,7 @@ out_tex = save_figure_tex(
     ),
     cite_keys="mpsv_ipp",
     label="fig:stav_ipp_rozsah",
+    strings={},
 )
 print(f"\nSaved: {out_pdf}")
 print(f"Saved TeX: {out_tex}")

@@ -54,9 +54,13 @@ texparts = ["korelace_hustota_gini"]
 pics     = ["korelace_hustota_gini"]
 
 [cz_pension]
-script   = "analyses/problemy_cz_duchod.py"
-texparts = ["problemy_duchod_solidarita"]
-pics     = ["problemy_duchod_solidarita"]
+script   = "analyses/problemy_cz_model.py"
+texparts = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+pics     = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
 
 [cz_tax_model]
 script   = "analyses/problemy_cz_model.py"

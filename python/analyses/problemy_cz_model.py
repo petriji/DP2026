@@ -21,8 +21,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import (
-    apply_style, cm2in, save_figure_tex, savefig,
-    _fmt_czk, _add_vertical_ref, _apply_figure_layout,
+    cm2in,
+    _fmt_czk,
+    _add_vertical_ref,
+    _apply_figure_layout,
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
 )
 
 # ── Pension-model calc helpers ────────────────────────────────────────────────
@@ -88,7 +93,7 @@ OSVC_VYDAJOVY_CAP: dict[float, int] = {0.80: 133_333, 0.60: 100_000, 0.40: 66_66
 SVARC_EXPENSE_RATE: float = 0.16
 SVARC_LINESTYLE           = (0, (6, 1))
 
-apply_style()
+apply_style_pgf()
 
 
 def _plot_osvc_lines(
@@ -1263,8 +1268,8 @@ def plot_tax_wedge_comparison(
 if __name__ == "__main__":
     # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
     fig_cmp = plot_pension_comparison()
-    savefig(fig_cmp, "problemy_duchod_prijem", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_cmp, "problemy_duchod_prijem")
+    save_figure_tex_pgf(
         "problemy_duchod_prijem",
         caption=(
             r"Výše starobního důchodu v~závislosti na příjmu, parametry 2026. "
@@ -1280,29 +1285,30 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_prijem",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
     fig_sol = plot_pension_solidarity()
-    savefig(fig_sol, "problemy_duchod_solidarita", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_sol, "problemy_duchod_solidarita")
+    save_figure_tex_pgf(
         "problemy_duchod_solidarita",
         caption=(
             r"Náhradový poměr a~výše důchodu v~závislosti na příjmu, parametry 2026. "
             r"Parametry roku~2026, pojistná doba 40~let. "
             r"Výpočet dle zákona č.\,155/1995~Sb., zákona č.\,270/2023~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
-        ),
+            r"a nařízení vlády č.\,365/2025~Sb."),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_solidarita",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 3: náhradový poměr vs. daňový klín (parametrický) ─────────────
     fig_tw = plot_tax_wedge_comparison()
-    savefig(fig_tw, "problemy_duchod_klin", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_tw, "problemy_duchod_klin")
+    save_figure_tex_pgf(
         "problemy_duchod_klin",
         caption=(
             r"Náhradový poměr a~efektivní daňový klín, OSVČ a~zaměstnanec. "
@@ -1325,13 +1331,14 @@ if __name__ == "__main__":
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_duchod_klin",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 4: daňový klín vs. příjmy ────────────────────────────────────
     fig_twi = plot_tax_wedge_vs_income()
-    savefig(fig_twi, "problemy_danovy_klin_cz", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_twi, "problemy_danovy_klin_cz")
+    save_figure_tex_pgf(
         "problemy_danovy_klin_cz",
         caption=(
             r"Efektivní daňový klín, zaměstnanec vs.\ OSVČ, parametry 2026. "
@@ -1348,13 +1355,14 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_danovy_klin_cz",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 5: čistý příjem vs. příjmy ───────────────────────────────────
     fig_ni = plot_net_income_vs_income()
-    savefig(fig_ni, "problemy_cisty_prijem_cz", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_ni, "problemy_cisty_prijem_cz")
+    save_figure_tex_pgf(
         "problemy_cisty_prijem_cz",
         caption=(
             r"Čistý příjem, zaměstnanec vs.\ OSVČ, parametry 2026. "
@@ -1372,13 +1380,14 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_cisty_prijem_cz",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 7: odvody na SP vs. příjmy ───────────────────────────────────
     fig_spi = plot_sp_vs_income()
-    savefig(fig_spi, "problemy_sp_odvody_cz", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_spi, "problemy_sp_odvody_cz")
+    save_figure_tex_pgf(
         "problemy_sp_odvody_cz",
         caption=(
             r"Měsíční odvody na SP, zaměstnanec vs.\ OSVČ, parametry 2026. "
@@ -1394,13 +1403,14 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_sp_1992", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_sp_odvody_cz",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     # ── Obrázek 8: poměr důchod/SP vs. příjmy ────────────────────────────────
     fig_rsr = plot_pension_sp_ratio_vs_income()
-    savefig(fig_rsr, "problemy_duchod_sp_pomer", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_rsr, "problemy_duchod_sp_pomer")
+    save_figure_tex_pgf(
         "problemy_duchod_sp_pomer",
         caption=(
             r"Poměr měsíčního důchodu k~odvodům na SP, parametry 2026. "
@@ -1417,7 +1427,8 @@ if __name__ == "__main__":
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_sp_1992", "nv_365_2025"],
         label="fig:problemy_duchod_sp_pomer",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 
     print("Hotovo.")

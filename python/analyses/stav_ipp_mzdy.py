@@ -50,7 +50,7 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
@@ -66,7 +66,7 @@ LBL_ACTUAL = "skutečný nárůst (Eurostat LCI)"
 LBL_NEGOTIATED = "sjednaný nárůst (IPP/KS)"
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Load IPP negotiated wage increases ─────────────────────────────────────
 print(f"Loading IPP odmenovani for {START_YEAR}–{END_YEAR} …")
@@ -187,16 +187,17 @@ if all_years:
     ax.set_xlim(START_YEAR, END_YEAR)
 
 # ── 5. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "stav_ipp_mzdy", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "stav_ipp_mzdy")
 
 # ── 6. Write LaTeX snippet ────────────────────────────────────────────────────
 year_range = f"{START_YEAR}–{END_YEAR}"
-save_figure_tex(
+save_figure_tex_pgf(
     "stav_ipp_mzdy",
     caption=f"Sjednaný a~skutečný mzdový nárůst v~KS, ČR, {year_range}.",
     label="fig:stav_ipp_mzdy",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_keys=["mpsv_ipp", "eurostat_lci"],
+    strings={},
 )
 
 print("Done.")

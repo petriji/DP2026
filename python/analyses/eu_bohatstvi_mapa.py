@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ from statout.map_europe import choropleth
 START_YEAR = 2008
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # WEALTH dataset: SH_TOP10 = top 10 % net wealth share (% of total)
@@ -64,18 +64,18 @@ fig = choropleth(
 )
 
 # ── 3. Save ───────────────────────────────────────────────────────────────────
-savefig(fig, "eu_bohatstvi_mapa", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_bohatstvi_mapa")
 
 # ── 4. LaTeX snippet ──────────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_bohatstvi_mapa",
     caption=(
         f"Podíl top 10\,\% domácností na čistém jmění, EU mapa, do {ds.latest_year}. "
-        "Šedá~= data nedostupná."
-    ),
+        "Šedá~= data nedostupná."),
     label="fig:eu_bohatstvi_mapa",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",
+    strings={},
 )
 
 print("Done.")

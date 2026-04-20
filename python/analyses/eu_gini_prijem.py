@@ -29,8 +29,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ START_YEAR = 2003
 HIGHLIGHT = ["CZ"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # ilc_di12: Gini coefficient of equivalised disposable income
@@ -76,18 +76,36 @@ fig = timeline(
 ax = fig.axes[0]
 ax.set_ylim(15, 45)
 
+# ── PGF tooltips & geo labels ─────────────────────────────────────────────────
+_pivot = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(ax, _pivot, fmt="{:.2f}")
+_bg = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_bg = (
+    ds.df[ds.df["geo"].isin(_bg)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(ax, _pivot_bg, fmt="{:.2f}")
+for _child in ax.get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_gini_prijem", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_gini_prijem")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_gini_prijem",
     caption=(
-        f"Giniho koeficient disponibilního příjmu, vybrané země EU, {START_YEAR}--{ds.years[-1]}."
-    ),
+        f"Giniho koeficient disponibilního příjmu, vybrané země EU, {START_YEAR}--{ds.years[-1]}."),
     label="fig:eu_gini_prijem",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="eurostat_ilc_di12_Gini",
+    strings={},
 )
 
 print("Done.")

@@ -28,8 +28,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ START_YEAR = 2000
 HIGHLIGHT = ["CZ"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # lfsi_emp_a: employment rate by sex and age
@@ -72,19 +72,38 @@ fig = timeline(
     show_eu_avg=True,
 )
 
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_pivot_emp = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_emp, fmt="{:.1f}")
+_bg_emp = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_emp_bg = (
+    ds.df[ds.df["geo"].isin(_bg_emp)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_emp_bg, fmt="{:.1f}")
+for _child in fig.axes[0].get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "stav_zamestnanost", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "stav_zamestnanost")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "stav_zamestnanost",
     caption=(
         f"Míra zaměstnanosti (20--64 let), vybrané země EU, "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_zamestnanost",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="eurostat_lfsi_emp_a",
+    strings={},
 )
 
 print("Done.")

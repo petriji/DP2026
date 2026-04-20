@@ -56,12 +56,12 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -628,8 +628,8 @@ ax.legend(
     handlelength=1.8,
 )
 
-savefig(fig, "problemy_mzda_duchod", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig, "problemy_mzda_duchod")
+save_figure_tex_pgf(
     "problemy_mzda_duchod",
     caption=(
         f"Distribuce čistých mezd a~starobních důchodů, ČR, {wage_year}/{pension_year}. "
@@ -657,8 +657,9 @@ save_figure_tex(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_mzda_duchod",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="mpsv_ispv",
+    strings={},
 )
 
 print("\nDone.")

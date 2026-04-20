@@ -50,12 +50,12 @@ import pandas as pd
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-apply_style()
+apply_style_pgf()
 
 
 def _filter_aes(df: pd.DataFrame, dim_keywords: dict[str, list[str]]) -> pd.DataFrame:
@@ -119,13 +119,14 @@ def _make_choropleth(
         colorbar_label=cbar_label,
         label_countries=False,
     )
-    savefig(fig, stem, out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig, stem)
+    save_figure_tex_pgf(
         stem,
         caption=caption,
         label=label,
-        width=r"0.85\linewidth",
+        resizebox_width=r"0.85\linewidth",
         cite_key="eurostat_edat_aes",
+        strings={},
     )
     print(f"  {stem} done ({year}).")
 

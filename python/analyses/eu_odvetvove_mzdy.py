@@ -37,7 +37,7 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ SECTORS = {"C": "Výroba", "G": "Obchod", "J": "ICT", "K": "Finance"}
 DISPLAY_YEAR = 2024   # latest available full year
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download sector wages (EUR/h) – 6 countries + EU27 ────────────────────
 # lc_lci_lev: freq.unit.lcstruct.nace_r2.geo
@@ -181,8 +181,8 @@ ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax1.grid(which="minor", axis="y", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
 ax1.tick_params(axis="x", which="minor", bottom=False)
 
-savefig(fig1, "eu_odvetvove_mzdy_bar", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig1, "eu_odvetvove_mzdy_bar")
+save_figure_tex_pgf(
     "eu_odvetvove_mzdy_bar",
     caption=(
         f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~klíčových odvětvích NACE, "
@@ -190,8 +190,9 @@ save_figure_tex(
         f"Plná čára se~zarážkami~= průměr EU27."
     ),
     label="fig:eu_odvetvove_mzdy_bar",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
+    strings={},
 )
 print("Figure 1 saved.")
 
@@ -224,17 +225,17 @@ if "EU27_2020" in lc_pps.index:
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
     ax2.tick_params(axis="y", which="minor", left=False)
 
-    savefig(fig2, "eu_odvetvove_mzdy_odchylka", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig2, "eu_odvetvove_mzdy_odchylka")
+    save_figure_tex_pgf(
         "eu_odvetvove_mzdy_odchylka",
         caption=(
             f"Odchylka nákladů práce od průměru EU27, {ref_year}. "
             f"\\si{{\\eur\\per\\hour}} přepočteno na \\si{{\\pps\\per\\hour}} pomocí \\texttt{{prc\\_ppp\\_ind}}. "
-            f"Záporné hodnoty = nižší náklady práce než průměr EU27."
-        ),
+            f"Záporné hodnoty = nižší náklady práce než průměr EU27."),
         label="fig:eu_odvetvove_mzdy_odchylka",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
+        strings={},
     )
     print("Figure 2 saved.")
 
@@ -308,8 +309,8 @@ fig_maps.colorbar(sm_shared, ax=axes.ravel().tolist(), shrink=0.6,
 fig_maps._tight_layout_kwargs = {"pad": 1.0, "rect": [0, 0.08, 1, 0.95]}
 fig_maps._subplots_adjust_kwargs = {"top": 0.93}
 
-savefig(fig_maps, "eu_odvetvove_mzdy_mapa", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa")
+save_figure_tex_pgf(
     "eu_odvetvove_mzdy_mapa",
     caption=(
         f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~odvětvích Průmysl~(C), Obchod~(G), ICT~(J) a~Finance~(K), EU27, {ref_year}. "
@@ -317,8 +318,9 @@ save_figure_tex(
         f"Společná barevná škála umožňuje porovnání mezi panely."
     ),
     label="fig:eu_odvetvove_mzdy_mapa",
-    width=r"\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
+    strings={},
 )
 print("Combined choropleth (2×2) saved.")
 

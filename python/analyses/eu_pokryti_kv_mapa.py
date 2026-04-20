@@ -25,11 +25,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # CBC: Collective Bargaining Coverage, single measure ERB (% of salaried).
@@ -64,17 +64,17 @@ fig = choropleth(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_pokryti_kv_mapa", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_pokryti_kv_mapa")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_pokryti_kv_mapa",
     caption=(
-        f"Pokrytí KV, EU mapa, {ds.latest_year}."
-    ),
+        f"Pokrytí KV, EU mapa, {ds.latest_year}."),
     label="fig:eu_pokryti_kv_mapa",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
+    strings={},
 )
 
 print("Done.")

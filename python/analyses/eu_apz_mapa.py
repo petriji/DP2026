@@ -23,12 +23,12 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 from analyses._shared_data import load_lmp_active
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Load data ──────────────────────────────────────────────────────────────
 ds = load_lmp_active()
@@ -49,15 +49,16 @@ fig = choropleth(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_apz_mapa", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_apz_mapa")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_apz_mapa",
     caption=f"Výdaje na APZ (% HDP), EU mapa, {ds.latest_year}.",
     label="fig:eu_apz_mapa",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_keys="oecd_lmpexp",
+    strings={},
 )
 
 print("Done.")

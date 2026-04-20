@@ -31,8 +31,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.style import apply_style, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 from analyses._shared_data import load_cb_coverage
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ HIGHLIGHT = ["CZ"]
 START_YEAR = 1993   # grey cloud starts here; some EU27 countries go back to 1990
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Load CB coverage data ──────────────────────────────────────────────────
 print("Loading CB coverage data …")
@@ -64,10 +64,29 @@ fig = timeline(
 fig.axes[0].set_xlim(START_YEAR - 2, 2025)
 fig.axes[0].set_ylim(0, 105)
 
-savefig(fig, "eu_pokryti_kv_vyvoj", out_dir=LATEX_PICS_DIR)
+# ── PGF tooltips & geo labels ─────────────────────────────────────────────────
+_ax1 = fig.axes[0]
+_pivot_kv1 = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax1, _pivot_kv1, fmt="{:.1f}")
+_bg_kv = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_kv1_bg = (
+    ds.df[ds.df["geo"].isin(_bg_kv)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax1, _pivot_kv1_bg, fmt="{:.1f}")
+for _child in _ax1.get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
+savefig_pgf(fig, "eu_pokryti_kv_vyvoj")
 
 latest_yr = ds.years[-1]
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_pokryti_kv_vyvoj",
     caption=(
         r"Vývoj pokrytí kolektivním vyjednáváním, "
@@ -78,8 +97,9 @@ save_figure_tex(
         r"ERB \(\neq\) AdjCov). Chybějící hodnoty = mezery v datech."
     ),
     label="fig:eu_pokryti_kv_vyvoj",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
+    strings={},
 )
 
 # ── 5. Cropped figure (2004–latest, xlim up to 2025) ─────────────────────────
@@ -99,9 +119,27 @@ fig2 = timeline(
 fig2.axes[0].set_xlim(YEAR_START2 - 2, 2025)
 fig2.axes[0].set_ylim(0, 105)
 
-savefig(fig2, "eu_pokryti_kv_vyvoj_2004", out_dir=LATEX_PICS_DIR)
+# ── PGF tooltips & geo labels ─────────────────────────────────────────────────
+_ax2 = fig2.axes[0]
+_pivot_kv2 = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax2, _pivot_kv2, fmt="{:.1f}")
+_pivot_kv2_bg = (
+    ds.df[ds.df["geo"].isin(_bg_kv)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax2, _pivot_kv2_bg, fmt="{:.1f}")
+for _child in _ax2.get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-save_figure_tex(
+savefig_pgf(fig2, "eu_pokryti_kv_vyvoj_2004")
+
+save_figure_tex_pgf(
     "eu_pokryti_kv_vyvoj_2004",
     caption=(
         r"Vývoj pokrytí kolektivním vyjednáváním (podíl zaměstnanců "
@@ -113,8 +151,9 @@ save_figure_tex(
         r"(ERB \(\neq\) AdjCov, viz text). Chybějící hodnoty = mezery v datech."
     ),
     label="fig:eu_pokryti_kv_vyvoj_2004",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
+    strings={},
 )
 
 print("Done.")

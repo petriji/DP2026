@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "SK", "FI"]
 START_YEAR = 2008
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # WEALTH dataset: SH_TOP5 = top 5 % net wealth share (% of total)
@@ -114,10 +114,10 @@ if ds_all.years:
     ax.set_xlim(ds_all.years[0] - 1, ds_all.years[-1] + 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig(fig, "eu_bohatstvi_top20", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_bohatstvi_top20")
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_bohatstvi_top20",
     caption=(
         f"Podíl top 5\\,\\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
@@ -125,8 +125,9 @@ save_figure_tex(
         "Šedé linie = ostatní země v~datové sadě."
     ),
     label="fig:eu_bohatstvi_top20",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_hfcs_wealth_top5_PC",
+    strings={},
 )
 
 print("Done.")

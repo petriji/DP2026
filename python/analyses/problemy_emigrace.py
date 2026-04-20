@@ -37,13 +37,13 @@ import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 START_YEAR = 2008
 CZ_COLOR   = COUNTRY_COLORS["CZ"]
 
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading migr_emi1ctz …")
@@ -171,18 +171,18 @@ ax.set_title(
 ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig(fig, "problemy_emigrace_vyvoj", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "problemy_emigrace_vyvoj")
 
 yr_min = int(df["time"].min()) if not df.empty else START_YEAR
 yr_max = int(df["time"].max()) if not df.empty else 2023
-save_figure_tex(
+save_figure_tex_pgf(
     "problemy_emigrace_vyvoj",
     caption=(
-        f"Emigrace z~ČR podle věkové skupiny, {yr_min}--{yr_max}."
-    ),
+        f"Emigrace z~ČR podle věkové skupiny, {yr_min}--{yr_max}."),
     cite_keys="eurostat_migr_emi1ctz",
     label="fig:problemy_emigrace_vyvoj",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
+    strings={},
 )
 
 print("Done.")

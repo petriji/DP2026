@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ from statout.map_europe import choropleth
 START_YEAR = 2015
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # nama_10_pc: GDP and main components per capita (PPS)
@@ -72,17 +72,18 @@ fig = choropleth(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_prijem_pps", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_prijem_pps")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_prijem_pps",
     caption=(
         f"HDP na obyvatele v~PPS (EU27\\,=\\,100), EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_prijem_pps",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
+    strings={},
 )
 
 print("Done.")
