@@ -1762,6 +1762,8 @@
   \usetikzlibrary{external}%
   \tikzexternalize
 \fi
+% Common TikZ libraries used by hand-drawn schemas in texparts/figures/.
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
 
 % ==============================================================================
 % Packages: Lists, Quotation Marks, And Inline Helpers
