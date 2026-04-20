@@ -224,6 +224,13 @@ def timeline(
         ax.legend(bbox_to_anchor=(1.01, 1), loc="upper left",
                   borderaxespad=0, frameon=False, fontsize=FONT_SIZE)
 
+    # Stash the pivots so savefig_pgf() can attach \pdftooltip nodes after
+    # the script has finalised xlim/ylim, and so apply_geo_labels_pgf() can
+    # replace bare ISO-2 country code annotations with \acs{geo-XX}.
+    fig._timeline_pivot = pivot
+    if background_eu and 'bg_pivot' in locals():
+        fig._timeline_pivot_bg = bg_pivot
+
     return fig
 
 
