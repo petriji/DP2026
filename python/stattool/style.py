@@ -128,6 +128,15 @@ PGF_PREAMBLE = r"""
 \contourlength{0.6pt}
 % Stub \contour for the metrics pass (real one comes from CTUthesis.cls).
 \providecommand{\contour}[2]{#2}
+\usepackage{pdfcomment}
+% Stub \pdftooltip for the PGF metrics pass (real one from CTUthesis.cls).
+% Falls back to showing the displayed text only, so figures degrade gracefully.
+\providecommand{\pdftooltip}[2]{#1}
+% Stub \CTUtooltiplink (user-level alias used in PGF annotations) for the
+% metrics pass.  Falls back to showing the visible text only (arg #2).
+% \CTU@tooltiplink (the internal @-command) is NOT used directly in PGF
+% annotations because \makeatletter inside a tokenised group has no effect.
+\providecommand{\CTUtooltiplink}[3]{#2}
 % Stub acro commands so PGF text-metric pass can measure them.
 % The real acro package resolves them when \input{} into main.tex.
 \providecommand{\ac}[1]{#1}
@@ -142,6 +151,52 @@ PGF_PREAMBLE = r"""
 """
 
 # ── Geo-label helpers ─────────────────────────────────────────────────────────
+
+# Czech long-form names matching the `long=` property of each \DeclareAcronym{geo-XX}
+# entry in latex/texparts/references/acro.tex.  Used in PDF hover tooltips so
+# Acrobat displays "Česko: 1.36" instead of "CZ: 1.36".
+GEO_LONG_NAMES: dict[str, str] = {
+    "AT": "Rakousko",
+    "BE": "Belgie",
+    "BG": "Bulharsko",
+    "CH": "Švýcarsko",
+    "CY": "Kypr",
+    "CZ": "Česko",
+    "DE": "Německo",
+    "DK": "Dánsko",
+    "EE": "Estonsko",
+    "EL": "Řecko",
+    "ES": "Španělsko",
+    "FI": "Finsko",
+    "FR": "Francie",
+    "GR": "Řecko",
+    "HR": "Chorvatsko",
+    "HU": "Maďarsko",
+    "IE": "Irsko",
+    "IS": "Island",
+    "IT": "Itálie",
+    "LT": "Litva",
+    "LU": "Lucembursko",
+    "LV": "Lotyšsko",
+    "MT": "Malta",
+    "NL": "Nizozemsko",
+    "NO": "Norsko",
+    "PL": "Polsko",
+    "PT": "Portugalsko",
+    "RO": "Rumunsko",
+    "SE": "Švédsko",
+    "SI": "Slovinsko",
+    "SK": "Slovensko",
+    "UK": "Spojené království",
+    "GB": "Velká Británie",
+    "UA": "Ukrajina",
+    "RS": "Srbsko",
+    "TR": "Turecko",
+    "GE": "Gruzie",
+    "AM": "Arménie",
+    "AL": "Albánie",
+    "MD": "Moldavsko"
+}
 
 # All ISO 3166-1 alpha-2 codes with a \DeclareAcronym{geo-XX} entry in acro.tex.
 # EU-27 + GR alias + EEA/non-EU countries that appear in Eurostat data.
@@ -160,6 +215,8 @@ def apply_geo_labels_pgf(
     *,
     halo: bool = True,
     geo_set: "frozenset[str] | None" = None,
+    values: "dict[str, float] | None" = None,
+    tooltip_fmt: str = "{:.1f}",
 ) -> None:
     r"""Replace bare ISO-2 country codes on a PGF axes with ``\acs{geo-XX}``.
 
@@ -171,6 +228,10 @@ def apply_geo_labels_pgf(
     * If *halo* is ``True`` (default), wraps in ``\contour{white}{...}`` for
       readability on coloured map backgrounds.  Requires the ``contour``
       package in ``CTUthesis.cls``.
+    * If *values* is given (``{"CZ": 38.2, "DE": 52.1, …}``), each label is
+      wrapped with ``\pdftooltip{label}{XX: N.N}`` so hover-capable PDF
+      viewers (Adobe Acrobat, Foxit) display the value on mouse-over.
+      Formatted using *tooltip_fmt*.
 
     Call this function *after* all plotting is done, *before* ``savefig_pgf()``.
     """
@@ -181,11 +242,113 @@ def apply_geo_labels_pgf(
         txt = child.get_text().strip()
         if txt not in codes:
             continue
-        label = rf"\acs{{geo-{txt}}}"
-        if halo:
-            label = rf"\contour{{white}}{{{label}}}"
+        if values is not None and txt in values:
+            # Country code labels never become hyperlinks: their acro entries
+            # use tag=geo which is excluded from the printed acronym list, so
+            # no \hypertarget{geo-XX} exists.  A GoTo link to a missing
+            # destination falls back to page 1 in Acrobat.  Use \pdftooltip
+            # (annotation only, no link) so hover shows the long Czech name.
+            display = rf"\contour{{white}}{{{txt}}}" if halo else txt
+            val_str = tooltip_fmt.format(values[txt])
+            long = GEO_LONG_NAMES.get(txt, txt)
+            label = rf"\pdftooltip{{{display}}}{{{long}: {val_str}}}"
+        else:
+            label = rf"\acs{{geo-{txt}}}"
+            if halo:
+                label = rf"\contour{{white}}{{{label}}}"
         child.set_text(label)
         child.set_path_effects([])
+
+
+def add_pgf_tooltips(
+    ax: "plt.Axes",
+    pivot: "pd.DataFrame",
+    *,
+    fmt: str = "{:.1f}",
+) -> None:
+    r"""Overlay invisible ``\pdftooltip`` annotations at every data point.
+
+    Each annotation is a zero-width phantom node that hover-capable PDF
+    viewers (Adobe Acrobat, Foxit) render as a tooltip showing the country
+    code, year, and numeric value.  In other viewers the annotation is
+    completely invisible.
+
+    This function is a **no-op** when the active matplotlib backend is not
+    ``pgf``; it can therefore be called unconditionally in scripts that
+    support both PGF and raster output.
+
+    Parameters
+    ----------
+    ax:
+        Axes containing the plotted data.
+    pivot:
+        DataFrame with time/year values as the index and ISO-2 country codes
+        as columns, matching the internal pivot used by :func:`timeline`.
+    fmt:
+        Python format string for the numeric value (e.g. ``"{:.1f}"`` or
+        ``"{:.2f}"``).  Default ``"{:.1f}"``.
+    """
+    import pandas as pd  # noqa: F401 — guard if not yet imported at module top
+    if mpl.get_backend() != "pgf":
+        return
+    for geo in pivot.columns:
+        series = pivot[geo].dropna()
+        for year, val in series.items():
+            long = GEO_LONG_NAMES.get(str(geo), str(geo))
+            tooltip_text = f"{long} {int(year)}: {fmt.format(val)}"
+            ax.text(
+                float(year),
+                float(val),
+                # \phantom{\rule{3pt}{3pt}} gives a 3×3pt invisible hit area
+                # matching the data-point marker size (markersize=3).
+                # \phantom{0.00} was too large and visually offset the line.
+                r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tooltip_text + r"}",
+                fontsize=FONT_SIZE,
+                ha="center",
+                va="center",
+                transform=ax.transData,
+                clip_on=True,
+                zorder=10,
+            )
+
+
+def add_pgf_tooltips_scatter(
+    ax: "plt.Axes",
+    points: "pd.DataFrame",
+    *,
+    geo_col: str = "geo",
+    x_col: str = "x",
+    y_col: str = "y",
+    fmt_x: str = "{:.1f}",
+    fmt_y: str = "{:.1f}",
+    label_x: str = "x",
+    label_y: str = "y",
+) -> None:
+    r"""Overlay invisible ``\pdftooltip`` annotations at every scatter point.
+
+    Each row of *points* yields one tooltip showing
+    ``"<long-name> | <label_x>: N | <label_y>: N"`` on hover (Acrobat/Foxit).
+    No-op when the active matplotlib backend is not ``pgf``.
+    """
+    if mpl.get_backend() != "pgf":
+        return
+    for _, row in points.iterrows():
+        geo = str(row[geo_col])
+        long = GEO_LONG_NAMES.get(geo, geo)
+        x_str = fmt_x.format(float(row[x_col]))
+        y_str = fmt_y.format(float(row[y_col]))
+        tooltip_text = f"{long} | {label_x}: {x_str} | {label_y}: {y_str}"
+        ax.text(
+            float(row[x_col]),
+            float(row[y_col]),
+            r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tooltip_text + r"}",
+            fontsize=FONT_SIZE,
+            ha="center",
+            va="center",
+            transform=ax.transData,
+            clip_on=True,
+            zorder=10,
+        )
 
 
 def apply_style_pgf() -> None:

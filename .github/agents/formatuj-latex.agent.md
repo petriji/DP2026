@@ -66,6 +66,7 @@ If a needed acronym lacks declension forms, invoke `Citace a zkratky` to add the
 
 **Country codes**: Use `\acs{geo-XX}` for ISO country codes (tag `geo`, hidden from lists).
 All EU-27 codes are declared. Example: `\acs{geo-CZ}` → "CZ".
+Renders as a hover tooltip ("Česká republika") but is **not clickable** — tag=geo entries skip the GoTo Link wrapper because their target is never registered in the printed acronym list. This is intentional; do not add `\hypertarget{geo-XX}` workarounds.
 
 #### Adding a new abbreviation
 

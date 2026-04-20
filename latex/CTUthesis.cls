@@ -1916,8 +1916,17 @@
   %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
   %   catcodes (colon and underscore as letters).
   \ExplSyntaxOn
+  % Helper: emit (visible)+tooltip without a hyperlink.  Used for entries
+  % with tag=geo whose acronym list is not printed (so no \hypertarget exists)
+  % — calling \CTU@tooltiplink would create a goto-name link to a missing
+  % destination, causing Acrobat to fall back to the cover page.
+  \cs_new:Npn \CTU@geo_tooltip:nn #1#2 { \pdftooltip{#1}{#2} }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
+      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+        \CTU@geo_tooltip:nn { \acrowrite{short} }
+                            { \acro_property_get:Vn \AcronymID { long } }%
+      }{%
       \CTU@tooltiplink{\AcronymID}{%
         \acrowrite{long}%
         \acspace(%
@@ -1926,10 +1935,16 @@
         \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
         \acrogroupcite)%
       }{ \acro_property_get:Vn \AcronymID { long } }%
+      }%
     }%
     {%
+      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+        \CTU@geo_tooltip:nn { \acrowrite{short} }
+                            { \acro_property_get:Vn \AcronymID { long } }%
+      }{%
       \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
         { \acro_property_get:Vn \AcronymID { long } }%
+      }%
     }%
   }
   % short template: when `index` is set (subscript/superscript index variable)
@@ -1937,6 +1952,10 @@
   %   The `short` form (e.g. \square_0) is always shown in the variables list
   %   via \acrowrite{short} in the xltabular list template above.
   \RenewAcroTemplate{short}{%
+    \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+      \CTU@geo_tooltip:nn { \acrowrite{short} }
+                          { \acro_property_get:Vn \AcronymID { long } }%
+    }{%
     \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
         \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
@@ -1946,6 +1965,7 @@
         \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
+    }%
   }
   \ExplSyntaxOff
 \else
@@ -1986,6 +2006,9 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% User-level alias so Python-generated PGF files can reference it without
+% needing \makeatletter (which fails when TeX tokenises an argument group).
+\newcommand{\CTUtooltiplink}[3]{\CTU@tooltiplink{#1}{#2}{#3}}
 % \CTU@tooltiplink{destination}{visible text}{tooltip text}
 %   Creates a single GoTo Link annotation whose /Contents entry is the tooltip.
 %   This is the standard PDF mechanism for hover tooltips on hyperlinks and is
@@ -1995,7 +2018,12 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
+  % NOTE: do NOT pass #1 through \HyperDestNameFilter / \pdfstringdef.
+  % With hyperref's [unicode=true], \pdfstringdef encodes the destination name
+  % as UTF-16BE (with BOM), which then no longer matches the raw ASCII names
+  % registered by biblatex (cite.<refsection>@<key>) and acro (<AcronymID>) in
+  % the PDF /Dests Names tree.  The resulting goto name{...} lookup falls back
+  % to the cover page in Acrobat.  Pass the destination tokens raw.
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -2003,7 +2031,7 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
+  \pdfstartlink attr{\Hy@tempa} goto name{#1}\relax
   \Hy@colorlink\@linkcolor
   #2%
   \Hy@endcolorlink
@@ -2031,6 +2059,11 @@
 %   (back matter uses \Roman{page}, which would make \pageref*{LastPage} return
 %   a Roman numeral).
 \RequirePackage{lastpage}
+% pdfcomment: hover tooltip annotations in PDF viewers (Adobe Acrobat, Foxit).
+%   Must be loaded AFTER hyperref (it uses hyperref internally).
+%   Used via \pdftooltip{displayed}{tooltip text} in PGF figures.
+%   Annotations are invisible in non-interactive viewers and in print.
+\RequirePackage{pdfcomment}
 
 % ==============================================================================
 % Packages: Bibliography

@@ -22,7 +22,7 @@ import pandas as pd
 from shapely.geometry import box as shapely_box
 from shapely.ops import unary_union
 
-from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, FONT_SIZE
+from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, COUNTRY_COLORS, FONT_SIZE
 from stattool.dataset import Dataset
 from stattool.fetch import fetch
 from stattool.style import cm2in
@@ -99,6 +99,7 @@ def choropleth(
     colorbar_label: Optional[str] = None,
     fill_latest: bool = True,
     ylim_south: Optional[float] = None,
+    highlight_colorbar: Optional[list[str]] = None,
     show_colorbar: bool = True,
 ) -> plt.Figure:
     """Draw a choropleth map of Europe coloured by *ds* values.
@@ -191,9 +192,67 @@ def choropleth(
 
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
+    cbar = None
     if show_colorbar:
         cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
-        fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
+        cbar = fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
+
+    # Default colorbar marks: thesis comparator countries (CZ first).
+    if highlight_colorbar is None:
+        highlight_colorbar = ["CZ", "SK", "PL", "DE", "AT", "DK"]
+
+    if highlight_colorbar and cbar is not None:
+        import matplotlib.transforms as _mtx
+        _pgf = mpl.get_backend() == "pgf"
+        _val_lookup: dict[str, float] = {
+            geo: float(v)
+            for geo, v in zip(row[ds.geo_col], row[ds.value_col])
+            if v == v  # drop NaN
+        }
+        for geo in highlight_colorbar:
+            if geo not in COUNTRY_COLORS or geo not in _val_lookup:
+                continue
+            val = _val_lookup[geo]
+            if not (norm.vmin <= val <= norm.vmax):
+                continue
+            color = COUNTRY_COLORS[geo]
+            trans = _mtx.blended_transform_factory(
+                cbar.ax.transAxes, cbar.ax.transData
+            )
+            cbar.ax.axhline(y=val, color=color, linewidth=1.5, alpha=0.85, zorder=5)
+            # Marker on the LEFT side of colorbar (negative axes x-coord)
+            # marker=">" points rightward toward the colorbar strip.
+            cbar.ax.plot(
+                [-0.12], [val], marker=">", markersize=4,
+                color=color, clip_on=False, zorder=6, transform=trans,
+            )
+            # Country code label.  In PGF mode use a plain ISO-2 code wrapped
+            # in \pdftooltip showing the long Czech name (no \acs{geo-XX}: that
+            # would create a broken hyperlink to a non-printed acronym entry).
+            from stattool.style import GEO_LONG_NAMES
+            if _pgf:
+                long = GEO_LONG_NAMES.get(geo, geo)
+                lbl = rf"\pdftooltip{{{geo}}}{{{long}}}"
+            else:
+                lbl = geo
+            # Place label 3pt to the left of the marker using an offset transform.
+            _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
+            cbar.ax.text(
+                -0.12, val, lbl,
+                color=color, fontsize=FONT_SIZE - 1,
+                va="center", ha="right",
+                transform=_label_trans, clip_on=False,
+            )
+            # Invisible phantom tooltip on the marker (PGF only).
+            # The visible label is already printed; tooltip shows just the value.
+            if _pgf:
+                val_str = f"{val:.2f}"
+                cbar.ax.text(
+                    -0.12, val,
+                    r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + val_str + r"}",
+                    fontsize=FONT_SIZE, va="center", ha="center",
+                    transform=trans, clip_on=False, zorder=7,
+                )
 
     if label_countries:
         for _, row_ in filled.iterrows():

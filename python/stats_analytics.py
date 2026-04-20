@@ -9,8 +9,10 @@ HOW IT WORKS
     the only place you need to touch when adding a new analysis script.
 
 2.  The script scans ``latex/main.tex`` recursively (following every
-    ``\input{…}`` and ``\include{…}``) to collect every
-    ``\input{texparts/python/STEM}`` reference currently in the project.
+    ``\input{…}`` and ``\include{…}``) to collect every referenced
+    Python-generated figure stem, including:
+    - ``\input{texparts/python/STEM}``
+    - ``\inputpgffigure{STEM}``
 
 3.  A registry entry is *active* if at least one of its texpart patterns
     matches at least one referenced stem.  Inactive entries are never run,
@@ -36,7 +38,9 @@ ADDING A NEW ANALYSIS SCRIPT
 1.  Create ``analyses/my_new_script.py`` that outputs into
     ``LATEX_PICS_DIR`` / ``LATEX_TEXPARTS_DIR`` (both from config.py).
 2.  Add a section to ``registry.toml``.
-3.  Add ``\input{texparts/python/my_texpart}`` to the .tex file.
+3.  Reference the output stem in LaTeX using either:
+    - ``\input{texparts/python/my_texpart}``, or
+    - ``\inputpgffigure{my_texpart}``.
 4.  Run ``python python_analytics.py`` once — it will detect the new missing
     output and run the script automatically.
 """
@@ -67,10 +71,11 @@ with open(PYTHON_DIR / "analytics_registry.toml", "rb") as _f:
 # ── LaTeX project scanner ─────────────────────────────────────────────────────
 
 _INPUT_RE   = re.compile(r'\\(?:input|include)\{([^}]+)\}')
+_PGF_RE     = re.compile(r'\\inputpgffigure\{([^}]+)\}')
 _COMMENT_RE = re.compile(r'%.*')
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
-    """Recursively collect ``texparts/python/STEM`` stems from *tex_file*.
+    """Recursively collect Python-generated figure stems from *tex_file*.
 
     Follows every ``\\input{…}`` / ``\\include{…}`` call, skipping files
     already visited (cycle guard) and files that don't exist.
@@ -87,6 +92,11 @@ def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
 
     for raw_line in tex_file.read_text(encoding="utf-8", errors="replace").splitlines():
         line = _COMMENT_RE.sub("", raw_line)           # strip TeX comments
+
+        # Capture PGF figure macro usage directly from commentary/main files.
+        for stem in _PGF_RE.findall(line):
+            stems.add(stem.strip().removesuffix(".tex"))
+
         for arg in _INPUT_RE.findall(line):
             arg = arg.strip()
             # Capture python-generated texparts
