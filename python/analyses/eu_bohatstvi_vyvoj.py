@@ -111,7 +111,7 @@ ax.set_ylabel("podíl top 10 % domácností na čistém jmění [%]")
 ax.set_title("Podíl top 10 % domácností na čistém jmění")
 ax.set_ylim(25, 80)
 if ds_all.years:
-    ax.set_xlim(ds_all.years[0] - 1, ds_all.years[-1] + 1)
+    ax.set_xlim(ds_all.years[0] - 1, max(ds_all.years[-1], 2025))
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
 savefig_pgf(fig, "eu_bohatstvi_vyvoj")

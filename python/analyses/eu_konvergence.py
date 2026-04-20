@@ -189,7 +189,7 @@ ax.set_ylabel("index [EU27 = 100]")
 ax.set_title(
     "Konvergence produktivity práce a čistého příjmu (PPS, EU27 = 100)"
 )
-ax.set_xlim(START_YEAR, lp_years[-1])
+ax.set_xlim(START_YEAR, max(lp_years[-1], 2025))
 
 # Integer major ticks + minor grid
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))

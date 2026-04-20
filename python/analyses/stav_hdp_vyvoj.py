@@ -1,5 +1,5 @@
 r"""
-GDP per capita in PPS (EU27=100) timeseries – AT, DE, SK, PL, DK, CZ.
+GDP per capita in PPS (EU27=100) timeseries -- AT, DE, SK, PL, DK, CZ.
 
 Data source: Eurostat, nama_10_pc
   unit = PC_EU27_2020_HAB_MPPS_CP (% of EU27 average in million PPS per capita)
@@ -51,11 +51,11 @@ ds = Dataset.from_sdmx_csv(
     path,
     name="GDP per capita",
     unit="EU27=100",
-    source_url="https://ec.europa.eu/eurostat – nama_10_pc",
+    source_url="https://ec.europa.eu/eurostat -- nama_10_pc",
 )
 # Remove LU and IE: outliers with ~270 and ~175 EU27=100 that distort the y-axis
 ds.df = ds.df[~ds.df["geo"].isin({"LU", "IE"})].copy()
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
@@ -69,7 +69,7 @@ fig = timeline(
 
 # Add EU27 = 100 reference line
 ax = fig.axes[0]
-ax.set_xlim(START_YEAR, ds.years[-1])
+ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
 ax.axhline(100, color="gray", linewidth=0.8, linestyle="--", alpha=0.6, zorder=1)
 ax.annotate(
     "EU27 = 100",
