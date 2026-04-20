@@ -13,12 +13,13 @@
 %  Defined here so they are available to all \SI{}{} calls in this thesis.
 % ---------------------------------------------------------------------------
 \DeclareSIUnit\czk{Kč}
-\DeclareSIUnit\eur{€}
+\DeclareSIUnit\eur{\text{\texteuro}}
 \DeclareSIUnit\pps{PPS}
 \DeclareSIUnit\week{týd.}
 \DeclareSIUnit\month{měs.}
 \DeclareSIUnit\rok{rok}
 \DeclareSIUnit\person{os.}
+\DeclareSIUnit\pp{p.\,b.}
 % Use slash notation for compound units: \SI{12.5}{\pps\per\hour} → PPS/h
 \sisetup{per-mode=symbol}
 
@@ -55,6 +56,7 @@
 \DeclareVariable{idx-tilde}{\ensuremath{\tilde{\square}}}{medián veličiny}
 \DeclareVariable{idx-bar}{\ensuremath{\bar{\square}}}{aritmetický průměr veličiny}
 \DeclareVariable{idx-hat}{\ensuremath{\hat{\square}}}{odhad veličiny}
+\DeclareVariable{idx-0}{\ensuremath{\square_0}}{počáteční}
 
 % ---------------------------------------------------------------------------
 %  Base variables
@@ -115,6 +117,10 @@
 \DeclareVariable{var-rho-U}{\ensuremath{\varrho_U}}{%
   hustota odborové organizace $= n_U/L$
   [\SI{}{\percent}]}
+
+\DeclareVariable{var-D3}{\ensuremath{D_3}}{%
+  horní hranice třetího decilu čistého ekvivalizovaného příjmu domácností
+  [\SI{}{\pps}]}
 
 \DeclareVariable{var-N}{\ensuremath{N}}{%
   počet obyvatel / pozorování;
