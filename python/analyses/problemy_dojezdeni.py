@@ -1,15 +1,15 @@
 r"""
-Cross-border labour mobility – CZ and EU comparators.
+Cross-border labour mobility -- CZ and EU comparators.
 
 Three figures illustrating how Czech workers commute across national borders,
-expressed as % of the employed workforce (PC_EMP) — normalised to remove
+expressed as % of the employed workforce (PC_EMP) --- normalised to remove
 country- and region-size effects.
 
 Data source: Eurostat, ``lfst_r_lfe2ecomm``
   Employed persons commuting to work by country of work and NUTS 2 region.
   Dimensions: freq · unit · wstatus · wrkplace · age · sex · geo
   Key filter values (verified from CSV on first download):
-    unit     = PC_ACT   (% of employed; may also appear as PC_EMP — checked at runtime)
+    unit     = PC_ACT   (% of employed; may also appear as PC_EMP --- checked at runtime)
     wrkplace = FOR       (working in a foreign country; may be ABROAD / ABRD)
     age      = TOTAL or Y_GE15
     sex      = T
@@ -184,7 +184,7 @@ if _cwork_col is not None and geo_col and val_col and time_col:
     _top_dest = _td.loc[_idx, [geo_col, _cwork_col]].set_index(geo_col)[_cwork_col].to_dict()
     print(f"  Top destinations per CZ NUTS2: {_top_dest}")
 else:
-    print("  C_WORK column not found — top-destination labels unavailable.")
+    print("  C_WORK column not found --- top-destination labels unavailable.")
 
 ds = Dataset(filt, name="Přeshraniční dojíždění", unit="% zaměstnaných",
              source_url="Eurostat/lfst_r_lfe2ecomm")
@@ -230,7 +230,7 @@ except Exception as _exc:
           "will use raw values if already in % form")
     _emp_data = None
 
-# ── Figure A — Timeline (national-level rows only, 2-char geo codes) ─────────
+# ── Figure A --- Timeline (national-level rows only, 2-char geo codes) ─────────
 print("\nFigure A: timeline …")
 nat = filt[filt["geo"].str.len() == 2].copy()
 ds_nat = Dataset(nat, name="Přeshraniční dojíždění", unit="% zaměstnaných",
@@ -268,7 +268,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         cite_keys="eurostat_lfst_r_lfe2ecomm",
     )
 
-# ── Figure B — EU map ─────────────────────────────────────────────────────────
+# ── Figure B --- EU map ─────────────────────────────────────────────────────────
 print("\nFigure B: EU map …")
 try:
     nat2 = filt[filt["geo"].str.len() == 2].copy()
@@ -303,7 +303,7 @@ try:
 except Exception as exc:
     print(f"  Figure B skipped: {exc}")
 
-# ── Figure C — CZ NUTS2 choropleth ───────────────────────────────────────────
+# ── Figure C --- CZ NUTS2 choropleth ───────────────────────────────────────────
 print("\nFigure C: CZ NUTS2 choropleth …")
 try:
     nuts2_data = filt[filt["geo"].str.len() == 4].copy()
@@ -333,7 +333,7 @@ try:
         _normed = snap_nuts2["value"].notna().sum()
         print(f"  Normalised {_normed}/{len(snap_nuts2)} regions to % of employed.")
     elif _is_absolute:
-        print("  WARNING: absolute unit detected but denominator unavailable — "
+        print("  WARNING: absolute unit detected but denominator unavailable --- "
               "values not normalised; map may have non-comparable scale.")
 
     data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
@@ -342,7 +342,7 @@ try:
     _de_regions = [g for g in data_series.index if g.startswith("DE")]
     _de_missing = len(_de_regions) == 0
     if _de_missing:
-        print("  NOTE: German NUTS2 data not available in lfst_r_lfe2ecomm — "
+        print("  NOTE: German NUTS2 data not available in lfst_r_lfe2ecomm --- "
               "DE regions render as 'data nedostupná'.")
 
     fig_c = choropleth_cz(

@@ -3,11 +3,11 @@ Regional, gender and sectoral wage stratification using ISPV / RSCP data.
 
 ISPV (*Informační systém o průměrném výdělku*) semi-annual Excel workbooks
 publish wage breakdowns by NACE sector, Czech region (kraj / NUTS3), and sex,
-with full percentile profiles (P10–P90).  This script extracts three
+with full percentile profiles (P10--P90).  This script extracts three
 argumentation figures that together illustrate the multi-dimensional structure
 of wage inequality in the Czech labour market.
 
-Figure A – ``rscp_regional_wages``
+Figure A -- ``rscp_regional_wages``
     Horizontal bar chart: CZ median monthly wage by region (kraj), indexed
     to the national median (100 = ČR celkem).
 
@@ -15,30 +15,30 @@ Figure A – ``rscp_regional_wages``
     when available; falls back to Eurostat ``earn_rgnmhw`` (mean hourly wages,
     NUTS2) for AT, DE, DK, PL, SK cross-country context.
 
-    Argumentation: Persistent regional wage gaps (Prague 140–150 vs. rural
-    regions 80–90) illustrate why a single national wage floor / collective
-    agreement can mean very different things across regions — and why regional
+    Argumentation: Persistent regional wage gaps (Prague 140--150 vs. rural
+    regions 80--90) illustrate why a single national wage floor / collective
+    agreement can mean very different things across regions --- and why regional
     extension mechanisms matter for equality.
 
-Figure B – ``rscp_gender_gap``
+Figure B -- ``rscp_gender_gap``
     Dual panel:
-      Left  – CZ unadjusted gender pay gap (%) by NACE sector (ISPV M/Ž
+      Left  -- CZ unadjusted gender pay gap (%) by NACE sector (ISPV M/Ž
               median columns or Eurostat ``earn_gr_gpgr2``).
-      Right – Cross-country unadjusted GPG trend 2010–2024 for 6 countries
+      Right -- Cross-country unadjusted GPG trend 2010--2024 for 6 countries
               (Eurostat ``earn_gr_gpgr2``, economy-wide).
 
     Argumentation: The sectoral GPG panel shows that the gender wage gap is
-    not uniform — it is smallest in sectors with strong collective agreements
+    not uniform --- it is smallest in sectors with strong collective agreements
     (industry, finance) and largest in mixed/service sectors.  The
     cross-country trend shows CZ consistently above the EU average, providing
     a reform motivation.
 
-Figure C – ``rscp_sector_percentiles``
+Figure C -- ``rscp_sector_percentiles``
     Grouped horizontal bar (floating whisker) chart: P25 / P50 / P75 wage
     levels by NACE sector for CZ (ISPV percentile columns).  Bars run from
     P25 to P75; tick marks at P50.
 
-    Argumentation: Sectors with narrow P25–P75 bands (low within-sector
+    Argumentation: Sectors with narrow P25--P75 bands (low within-sector
     dispersion) are candidates for sector-wide collective agreements with
     tight wage grids; wide-band sectors have heterogeneous workforces where
     economy-wide KS floors are less effective.
@@ -94,7 +94,7 @@ END_YEAR   = 2024
 
 CZ_COLOR = COUNTRY_COLORS["CZ"]
 
-# Czech regions (kraje) — canonical order (Prague first, then Bohemia, Moravia)
+# Czech regions (kraje) --- canonical order (Prague first, then Bohemia, Moravia)
 CZ_REGIONS_ORDER = [
     "Hlavní město Praha",
     "Jihomoravský kraj",
@@ -470,7 +470,7 @@ if ispv_path is None:
         print(f"  ISPV 2025 GUID fallback failed: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A – Regional wage levels
+# Figure A -- Regional wage levels
 # ════════════════════════════════════════════════════════════════════════════
 regional_done = False
 
@@ -579,11 +579,11 @@ if not regional_done:
         print(f"  Only {len(regional_medians)} ISPV regional files parsed; skipping.")
 
 if not regional_done:
-    print("Figure A (regional wages) skipped – no data available.")
+    print("Figure A (regional wages) skipped -- no data available.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B – Gender pay gap: cross-country timeline (Eurostat earn_gr_gpgr2)
+# Figure B -- Gender pay gap: cross-country timeline (Eurostat earn_gr_gpgr2)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding gender pay gap figure …")
 
@@ -650,7 +650,7 @@ except Exception as exc:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C – Sector wage distribution (P25 / P50 / P75) from ISPV
+# Figure C -- Sector wage distribution (P25 / P50 / P75) from ISPV
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding sector percentile figure …")
 pct_df: pd.DataFrame | None = None
@@ -671,12 +671,12 @@ if pct_df is not None and "p50" in pct_df.columns:
     y_pos = np.arange(n)
     labels = [str(s) for s in pct_df["sector"]]
 
-    # Draw IQR bar (P25–P75) if available
+    # Draw IQR bar (P25--P75) if available
     if "p25" in pct_df.columns and "p75" in pct_df.columns:
         widths = pct_df["p75"].values - pct_df["p25"].values
         ax_c.barh(
             y_pos, widths, left=pct_df["p25"].values,
-            color="#4393C3", alpha=0.55, height=0.6, label="P25–P75 (IQR)",
+            color="#4393C3", alpha=0.55, height=0.6, label="P25--P75 (IQR)",
         )
 
     # P50 tick mark
@@ -703,7 +703,7 @@ if pct_df is not None and "p50" in pct_df.columns:
     ax_c.set_xlabel("hrubá měsíční mzda [Kč]", fontsize=FONT_SIZE)
     ax_c.set_title(
         f"ČR: rozložení mezd podle odvětví NACE (ISPV {ispv_year}/H2)\n"
-        "mezikvartilový rozsah P25–P75 a medián",
+        "mezikvartilový rozsah P25--P75 a medián",
         fontsize=FONT_SIZE,
     )
     ax_c.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
@@ -721,11 +721,11 @@ if pct_df is not None and "p50" in pct_df.columns:
         strings={},
     )
 else:
-    print("Figure C (sector percentiles) skipped – no percentile data available.")
+    print("Figure C (sector percentiles) skipped -- no percentile data available.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure D – CZ NUTS3 regional wage choropleth (ISPV 14 regional workbooks)
+# Figure D -- CZ NUTS3 regional wage choropleth (ISPV 14 regional workbooks)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding CZ NUTS3 regional wage choropleth (ISPV) …")
 
@@ -748,7 +748,7 @@ try:
     fig_d = choropleth_cz(
         wage_series,
         nuts_level_cz=3,
-        title="ČR: mediánová mzda podle kraje (ISPV 2025/H1) — index (medián ČR\u00a0=\u00a0100)",
+        title="ČR: mediánová mzda podle kraje (ISPV 2025/H1) --- index (medián ČR\u00a0=\u00a0100)",
         cmap="RdYlGn",
         vmin=70,
         vmax=150,

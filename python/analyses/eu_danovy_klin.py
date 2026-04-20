@@ -30,7 +30,7 @@ from statout.map_europe import choropleth
 apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# Full dataset – no geo filter so all European countries appear on the map.
+# Full dataset -- no geo filter so all European countries appear on the map.
 # earn_nt_taxwedge: simple 2-dim dataset (freq, geo).
 # Omit the path filter to download all countries at once.
 path = fetch_eurostat("earn_nt_taxwedge", start_period=2015)
@@ -40,9 +40,9 @@ ds = Dataset.from_sdmx_csv(
     path,
     name="Daňový klín",
     unit="%",
-    source_url="https://ec.europa.eu/eurostat – earn_nt_taxwedge",
+    source_url="https://ec.europa.eu/eurostat -- earn_nt_taxwedge",
 )
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

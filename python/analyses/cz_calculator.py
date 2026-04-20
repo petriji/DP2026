@@ -1,10 +1,10 @@
-r"""Czech old-age pension (starobní důchod) – individual calculator.
+r"""Czech old-age pension (starobní důchod) -- individual calculator.
 
 Uses the statutory parameters and reduction formula from ``problemy_cz_duchod``
 and the levy constants from ``cz_tax_model``.
 
 Reduction formula (§ 15 ZPDS, zákon č. 270/2023 Sb.):
-    ROVZ = min(OVZ, RH1) × 0.99             ← first_limit_pct declines 2026–2035
+    ROVZ = min(OVZ, RH1) × 0.99             ← first_limit_pct declines 2026--2035
          + max(min(OVZ, RH2) − RH1, 0) × 0.26
          # third band (> RH2) abolished from 2026 → 0 %
 
@@ -48,7 +48,7 @@ from problemy_cz_duchod import (
 # ── VVZ / PK table (NV published annually in Sbírka zákonů) ──────────────────
 # Format: year → (VVZ, PK)
 # NV 253/2023 Sb. (2023), NV 286/2024 Sb. (2024);
-# 2025 estimate – replace with official NV when published.
+# 2025 estimate -- replace with official NV when published.
 VVZ_PK: dict[int, tuple[int, float]] = {
     2003: (16_769, 1.0665),
     2004: (17_882, 1.0532),
@@ -71,7 +71,7 @@ VVZ_PK: dict[int, tuple[int, float]] = {
     2021: (36_119, 1.0773),
     2022: (38_294, 1.0530),
     2023: (40_638, 1.0819),
-    2024: (43_967, 1.1137),  # NV 286/2024 Sb. – PK back-calculated from NV 365/2025 (RH1=21 546)
+    2024: (43_967, 1.1137),  # NV 286/2024 Sb. -- PK back-calculated from NV 365/2025 (RH1=21 546)
     # 2025: (?,?),            # TODO: add NV 2025/2026 when published
 }
 
@@ -130,7 +130,7 @@ def _prumerna_mzda(year: int) -> int:
     ref = year - 2
     if ref not in VVZ_PK:
         raise ValueError(
-            f"VVZ/PK data for {ref} not available – add it to VVZ_PK."
+            f"VVZ/PK data for {ref} not available -- add it to VVZ_PK."
         )
     vvz, pk = VVZ_PK[ref]
     pm = _ceil_int(vvz * pk)
@@ -162,7 +162,7 @@ def compute_vypoctovy_zaklad(ovz: int, params: PensionParams) -> int:
 
     Pásma (2026):
       do 1. RH:           first_limit_pct (2026 = 99 %)
-      1. RH – 2. RH:      26 %
+      1. RH -- 2. RH:      26 %
       nad 2. RH:          0 % (třetí pásmo zrušeno zákonem č. 270/2023 Sb.)
     """
     rh1 = params.rh1
@@ -214,7 +214,7 @@ def compute_ovz(
     year_of_retirement:
         Rok přiznání důchodu.
     excluded_days:
-        Vyloučené doby v kalendářních dnech (§ 16 odst. 4–5 ZPDS).
+        Vyloučené doby v kalendářních dnech (§ 16 odst. 4--5 ZPDS).
     """
     period_start = year_of_birth + 19   # rok po dovršení 18 let (§ 18 odst. 1)
     period_end   = year_of_retirement - 1
@@ -303,7 +303,7 @@ def calculate_pension(
     year_of_birth, year_of_retirement, years_of_insurance:
         Rok narození, rok přiznání, celková pojistná doba v celých rocích.
     excluded_days:
-        Vyloučené doby (§ 16 odst. 4–5 ZPDS) v kalendářních dnech.
+        Vyloučené doby (§ 16 odst. 4--5 ZPDS) v kalendářních dnech.
     children_raised:
         Počet vychovaných dětí (§ 34a ZPDS, +500 Kč/dítě).
     early_days:
@@ -351,7 +351,7 @@ def calculate_pension_simple(
     """Rychlý odhad důchodu při konstantním měsíčním hrubém příjmu.
 
     OVZ ≈ monthly_gross (koeficienty nárůstu VVZ se za konstantního příjmu
-    vyruší – vzájemná normalizace na aktuální mzdovou úroveň).
+    vyruší -- vzájemná normalizace na aktuální mzdovou úroveň).
 
     Parameters
     ----------
@@ -393,7 +393,7 @@ def calculate_pension_simple(
 def print_result(r: PensionResult) -> None:
     p = r.params
     print(f"{'='*60}")
-    print(f"  VÝPOČET STAROBNÍHO DŮCHODU – rok přiznání {r.year}")
+    print(f"  VÝPOČET STAROBNÍHO DŮCHODU -- rok přiznání {r.year}")
     print(f"{'='*60}")
     print(f"  Průměrná mzda (§ 15 odst. 5):  {p.prumerna_mzda:>10,} Kč")
     print(f"  1. redukční hranice (44 %):     {p.rh1:>10,} Kč")
@@ -419,7 +419,7 @@ def print_result(r: PensionResult) -> None:
 
 
 if __name__ == "__main__":
-    print("DEMO – Odhad starobního důchodu pro rok 2026\n")
+    print("DEMO -- Odhad starobního důchodu pro rok 2026\n")
 
     cases = [
         ("Průměrný příjem, 40 let",        45_000, 2026, 40, {}),

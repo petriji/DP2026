@@ -1,10 +1,10 @@
 r"""
-Czech collective-agreement wage growth vs. actual wage growth – CZ and peers.
+Czech collective-agreement wage growth vs. actual wage growth -- CZ and peers.
 
 Data sources
 ------------
 Czech Republic (negotiated):
-    MPSV IPP (Informace o pracovních podmínkách) – annual Excel workbooks
+    MPSV IPP (Informace o pracovních podmínkách) -- annual Excel workbooks
     downloaded from ``https://www.kolektivnismlouvy.cz``.
     The ``odmenovani`` workbook sheet A15a "Mzdový vývoj" contains, for each
     trade union sector, the breakdown of collective agreements (KS) by wage
@@ -12,14 +12,14 @@ Czech Republic (negotiated):
     percentage increase (``prům.%``) among KS that used the
     "zvýšením v %" (percentage-increase) method.
 
-    Fixed layout (verified 2019–2025):
+    Fixed layout (verified 2019--2025):
       - sheet: ``A15a``
-      - header rows: 6 (rows 0–5 are title/header; row 6 starts the table)
+      - header rows: 6 (rows 0--5 are title/header; row 6 starts the table)
       - Celkem row: row index 11 (0-based) or the first row where col 0 == "Celkem"
       - value column: index 11 (``prům.%`` for "zvýšením v %" sub-column)
 
 All 6 countries (actual):
-    Eurostat Labour Cost Index – nominal, annual (``lc_lci_r2_a``).
+    Eurostat Labour Cost Index -- nominal, annual (``lc_lci_r2_a``).
     ``B-S`` = total business economy; ``D1_D4_MD5`` = total labour costs;
     ``I20`` = 2020 = 100 base year.
     Annual growth rate derived by dividing consecutive index values.
@@ -50,7 +50,7 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
@@ -66,10 +66,10 @@ LBL_ACTUAL = "skutečný nárůst (Eurostat LCI)"
 LBL_NEGOTIATED = "sjednaný nárůst (IPP/KS)"
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Load IPP negotiated wage increases ─────────────────────────────────────
-print(f"Loading IPP odmenovani for {START_YEAR}–{END_YEAR} …")
+print(f"Loading IPP odmenovani for {START_YEAR}--{END_YEAR} …")
 ipp_dict = extract_ipp_negotiated(START_YEAR, END_YEAR)
 ipp_records = [{"time": yr, "value": val} for yr, val in sorted(ipp_dict.items())]
 ipp_years_ok = sorted(ipp_dict.keys())
@@ -86,7 +86,7 @@ if not ipp_records:
     )
 
 # ── 2. Download Eurostat labour cost index (nominal, all countries) ───────────
-# lc_lci_r2_a: Labour cost index – nominal, annual (replaced lc_lci_r2 in 2024)
+# lc_lci_r2_a: Labour cost index -- nominal, annual (replaced lc_lci_r2 in 2024)
 # Dimensions: freq · unit · nace_r2 · lcstruct · geo
 # Filter: A (annual) · I20 (2020=100) · B-S (business economy) · D1_D4_MD5 (total labour costs)
 print("Downloading Eurostat labour cost index (total labour costs) …")
@@ -103,7 +103,7 @@ ds_lci = Dataset.from_sdmx_csv(
     source_url="Eurostat/lc_lci_r2_a",
 )
 
-print(f"LCI countries: {ds_lci.countries}  |  years: {ds_lci.years[0]}–{ds_lci.years[-1]}")
+print(f"LCI countries: {ds_lci.countries}  |  years: {ds_lci.years[0]}--{ds_lci.years[-1]}")
 
 # ── 3. Compute year-on-year wage growth from LCI index ────────────────────────
 
@@ -187,17 +187,16 @@ if all_years:
     ax.set_xlim(START_YEAR, END_YEAR)
 
 # ── 5. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_ipp_mzdy")
+savefig(fig, "stav_ipp_mzdy", out_dir=LATEX_PICS_DIR)
 
 # ── 6. Write LaTeX snippet ────────────────────────────────────────────────────
-year_range = f"{START_YEAR}–{END_YEAR}"
-save_figure_tex_pgf(
+year_range = f"{START_YEAR}--{END_YEAR}"
+save_figure_tex(
     "stav_ipp_mzdy",
     caption=f"Sjednaný a~skutečný mzdový nárůst v~KS, ČR, {year_range}.",
     label="fig:stav_ipp_mzdy",
-    resizebox_width=r"0.95\linewidth",
+    width=r"\linewidth",
     cite_keys=["mpsv_ipp", "eurostat_lci"],
-    strings={},
 )
 
 print("Done.")

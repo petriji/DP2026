@@ -1,5 +1,5 @@
 r"""
-Top 5 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
+Top 5 % wealth share timeline -- CZ, AT, DE, DK, SK, FI.
 
 Shows changes in the top 5 % net wealth share (% of total household net
 wealth) from OECD HFCS survey waves.  The top 5 % captures the broadest
@@ -49,7 +49,7 @@ ds = Dataset.from_oecd_csv(
     filters={"MEASURE": "SH_TOP5"},
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 
 # ── 2. Separate all-countries data from highlighted subset ────────────────────
 ds_all = ds   # keep all for grey cloud
@@ -61,10 +61,10 @@ ds_highlighted = Dataset(
 )
 
 # ── 3. Plot ───────────────────────────────────────────────────────────────────
-# Survey data is sparse — plot as markers connected by dashed lines per country
+# Survey data is sparse --- plot as markers connected by dashed lines per country
 fig, ax = plt.subplots(figsize=cm2in(15, 9))
 
-# Grey cloud — all other countries in the dataset
+# Grey cloud --- all other countries in the dataset
 for country in ds_all.countries:
     if country in COUNTRIES:
         continue

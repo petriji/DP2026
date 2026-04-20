@@ -1,5 +1,5 @@
 r"""
-Hourly wages by NACE sector in PPS – grouped bar chart, deviation from EU27,
+Hourly wages by NACE sector in PPS -- grouped bar chart, deviation from EU27,
 and per-sector choropleth maps for all EU27 countries.
 
 Compares gross hourly wages (adjusted for purchasing power parity) across
@@ -52,10 +52,10 @@ DISPLAY_YEAR = 2024   # latest available full year
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
 
-# ── 1. Download sector wages (EUR/h) – 6 countries + EU27 ────────────────────
+# ── 1. Download sector wages (EUR/h) -- 6 countries + EU27 ────────────────────
 # lc_lci_lev: freq.unit.lcstruct.nace_r2.geo
 # D1_D4_MD5 = total labour costs (wages + employer contributions − direct subsidies)
-# D11 (wages only) is NOT used – D1_D4_MD5 is available for all sectors/countries.
+# D11 (wages only) is NOT used -- D1_D4_MD5 is available for all sectors/countries.
 sector_filter = "+".join(SECTORS.keys())
 
 path_lc = fetch_eurostat(

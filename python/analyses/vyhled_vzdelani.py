@@ -1,7 +1,7 @@
 r"""
-Tertiary education attainment – timeline.
+Tertiary education attainment -- timeline.
 
-Share of population aged 25–64 with tertiary education (ISCED 5–8).
+Share of population aged 25--64 with tertiary education (ISCED 5--8).
 
 Data source: Eurostat ``edat_lfse_03``
   Dimensions: freq.sex.age.unit.isced11.geo
@@ -51,19 +51,19 @@ path = fetch_eurostat(
 # ── 2. Parse ──────────────────────────────────────────────────────────────────
 ds = Dataset.from_sdmx_csv(
     path,
-    name="Terciární vzdělání (25–64)",
+    name="Terciární vzdělání (25--64)",
     unit="%",
     source_url="Eurostat/edat_lfse_03",
 )
 
-print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}–{ds.years[-1]}")
+print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Podíl obyvatel s terciárním vzděláním (25–64 let)",
-    ylabel="podíl s ISCED 5–8 [%]",
+    title="Podíl obyvatel s terciárním vzděláním (25--64 let)",
+    ylabel="podíl s ISCED 5--8 [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,

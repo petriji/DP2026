@@ -1,5 +1,5 @@
 r"""
-CB coverage × GDP per capita scatter – OECD/EU countries.
+CB coverage × GDP per capita scatter -- OECD/EU countries.
 
 Illustrates the correlation between collective bargaining coverage (% of
 salaried workers covered) and GDP per capita in PPS (EU27=100), 
@@ -111,7 +111,7 @@ save_figure_tex_pgf(
     caption=(
         f"Pokrytí \\acs{{KV}} a~\\acs{{HDP}} na obyvatele v~paritě kupní síly "
         f"(\\acs{{geo-EU}}27\u00a0=\u00a0100), pro státy OECD/\\acs{{geo-EU}}, "
-        f"{display_year}. Přerušovaná čára – regrese OLS."
+        f"{display_year}. Přerušovaná čára -- regrese OLS."
     ),
     label="fig:eu_pokryti_prijem",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct,eurostat_nama_10_pc_PPS_EU27eq100",

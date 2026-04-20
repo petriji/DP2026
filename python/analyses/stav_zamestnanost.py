@@ -1,5 +1,5 @@
 r"""
-Employment rate (ages 20–64) timeline – CZ, AT, DE, DK, PL, SK.
+Employment rate (ages 20--64) timeline -- CZ, AT, DE, DK, PL, SK.
 
 Shows the trend in total employment rates across the six reference countries
 from the first available year to the latest available year. CZ's high employment rate relative
@@ -28,8 +28,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
-from statout.timeline import timeline, EU27 as _EU27
+from stattool.style import apply_style, savefig, save_figure_tex
+from statout.timeline import timeline
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ START_YEAR = 2000
 HIGHLIGHT = ["CZ"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # lfsi_emp_a: employment rate by sex and age
@@ -58,13 +58,13 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/lfsi_emp_a",
 )
 
-print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}–{ds.years[-1]}")
+print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Míra zaměstnanosti (20–64 let)",
+    title="Míra zaměstnanosti (20--64 let)",
     ylabel="míra zaměstnanosti [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,
@@ -72,38 +72,19 @@ fig = timeline(
     show_eu_avg=True,
 )
 
-# ── PGF tooltips & geo labels ───────────────────────────────────────────
-_pivot_emp = (
-    ds.df[ds.df["geo"].isin(COUNTRIES)]
-    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-)
-add_pgf_tooltips(fig.axes[0], _pivot_emp, fmt="{:.1f}")
-_bg_emp = sorted(set(_EU27) - set(COUNTRIES))
-_pivot_emp_bg = (
-    ds.df[ds.df["geo"].isin(_bg_emp)]
-    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-)
-add_pgf_tooltips(fig.axes[0], _pivot_emp_bg, fmt="{:.1f}")
-for _child in fig.axes[0].get_children():
-    if hasattr(_child, "get_text"):
-        _txt = _child.get_text().strip()
-        if _txt in COUNTRIES:
-            _child.set_text(f"\\acs{{geo-{_txt}}}")
-
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_zamestnanost")
+savefig(fig, "stav_zamestnanost", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
+save_figure_tex(
     "stav_zamestnanost",
     caption=(
         f"Míra zaměstnanosti (20--64 let), vybrané země EU, "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_zamestnanost",
-    resizebox_width=r"0.95\linewidth",
+    width=r"\linewidth",
     cite_key="eurostat_lfsi_emp_a",
-    strings={},
 )
 
 print("Done.")

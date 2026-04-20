@@ -1,4 +1,4 @@
-r"""Czech old-age pension (starobní důchod) – calculation model and figures.
+r"""Czech old-age pension (starobní důchod) -- calculation model and figures.
 
 X-axis semantics (shared by all plot functions)
 ------------------------------------------------
@@ -10,10 +10,10 @@ work, the x-axis represents the *total cost to the payer* (employer or client):
           (employer social 24,8 % + health 9,0 % = 33,8 % on top of gross wage)
       OVZ = hrubá mzda = x / (1 + EMPLOYER_INS_RATE)
 
-  • OSVČ – standardní odvody:
+  • OSVČ -- standardní odvody:
       x = zisk (příjmy − výdaje)      OVZ = max(55 % × zisk, OSVC_MIN_MONTHLY_BASE)
 
-  • OSVČ – paušální daň:
+  • OSVČ -- paušální daň:
       x = měsíční příjmy (revenue); assessment base fixed per pásmo.
       Dostupná pásma dle typu OSVČ (§ 2a zákona č. 586/1992 Sb.):
         40 % výd. paušál: pásmo 1 (≤ 83 333 Kč/měs.), 2 (≤ 125 000), 3 (≤ 166 667)
@@ -28,7 +28,7 @@ All calculations use 2026 parameters:
   zákon č. 155/1995 Sb. (ZPDS), zákon č. 270/2023 Sb. (pension reform),
   nařízení vlády č. 365/2025 Sb. (valuation for 2026).
 
-Pension formula (§ 33–34 ZPDS):
+Pension formula (§ 33--34 ZPDS):
     pension = základní výměra + ROVZ × pojistná_doba × PCT_PER_YEAR
 
 PCT_PER_YEAR = 1,495 % for 2026 (gradual reduction from 1,5 % to 1,45 % by 2035,
@@ -41,12 +41,12 @@ Reduction (§ 15 ZPDS, zákon č. 270/2023 Sb.):
 
 Figures
 -------
-  plot_pension_comparison() – single panel: monthly pension vs x-axis cost.
+  plot_pension_comparison() -- single panel: monthly pension vs x-axis cost.
       Output: pics/python/problemy_duchod_prijem.pdf
 
-  plot_pension_solidarity()  – two panels:
-      Top:    monthly pension (tis. Kč) – absolute values
-      Bottom: replacement rate (%) = pension / x – the declining slope shows
+  plot_pension_solidarity()  -- two panels:
+      Top:    monthly pension (tis. Kč) -- absolute values
+      Bottom: replacement rate (%) = pension / x -- the declining slope shows
               the solidarity mechanism; lower earners receive proportionally more.
       Output: pics/python/problemy_duchod_solidarita.pdf
 
@@ -166,7 +166,7 @@ def pension_pausalni(gross_income: np.ndarray | float,
     """Starobní důchod OSVČ v paušálním režimu (odvodový paušál).
 
     Vyměřovací základ je pro každé pásmo PEVNÝ a nezávisí na skutečném příjmu
-    v rámci pásma – viz PAUSALNI_DAN.  Vstupní příjem nad nejvyšší pásmové
+    v rámci pásma -- viz PAUSALNI_DAN.  Vstupní příjem nad nejvyšší pásmové
     maximum je považován za nepřípustný pro paušální daň (vrací NaN).
     """
     income = np.asarray(gross_income, dtype=float)

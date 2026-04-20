@@ -1,10 +1,10 @@
 r"""
-Digital skills – EU map (above-basic level, individuals 16–74).
+Digital skills -- EU map (above-basic level, individuals 16--74).
 
 Data source: Eurostat ``isoc_sk_dskl_i21``
   Dimensions: freq.ind_type.indic_is.unit.geo
   I_DSK2_AB = individuals with above-basic overall digital skills
-  IND_TOTAL = all individuals (16–74)
+  IND_TOTAL = all individuals (16--74)
   PC_IND = percentage of individuals
 
 Output

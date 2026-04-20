@@ -1,5 +1,5 @@
 r"""
-Income per capita in PPS – choropleth map of Europe.
+Income per capita in PPS -- choropleth map of Europe.
 
 Shows GDP per capita in purchasing power standards (EU27=100) across EU
 member states.  Illustrates the large gap in real living standards between
@@ -56,7 +56,7 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/nama_10_pc",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

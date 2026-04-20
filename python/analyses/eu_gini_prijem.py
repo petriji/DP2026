@@ -1,9 +1,9 @@
 r"""
-Income GINI coefficient timeline – CZ, AT, DE, DK, PL, SK.
+Income GINI coefficient timeline -- CZ, AT, DE, DK, PL, SK.
 
 Presents the long-run trend in income inequality (Gini of equivalised
 disposable income) for six reference countries.  CZ has one of the lowest
-Gini values in the EU — but this is used as a protiargument: low Gini at a
+Gini values in the EU --- but this is used as a protiargument: low Gini at a
 low median income level means equality in relative poverty, not prosperity.
 
 Data source: Eurostat, ``ilc_di12``
@@ -59,14 +59,14 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/ilc_di12",
 )
 
-print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}–{ds.years[-1]}")
+print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
     ds,
     countries=COUNTRIES,
     title="Giniho koeficient příjmové nerovnosti",
-    ylabel="Giniho koeficient [0–100]",
+    ylabel="Giniho koeficient [0--100]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,

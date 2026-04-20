@@ -31,7 +31,7 @@ apply_style_pgf()
 # ── 1. Load data ──────────────────────────────────────────────────────────────
 ds = load_union_density(start_period=2010)
 
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

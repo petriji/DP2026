@@ -60,7 +60,7 @@ path_lp = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# Net annual earnings in PPS (single person, no children, 100 % AW) – all countries
+# Net annual earnings in PPS (single person, no children, 100 % AW) -- all countries
 path_net = fetch_eurostat(
     "earn_nt_net",
     "A.PPS.NET.P1_NCH_AW100.",
@@ -91,7 +91,7 @@ ds_net_raw = Dataset(
 # ── 3. Normalise both series to EU27=100 per year ────────────────────────────
 
 def _to_eu100(ds: Dataset, eu_geo: str = "EU27_2020") -> Dataset:
-    """Normalise every country–year observation to EU27 aggregate = 100."""
+    """Normalise every country--year observation to EU27 aggregate = 100."""
     df = ds.df.copy()
     eu_rows = df[df[ds.geo_col] == eu_geo]
     if not eu_rows.empty:
@@ -117,7 +117,7 @@ def _to_eu100(ds: Dataset, eu_geo: str = "EU27_2020") -> Dataset:
     )
 
 
-# LP is already in EU27=100 (unit PC_EU27_2020_MPPS_CP) — skip normalization;
+# LP is already in EU27=100 (unit PC_EU27_2020_MPPS_CP) --- skip normalization;
 # only remove EU27 aggregate row itself and set unit label.
 _lp_df = ds_lp_raw.df.copy()
 _lp_df = _lp_df[_lp_df[ds_lp_raw.geo_col] != "EU27_2020"]
@@ -136,8 +136,8 @@ ds_net_idx.df = ds_net_idx.df[~ds_net_idx.df[ds_net_idx.geo_col].isin(EXCLUDE_OU
 lp_years = sorted(ds_lp_idx.years)
 net_years = sorted(ds_net_idx.years)
 print(
-    f"LP: {lp_years[0]}–{lp_years[-1]}  |  "
-    f"Net income: {net_years[0] if net_years else 'n/a'}–"
+    f"LP: {lp_years[0]}--{lp_years[-1]}  |  "
+    f"Net income: {net_years[0] if net_years else 'n/a'}--"
     f"{net_years[-1] if net_years else 'n/a'}"
 )
 

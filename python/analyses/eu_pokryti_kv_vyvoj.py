@@ -1,12 +1,12 @@
 r"""
-CB coverage timeline – EU grey cloud + CZ, AT, DE, DK, PL, SK highlighted.
+CB coverage timeline -- EU grey cloud + CZ, AT, DE, DK, PL, SK highlighted.
 
 Data sources
 ------------
 * ICTWSS v2 ``AdjCov`` column (OECD / AIAS, administrative-based adjusted
   coverage) for all EU-27 countries **except Germany**.
 * OECD CBC API, ``MEASURE='ERB'`` (European Record of Bargaining survey-based
-  measure) for **Germany only** — ICTWSS AdjCov for DE is unavailable after 1990.
+  measure) for **Germany only** --- ICTWSS AdjCov for DE is unavailable after 1990.
 
 Note: AdjCov and ERB are methodologically distinct measures.  German values
 (ERB ≈ 49 % in 2024) are not directly comparable to the AdjCov series
@@ -48,9 +48,9 @@ apply_style_pgf()
 print("Loading CB coverage data …")
 ds = load_cb_coverage(start_period=START_YEAR)
 ds.name = "Pokrytí kolektivním vyjednáváním"
-print(f"Merged: {ds.df['geo'].nunique()} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Merged: {ds.df['geo'].nunique()} countries, years {ds.years[0]}--{ds.years[-1]}")
 
-# ── 4. Long-run figure (1993–latest, xlim up to 2025) ────────────────────────
+# ── 4. Long-run figure (1993--latest, xlim up to 2025) ────────────────────────
 fig = timeline(
     ds,
     countries=COUNTRIES,
@@ -102,13 +102,13 @@ save_figure_tex_pgf(
     strings={},
 )
 
-# ── 5. Cropped figure (2004–latest, xlim up to 2025) ─────────────────────────
+# ── 5. Cropped figure (2004--latest, xlim up to 2025) ─────────────────────────
 YEAR_START2 = 2004
 
 fig2 = timeline(
     ds,
     countries=COUNTRIES,
-    title=f"Pokrytí KV ({YEAR_START2}–{latest_yr})",
+    title=f"Pokrytí KV ({YEAR_START2}--{latest_yr})",
     ylabel="pokrytí KV [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,

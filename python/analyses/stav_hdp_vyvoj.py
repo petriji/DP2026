@@ -110,7 +110,7 @@ save_figure_tex_pgf(
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_hdp_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
     strings={},
 )

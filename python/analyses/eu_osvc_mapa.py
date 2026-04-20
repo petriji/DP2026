@@ -3,7 +3,7 @@ Self-employment rate choropleth map of Europe.
 
 Data source: Eurostat lfsa_egaps (Employed persons by professional status)
   Computes: self-employed (wstatus=SELF) / total employed (wstatus=EMP) × 100
-  Sex: T (both), Age: Y15–74, Unit: THS_PER (thousands) → ratio computed here.
+  Sex: T (both), Age: Y15--74, Unit: THS_PER (thousands) → ratio computed here.
 
 Output
 ------
@@ -63,7 +63,7 @@ ds = Dataset(
     source_url="Eurostat lfsa_egaps",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

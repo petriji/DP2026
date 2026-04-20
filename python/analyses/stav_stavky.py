@@ -1,16 +1,16 @@
 r"""
-Strike activity – % working time lost to strikes, EU grey cloud + selected countries.
+Strike activity -- % working time lost to strikes, EU grey cloud + selected countries.
 
 Data sources
 ------------
-* ILOSTAT ``STR_DAYS_ECO_RT_A`` — days not worked per 1\,000 workers due to
+* ILOSTAT ``STR_DAYS_ECO_RT_A`` --- days not worked per 1\,000 workers due to
   industrial action, annual, by economy.
   (classif1=ECO_AGGREGATE_TOTAL, sex=SEX_T)
 * Statistics Denmark ``ABST1`` (unit 300 = lost working days, BRANCHE 000 = total)
-  for **Denmark only** — DK does not report to ILOSTAT.
+  for **Denmark only** --- DK does not report to ILOSTAT.
   Rate computed as: lost_days / (Eurostat lfsi_emp_a THS_PER * 1000) * 1000
-* Eurostat ``lfsa_ewhun2`` — average actual weekly hours of work in main job,
-  total employed, 20–64 years.
+* Eurostat ``lfsa_ewhun2`` --- average actual weekly hours of work in main job,
+  total employed, 20--64 years.
   Used to convert the ILO rate into % working time lost:
 
       A   = H_w × 52.18 / 8       (annual working days per worker;
@@ -130,9 +130,9 @@ df_ilo = df_ilo[df_ilo["time"] >= START_YEAR]
 df_ilo_clean = df_ilo[["geo", "time", obs_col]].copy()
 df_ilo_clean = df_ilo_clean.rename(columns={obs_col: "D_S"})
 print(f"  ILO clean: {df_ilo_clean['geo'].nunique()} EU27 countries, "
-      f"years {df_ilo_clean['time'].min()}–{df_ilo_clean['time'].max()}")
+      f"years {df_ilo_clean['time'].min()}--{df_ilo_clean['time'].max()}")
 
-# ── 1b. Statistics Denmark ABST1 – lost working days + employment for DK ────────────────
+# ── 1b. Statistics Denmark ABST1 -- lost working days + employment for DK ────────────────
 # ABST1: unit 300 = "Number of lost working days", BRANCHE 000 = Total
 # API: https://api.statbank.dk/v1/data/ABST1/CSV?lang=en
 print("Downloading Statistics Denmark ABST1 (DK lost working days) …")
@@ -157,7 +157,7 @@ df_dk_days["lost_days"] = pd.to_numeric(
 )
 df_dk_days = df_dk_days.dropna().astype({"time": int})
 df_dk_days = df_dk_days[df_dk_days["time"] >= START_YEAR]
-print(f"  ABST1 raw: {len(df_dk_days)} years, {df_dk_days['time'].min()}–{df_dk_days['time'].max()}")
+print(f"  ABST1 raw: {len(df_dk_days)} years, {df_dk_days['time'].min()}--{df_dk_days['time'].max()}")
 
 # Eurostat employment (total employed, thousands) for DK to compute rate per 1000
 print("Downloading Eurostat lfsi_emp_a for DK employment …")
@@ -182,13 +182,13 @@ df_dk["D_S"] = df_dk["lost_days"] / df_dk["emp_thousands"]
 df_dk["geo"] = "DK"
 df_dk = df_dk[["geo", "time", "D_S"]]
 print(f"  DK computed: {len(df_dk)} years, D_S range "
-      f"{df_dk['D_S'].min():.4f}–{df_dk['D_S'].max():.4f} days/1000")
+      f"{df_dk['D_S'].min():.4f}--{df_dk['D_S'].max():.4f} days/1000")
 
 # Merge DK into ILO frame (ILO doesn't report DK)
 df_ilo_clean = pd.concat([df_ilo_clean, df_dk], ignore_index=True)
 print(f"  After DK merge: {df_ilo_clean['geo'].nunique()} countries")
 
-# ── 2. Download Eurostat lfsa_ewhun2 – average weekly hours ──────────────────
+# ── 2. Download Eurostat lfsa_ewhun2 -- average weekly hours ──────────────────
 # Dimension order: freq.unit.worktime.sex.age.geo
 # We want: A (annual), TOTAL (worktime=total), T (sex), Y20-64 (age)
 print("Downloading Eurostat lfsa_ewhun2 (average weekly hours) …")
@@ -209,7 +209,7 @@ df_h["H_w"] = pd.to_numeric(df_h["H_w"], errors="coerce")
 df_h = df_h.dropna(subset=["H_w"])
 df_h = df_h[df_h["geo"].str.len() == 2]
 print(f"  Eurostat H_w: {df_h['geo'].nunique()} countries, "
-      f"years {df_h['time'].min()}–{df_h['time'].max()}")
+      f"years {df_h['time'].min()}--{df_h['time'].max()}")
 
 # ── 3. Merge and compute P_S ──────────────────────────────────────────────────
 df = df_ilo_clean.merge(df_h[["geo", "time", "H_w"]], on=["geo", "time"], how="left")
@@ -232,7 +232,7 @@ counts = df.groupby("geo")["value"].count()
 excluded = counts[counts < MIN_POINTS].index.tolist()
 if excluded:
     log.warning(
-        "Excluding countries with < %d data points (2000–): %s",
+        "Excluding countries with < %d data points (2000--): %s",
         MIN_POINTS, excluded,
     )
 df = df[~df["geo"].isin(excluded)].copy()
@@ -244,7 +244,7 @@ ds = Dataset(
     source_url="ILOSTAT STR_DAYS_ECO_RT_A; DST ABST1 (DK); Eurostat lfsa_ewhun2",
 )
 print(f"Final: {ds.df['geo'].nunique()} countries, "
-      f"years {ds.years[0]}–{ds.years[-1]}")
+      f"years {ds.years[0]}--{ds.years[-1]}")
 
 # Clamp requested COUNTRIES to those actually present
 countries_present = [c for c in COUNTRIES if c in ds.countries]
@@ -302,7 +302,7 @@ save_figure_tex_pgf(
         r"(LT 2008 dosahuje cca \SI{10}{\percent} --- jednorázový spor ve veřejném sektoru)."
     ),
     label="fig:stav_stavky",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "dst_abst1", "eurostat_lfsa_ewhun2"],
     strings={},
 )

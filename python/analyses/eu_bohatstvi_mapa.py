@@ -1,5 +1,5 @@
 r"""
-Top 10 % wealth share map – Europe choropleth.
+Top 10 % wealth share map -- Europe choropleth.
 
 Shows the concentration of household net wealth (top 10 % share) across
 European countries using OECD HFCS survey data (latest available per country).
@@ -46,7 +46,7 @@ ds = Dataset.from_oecd_csv(
     filters={"MEASURE": "SH_TOP10"},
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 2. Choropleth map ─────────────────────────────────────────────────────────
