@@ -1,0 +1,12 @@
+% Editable figure definition for eu_mzda_distribuce
+% Edit freely --- Python will NOT overwrite this file.
+% To regenerate defaults, delete this file and re-run the script.
+\def\strEuMzdaDistribuceMediany{\acs{geo-CZ}~\SI{10{,}55}{\pps\per\hour}; \acs{geo-SK}~\SI{10{,}18}{\pps\per\hour}; \acs{geo-PL}~\SI{12{,}09}{\pps\per\hour}; \acs{geo-AT}~\SI{16{,}10}{\pps\per\hour}; \acs{geo-DE}~\SI{17{,}36}{\pps\per\hour}; \acs{geo-DK}~\SI{22{,}85}{\pps\per\hour}}%
+\def\strEuMzdaDistribuceCaption{\centering Modelové rozložení hrubé hodinové mzdy zaměstnanců v~\ac{PPS}, \emph{Structure of Earnings Survey} 2022. Křivky jsou log-normální fit metodou nejmenších čtverců na~třech publikovaných bodech distribuce (D1, medián, D9). Pokrytí: podniky s~$\geq$\,10~zaměstnanci, \ac{NACE}~B--S bez~O, obě pohlaví, všechny pracovní úvazky. Osa~y udává podíl zaměstnanců v~intervalu šíře \SI{1}{\pps\per\hour}; přerušované svislé čáry označují mediány. Mediány: \strEuMzdaDistribuceMediany. Zdroj dat: Eurostat~\cite{eurostat_ses_hourly}.}%
+%
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/eu_mzda_distribuce.pgf}}
+  \caption{\strEuMzdaDistribuceCaption}
+  \label{fig:eu_mzda_distribuce}
+\end{figure}
