@@ -52,6 +52,9 @@ Output the full gap table with ✅/❌/⚠️ symbols. Then list:
 5. **Utility scripts** (no `save_figure_tex`) — list separately
 
 ## Notes
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
 - `correlation_analyses.py` generates figures that are included via `latex/texparts/commentary/correlation_analyses.tex` (merged file) — mark these as covered.
 - Scripts like `cz_calculator.py` and `cz_tax_model.py` are utilities (no `save_figure_tex`) — list separately without ❌.
 - Do NOT edit any files. Report only.

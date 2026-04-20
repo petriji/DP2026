@@ -163,10 +163,18 @@ After the user confirms the script ran, invoke `Komentuj analýzu` with the scri
 Then add `\input{texparts/commentary/<name>}` to the appropriate place in `main.tex`.
 
 ## Rules
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
 - Always read the template script fully before scaffolding — match its import style and parameter conventions exactly.
 - Captions must be Czech. Use `r"..."` strings. Use `\textit{}` for dataset names, `\SI{}` for percentages.
 - `label=` must follow the pattern `fig:<name>` (no underscores replaced — keep as-is).
 - `cite_key=` must be a real key from `socialnidialog.bib` — invoke `Citace a zkratky` to verify.
+
+### Citation integrity — MANDATORY
+- **Only bibliography citations are permitted.** Every factual claim, statistic, or dataset reference in commentary and captions must be backed by a `\cite{key}` pointing to an entry in `socialnidialog.bib`. No external URLs, footnote URLs, or informal source attributions are allowed as substitutes for `\cite{}`.
+- **Data must have a bibliographic entry.** Only use data that originates from a source already recorded in `socialnidialog.bib` (e.g. Eurostat/OECD databases with a `@misc` or `@dataset` entry, cited journal articles, official reports). If the dataset has no bib entry yet, invoke `Citace a zkratky` to add one before using the data.
+- If a required bib entry does not exist and cannot be created (missing metadata), do NOT use that data — raise the gap to the user instead.
 - Do NOT add `\begin{figure}` or `\end{figure}` to the Python script — `save_figure_tex`/`save_figure_tex_pgf` handles it.
 - For PGF figures: `texparts/figures/<name>.tex` is git-tracked and hand-editable. Python only creates it if it doesn't exist — delete it to regenerate defaults from data.
 - `\inputpgffigure{name}` shows a yellow warning box if the `.pgf` is missing (script not yet run) — this is expected and not an error to fix in LaTeX.

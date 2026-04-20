@@ -31,6 +31,12 @@ Before formatting, consult these files when context is needed:
 
 ## Rules
 
+### 0. LaTeX compilation coordination — MANDATORY
+
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
+
 ### 1. Acronyms — `acro` macros
 
 | Situation | Macro | Notes |
@@ -106,6 +112,11 @@ After editing, use the new ID in the formatted text immediately.
 - Multiple consecutive citations: `\cite{key1}\cite{key2}` (no space between).
 
 **Finding citation keys**: Read `\addbibresource{…}` lines in `latex/main.tex` to discover which `.bib` files are active, then search those files for the relevant entry.
+
+**Citation integrity — MANDATORY:**
+- **Only `socialnidialog.bib` entries are permitted.** No external URLs, footnote-only attributions, or bare author-year strings may substitute for `\cite{}` in the final text.
+- **Every data point or statistic must be backed by a bib entry.** Data from databases (Eurostat, OECD, MPSV, ISPV, ETUI, etc.) is only allowed if a corresponding `@misc`/`@dataset` entry exists in `socialnidialog.bib`. If a required entry is missing, invoke `Citace a zkratky` to add it before inserting the data or claim.
+- Do NOT insert `\cite{TODO}` as a permanent placeholder — it must be resolved before the text is committed.
 
 ### 3. Cross-references — `\label` and `\ref`
 

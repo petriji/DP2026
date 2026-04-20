@@ -153,6 +153,9 @@ Report:
 
 ## Decision Rules
 
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
 - Prefer editing the originating script over editing `stats_analytics.py`.
 - Do not add raw HTTP requests to analyses; use `fetch_eurostat()` or `fetch_oecd()`.
 - Keep output paths in `config.py` conventions.

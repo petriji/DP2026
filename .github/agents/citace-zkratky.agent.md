@@ -93,3 +93,13 @@ If asked to add a missing citation, ask the user for: author(s), year, title, jo
 - Never fabricate citation keys or DOIs.
 - Always read the actual file before reporting "not found" — do not rely on memory.
 - IDs in `acro.tex` are case-sensitive. Always return the exact casing.
+
+### LaTeX compilation coordination — MANDATORY
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
+
+### Citation integrity — MANDATORY
+- **All citations must resolve to an entry in `socialnidialog.bib`.** Never approve, suggest, or pass through a `\cite{key}` that does not exist in the bibliography. If the key is absent, either add a proper entry (task 6) or report the gap to the caller.
+- **Data must be backed by a bib entry.** Any dataset used in an analysis (Eurostat, OECD, MPSV, ISPV, ETUI, etc.) must have a corresponding `@misc`/`@dataset` or other BibLaTeX entry before the data may be cited. Do not allow data to be used with only an informal attribution.
+- **No references outside the bibliography.** External URLs, footnote-only links, or bare author-year strings in prose are not acceptable substitutes for a proper `\cite{key}`. Raise missing entries to the user immediately.
