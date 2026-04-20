@@ -1341,21 +1341,39 @@
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
 % Global flags: true when at least one captioned figure / table exists in the
-% document.  Set by patching \addcontentsline so they reflect the current run
-% rather than the per-chapter \c@figure / \c@table counters (which reset).
+% document.  Set by hooking \caption@beginex (caption.sty's caption emitter,
+% which underlies every figure/table \caption); falls back to wrapping the
+% kernel \@caption when caption.sty is not loaded.  The hook is installed at
+% \AtBeginDocument so it sits on top of caption.sty's own redefinition.
+% This is robust against hyperref's later patch of \addcontentsline (which
+% is why the flags can't reliably be set there).
+% \edef captures the type token (caption.sty passes \@captype, not the literal
+% string "figure"/"table") so \ifx compares the expanded value.
 \newif\if@CTUhasfigures
 \newif\if@CTUhastables
-\let\CTU@orig@addcontentsline\addcontentsline
-\renewcommand\addcontentsline[3]{%
-  \CTU@orig@addcontentsline{#1}{#2}{#3}%
-  \begingroup
-    \def\CTU@temp{#1}%
-    \ifx\CTU@temp\CTU@lof@name\global\@CTUhasfigurestrue\fi
-    \ifx\CTU@temp\CTU@lot@name\global\@CTUhastablestrue\fi
-  \endgroup
-}%
-\def\CTU@lof@name{lof}%
-\def\CTU@lot@name{lot}%
+\AtBeginDocument{%
+  \@ifpackageloaded{caption}{%
+    \let\CTU@orig@beginex\caption@beginex
+    \renewcommand\caption@beginex[3]{%
+      \edef\CTU@cap@type{#1}%
+      \def\CTU@cap@fig{figure}%
+      \def\CTU@cap@tab{table}%
+      \ifx\CTU@cap@type\CTU@cap@fig\global\@CTUhasfigurestrue\fi
+      \ifx\CTU@cap@type\CTU@cap@tab\global\@CTUhastablestrue\fi
+      \CTU@orig@beginex{#1}{#2}{#3}%
+    }%
+  }{%
+    \let\CTU@orig@@caption\@caption
+    \long\def\@caption#1[#2]#3{%
+      \edef\CTU@cap@type{#1}%
+      \def\CTU@cap@fig{figure}%
+      \def\CTU@cap@tab{table}%
+      \ifx\CTU@cap@type\CTU@cap@fig\global\@CTUhasfigurestrue\fi
+      \ifx\CTU@cap@type\CTU@cap@tab\global\@CTUhastablestrue\fi
+      \CTU@orig@@caption{#1}[{#2}]{#3}%
+    }%
+  }%
+}
 \newcommand\listoffigures{%
     \if@CTUhasfigures
     \if@twocolumn
