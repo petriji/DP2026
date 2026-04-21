@@ -1996,7 +1996,17 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
+  % In math mode, \pdfstringdef and \pdfstartlink/\leavevmode are invalid
+  % (they trigger "Command \pdfstringdef invalid in math mode" and break
+  % subsequent token parsing).  When called from \acs{var-X} or \acs{idx-Y}
+  % inside $...$, just emit the visible text without tooltip/link annotation.
+  \ifmmode #2\else
+  % NOTE: do NOT pass #1 through \HyperDestNameFilter / \pdfstringdef.
+  % With hyperref's [unicode=true], \pdfstringdef encodes the destination name
+  % as UTF-16BE (with BOM), which then no longer matches the raw ASCII names
+  % registered by biblatex (cite.<refsection>@<key>) and acro (<AcronymID>) in
+  % the PDF /Dests Names tree.  The resulting goto name{...} lookup falls back
+  % to the cover page in Acrobat.  Pass the destination tokens raw.
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -2009,6 +2019,7 @@
   #2%
   \Hy@endcolorlink
   \pdfendlink
+  \fi
 }
 % Strip formatting and normalise dashes in PDF tooltip strings.
 % Also bypass the \exp_not:n (= \unexpanded) wrappers that acro3 and biblatex
