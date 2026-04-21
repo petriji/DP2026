@@ -844,14 +844,17 @@ def savefig_pgf(
 # ── Citation helpers for save_figure_tex ─────────────────────────────────────
 
 _CITE_PROVIDERS: list[tuple[str, str]] = [
+    ("oecd_aias_ictwss", "\\acs{OECD}~\\acs{ICTWSS}"),
+    ("oecd_hfcs",        "\\acs{OECD}~\\acs{HFCS}"),
+    ("oecd_lmp",         "\\acs{OECD}~\\acs{LMP}"),
+    ("eurostat_ses",     "Eurostat~\\acs{SES}"),
     ("eurostat",         "Eurostat"),
-    ("oecd_aias_ictwss", "OECD\\,ICTWSS"),
-    ("oecd",             "OECD"),
-    ("mpsv_ipp",         "MPSV/IPP"),
-    ("mpsv_ispv",        "MPSV/ISPV"),
-    ("zakon_",           "zákon\\,ČR"),
-    ("nv_",              "zákon\\,ČR"),
-    ("sdeleni_",         "zákon\\,ČR"),
+    ("oecd",             "\\acs{OECD}"),
+    ("mpsv_ipp",         "\\acs{MPSV}~\\acs{IPP}"),
+    ("mpsv_ispv",        "\\acs{MPSV}~\\acs{ISPV}"),
+    ("zakon_",           "Model podle legislativy \\aca{geo-CZ}"),
+    ("nv_",              "Model podle legislativy \\aca{geo-CZ}"),
+    ("sdeleni_",         "Model podle legislativy \\aca{geo-CZ}"),
 ]
 
 
@@ -941,10 +944,10 @@ def save_figure_tex(
         caption_full = title
 
     if footnote:
-        caption_str = f"\\centering {caption_full}\\protect\\footnotemark"
+        caption_str = f"{caption_full}\\protect\\footnotemark"
         footnote_line = f"\\footnotetext{{{footnote}}}\n"
     else:
-        caption_str = f"\\centering {caption_full}"
+        caption_str = caption_full
         footnote_line = ""
 
     tex = (
@@ -1008,10 +1011,10 @@ def save_figure_tex_pgf(
         caption_full = title
 
     if footnote:
-        caption_str = f"\\centering {caption_full}\\protect\\footnotemark"
+        caption_str = f"{caption_full}\\protect\\footnotemark"
         footnote_line = f"\\footnotetext{{{footnote}}}\n"
     else:
-        caption_str = f"\\centering {caption_full}"
+        caption_str = caption_full
         footnote_line = ""
 
     # ── Editable figure tex file (written once, never overwritten) ────────
