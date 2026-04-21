@@ -66,15 +66,18 @@ COUNTRY_COLORS.update({"IT": "#17becf", "SE": "#e377c2"})  # teal, pink
 # actual living standards or labour-market conditions.
 EXCLUDE_COUNTRIES = ["IE"]
 
-# Footnote used in all figure/table captions explaining excluded and missing countries.
-_EXCL_NOTE = (
-    "Irsko (IE) vyřazeno: HDP/ob.~v~PPS $\\approx 237$ (EU27\\,=\\,100) "
-    "je zkresleno přesunem zisků nadnárodních korporací se sídlem v~Irsku "
-    "(transfer pricing, relokace~IP) --- nereprezentuje skutečnou životní "
-    "úroveň ani podmínky trhu práce. "
-    "Data nedostupná: EE, LV --- chybějící hodnoty v~ICTWSS~\\textit{AdjCov}; "
-    "LU --- data dostupná pouze před rokem 2004."
+# Footnote used in figure/table captions explaining excluded and missing countries.
+# (Detailed rationale for IE exclusion and ICTWSS gaps lives in the commentary file.)
+_EXCL_NOTE_FIG = (
+    "Irsko (IE) vyřazeno (\\acs{HDP}/ob. silně zkresleno transfer pricing). "
+    "Data pokrytí \\acs{KV} nedostupná: EE, LV, LU."
 )
+_EXCL_NOTE_TAB = (
+    "Srovnáno dle kupní síly. Irsko (IE) vyřazeno. "
+    "Data pokrytí \\acs{KV} nedostupná: EE, LV, LU."
+)
+# Backward-compat alias (still referenced in scatter footnote below).
+_EXCL_NOTE = _EXCL_NOTE_FIG
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
@@ -293,31 +296,31 @@ print("Computing correlation table …")
 
 _PAIRS = [
     {
-        "label": r"Pokrytí KV vs. prac.~doba",
+        "label": r"Skut. prac.~doba",
         "ds_x": ds_cbc,
         "ds_y": ds_hours,
         "y_name": "Prům. skut. hodin./týden",
     },
     {
-        "label": r"Pokrytí KV vs. gender pay gap",
+        "label": r"Gender pay gap",
         "ds_x": ds_cbc,
         "ds_y": ds_gpg,
         "y_name": "GPG (%)",
     },
     {
-        "label": r"Pokrytí KV vs. hod. příjem (\si{\pps\per\hour})",
+        "label": r"Čistý hod. příjem",
         "ds_x": ds_cbc,
         "ds_y": ds_netpps,
         "y_name": "Čistý příjem (PPS/h)",
     },
     {
-        "label": r"Pokrytí KV vs. produktivita (\si{\pps\per\hour})",
+        "label": r"Produktivita",
         "ds_x": ds_cbc,
         "ds_y": ds_prod,
         "y_name": "Produktivita (EU27=100)",
     },
     {
-        "label": r"Hustota odborů vs. Gini",
+        "label": r"Gini (\acs{var-rho-U})",
         "ds_x": ds_tud,
         "ds_y": ds_gini,
         "y_name": "Gini",
@@ -402,15 +405,19 @@ _year_label = max(_Counter(_years), key=lambda y: (_Counter(_years)[y], y)) if _
 lines = [
     r"\begin{table}[htbp]",
     r"\centering",
-    r"\caption{Korelace pokrytí KV a hustoty odborů s~vybranými veličinami pracovního trhu "
-    r"(Pearsonovo $r$ a Spearmanovo $\rho$; panelový koeficient na všech dostupných "
-    r"geo$\times$rok pozorováních, $r_{\text{akt.}}$ = průřezový Pearsonův $r$ pro rok "
-    rf"{_year_label}).}}",
+    r"\caption{Korelace pokrytí \acs{KV} (hustoty odborů) s~vybranými veličinami "
+    rf"pracovního trhu v~letech {START_YEAR}--{_year_label} a průřezovém roce "
+    rf"{_year_label}. (Pearsonovo $r$ a Spearmanovo $\rho$; panelový koeficient "
+    r"na všech dostupných geo$\times$rok pozorováních, $r_{\text{akt.}}$ = "
+    rf"průřezový Pearsonův $r$ pro rok {_year_label}).}}",
     r"\label{tab:korelace_tabulka}",
-    r"\begin{tabular}{lrrrrrr}",
+    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4cm}"
+    r"*{6}{>{\centering\arraybackslash}m{1.65cm}}@{}}",
     r"\toprule",
-    rf"Vztah & $n_{{\text{{panel}}}}$ & $n_{{\text{{geo}}}}$ & Pearson $r$ & "
-    rf"Spearman $\rho$ & $r_{{\text{{akt.}}}}$ ({_year_label}) & $n_{{\text{{akt.}}}}$ \\",
+    rf"\bfseries Ukazatel & \bfseries $n_{{\text{{panel}}}}$ "
+    rf"& \bfseries $n_{{\text{{geo}}}}$ & \bfseries $r$ & "
+    rf"\bfseries $\rho$ & \bfseries $n_{{\text{{{_year_label}}}}}$ "
+    rf"& \bfseries $r_{{\text{{{_year_label}}}}}$ \\",
     r"\midrule",
 ]
 for row in rows:
@@ -418,12 +425,12 @@ for row in rows:
         f"{row['label']} & {row['n_panel']} & {row['n_geo']} & "
         f"{_fmt_r(row['r_pearson'])} & "
         f"{_fmt_r(row['r_spearman'])} & "
-        f"{_fmt_r(row['r_year'])} & {row['n_akt']} \\\\"
+        f"{row['n_akt']} & {_fmt_r(row['r_year'])} \\\\"
     )
 lines += [
     r"\bottomrule",
-    r"\end{tabular}",
-    rf"\par\vspace{{2pt}}\footnotesize {_EXCL_NOTE}",
+    r"\end{xltabular}",
+    rf"\par\vspace{{2pt}}\footnotesize {_EXCL_NOTE_TAB}",
     r"\end{table}",
 ]
 
@@ -540,15 +547,17 @@ _max_year = max(r["y0_year"] for r in pred_rows)
 pred_lines = [
     r"\begin{table}[htbp]",
     r"\centering",
-    rf"\caption{{Lineární predikce dle rov.~\eqref{{eq:model_cz}}: predikovaná změna ukazatelů "
-    rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KS}} na~\SI{{{_target_str}}}{{\percent}} "
-    rf"(panelový $\hat{{\beta}}$, $\Delta x = {_target_str}{{,}}0 - {_cz_cov_str} = +{_delta_x_str}$\,pp, "
-    rf"data \acs{{geo-CZ}} z~roku {_max_year}).}}",
+    rf"\caption{{Lineární predikce: predikovaná změna ukazatelů trhu práce "
+    rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KV}} ze "
+    rf"\SI{{{_cz_cov_str}}}{{\percent}} na~\SI{{{_target_str}}}{{\percent}}.}}",
     r"\label{tab:model_cz}",
-    r"\begin{tabular}{lrrrr}",
+    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{8cm}"
+    r"*{4}{>{\centering\arraybackslash}m{1.65cm}}@{}}",
     r"\toprule",
-    r"Ukazatel & $y_{\acs{idx-0}}$ & $\hat{\beta}$ "
-    r"& $\Delta\hat{y}_{\acs{geo-CZ}}$ & $\hat{y}_1$ \\",
+    rf"\bfseries Ukazatel & \bfseries $y_{{{_max_year}}}$ "
+    r"& \bfseries $\hat{\beta}$ (na \SI{}{\pp}) "
+    r"& \bfseries $\Delta\hat{y}_{\acs{geo-CZ}}$ "
+    r"& \bfseries $\hat{y}$ \\",
     r"\midrule",
 ]
 for r in pred_rows:
@@ -557,14 +566,12 @@ for r in pred_rows:
         f"{_fmt_pred(r['y0'])} & "
         f"{_fmt_pred_beta(r['beta'])} & "
         f"{_fmt_pred(r['delta_y'], sign=True)} & "
-        f"{_fmt_pred(r['y1'])} \\\\"
+        f"\\bfseries {_fmt_pred(r['y1'])} \\\\"
     )
 pred_lines += [
     r"\bottomrule",
-    r"\end{tabular}",
-    rf"\par\vspace{{2pt}}\footnotesize "
-    rf"Pokrytí \acs{{geo-CZ}}: {_cz_cov_str}\,\% ({_cz_cov_year}). "
-    rf"Cíl: \SI{{{_target_str}}}{{\percent}}. "
+    r"\end{xltabular}",
+    r"\par\vspace{2pt}\footnotesize "
     r"Predikce je horním odhadem korelovatelné části efektu --- "
     r"nezachycuje zpětné vazby ani náklady přechodu.",
     r"\end{table}",
