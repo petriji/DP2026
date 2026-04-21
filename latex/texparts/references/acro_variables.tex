@@ -83,6 +83,7 @@
 \DeclareIndex{idx-pc}{\ensuremath{\square_{pc}}}{\ensuremath{pc}}{per capita (děleno $N$)}
 \DeclareIndex{idx-eq}{\ensuremath{\square_{eq}}}{\ensuremath{eq}}{ekvivalizovaná hodnota (modifikovaná OECD škála)}
 \DeclareIndex{idx-PPS}{\ensuremath{\square^{PPS}}}{\ensuremath{PPS}}{hodnota v~paritě kupní síly}
+\DeclareIndex{idx-EUR}{\ensuremath{\square^{EUR}}}{\ensuremath{EUR}}{nominální hodnota v~eurech}
 \DeclareIndex{idx-AW100}{\ensuremath{\square_{AW100}}}{\ensuremath{AW100}}{při \SI{100}{\percent} průměrné mzdy (Eurostat AW)}
 \DeclareIndex{idx-M}{\ensuremath{\square_M}}{\ensuremath{M}}{gender: muži}
 \DeclareIndex{idx-F}{\ensuremath{\square_F}}{\ensuremath{F}}{gender: ženy}
@@ -104,26 +105,20 @@
 \DeclareIndex{idx-0}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční / referenční stav}
 
 % ---------------------------------------------------------------------------
-%  Accent indices — argument-taking macros
+%  Accent helpers — plain math macros (no acro bookkeeping)
 %
-%  Accents apply to a variable, so they cannot be expressed via the `index`
-%  property (which renders an inert symbol). Use the helper macros below
-%  whenever you would otherwise write \tilde{X} / \bar{X} / \hat{X}; they
-%  register usage so the entry appears in the indices list.
+%  Accents (\hat, \bar, \tilde) are standard math notation and do not need
+%  separate entries in the indices list. Inside math mode just write
+%  \hat{\beta} / \bar{x} / \tilde{w} directly — the variable letter alone
+%  carries the acro semantics, the accent is universal notation.
 %
-%      \acidxtilde{\acs{var-w}}   →   \tilde{w}      (medián)
-%      \acidxbar{\acs{var-M}}     →   \bar{M}        (aritmetický průměr)
-%      \acidxhat{\acs{var-y}}     →   \hat{y}        (odhad)
-%
-%  The list entry shows the placeholder form (\tilde{\square} etc.).
+%  The \acidx* wrappers below are kept only for backward compatibility
+%  with any commentary that already calls them; they expand to the plain
+%  math accent and do nothing else.
 % ---------------------------------------------------------------------------
-\DeclareIndex{idx-tilde}{\ensuremath{\tilde{\square}}}{\ensuremath{\tilde{\square}}}{medián veličiny}
-\DeclareIndex{idx-bar}{\ensuremath{\bar{\square}}}{\ensuremath{\bar{\square}}}{aritmetický průměr veličiny}
-\DeclareIndex{idx-hat}{\ensuremath{\hat{\square}}}{\ensuremath{\hat{\square}}}{odhad veličiny}
-
-\newcommand\acidxtilde[1]{\acuse{idx-tilde}\ensuremath{\tilde{#1}}}
-\newcommand\acidxbar[1]{\acuse{idx-bar}\ensuremath{\bar{#1}}}
-\newcommand\acidxhat[1]{\acuse{idx-hat}\ensuremath{\hat{#1}}}
+\newcommand\acidxtilde[1]{\ensuremath{\tilde{#1}}}
+\newcommand\acidxbar[1]{\ensuremath{\bar{#1}}}
+\newcommand\acidxhat[1]{\ensuremath{\hat{#1}}}
 
 % ---------------------------------------------------------------------------
 %  Base variables

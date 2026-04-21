@@ -10,6 +10,20 @@ nereportuje.
 Zobrazeno je pouze devět zemí \ac{EU} s~dostatečně kontinuálním pokrytím:
 DE, DK, ES, FI, FR, HU, LV, PL a~SE.
 
+Indikátorem na svislé ose je podíl ztracené pracovní doby: počet osobo-dní
+ztracených stávkou, dělený odhadem ročního pracovního fondu na zaměstnance.
+Roční pracovní fond~$\acs{var-A}_{\acs{idx-z}}$ se počítá ze skutečné týdenní
+pracovní doby~$\acs{var-H}_{\acs{idx-w}}$ (Eurostat lfsa\_ewhan2)
+přepočtem na 52,18~týdne v~roce a~osmihodinový pracovní den:
+\begin{equation}\label{eq:annual_workdays}
+  \acs{var-A}_{\acs{idx-z}}
+    = \acs{var-H}_{\acs{idx-w}} \cdot \frac{52{,}18}{8}.
+\end{equation}
+Hodnota 52,18~týdne odpovídá průměrné délce gregoriánského roku
+($365{,}2425/7 \approx 52{,}18$); osmihodinový den je standard \acs{ILO}.
+Tento přepočet umožňuje srovnatelně vyjádřit stávkovou aktivitu napříč zeměmi
+i~v~čase, nezávisle na národních rozdílech v~délce pracovního týdne.
+
 \input{texparts/python/stav_stavky}
 
 Česká republika a~Slovensko v~datové sadě \ac{ILO} figurují jako prakticky

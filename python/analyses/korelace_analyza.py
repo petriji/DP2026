@@ -320,7 +320,7 @@ _PAIRS = [
         "y_name": "Produktivita (EU27=100)",
     },
     {
-        "label": r"Gini (\acs{var-rho-U})",
+        "label": r"Gini (\acs{var-rho}_{\acs{idx-U}})",
         "ds_x": ds_tud,
         "ds_y": ds_gini,
         "y_name": "Gini",
