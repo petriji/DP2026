@@ -1,22 +1,13 @@
 % Editable figure definition for stav_zamestnanost
 % Edit freely --- Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strStavZamestnanostTitle{Konvergence míry zaměstnanosti (20--64 let)}%
-\def\strStavZamestnanostYlabel{míra zaměstnanosti (\acs{geo-EU27}\,=\,100) [\si{\percent}]}%
-\def\strStavZamestnanostCaption{Konvergence míry zaměstnanosti (20--64 let, \acs{geo-EU27}\,=\,100), \acs{EU}, 2009--2025. Zdroj dat: Eurostat~\cite{eurostat_lfsi_emp_a}.}%
+\def\strStavZamestnanostTitle{Míra zaměstnanosti (20--64 let)}%
+\def\strStavZamestnanostYlabel{míra zaměstnanosti [\%]}%
+\def\strStavZamestnanostCaption{Míra zaměstnanosti (20--64 let), vybrané země EU, 2003--2025}%
 %
-
-% --- Auto-added nudge knobs (override with \renewcommand)
-\providecommand\NudgeStavZamestnanostCz{5pt}%
-\providecommand\NudgeStavZamestnanostAt{-14pt}%
-\providecommand\NudgeStavZamestnanostDe{5pt}%
-\providecommand\NudgeStavZamestnanostDk{4pt}%
-\providecommand\NudgeStavZamestnanostPl{-1pt}%
-\providecommand\NudgeStavZamestnanostSk{-8pt}%
-\providecommand\NudgeStavZamestnanostEu{0pt}%
-\begin{figure}[htb]
+\begin{figure}[htbp]
   \centering
-  \input{../python/figures/stav_zamestnanost.pgf}
+  \resizebox{\linewidth}{!}{\input{../python/figures/stav_zamestnanost.pgf}}
   \caption{\strStavZamestnanostCaption}
   \label{fig:stav_zamestnanost}
 \end{figure}

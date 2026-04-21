@@ -1,13 +1,11 @@
 % Editable figure definition for stav_arope_mapa_2025
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strStavAropeMapaZOZVTitle{Míra \acs{AROPE} (2025)}%
-\def\strStavAropeMapaZOZVColorbarLabel{\acs{AROPE} [\%]}%
-\def\strStavAropeMapaZOZVCaption{Míra \acs{AROPE} v~evropských zemích, 2025. Zdroj dat: Eurostat~\cite{eurostat_ilc_peps01n_PC_pop}.}%
+\def\strStavAropeMapa2025Caption{Míra \acs{AROPE} v~evropských zemích, 2025}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \input{../python/figures/stav_arope_mapa_2025.pgf}
-  \caption{\strStavAropeMapaZOZVCaption}
+  \resizebox{\linewidth}{!}{\input{../python/figures/stav_arope_mapa_2025.pgf}}
+  \caption{\strStavAropeMapa2025Caption}
   \label{fig:stav_arope_mapa_2025}
 \end{figure}

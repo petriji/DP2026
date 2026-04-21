@@ -3,11 +3,11 @@
 % To regenerate defaults, delete this file and re-run the script.
 \def\strStavAropeSkupinyTitle{Míra \acs{AROPE} podle skupin zemí}%
 \def\strStavAropeSkupinyYlabel{míra \acs{AROPE} [\%]}%
-\def\strStavAropeSkupinyCaption{Vývoj míry \acs{AROPE} podle skupin zemí, 2015--2025. Zdroj dat: Eurostat~\cite{eurostat_ilc_peps01n_PC_pop}.}%
+\def\strStavAropeSkupinyCaption{Vývoj míry \acs{AROPE} podle skupin zemí, 2015--2025}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \input{../python/figures/stav_arope_skupiny.pgf}
+  \resizebox{\linewidth}{!}{\input{../python/figures/stav_arope_skupiny.pgf}}
   \caption{\strStavAropeSkupinyCaption}
   \label{fig:stav_arope_skupiny}
 \end{figure}
