@@ -98,7 +98,7 @@ savefig_pgf(fig, "eu_prijem_pps", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_prijem_pps",
     caption=(
-        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), EU mapa, {ds.latest_year}."
+        f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU}}27\\,=\\,100), EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_prijem_pps",
     resizebox_width=r"0.92\linewidth",

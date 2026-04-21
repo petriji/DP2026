@@ -82,7 +82,7 @@ savefig_pgf(fig_a, map_name, strings=STRINGS_MAP)
 save_figure_tex_pgf(
     map_name,
     caption=(
-        f"Míra AROPE v~evropských zemích, {ds.latest_year}."),
+        f"Míra \\acs{{AROPE}} v~evropských zemích, {ds.latest_year}."),
     label=f"fig:{map_name}",
     cite_key="eurostat_ilc_peps01n_PC_pop",
     strings=STRINGS_MAP,
@@ -123,7 +123,7 @@ for _child in _ax_b.get_children():
 savefig_pgf(fig_b, "stav_arope_vyvoj", strings=STRINGS_TL_B)
 save_figure_tex_pgf(
     "stav_arope_vyvoj",
-    caption=f"Vývoj míry AROPE, střední Evropa, {ds.years[0]}--{ds.years[-1]}.",
+    caption=f"Vývoj míry \\acs{{AROPE}}, střední Evropa, {ds.years[0]}--{ds.years[-1]}.",
     label="fig:stav_arope_vyvoj",
     cite_key="eurostat_ilc_peps01n_PC_pop",
     strings=STRINGS_TL_B,
@@ -156,7 +156,7 @@ savefig_pgf(fig_c, "stav_arope_skupiny", strings=STRINGS_TL_C)
 save_figure_tex_pgf(
     "stav_arope_skupiny",
     caption=(
-        "Vývoj míry AROPE podle skupin zemí, "
+        "Vývoj míry \\acs{AROPE} podle skupin zemí, "
         f"{ds.years[0]}--{ds.years[-1]}."),
     label="fig:stav_arope_skupiny",
     cite_key="eurostat_ilc_peps01n_PC_pop",

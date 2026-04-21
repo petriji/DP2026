@@ -193,12 +193,9 @@ savefig_pgf(fig, "stav_arope_dual")
 save_figure_tex_pgf(
     "stav_arope_dual",
     caption=(
-        f"Vývoj míry AROPE (nahoře) a~hranice třetího decilu čistého "
-        f"ekvivalizovaného příjmu v~PPS vůči mediánu EU27 (dole), "
-        f"{first_year}--{last_year}. "
-        f"Hodnoty mediánu EU27 v~letech 2015--2017 doplněny z~řady v~EUR "
-        f"(na úrovni EU27 je PPP${{}}\\equiv{{}}$1, ověřená odchylka "
-        f"$\\leq\\SI{{2}}{{\\percent}}$ na překryvu 2018--2024)."
+        f"Vývoj míry \\acs{{AROPE}} a~hranice třetího decilu čistého "
+        f"ekvivalizovaného příjmu v~\\acs{{PPS}} vůči mediánu \\acs{{EU}}27, "
+        f"vybrané země EU, {first_year}--{last_year}."
     ),
     label="fig:stav_arope_dual",
     cite_keys=[

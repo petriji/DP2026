@@ -226,16 +226,8 @@ savefig_pgf(fig, "eu_mzda_distribuce")
 save_figure_tex_pgf(
     "eu_mzda_distribuce",
     caption=(
-        "Modelové rozložení hrubé hodinové mzdy zaměstnanců v~\\ac{PPS}, "
-        f"\\emph{{Structure of Earnings Survey}} {ref_year}. "
-        "Křivky jsou log-normální fit metodou nejmenších čtverců "
-        "na~třech publikovaných bodech distribuce (D1, medián, D9). "
-        "Šedé křivky v~pozadí: ostatní státy \\ac{EU}\\,27. "
-        "Pokrytí: podniky s~$\\geq$\\,10~zaměstnanci, "
-        "\\ac{NACE}~B--S bez~O, obě pohlaví, všechny pracovní úvazky. "
-        "Osa~y udává podíl zaměstnanců v~intervalu šíře "
-        "\\SI{1}{\\pps\\per\\hour}; přerušované svislé čáry označují mediány. "
-        "Mediány: \\strEuMzdaDistribuceMediany"
+        f"Modelové rozložení hrubé hodinové mzdy zaměstnanců v~\\acs{{PPS}}, "
+        f"vybrané země EU, {ref_year}."
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:eu_mzda_distribuce",

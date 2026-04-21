@@ -242,16 +242,8 @@ savefig_pgf(fig, "eu_prijem_distribuce")
 save_figure_tex_pgf(
     "eu_prijem_distribuce",
     caption=(
-        "Modelové rozložení ekvivalizovaného čistého disponibilního "
-        f"příjmu domácností, {ref_year}. Hodnoty v~\\ac{{PPS}} na "
-        "ekvivalentního dospělého a~rok (modifikovaná stupnice OECD); "
-        "odstraněn vliv cenových hladin. Křivky jsou log-normální fit "
-        "metodou nejmenších čtverců na~devíti decilových hranicích "
-        "(D1\\,--\\,D9, ukazatel TC). "
-        "Šedé křivky v~pozadí: ostatní státy \\ac{EU}\\,27. "
-        "Osa~y udává podíl domácností v~intervalu šíře \\SI{1000}{\\pps}; "
-        "přerušované svislé čáry označují mediány. "
-        "Mediány: \\strEuPrijemDistribuceMediany"
+        f"Modelové rozložení ekvivalizovaného čistého disponibilního "
+        f"příjmu domácností, vybrané země EU, {ref_year}."
     ),
     cite_keys="eurostat_ilc_di01",
     label="fig:eu_prijem_distribuce",

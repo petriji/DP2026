@@ -157,9 +157,7 @@ savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP)
 save_figure_tex_pgf(
     "problemy_gpg_mapa",
     caption=(
-        f"Nekorigovaný gender pay gap (NACE B--S), EU27, {snap_year}. "
-        "Hodnota udává, o~kolik procent jsou průměrné hodinové výdělky žen nižší "
-        "než výdělky mužů"
+        f"Nekorigovaný \\acs{{GPG}} (\\acs{{NACE}} B--S), \\acs{{geo-EU}}27, {snap_year}."
     ),
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
@@ -305,9 +303,7 @@ savefig_pgf(fig_b, "problemy_gpg_stratifikace")
 save_figure_tex_pgf(
     "problemy_gpg_stratifikace",
     caption=(
-        f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země EU, {ses_year}. "
-        "Plná čára = ženy, přerušovaná = muži; barvy odlišují země. "
-        "Zobrazeny tři ukazatele: D1 (1.~decil), medián a~D9 (9.~decil)"
+        f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",

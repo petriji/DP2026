@@ -247,18 +247,7 @@ fig.tight_layout()
 out_pdf = savefig_pgf(fig, "stav_ipp_rozsah", strings=STRINGS)
 out_tex = save_figure_tex_pgf(
     "stav_ipp_rozsah",
-    caption=(
-        r"Institucionální obsah kolektivních smluv, \acs{geo-CZ}, 2007--2025. "
-        r"\emph{Mzdová stupnice} (plná čára) -- podíl \acs{KS} "
-        r"se sjednanou hierarchickou mzdovou stupnicí (12ti-stupňový nebo jiný "
-        r"tarifní systém); zdroj: \acs{IPP} Mzdový tarify A1a. "
-        r"\emph{Konkretizované podmínky činnosti odborové organizace} "
-        r"(přerušovaná čára) -- podíl \acs{KS} s explicitně vymezenými pravidly "
-        r"pro výkon odborové činnosti. "
-        r"\emph{Uvolnění odborového zástupce} (tečkovaná čára) -- podíl \acs{KS} "
-        r"se sjednaným časovým rozsahem uvolnění pro odborovou práci; "
-        r"zdroj: \acs{IPP} Spolupráce smluvních stran A19a."
-    ),
+    caption=r"Institucionální obsah kolektivních smluv, \acs{geo-CZ}, 2007--2025.",
     cite_keys="mpsv_ipp",
     label="fig:stav_ipp_rozsah",
     strings=STRINGS,

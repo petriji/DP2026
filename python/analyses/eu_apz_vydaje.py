@@ -116,9 +116,8 @@ savefig_pgf(fig, "eu_apz_vydaje", nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_apz_vydaje",
     caption=(
-        f"Výdaje na APZ (% HDP), vybrané země EU, "
-        f"{START_YEAR}--{ds_all.years[-1]}. "
-        f"Šedé linie~= ostatní evropské země."
+        f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země EU, "
+        f"{START_YEAR}--{ds_all.years[-1]}."
     ),
     label="fig:eu_apz_vydaje",
     resizebox_width=r"0.95\linewidth",
@@ -173,9 +172,8 @@ savefig_pgf(fig2, "eu_apz_vydaje_2004", nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_apz_vydaje_2004",
     caption=(
-        f"Výdaje na APZ (% HDP), vybrané země EU, "
-        f"2004--{ds_all.years[-1]}. "
-        f"Šedé linie~= ostatní evropské země."
+        f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země EU, "
+        f"2004--{ds_all.years[-1]}."
     ),
     label="fig:eu_apz_vydaje_2004",
     resizebox_width=r"0.95\linewidth",

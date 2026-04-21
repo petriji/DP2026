@@ -178,7 +178,7 @@ yr_max = int(df["time"].max()) if not df.empty else 2023
 save_figure_tex_pgf(
     "problemy_emigrace_vyvoj",
     caption=(
-        f"Emigrace z~ČR podle věkové skupiny, {yr_min}--{yr_max}."),
+        f"Emigrace z~\\acs{{geo-CZ}} podle věkové skupiny, {yr_min}--{yr_max}."),
     cite_keys="eurostat_migr_emi1ctz",
     label="fig:problemy_emigrace_vyvoj",
     resizebox_width=r"0.95\linewidth",

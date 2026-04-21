@@ -107,7 +107,7 @@ display_year = common_years[-1] if common_years else "?"
 
 save_figure_tex_pgf(
     "korelace_hustota_gini",
-    caption=f"Hustota odborů a~příjmová nerovnost, EU27, {display_year}.",
+    caption=f"Hustota odborů a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
     label="fig:korelace_hustota_gini",
     resizebox_width=r"0.85\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],

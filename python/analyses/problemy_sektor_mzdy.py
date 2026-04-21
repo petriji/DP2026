@@ -341,7 +341,7 @@ if ispv_wages is not None:
     save_figure_tex_pgf(
         "problemy_sektor_mzdy_cz",
         caption=(
-            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}, normovaná na celkový medián ekonomiky~= 100"),
+            f"Mediánová hrubá mzda podle odvětví \\acs{{NACE}}, \\acs{{geo-CZ}}, {ispv_year}"),
         label="fig:problemy_sektor_mzdy_cz",
         resizebox_width=r"0.95\linewidth",
         cite_key="mpsv_ispv",
@@ -395,7 +395,7 @@ if lci_by_nace:
     savefig_pgf(fig_b, "problemy_sektor_lci")
     save_figure_tex_pgf(
         "problemy_sektor_lci",
-        caption=f"Meziroční nárůst LCI podle odvětví NACE, ČR, {yr0}--{yr1}",
+        caption=f"Meziroční nárůst \\acs{{LCI}} podle odvětví \\acs{{NACE}}, \\acs{{geo-CZ}}, {yr0}--{yr1}",
         label="fig:problemy_sektor_lci",
         resizebox_width=r"0.95\linewidth",
         cite_keys="eurostat_lci",
@@ -468,7 +468,7 @@ if cv_by_country:
     savefig_pgf(fig_c, "problemy_sektor_disperze")
     save_figure_tex_pgf(
         "problemy_sektor_disperze",
-        caption=f"Variace nárůstu LCI napříč odvětvími, vybrané země EU, {latest_yr}",
+        caption=f"Variace nárůstu \\acs{{LCI}} napříč odvětvími \\acs{{NACE}}, vybrané země \\acs{{geo-EU}}, {latest_yr}",
         cite_keys="eurostat_lci",
         label="fig:problemy_sektor_disperze",
         resizebox_width=r"0.95\linewidth",

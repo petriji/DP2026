@@ -83,7 +83,7 @@ savefig_pgf(fig, "eu_danovy_klin", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_danovy_klin",
     caption=(
-        f"Daňový klín (67\\,\\% průměrné mzdy, \\% celkových nákladů práce), "
+        f"Daňový klín (\\SI{{67}}{{\\percent}} průměrné mzdy), "
         f"EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_danovy_klin",

@@ -514,12 +514,8 @@ if ispv_path is not None:
         save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
-                f"ČR: mediánová hrubá mzda podle kraje (ISPV {ispv_year}/H2, "
-                "MPSV/TREXIMA), normovaná na národní medián\u00a0=\u00a0100. "
-                "Červené sloupce = regiony s~nadprůměrnou mzdou; modré = "
-                "podprůměrné kraje. Přetrvávající regionální mzdové nerovnosti "
-                "dokládají, proč celostátní minimální mzda a KS různě ovlivňují "
-                "reálnou kupní sílu zaměstnanců v~různých částech republiky."
+                r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, "
+                f"{ispv_year}"
             ),
             cite_keys="mpsv_ispv",
             label="fig:problemy_regiony",
@@ -561,13 +557,7 @@ if not regional_done:
         save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
-                "ČR: mediánová hrubá mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA), "
-                "normovaná na národní medián\u00a0=\u00a0100. "
-                "Červené sloupce\u00a0= regiony s~nadprůměrnou mzdou; "
-                "modré\u00a0= podprůměrné kraje. "
-                "Přetrvávající regionální mzdové nerovnosti dokládají, "
-                "proč celostátní minimální mzda a KS různě ovlivňují "
-                "reálnou kupní sílu zaměstnanců v~různých částech republiky."
+                r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025"
             ),
             label="fig:problemy_regiony",
             resizebox_width=r"0.95\linewidth",
@@ -636,10 +626,8 @@ try:
     save_figure_tex_pgf(
         "problemy_gpg_sektor",
         caption=(
-            f"Nekorigovaný GPG, vybrané země EU, "
-            f"{START_YEAR}--{END_YEAR}. "
-            "Šedé linie = ostatní členské státy EU; "
-            "přerušovaná černá = průměr EU27"),
+            f"Nekorigovaný \\acs{{GPG}}, vybrané země \\acs{{geo-EU}}, "
+            f"{START_YEAR}--{END_YEAR}"),
         label="fig:problemy_gpg_sektor",
         resizebox_width=r"0.95\linewidth",
         cite_key="eurostat_gpg",
@@ -712,7 +700,7 @@ if pct_df is not None and "p50" in pct_df.columns:
     save_figure_tex_pgf(
         "problemy_sektor_percentily",
         caption=(
-            f"Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, {ispv_year}"
+            f"Mzdové rozdělení podle odvětví (CZ-ISCO), \\acs{{geo-CZ}}, {ispv_year}"
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_sektor_percentily",
@@ -768,13 +756,7 @@ try:
     save_figure_tex_pgf(
         "problemy_regiony_mapa",
         caption=(
-            r"\acs{geo-CZ}: mediánová hrubá mzda podle kraje (NUTS3) (\acs{ISPV} 2025/H1, "
-            r"\acs{MPSV}/TREXIMA), normovaná na národní medián~=~100. "
-            r"Sousední regiony (\acs{geo-AT}, \acs{geo-DE}, \acs{geo-PL}, \acs{geo-SK}) zobrazeny šedě. "
-            r"Praha (CZ010) a přilehlý Středočeský kraj (CZ020) dosahují "
-            "výrazně vyšších mezd než periferní regiony, "
-            r"což zesiluje emigrační tlak a ztěžuje praktický dopad "
-            r"celostátních kolektivních smluv."
+            r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025"
         ),
         label="fig:problemy_regiony_mapa",
         resizebox_width=r"\linewidth",
