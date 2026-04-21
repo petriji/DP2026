@@ -45,6 +45,14 @@
 	single-style = long-short,
 	tag         = zkr
 }
+\DeclareAcronym{PPP}{
+	short       = PPP,
+	long        = parita kupní síly,
+	foreign     = purchasing power parity,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
 \DeclareAcronym{PLI}{
 	short       = PLI,
 	long        = index cenové hladiny,
@@ -60,6 +68,23 @@
 	single      = false,
 	single-style = long-short,
 	tag         = zkr
+}
+\DeclareAcronym{ICT}{
+	short            = ICT,
+	long             = informační a~komunikační technologie,
+	long-plural-form = informační a~komunikační technologie,
+	foreign          = Information and Communication Technology,
+	single           = false,
+	single-style     = long-short,
+	tag              = zkr
+}
+\DeclareAcronym{ISCED}{
+	short        = ISCED,
+	long         = Mezinárodní standardní klasifikace vzdělávání,
+	foreign      = International Standard Classification of Education,
+	single       = false,
+	single-style = long-short,
+	tag          = zkr
 }
 \DeclareAcronym{LCI}{
 	short       = LCI,
@@ -215,6 +240,11 @@
 	long  = Českomoravská konfederace odborových svazů,
 	tag   = zkr
 }
+\DeclareAcronym{ČSSZ}{
+	short = {ČSSZ},
+	long  = Česká správa sociálního zabezpečení,
+	tag   = zkr
+}
 \DeclareAcronym{MPSV}{
 	short = MPSV,
 	long  = Ministerstvo práce a sociálních věcí,
@@ -256,14 +286,24 @@
 % common oblique cases needed in economic/legal prose.  The default ending
 % is empty because each acronym sets its own full form via the -form property.
 %
-% Usage:  \acgen{EU}  → "Evropské unie"  (genitive)
-%         \acdат{EU}  → "Evropské unii"  (dative)
-%         \acloc{EU}  → "Evropské unii"  (locative)
-%         \acacc{EU}  → "Evropskou unii" (accusative)
-%         \acins{EU}  → "Evropskou unií" (instrumental)
+% Usage:  \acgen{EU}   → "Evropské unie"  (genitive)
+%         \acdat{EU}   → "Evropské unii"  (dative)
+%         \acloc{EU}   → "Evropské unii"  (locative)
+%         \acacc{EU}   → "Evropskou unii" (accusative)
+%         \acins{EU}   → "Evropskou unií" (instrumental)
 %
 % The short form is always the same abbreviation; only the long form changes.
 % On first use: "long-<case>-form (SHORT)" — subsequent: just "SHORT".
+%
+% Force-first variants (reset + case):
+%         \acaccf{APZ} → "aktivní politiku zaměstnanosti (APZ)" regardless of prior usage
+%         \acgenf, \acdatf, \aclocf, \acinsf — same for other cases
+%         \acf{KEY}    → nominative force-first (built-in acro command)
+%
+% Alt form (built-in acro \aca):
+%         \aca{geo-CZ} → "ČR"   (alt= field; valid in Czech prose)
+%         \acl{geo-CZ} → "Česko" (full long form; for formal/first mentions)
+%         \acs{geo-CZ} → "CZ"   (ISO short; figures and tables ONLY)
 % ---------------------------------------------------------------------------
 \DeclareAcroEnding{genitive}{}{}
 \DeclareAcroEnding{dative}{}{}
@@ -277,6 +317,20 @@
 \NewAcroCommand\acacc{m}{\acroaccusative\UseAcroTemplate{first}{#1}}
 \NewAcroCommand\acloc{m}{\acrolocative\UseAcroTemplate{first}{#1}}
 \NewAcroCommand\acins{m}{\acroinstrumental\UseAcroTemplate{first}{#1}}
+
+% Force-first variants — reset used-flag then show "long-case (SHORT)" unconditionally.
+% Use at the start of a paragraph/block where the acronym will repeat frequently and
+% needs re-introducing in full.  Nominative force-first = built-in \acf{KEY}.
+%   \acgenf{KEY}  → resets + genitive first-form
+%   \acdatf{KEY}  → resets + dative first-form
+%   \acaccf{KEY}  → resets + accusative first-form   ← most common in Czech prose
+%   \aclocf{KEY}  → resets + locative first-form
+%   \acinsf{KEY}  → resets + instrumental first-form
+\NewDocumentCommand\acgenf{m}{\acreset{#1}\acgen{#1}}
+\NewDocumentCommand\acdatf{m}{\acreset{#1}\acdat{#1}}
+\NewDocumentCommand\acaccf{m}{\acreset{#1}\acacc{#1}}
+\NewDocumentCommand\aclocf{m}{\acreset{#1}\acloc{#1}}
+\NewDocumentCommand\acinsf{m}{\acreset{#1}\acins{#1}}
 
 % Long-only variants (always expand to the long form in given case)
 \NewAcroCommand\aclgen{m}{\acrogenitive\UseAcroTemplate{long}{#1}}
