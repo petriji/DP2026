@@ -18,9 +18,7 @@
   and        = a,%
   or         = nebo%
 }
-% ---------------------------------------------------------------------------
-%  Mezinárodní statistické a ekonomické zkratky
-% ---------------------------------------------------------------------------
+
 \DeclareAcronym{EU}{
 	short       = EU,
 	long        = Evropská unie,
@@ -29,6 +27,17 @@
 	single-style = long-short,
 	tag         = zkr
 }
+\DeclareAcronym{ČR}{
+	short       = ČR,
+	long        = Česká republika,
+	single      = false,
+	single-style = long-short,
+	tag         = geo
+}
+
+% ---------------------------------------------------------------------------
+%  Mezinárodní statistické a ekonomické zkratky
+% ---------------------------------------------------------------------------
 \DeclareAcronym{HDP}{
 	short       = HDP,
 	long        = hrubý domácí produkt,
@@ -156,30 +165,7 @@
 	single-style = long-short,
 	tag         = zkr
 }
-\DeclareAcronym{OECD}{
-	short       = OECD,
-	long        = Organizace pro hospodářskou spolupráci a rozvoj,
-	foreign     = Organisation for Economic Co-operation and Development,
-	single      = false,
-	single-style = long-short,
-	tag         = zkr
-}
-\DeclareAcronym{ICTWSS}{
-	short       = ICTWSS,
-	long        = {databáze institucionálních charakteristik odborů, mzdového vyjednávání, státních intervencí a sociálních paktů},
-	foreign     = {Database on Institutional Characteristics of Trade Unions, Wage Setting, State Intervention and Social Pacts},
-	single      = false,
-	single-style = long-short,
-	tag         = zkr
-}
-\DeclareAcronym{AIAS}{
-	short       = AIAS,
-	long        = Amsterdamský institut pro výzkum práce,
-	foreign     = Amsterdam Institute for Advanced Labour Studies,
-	single      = false,
-	single-style = long-short,
-	tag         = zkr
-}
+
 % ---------------------------------------------------------------------------
 %  Kolektivní vyjednávání a pracovní právo
 % ---------------------------------------------------------------------------
@@ -220,6 +206,11 @@
 	long  = daň z přidané hodnoty,
 	tag   = zkr
 }
+\DeclareAcronym{DPFO}{
+	short = DPFO,
+	long  = daň z příjmů fyzických osob,
+	tag   = zkr
+}
 \DeclareAcronym{OSVČ}{
 	short            = {OSVČ},
 	long             = osoba samostatně výdělečně činná,
@@ -252,12 +243,12 @@
 }
 \DeclareAcronym{IPP}{
 	short = IPP,
-	long  = Informace o pracovních podmínkách,
+	long  = Informace o pracovních podmínkách \acs{MPSV},
 	tag   = zkr
 }
 \DeclareAcronym{ISPV}{
 	short = ISPV,
-	long  = Informační systém o průměrném výdělku,
+	long  = Informační systém o průměrném výdělku \acs{MPSV},
 	tag   = zkr
 }
 \DeclareAcronym{SUIP}{
@@ -273,12 +264,51 @@
 	single-style = long-short,
 	tag         = zkr
 }
+\DeclareAcronym{OECD}{
+	short       = OECD,
+	long        = Organizace pro hospodářskou spolupráci a rozvoj,
+	foreign     = Organisation for Economic Co-operation and Development,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{AIAS}{
+	short       = AIAS,
+	long        = Amsterdam Institute for Advanced Labour Studies,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
 \DeclareAcronym{JVR}{
 	short   = JVR,
-	long    = míra volných pracovních míst,
+	long    = míra volných pracovních míst \acs{LFS} Eurostat,
 	foreign = job vacancy rate,
 	tag     = zkr
 }
+\DeclareAcronym{LFS}{
+	short   = LFS,
+	long    = Labour Force Survey Eurostat,
+	tag     = zkr
+}
+\DeclareAcronym{LMP}{
+	short   = LMP,
+	long    = Labour Market Policy \acs{OECD},
+	tag     = zkr
+}
+\DeclareAcronym{HFCS}{	
+	short   = HFCS,
+	long    = Household Finance and Consumption Survey \acs{OECD},
+	tag     = zkr
+}
+\DeclareAcronym{ICTWSS}{
+	short       = ICTWSS,
+	long        = {databáze institucionálních charakteristik odborů, mzdového vyjednávání, státních intervencí a sociálních paktů \acs{OECD}},
+	foreign     = {Database on Institutional Characteristics of Trade Unions, Wage Setting, State Intervention and Social Pacts},
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+
 % ---------------------------------------------------------------------------
 %  Czech declension support (acro endings)
 % ---------------------------------------------------------------------------
@@ -407,6 +437,14 @@
 	long-locative-form      = Ministerstvu práce a sociálních věcí,
 	long-instrumental-form  = Ministerstvem práce a sociálních věcí
 }
+% ČR – Česká republika (f.)
+\AcroPropertiesSet{ČR}{
+	long-genitive-form      = České republiky,
+	long-dative-form        = České republice,
+	long-accusative-form    = Českou republiku,
+	long-locative-form      = České republice,
+	long-instrumental-form  = Českou republikou
+}
 % ---------------------------------------------------------------------------
 %  ISO country codes  (tag = geo — NOT printed in abbreviation/variable lists)
 % ---------------------------------------------------------------------------
@@ -441,7 +479,8 @@
 \DeclareAcronym{geo-LU}{short=LU, long=Lucembursko, tag=geo}
 \DeclareAcronym{geo-EE}{short=EE, long=Estonsko, tag=geo}
 \DeclareAcronym{geo-MT}{short=MT, long=Malta, tag=geo}
-\DeclareAcronym{geo-EU}{short=EU27, long=Evropská unie (27), tag=geo}
+\DeclareAcronym{geo-EU27}{short=EU27, long=Evropská unie (27), tag=geo}
+\DeclareAcronym{geo-EU}{short=EU, long=Evropská unie, tag=geo}
 \DeclareAcronym{geo-IS}{short=IS, long=Island, tag=geo}
 \DeclareAcronym{geo-NO}{short=NO, long=Norsko, tag=geo}
 \DeclareAcronym{geo-CH}{short=CH, long=Švýcarsko, tag=geo}
