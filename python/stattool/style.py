@@ -547,8 +547,19 @@ def savefig(
 
 
 def _macro_prefix(name: str) -> str:
-    """Convert ``'vyhled_porodnost_vyvoj'`` → ``'VyhledPorodnostVyvoj'``."""
-    return "".join(part.capitalize() for part in name.split("_"))
+    r"""Convert ``'vyhled_porodnost_vyvoj'`` → ``'VyhledPorodnostVyvoj'``.
+
+    Digits are mapped to letters (``0→O``, ``1→I``, ``2→Z``, ``3→T``, ``4→F``,
+    ``5→V``, ``6→S``, ``7→N``, ``8→E``, ``9→X``) so the result is a valid
+    TeX control-sequence body (letters only).  Without this, a stem like
+    ``eu_apz_vydaje_2004`` would produce ``\NudgeEuApzVydaje2004Cz`` which
+    TeX parses as ``\NudgeEuApzVydaje`` followed by stray ``2004Cz`` tokens.
+    """
+    camel = "".join(part.capitalize() for part in name.split("_"))
+    return camel.translate(_DIGIT_TO_LETTER)
+
+
+_DIGIT_TO_LETTER = str.maketrans("0123456789", "OIZTFVSNEX")
 
 
 def _macro_name(prefix: str, key: str) -> str:
@@ -579,6 +590,103 @@ def _replace_pgf_strings(
     if total:
         pgf_path.write_text(content, encoding="utf-8")
     return total
+
+
+# ── Per-label y-nudge interface ──────────────────────────────────────────────
+
+def _nudge_macro_name(prefix: str, label_id: str) -> str:
+    r"""Build a LaTeX macro name like ``\NudgeStavHdpVyvojCZ``.
+
+    *label_id* is sanitised: non-letter chars dropped, ``_`` → CamelCase.
+    """
+    parts = [p for p in label_id.replace("-", "_").split("_") if p]
+    suffix = "".join(p.capitalize() for p in parts)
+    # Strip remaining non-letter chars (e.g. digits, '=') --- LaTeX macros
+    # may only contain letters when defined via \providecommand without \csname.
+    suffix = "".join(c for c in suffix if c.isalpha())
+    macro = rf"\Nudge{prefix}{suffix}"
+    import re as _re
+    assert _re.fullmatch(r"\\[A-Za-z]+", macro), (
+        f"Invalid TeX cs name: {macro!r} (prefix={prefix!r}, label_id={label_id!r})"
+    )
+    return macro
+
+
+def _apply_label_nudges_pgf(
+    pgf_path: Path,
+    name: str,
+    nudge_labels: list,
+) -> dict[str, str]:
+    r"""Rewrite y-coords of matching ``\pgftext`` lines with nudge macros.
+
+    *nudge_labels* is a list of items, each one of:
+
+    * ``"\\acs{geo-CZ}"`` --- bare match string; macro name auto-derived as
+      ``\NudgeStavHdpVyvojGeoCZ``.
+    * ``("CZ", "\\acs{geo-CZ}")`` --- explicit (label_id, match_string) pair;
+      macro becomes ``\NudgeStavHdpVyvojCZ``.
+
+    For every ``\pgftext[x=…,y=Yin,…]{…match_string…}`` line found, the
+    ``y=Yin`` portion is rewritten as
+    ``y={\dimexpr Yin+\Nudge…\relax}``.  All other content of the line
+    (including hyperlinks, tooltips, contour/halo wrappers) is preserved.
+
+    Returns ``{macro_name: match_string}`` mapping for use by
+    :func:`save_figure_tex_pgf` to emit ``\providecommand{\Nudge…}{0pt}``.
+    """
+    import re
+
+    prefix = _macro_prefix(name)
+    items: list[tuple[str, str]] = []
+    for entry in nudge_labels:
+        if isinstance(entry, str):
+            # Auto-derive ID by stripping LaTeX/punctuation
+            label_id = re.sub(r"[\\{}]", "", entry)
+            label_id = re.sub(r"[^A-Za-z0-9]+", "_", label_id).strip("_")
+        else:
+            label_id, entry = entry
+        macro = _nudge_macro_name(prefix, label_id)
+        items.append((macro, entry))
+
+    content = pgf_path.read_text(encoding="utf-8")
+    macros_used: dict[str, str] = {}
+
+    # Match only the y= coordinate inside a \pgftext[...] bracket.
+    # The text body is searched separately on the whole line because
+    # it can contain arbitrarily nested braces (\acs{geo-CZ}, \color{...} ...).
+    y_re = re.compile(r"(\\pgftext\[x=[^,\]]+,y=)([^,\]]+)")
+
+    new_lines: list[str] = []
+    for line in content.splitlines(keepends=True):
+        if "\\pgftext" not in line:
+            new_lines.append(line)
+            continue
+        # Needle must be the actual text payload of the \pgftext, i.e.
+        # immediately followed by "}}" (closing \selectfont and \color groups).
+        # This avoids false positives where the needle appears inside another
+        # element (e.g. y-axis title containing "EU27 = 100").
+        chosen: tuple[str, str] | None = None
+        for macro, needle in sorted(items, key=lambda kv: -len(kv[1])):
+            if needle + "}}" in line:
+                chosen = (macro, needle)
+                break
+        if chosen is None:
+            new_lines.append(line)
+            continue
+        m = y_re.search(line)
+        if not m:
+            new_lines.append(line)
+            continue
+        macro, needle = chosen
+        y_val = m.group(2)
+        new_y = f"{{\\dimexpr {y_val}+{macro}\\relax}}"
+        new_line = line[: m.start(2)] + new_y + line[m.end(2) :]
+        new_lines.append(new_line)
+        macros_used[macro] = needle
+
+    if macros_used:
+        pgf_path.write_text("".join(new_lines), encoding="utf-8")
+    return macros_used
 
 
 def _sha256_file(path: Path) -> str:
@@ -685,6 +793,7 @@ def savefig_pgf(
     out_dir: Optional[Union[str, Path]] = None,
     tight: bool = True,
     strings: Optional[dict[str, str]] = None,
+    nudge_labels: Optional[list] = None,
 ) -> Path:
     r"""Save *fig* as a ``.pgf`` file for inclusion via ``\input{}`` in LaTeX.
 
@@ -721,6 +830,10 @@ def savefig_pgf(
     if strings:
         n = _replace_pgf_strings(out, name, strings)
         print(f"  ↳ {n} string→macro replacement(s) in PGF")
+
+    if nudge_labels:
+        used = _apply_label_nudges_pgf(out, name, nudge_labels)
+        print(f"  ↳ {len(used)} label nudge macro(s) wired in PGF")
 
     return out
 
@@ -858,6 +971,7 @@ def save_figure_tex_pgf(
     footnote: Optional[str] = None,
     resizebox_width: str = r"\linewidth",
     strings: Optional[dict[str, str]] = None,
+    nudge_labels: Optional[list] = None,
 ) -> Path:
     r"""Write a LaTeX ``figure`` environment that ``\input``s a PGF file.
 
@@ -898,11 +1012,22 @@ def save_figure_tex_pgf(
         footnote_line = ""
 
     # ── Editable figure tex file (written once, never overwritten) ────────
-    if strings:
+    if strings is not None or nudge_labels:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
         strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
         strings_input_path = f"texparts/figures/{name}"
+        # Build list of nudge macros (auto-derived names).
+        nudge_macros: list[str] = []
+        if nudge_labels:
+            import re as _re
+            for entry in nudge_labels:
+                if isinstance(entry, str):
+                    label_id = _re.sub(r"[\\{}]", "", entry)
+                    label_id = _re.sub(r"[^A-Za-z0-9]+", "_", label_id).strip("_")
+                else:
+                    label_id, _ = entry
+                nudge_macros.append(_nudge_macro_name(prefix, label_id))
         if not strings_file.exists():
             caption_macro = _macro_name(prefix, "caption")
             lines = [
@@ -910,9 +1035,14 @@ def save_figure_tex_pgf(
                 f"% Edit freely --- Python will NOT overwrite this file.",
                 f"% To regenerate defaults, delete this file and re-run the script.",
             ]
-            for key, value in strings.items():
+            for key, value in (strings or {}).items():
                 macro = _macro_name(prefix, key)
                 lines.append(f"\\def{macro}{{{value}}}%")
+            if nudge_macros:
+                lines.append("% --- Per-label y-nudge knobs (override with \\renewcommand)")
+                lines.append("% Example: \\renewcommand" + nudge_macros[0] + "{-3pt}  % shift label up by 3pt")
+                for m in nudge_macros:
+                    lines.append(f"\\providecommand{m}{{0pt}}%")
             lines.append(f"\\def{caption_macro}{{{caption_str}}}%")
             lines.append(f"%")
             lines.append(f"\\begin{{figure}}[htbp]")
@@ -929,6 +1059,27 @@ def save_figure_tex_pgf(
             strings_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
             print(f"  Created figure tex: {strings_file}")
         else:
+            # File exists: do NOT overwrite, but ensure any newly-introduced
+            # nudge macros have a default \providecommand so the build does
+            # not break when the .pgf references them.
+            if nudge_macros:
+                existing = strings_file.read_text(encoding="utf-8")
+                missing = [m for m in nudge_macros if m not in existing]
+                if missing:
+                    add = ["", "% --- Auto-added nudge knobs (override with \\renewcommand)"]
+                    for m in missing:
+                        add.append(f"\\providecommand{m}{{0pt}}%")
+                    # Insert before the \begin{figure} line so defaults are
+                    # in scope when \input{...pgf} expands.
+                    marker = "\\begin{figure}"
+                    if marker in existing:
+                        existing = existing.replace(
+                            marker, "\n".join(add) + "\n" + marker, 1
+                        )
+                    else:
+                        existing = existing + "\n".join(add) + "\n"
+                    strings_file.write_text(existing, encoding="utf-8")
+                    print(f"  Added {len(missing)} nudge default(s) to: {strings_file}")
             print(f"  Figure tex exists (kept): {strings_file}")
 
         # Wrapper is a one-line macro call --- always regenerated, no user content.
