@@ -21,7 +21,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 from analyses._shared_data import load_union_density
 
@@ -35,19 +40,32 @@ print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmax = max(_values.values())
+
+STRINGS = {
+    "title": f"Hustota odborů ({ds.latest_year})",
+    "colorbar_label": r"hustota odborů [\% zaměstnanců]",
+}
+
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Hustota odborů ({ds.latest_year})",
-    colorbar_label="hustota odborů [% zaměstnanců]",
+    title=STRINGS["title"],
+    colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn",
     vmin=0,
-    vmax=80,
+    vmax=_vmax,
     label_countries=True,
+    highlight_colorbar=["CZ"],
 )
 
-# ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_hustota_mapa")
+apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
+
+savefig_pgf(fig, "eu_hustota_mapa", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -57,7 +75,7 @@ save_figure_tex_pgf(
     label="fig:eu_hustota_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

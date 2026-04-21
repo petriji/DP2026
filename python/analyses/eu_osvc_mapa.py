@@ -25,7 +25,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
@@ -67,19 +72,34 @@ print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmin = min(_values.values())
+_vmax = max(_values.values())
+
+STRINGS = {
+    "title": f"Podíl \\acp{{OSVČ}} na zaměstnanosti ({ds.latest_year})",
+    "colorbar_label": r"podíl \acp{OSVČ} [\%]",
+}
+
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Podíl OSVČ na zaměstnanosti ({ds.latest_year})",
-    colorbar_label="podíl OSVČ [%]",
+    title=STRINGS["title"],
+    colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn_r",
-    vmin=5,
-    vmax=35,
+    vmin=_vmin,
+    vmax=_vmax,
     label_countries=True,
+    highlight_colorbar=["CZ"],
 )
 
-# ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_osvc_mapa")
+apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
+
+# ── 4. Save figure ───────────────────────────────────────────────────────────────
+savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -88,7 +108,7 @@ save_figure_tex_pgf(
     label="fig:eu_osvc_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_keys="eurostat_lfsa_egaps",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

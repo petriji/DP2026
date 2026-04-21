@@ -37,7 +37,13 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    cm2in,
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -257,6 +263,11 @@ vmax_global = all_vals.max()
 fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(28, 22))
 panel_labels = iter("abcd")
 
+STRINGS_MAP = {
+    "title": f"Hodinové náklady práce dle odvětví, EU27 ({ref_year})",
+    "colorbar_label": r"[\si{\pps\per\hour}]",
+}
+
 for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
     if sec_code not in lc_pps_all.columns:
         print(f"  WARNING: sector {sec_code} not in all-EU data, skipping.")
@@ -280,7 +291,7 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         ds_map,
         year=int(ref_year),
         title="",
-        colorbar_label="[PPS/h]",
+        colorbar_label=r"[\si{\pps\per\hour}]",
         cmap="RdYlGn",
         vmin=vmin_global,
         vmax=vmax_global,
@@ -288,11 +299,17 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         label_countries=True,
         show_colorbar=False,
     )
+    apply_geo_labels_pgf(
+        ax_i,
+        halo=True,
+        values=sector_series.to_dict(),
+        tooltip_fmt="{:.1f}",
+    )
     lbl = next(panel_labels)
     ax_i.set_title(f"({lbl}) {sec_title}", fontsize=FONT_SIZE, pad=4)
 
 fig_maps.suptitle(
-    f"Hodinové náklady práce dle odvětví, EU27 ({ref_year})",
+    STRINGS_MAP["title"],
     fontsize=plt.rcParams.get("axes.titlesize", 9),
     y=0.98,
 )
@@ -303,13 +320,13 @@ norm_shared = mpl_lib.colors.Normalize(vmin=vmin_global, vmax=vmax_global)
 sm_shared = mpl_lib.cm.ScalarMappable(cmap="RdYlGn", norm=norm_shared)
 sm_shared.set_array([])
 fig_maps.colorbar(sm_shared, ax=axes.ravel().tolist(), shrink=0.6,
-                  label="[PPS/h]", location="bottom", pad=0.04)
+                  label=STRINGS_MAP["colorbar_label"], location="bottom", pad=0.04)
 
 # Prevent savefig's tight_layout from clobbering the colorbar positioning
 fig_maps._tight_layout_kwargs = {"pad": 1.0, "rect": [0, 0.08, 1, 0.95]}
 fig_maps._subplots_adjust_kwargs = {"top": 0.93}
 
-savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa")
+savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP)
 save_figure_tex_pgf(
     "eu_odvetvove_mzdy_mapa",
     caption=(
@@ -320,7 +337,7 @@ save_figure_tex_pgf(
     label="fig:eu_odvetvove_mzdy_mapa",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-    strings={},
+    strings=STRINGS_MAP,
 )
 print("Combined choropleth (2×2) saved.")
 

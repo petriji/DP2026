@@ -49,7 +49,13 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+    cm2in,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -122,17 +128,30 @@ gpg_df = (
 ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
                  source_url="Eurostat/earn_gr_gpgr2")
 
+_values_gpg = (
+    ds_gpg.df[ds_gpg.df["time"] <= snap_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmax_gpg = max(_values_gpg.values())
+
+STRINGS_GPG_MAP = {
+    "title": f"Nekorigovaný \\acs{{GPG}} v~\\acs{{geo-EU}} ({snap_year})",
+    "colorbar_label": r"nekorigovaný \acs{GPG} [\%]",
+}
+
 fig_a = choropleth(
     ds_gpg, year=snap_year,
-    title=f"Nekorigovaný GPG v\u00a0EU ({snap_year})\nNACE B--S, v\u00a0% hodinové mzdy mužů",
+    title=STRINGS_GPG_MAP["title"],
     cmap="RdBu_r",
     vmin=0,
-    vmax=25,
-    colorbar_label="nekorigovaný GPG [%]",
+    vmax=_vmax_gpg,
+    colorbar_label=STRINGS_GPG_MAP["colorbar_label"],
     label_countries=True,
+    highlight_colorbar=COUNTRIES,
 )
+apply_geo_labels_pgf(fig_a.axes[0], halo=True, values=_values_gpg, tooltip_fmt="{:.1f}")
 
-savefig_pgf(fig_a, "problemy_gpg_mapa")
+savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP)
 save_figure_tex_pgf(
     "problemy_gpg_mapa",
     caption=(
@@ -144,7 +163,7 @@ save_figure_tex_pgf(
     label="fig:problemy_gpg_mapa",
     resizebox_width=r"0.95\linewidth",
     cite_key="eurostat_gpg",
-    strings={},
+    strings=STRINGS_GPG_MAP,
 )
 
 # ==============================================================================

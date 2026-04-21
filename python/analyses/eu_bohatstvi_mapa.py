@@ -24,7 +24,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -51,20 +56,35 @@ print(f"Display year (latest): {ds.latest_year}")
 
 # ── 2. Choropleth map ─────────────────────────────────────────────────────────
 # fill_latest=True (default) fills countries with their most recent survey data
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmin = min(_values.values())
+_vmax = max(_values.values())
+
+STRINGS = {
+    "title": f"Podíl top 10\\,\\% domácností na čistém jmění (do {ds.latest_year})",
+    "colorbar_label": r"podíl top 10\,\% na čistém jmění [\%]",
+}
+
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Podíl top 10 % domácností na čistém jmění (do {ds.latest_year})",
-    colorbar_label="podíl top 10 % na čistém jmění [%]",
+    title=STRINGS["title"],
+    colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn_r",
-    vmin=30,
-    vmax=80,
+    vmin=_vmin,
+    vmax=_vmax,
     label_countries=True,
     fill_latest=True,
+    highlight_colorbar=["CZ"],
 )
 
+apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
+
 # ── 3. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_bohatstvi_mapa")
+savefig_pgf(fig, "eu_bohatstvi_mapa", strings=STRINGS)
 
 # ── 4. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -75,7 +95,7 @@ save_figure_tex_pgf(
     label="fig:eu_bohatstvi_mapa",
     resizebox_width=r"0.95\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")
