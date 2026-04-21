@@ -319,7 +319,7 @@ _PAIRS = [
         "y_name": "Produktivita (EU27=100)",
     },
     {
-        "label": r"Gini (\acs{var-rho}_{\acs{idx-U}})",
+        "label": r"Gini ($\acs{var-rho}_{\acs{idx-U}}$)",
         "ds_x": ds_tud,
         "ds_y": ds_gini,
         "y_name": "Gini",
@@ -406,9 +406,11 @@ lines = [
     r"\centering",
     r"\caption{Korelace pokrytí \acs{KV} (hustoty odborů) s~vybranými veličinami "
     rf"pracovního trhu v~letech {START_YEAR}--{_year_label} a průřezovém roce "
-    rf"{_year_label}. (Pearsonovo $r$ a Spearmanovo $\rho$; panelový koeficient "
-    r"na všech dostupných geo$\times$rok pozorováních, $r_{\text{akt.}}$ = "
-    rf"průřezový Pearsonův $r$ pro rok {_year_label}).}}",
+    rf"{_year_label}. "
+    r"Zdroj dat: Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}"
+    r"\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}"
+    r"\cite{eurostat_ilc_di12}; \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}"
+    r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}.}",
     r"\label{tab:korelace_tabulka}",
     r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4cm}"
     r"*{6}{>{\centering\arraybackslash}m{1.65cm}}@{}}",
