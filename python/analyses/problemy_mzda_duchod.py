@@ -114,7 +114,7 @@ N_PENSION = 2_367_000
 # Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5--90 tis. to cover both series.
 _X_MIN   =  0
 _X_MAX   = 90_000
-_X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
+_X_GRID  = np.linspace(_X_MIN, _X_MAX, 100)
 
 # Reference constants (2025)
 MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.289/2024 Sb.)

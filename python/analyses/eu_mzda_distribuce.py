@@ -29,6 +29,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import COUNTRY_COLORS, FONT_SIZE
+from statout.timeline import EU27
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
     apply_style_pgf,
@@ -46,8 +47,13 @@ ZSCORES = np.array([-1.281552, 0.000000, 1.281552])
 
 # X-axis evaluation grid (PPS / hour)
 X_MIN, X_MAX = 0.0, 50.0
-X_GRID = np.linspace(X_MIN, X_MAX, 2_000)
+# 100 points keep the PGF light while staying smooth for log-normal.
+X_GRID = np.linspace(X_MIN, X_MAX, 100)
 BIN_WIDTH = 1.0  # PPS/h
+
+# Background EU27 countries (drawn as thin grey lines, no fill).
+# Eurostat uses "EL" for Greece, not "GR".
+BG_COUNTRIES = sorted((set(EU27) - set(COUNTRIES)) - {"GR"} | {"EL"})
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
@@ -71,8 +77,9 @@ def lognormal_pdf(x: np.ndarray, mu: float, sigma: float) -> np.ndarray:
     )
 
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-geo_filter = "+".join(COUNTRIES)
+# ── 1. Download (foreground + EU27 background in one fetch) ──────────────────
+ALL_GEO = sorted(set(COUNTRIES) | set(BG_COUNTRIES))
+geo_filter = "+".join(ALL_GEO)
 indic_filter = "+".join(INDIC)
 path = fetch_eurostat(
     "earn_ses_hourly",
@@ -99,25 +106,53 @@ snap = raw[raw.apply(lambda r: r["year"] == latest.get(r["geo"], -1), axis=1)]
 # ── 3. Fit log-normal per country ─────────────────────────────────────────────
 fits: dict[str, tuple[float, float]] = {}
 medians: dict[str, float] = {}
-for country in COUNTRIES:
+indic_values: dict[str, np.ndarray] = {}
+for country in sorted(set(COUNTRIES) | set(BG_COUNTRIES)):
     sub = snap[snap["geo"] == country].set_index("indic_se")["OBS_VALUE"]
     if len(sub) < len(INDIC):
-        print(f"  {country}: missing indicators, skipping")
+        if country in COUNTRIES:
+            print(f"  {country}: missing indicators, skipping")
         continue
-    vals = np.array([sub[i] for i in INDIC])
+    vals = np.array([float(sub[i]) for i in INDIC])
     mu, sigma = fit_lognormal(vals)
     fits[country] = (mu, sigma)
     medians[country] = float(np.exp(mu))
-    print(
-        f"  {country} ({latest[country]}): μ={mu:.3f}, σ={sigma:.3f}, "
-        f"medián≈{medians[country]:.2f} PPS/h"
-    )
+    indic_values[country] = vals
+    if country in COUNTRIES:
+        print(
+            f"  {country} ({latest[country]}): μ={mu:.3f}, σ={sigma:.3f}, "
+            f"medián≈{medians[country]:.2f} PPS/h"
+        )
 
 # ── 4. Plot ───────────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=cm2in(16, 10))
 
 # Density [1/(PPS/h)] → % of employees per BIN_WIDTH-wide bin
 y_scale = BIN_WIDTH * 100.0
+
+# Background: other EU27 countries as thin grey lines (no fill, no markers)
+for country in BG_COUNTRIES:
+    if country not in fits:
+        continue
+    mu, sigma = fits[country]
+    pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
+    ax.plot(
+        X_GRID, pdf,
+        color="#999999", linewidth=0.5, alpha=0.45, zorder=1,
+    )
+
+
+DP_LABELS = ["D1 (p=0,1)", "medián (p=0,5)", "D9 (p=0,9)"]
+
+
+def _tooltip(ax, x, y, text):
+    ax.text(
+        x, y,
+        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
+        fontsize=FONT_SIZE,
+        ha="center", va="center", clip_on=True, zorder=10,
+    )
+
 
 handles = []
 for country in COUNTRIES:
@@ -126,28 +161,30 @@ for country in COUNTRIES:
     mu, sigma = fits[country]
     pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
     color = COUNTRY_COLORS.get(country, "#888888")
-    ax.fill_between(X_GRID, pdf, alpha=0.10, color=color, zorder=1)
+    ax.fill_between(X_GRID, pdf, alpha=0.10, color=color, zorder=2)
     line, = ax.plot(
         X_GRID, pdf,
         color=color, linewidth=1.6,
         label=f"\\acs{{geo-{country}}}",
-        zorder=3,
+        zorder=4,
     )
     handles.append(line)
     ax.axvline(
         medians[country],
-        color=color, linewidth=0.8, linestyle="--", alpha=0.55, zorder=2,
+        color=color, linewidth=0.8, linestyle="--", alpha=0.55, zorder=3,
     )
     peak_y = lognormal_pdf(np.array([medians[country]]), mu, sigma)[0] * y_scale
-    ax.text(
-        medians[country],
-        peak_y,
-        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{"
-        f"{country} {latest[country]}: median {medians[country]:.2f} PPS/h"
-        r"}",
-        fontsize=FONT_SIZE,
-        ha="center", va="center", clip_on=True, zorder=10,
+    _tooltip(
+        ax, medians[country], peak_y,
+        f"{country} {latest[country]}: median {medians[country]:.2f} PPS/h",
     )
+    # Tooltips at the three SES data points (D1, median, D9)
+    for label, q in zip(DP_LABELS, indic_values[country]):
+        y_q = lognormal_pdf(np.array([q]), mu, sigma)[0] * y_scale
+        _tooltip(
+            ax, q, y_q,
+            f"{country} {latest[country]} {label}: {q:.2f} PPS/h",
+        )
 
 ax.set_xlabel("hrubá hodinová mzda [PPS/h]", fontsize=FONT_SIZE)
 ax.set_ylabel(
@@ -193,6 +230,7 @@ save_figure_tex_pgf(
         f"\\emph{{Structure of Earnings Survey}} {ref_year}. "
         "Křivky jsou log-normální fit metodou nejmenších čtverců "
         "na~třech publikovaných bodech distribuce (D1, medián, D9). "
+        "Šedé křivky v~pozadí: ostatní státy \\ac{EU}\\,27. "
         "Pokrytí: podniky s~$\\geq$\\,10~zaměstnanci, "
         "\\ac{NACE}~B--S bez~O, obě pohlaví, všechny pracovní úvazky. "
         "Osa~y udává podíl zaměstnanců v~intervalu šíře "
