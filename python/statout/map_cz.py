@@ -105,7 +105,8 @@ def choropleth_cz(
     missing_color:
         Fill colour for regions with no data.
     figsize:
-        Figure size in inches.  Defaults to ``cm2in(15, 10)``.
+        Figure size in inches.  Defaults to ``cm2in(15, 11)`` (matches
+        ``statout.map_europe.choropleth`` so colourbar rasters dedup).
     ax:
         Existing Axes to draw into.  A new figure is created when None.
     label_cz:
@@ -170,7 +171,7 @@ def choropleth_cz(
 
     # ── Create figure ─────────────────────────────────────────────────────────
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize or cm2in(15, 10))
+        fig, ax = plt.subplots(figsize=figsize or cm2in(15, 11))
     else:
         fig = ax.figure  # type: ignore[assignment]
 
@@ -221,7 +222,9 @@ def choropleth_cz(
     # ── Colourbar ─────────────────────────────────────────────────────────────
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
-    cb = fig.colorbar(sm, ax=ax, shrink=0.7, pad=0.02)
+    # shrink/pad aligned with statout.map_europe.choropleth so the rasterised
+    # colourbar strip has identical pixel dimensions and dedups via _shared/.
+    cb = fig.colorbar(sm, ax=ax, shrink=0.6, pad=0.02)
     if colorbar_label:
         cb.set_label(colorbar_label, fontsize=FONT_SIZE)
     cb.ax.tick_params(labelsize=FONT_SIZE - 1)
