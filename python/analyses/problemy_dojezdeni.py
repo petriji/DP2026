@@ -7,12 +7,16 @@ country- and region-size effects.
 
 Data source: Eurostat, ``lfst_r_lfe2ecomm``
   Employed persons commuting to work by country of work and NUTS 2 region.
-  Dimensions: freq · unit · wstatus · wrkplace · age · sex · geo
-  Key filter values (verified from CSV on first download):
-    unit     = PC_ACT   (% of employed; may also appear as PC_EMP --- checked at runtime)
-    wrkplace = FOR       (working in a foreign country; may be ABROAD / ABRD)
-    age      = TOTAL or Y_GE15
-    sex      = T
+  Dimensions: freq · age · c_work · sex · unit · geo
+  Filter values (only THS_PER is published in this dataset):
+    unit    = THS_PER  (thousand persons; absolute counts)
+    c_work  = FOR      (working in a foreign country)
+    age     = Y20-64
+    sex     = T
+  All three figures express the indicator as
+  ``cross-border commuters / total employed in the same region * 100``.
+  The denominator is built from the same dataset by summing
+  ``c_work ∈ {FOR, INR, OUTR}`` (total employed by region of residence).
 
 Figures
 -------
@@ -129,106 +133,57 @@ def _first_val(df: pd.DataFrame, col_list: list[str], keywords: list[str]) -> st
             return str(matches[0])
     return None
 
-unit_val     = _first_val(df, unit_candidates,    ["PC_ACT", "PC_EMP", "PC", "THS_PER", "THOUS", "THS"])
-wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD", "TOTAL"])
+unit_val     = _first_val(df, unit_candidates,    ["THS_PER", "THOUS", "THS"])
+wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD"])
 sex_val      = _first_val(df, sex_candidates,      ["T", "TOTAL"])
-age_val      = _first_val(df, age_candidates,      ["Y20-64", "Y_GE15", "TOTAL", "Y15-74"])
+age_val      = _first_val(df, age_candidates,      ["Y20-64", "Y_GE15", "Y15-64"])
 
 print(f"  Selected: unit={unit_val}, wrkplace={wrkplace_val}, sex={sex_val}, age={age_val}")
 
-mask = pd.Series([True] * len(df), index=df.index)
+# Coerce values
+df[val_col] = pd.to_numeric(df[val_col], errors="coerce")
+
+# Common dim filter (unit/sex/age) --- used for both numerator and denominator.
+common_mask = pd.Series([True] * len(df), index=df.index)
 if unit_val and unit_candidates:
-    mask &= df[unit_candidates[0]].astype(str).str.upper() == unit_val.upper()
-if wrkplace_val and wrkplace_candidates:
-    mask &= df[wrkplace_candidates[0]].astype(str).str.upper() == wrkplace_val.upper()
+    common_mask &= df[unit_candidates[0]].astype(str).str.upper() == unit_val.upper()
 if sex_val and sex_candidates:
-    mask &= df[sex_candidates[0]].astype(str).str.upper() == sex_val.upper()
+    common_mask &= df[sex_candidates[0]].astype(str).str.upper() == sex_val.upper()
 if age_val and age_candidates:
-    mask &= df[age_candidates[0]].astype(str).str.upper() == age_val.upper()
+    common_mask &= df[age_candidates[0]].astype(str).str.upper() == age_val.upper()
 
-filt = df[mask].copy()
-if val_col:
-    filt[val_col] = pd.to_numeric(filt[val_col], errors="coerce")
-filt = filt.dropna(subset=[val_col] if val_col else [])
-print(f"  Filtered rows: {len(filt)}  |  geo values (sample): {filt[geo_col].unique()[:10]}")
+# Numerator: cross-border commuters (c_work=FOR), thousand persons.
+num_mask = common_mask.copy()
+if wrkplace_val and wrkplace_candidates:
+    num_mask &= df[wrkplace_candidates[0]].astype(str).str.upper() == wrkplace_val.upper()
+num = df[num_mask].copy()
+num = num.rename(columns={geo_col: "geo", time_col: "time", val_col: "commuters_ths"})
+num["time"] = num["time"].astype(str).str[:4].astype(int)
+num = num[["geo", "time", "commuters_ths"]].dropna()
 
-# Standardise column names for Dataset
-filt = filt.rename(columns={geo_col: "geo", time_col: "time", val_col: "value"})
-filt["time"] = filt["time"].astype(str).str[:4].astype(int)
+# Denominator: total employed = sum over c_work ∈ {FOR, INR, OUTR}.
+# (NRP excluded --- 'no response on place of work'.)
+den_mask = common_mask.copy()
+if wrkplace_candidates:
+    den_mask &= df[wrkplace_candidates[0]].astype(str).str.upper().isin(["FOR", "INR", "OUTR"])
+den = df[den_mask].copy()
+den = den.rename(columns={geo_col: "geo", time_col: "time", val_col: "emp_ths"})
+den["time"] = den["time"].astype(str).str[:4].astype(int)
+den = den.groupby(["geo", "time"], as_index=False)["emp_ths"].sum()
+
+# Combine → percent of regional employed working abroad.
+filt = num.merge(den, on=["geo", "time"], how="left")
+filt["value"] = filt["commuters_ths"] / filt["emp_ths"] * 100
 filt = filt[["geo", "time", "value"]].dropna()
+print(f"  Filtered (normalised) rows: {len(filt)}  "
+      f"|  geo sample: {list(filt['geo'].unique()[:10])}")
 
-# ── 3c. Top destination country per CZ NUTS2 region ─────────────────────────
-# Finds which foreign country has the highest commuter count per CZ region
-# at the latest available year, excluding aggregate rows (FOR/TOTAL).
-_top_dest: dict[str, str] = {}
-_cwork_col = next((c for c in df.columns if c in ("C_WORK", "CWORK")), None)
-if _cwork_col is not None and geo_col and val_col and time_col:
-    _AGG_VALS = {"FOR", "TOTAL", "ABROAD", "ABRD", "EU27_2020"}
-    _td_mask = (
-        df[geo_col].astype(str).str.match(r"^CZ[A-Z0-9]{2}$")
-        & ~df[_cwork_col].astype(str).str.upper().isin(_AGG_VALS)
-    )
-    if sex_val and sex_candidates:
-        _td_mask &= df[sex_candidates[0]].astype(str).str.upper() == sex_val.upper()
-    if age_val and age_candidates:
-        _td_mask &= df[age_candidates[0]].astype(str).str.upper() == age_val.upper()
-    if unit_val and unit_candidates:
-        _td_mask &= df[unit_candidates[0]].astype(str).str.upper() == unit_val.upper()
-    _td = df[_td_mask].copy()
-    _td[val_col] = pd.to_numeric(_td[val_col], errors="coerce")
-    _td = _td.dropna(subset=[val_col])
-    _td["_time_int"] = _td[time_col].astype(str).str[:4].astype(int)
-    _td_latest_yr = _td.groupby(geo_col)["_time_int"].transform("max")
-    _td = _td[_td["_time_int"] == _td_latest_yr]
-    _idx = _td.groupby(geo_col)[val_col].idxmax()
-    _top_dest = _td.loc[_idx, [geo_col, _cwork_col]].set_index(geo_col)[_cwork_col].to_dict()
-    print(f"  Top destinations per CZ NUTS2: {_top_dest}")
-else:
-    print("  C_WORK column not found --- top-destination labels unavailable.")
+# Note: lfst_r_lfe2ecomm has no per-destination-country breakdown
+# (c_work ∈ {FOR, INR, OUTR, NRP} only), so per-region top-destination
+# annotations are not available from this dataset.
 
 ds = Dataset(filt, name="Přeshraniční dojíždění", unit="% zaměstnaných",
              source_url="Eurostat/lfst_r_lfe2ecomm")
-
-# ── 3b. Download employed-persons denominator (lfst_r_lfe2emprtn) ────────────
-# Used to normalise absolute commuter counts (THOUS) to % of regional workforce.
-print("Downloading lfst_r_lfe2emprtn (denominator: employed persons) …")
-_emp_data: "pd.DataFrame | None" = None
-try:
-    _emp_path = fetch_eurostat("lfst_r_lfe2emprtn", "A.THS_PER.T.TOTAL.", start_period=2015)
-    _emp_raw = pd.read_csv(_emp_path, comment="#")
-    _emp_raw.columns = [c.strip().upper() for c in _emp_raw.columns]
-    _emp_geo  = next((c for c in _emp_raw.columns if c in ("GEO", "REF_AREA")), None)
-    _emp_val  = next((c for c in _emp_raw.columns if c in ("OBS_VALUE", "VALUE")), None)
-    _emp_time = next((c for c in _emp_raw.columns if c in ("TIME_PERIOD", "TIME")), None)
-    _emp_unit_col = next((c for c in _emp_raw.columns if "UNIT" in c), None)
-    _emp_sex_col  = next((c for c in _emp_raw.columns if "SEX"  in c), None)
-    _emp_age_col  = next((c for c in _emp_raw.columns if "AGE"  in c), None)
-    _emp_unit_val = _first_val(_emp_raw, [_emp_unit_col] if _emp_unit_col else [],
-                               ["THS_PER", "THOUS", "THS"])
-    _emp_sex_val  = _first_val(_emp_raw, [_emp_sex_col]  if _emp_sex_col  else [],
-                               ["T", "TOTAL"])
-    _emp_age_val  = _first_val(_emp_raw, [_emp_age_col]  if _emp_age_col  else [],
-                               ["TOTAL", "Y_GE15", "Y15-74"])
-    _emp_mask = pd.Series([True] * len(_emp_raw), index=_emp_raw.index)
-    if _emp_unit_val and _emp_unit_col:
-        _emp_mask &= _emp_raw[_emp_unit_col].astype(str).str.upper() == _emp_unit_val.upper()
-    if _emp_sex_val and _emp_sex_col:
-        _emp_mask &= _emp_raw[_emp_sex_col].astype(str).str.upper() == _emp_sex_val.upper()
-    if _emp_age_val and _emp_age_col:
-        _emp_mask &= _emp_raw[_emp_age_col].astype(str).str.upper() == _emp_age_val.upper()
-    _emp_filt = _emp_raw[_emp_mask].copy()
-    _emp_filt[_emp_val] = pd.to_numeric(_emp_filt[_emp_val], errors="coerce")
-    _emp_filt = _emp_filt.rename(
-        columns={_emp_geo: "geo", _emp_time: "time", _emp_val: "emp_value"}
-    )
-    _emp_filt["time"] = _emp_filt["time"].astype(str).str[:4].astype(int)
-    _emp_data = _emp_filt[["geo", "time", "emp_value"]].dropna()
-    print(f"  lfst_r_lfe2emprtn rows: {len(_emp_data)}  "
-          f"unit={_emp_unit_val}, sex={_emp_sex_val}, age={_emp_age_val}")
-except Exception as _exc:
-    print(f"  WARNING: denominator download failed ({_exc}); "
-          "will use raw values if already in % form")
-    _emp_data = None
 
 # ── Figure A --- Timeline (national-level rows only, 2-char geo codes) ─────────
 print("\nFigure A: timeline …")
@@ -277,27 +232,31 @@ try:
 
     ds_map = Dataset(snap_nat, name="Přeshraniční dojíždění", unit="% zaměstnaných",
                      source_url="Eurostat/lfst_r_lfe2ecomm")
+    _values_map = snap_nat.set_index("geo")["value"].to_dict()
+    _vmax = max(_values_map.values())
+    STRINGS_MAP = {
+        "title": f"Přeshraniční pracovní dojíždění v~\\acs{{geo-EU}} ({latest_nat})",
+        "colorbar_label": r"\% zaměstnaných pracujících v~zahraničí",
+    }
     fig_b = choropleth(
         ds_map, year=latest_nat,
-        title=(
-            f"Přeshraniční pracovní dojíždění v~\\acs{{geo-EU}} ({latest_nat})\n"
-            r"\% zaměstnaných pracujících v~zahraničí"
-        ),
-        colorbar_label=r"\% zaměstnaných pracujících v zahraničí",
+        title=STRINGS_MAP["title"],
+        colorbar_label=STRINGS_MAP["colorbar_label"],
         cmap="RdYlGn_r",
-
+        vmin=0, vmax=_vmax,
+        highlight_colorbar=["CZ"],
         label_countries=True,
     )
     # PGF hover tooltips on country codes (values shown on hover).
-    _snap_map = snap_nat.set_index("geo")["value"].to_dict()
-    apply_geo_labels_pgf(fig_b.axes[0], values=_snap_map, tooltip_fmt="{:.2f} %")
+    apply_geo_labels_pgf(fig_b.axes[0], halo=True, values=_values_map, tooltip_fmt="{:.2f} %")
 
-    savefig_pgf(fig_b, "problemy_dojezdeni_mapa")
+    savefig_pgf(fig_b, "problemy_dojezdeni_mapa", strings=STRINGS_MAP)
     save_figure_tex_pgf(
         "problemy_dojezdeni_mapa",
         caption=f"Přeshraniční pracovní dojíždění, \\acs{{geo-EU}}27, {latest_nat}.",
         label="fig:problemy_dojezdeni_mapa",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
+        strings=STRINGS_MAP,
     )
     print(f"  Figure B done ({latest_nat}).")
 except Exception as exc:
@@ -309,32 +268,6 @@ try:
     nuts2_data = filt[filt["geo"].str.len() == 4].copy()
     latest_nuts2 = nuts2_data["time"].max()
     snap_nuts2 = nuts2_data[nuts2_data["time"] == latest_nuts2].copy()
-
-    # Normalise to % of regional workforce when commuter counts are absolute
-    # (unit THS_PER / THOUS).  If unit is already PC_ACT/PC_EMP use as-is.
-    _is_absolute = unit_val is not None and any(
-        k in unit_val.upper() for k in ["THS", "THOUS"]
-    )
-    if _is_absolute and _emp_data is not None:
-        # Prefer exact year; fall back to latest available per region.
-        _emp_snap = _emp_data[
-            (_emp_data["geo"].str.len() == 4) & (_emp_data["time"] == latest_nuts2)
-        ][["geo", "emp_value"]].drop_duplicates(subset="geo")
-        if _emp_snap.empty:
-            _emp_snap = (
-                _emp_data[_emp_data["geo"].str.len() == 4]
-                .sort_values("time")
-                .groupby("geo")
-                .last()
-                .reset_index()[["geo", "emp_value"]]
-            )
-        snap_nuts2 = snap_nuts2.merge(_emp_snap, on="geo", how="left")
-        snap_nuts2["value"] = snap_nuts2["value"] / snap_nuts2["emp_value"] * 100
-        _normed = snap_nuts2["value"].notna().sum()
-        print(f"  Normalised {_normed}/{len(snap_nuts2)} regions to % of employed.")
-    elif _is_absolute:
-        print("  WARNING: absolute unit detected but denominator unavailable --- "
-              "values not normalised; map may have non-comparable scale.")
 
     data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
 
@@ -356,33 +289,6 @@ try:
         cmap="RdYlGn_r",
         label_cz=False,
     )
-    # Annotate each CZ NUTS2 region with its top destination country code
-    if _top_dest:
-        try:
-            _nuts_path_c = fetch(_GISCO_NUTS_URL, suffix=".geojson")
-            _cz2_gdf = gpd.read_file(_nuts_path_c)
-            _cz2_gdf = _cz2_gdf[
-                (_cz2_gdf["LEVL_CODE"] == 2) & (_cz2_gdf["CNTR_CODE"] == "CZ")
-            ]
-            _ax_c = fig_c.axes[0]
-            for _, _row in _cz2_gdf.iterrows():
-                _rid = _row["NUTS_ID"]
-                if _rid not in _top_dest:
-                    continue
-                _cx, _cy = _row.geometry.centroid.x, _row.geometry.centroid.y
-                _dest = _top_dest[_rid]
-                # \pdftooltip so hover shows NUTS_ID + destination country long name.
-                from stattool.style import GEO_LONG_NAMES as _GL
-                _tip = f"{_rid} \u2192 {_GL.get(_dest, _dest)}"
-                _ax_c.text(
-                    _cx, _cy,
-                    rf"\pdftooltip{{{_dest}}}{{{_tip}}}",
-                    ha="center", va="center",
-                    fontsize=FONT_SIZE, fontweight="bold", color="white",
-                    path_effects=[mpe.withStroke(linewidth=2.5, foreground="black")],
-                )
-        except Exception as _exc:
-            print(f"  Top-destination labels skipped: {_exc}")
     savefig_pgf(fig_c, "problemy_dojezdeni_nuts2")
     _de_note = (
         " Německé regiony nejsou v~datech dostupné."
