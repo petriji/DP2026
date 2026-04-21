@@ -1,11 +1,21 @@
 % ==============================================================================
-% Variable And Index Definitions (acro tag = vel)
+% Variable And Index Definitions
 % ==============================================================================
-% The variables list uses the same acro template as the abbreviations list.
+% Two acro tags are used:
+%   tag = vel  → variables       (printed by \printacronyms[include=vel])
+%   tag = idx  → indices         (printed by \printacronyms[include=idx])
+%
 % Used-only behaviour works only when acro sees the symbol as used:
-%   - in text: use \acs{var-...} or \ac{var-...}
+%   - in text: use \acs{var-...}, \acs{idx-...}, or \ac{var-...}
 %   - in math written manually: keep the raw symbol and add \acuse{var-...}
-%     nearby so the entry appears in the printed variables list.
+%     (or \acuse{idx-...}) nearby so the entry appears in the printed list.
+%
+% Index display behaviour (see CTUthesis.cls short template):
+%   - For idx-* entries the `index` property carries the bare in-text token
+%     (e.g. z, M, PPS); \acs{idx-z} renders that token, allowing expressions
+%     like  \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}.
+%   - The `short` field carries the placeholder form (\square_z, \square^{PPS})
+%     and is shown in the bold left column of the indices list.
 % ==============================================================================
 
 % ---------------------------------------------------------------------------
@@ -24,7 +34,7 @@
 \sisetup{per-mode=symbol}
 
 % ---------------------------------------------------------------------------
-%  \DeclareVariable macro
+%  \DeclareVariable macro  (tag = vel — printed in the variables list)
 % ---------------------------------------------------------------------------
 \newcommand\DeclareVariable[3]{%
 	\DeclareAcronym{#1}{%
@@ -36,27 +46,74 @@
 	}}
 
 % ---------------------------------------------------------------------------
-%  Index / modifier symbols  (□ = libovolná veličina, klíč = idx-...)
+%  \DeclareIndex macro  (tag = idx — printed in the indices list)
+%
+%  #1 = key (e.g. idx-z)
+%  #2 = short / list display, with placeholder \square (e.g. \ensuremath{\square_z})
+%        — appears in the bold left column of the indices list.
+%  #3 = index display, the bare token used in math (e.g. \ensuremath{z})
+%        — what \acs{idx-z} renders inline. Allows building expressions like
+%          \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}.
+%        The class' short template detects the `index` property (see
+%        CTUthesis.cls) and prints it instead of the square form.
+%  #4 = long description (right column of the indices list).
 % ---------------------------------------------------------------------------
-\DeclareVariable{idx-b}{\ensuremath{\square_b}}{brutto}
-\DeclareVariable{idx-n}{\ensuremath{\square_n}}{netto}
-\DeclareVariable{idx-m}{\ensuremath{\square_m}}{měsíční hodnota (výchozí jednotka hodinová)}
-\DeclareVariable{idx-pc}{\ensuremath{\square_{pc}}}{per capita (děleno $N$)}
-\DeclareVariable{idx-PPS}{\ensuremath{\square^{PPS}}}{hodnota v~paritě kupní síly}
-\DeclareVariable{idx-M}{\ensuremath{\square_M}}{gender: muži}
-\DeclareVariable{idx-F}{\ensuremath{\square_F}}{gender: ženy}
-\DeclareVariable{idx-z}{\ensuremath{\square_z}}{zaměstnanec}
-\DeclareVariable{idx-Z}{\ensuremath{\square_Z}}{zaměstnavatel}
-\DeclareVariable{idx-SP}{\ensuremath{\square_{SP}}}{sociální pojištění}
-\DeclareVariable{idx-ZP}{\ensuremath{\square_{ZP}}}{zdravotní pojištění}
-\DeclareVariable{idx-SD}{\ensuremath{\square_{SD}}}{starobní důchod}
-\DeclareVariable{idx-KS}{\ensuremath{\square_{KS}}}{kolektivní smlouva}
-\DeclareVariable{idx-U}{\ensuremath{\square_U}}{odbory (trade union)}
-\DeclareVariable{idx-i}{\ensuremath{\square_i}}{pořadové číslo pozorování (Giniho sumy)}
-\DeclareVariable{idx-tilde}{\ensuremath{\tilde{\square}}}{medián veličiny}
-\DeclareVariable{idx-bar}{\ensuremath{\bar{\square}}}{aritmetický průměr veličiny}
-\DeclareVariable{idx-hat}{\ensuremath{\hat{\square}}}{odhad veličiny}
-\DeclareVariable{idx-0}{\ensuremath{\square_0}}{počáteční}
+\newcommand\DeclareIndex[4]{%
+	\DeclareAcronym{#1}{%
+		short = {#2},
+		index = {#3},
+		long  = {#4},
+		first-style = short,
+		single-style = short,
+		tag = idx
+	}}
+
+% ---------------------------------------------------------------------------
+%  Subscript / superscript indices
+%  (\square = libovolná veličina; key = idx-...)
+%  In math:  \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}
+%  In the indices list:  \square_z   zaměstnanec
+% ---------------------------------------------------------------------------
+\DeclareIndex{idx-b}{\ensuremath{\square_b}}{\ensuremath{b}}{brutto}
+\DeclareIndex{idx-n}{\ensuremath{\square_n}}{\ensuremath{n}}{netto}
+\DeclareIndex{idx-m}{\ensuremath{\square_m}}{\ensuremath{m}}{měsíční hodnota}
+\DeclareIndex{idx-pc}{\ensuremath{\square_{pc}}}{\ensuremath{pc}}{per capita (děleno $N$)}
+\DeclareIndex{idx-PPS}{\ensuremath{\square^{PPS}}}{\ensuremath{PPS}}{hodnota v~paritě kupní síly}
+\DeclareIndex{idx-M}{\ensuremath{\square_M}}{\ensuremath{M}}{gender: muži}
+\DeclareIndex{idx-F}{\ensuremath{\square_F}}{\ensuremath{F}}{gender: ženy}
+\DeclareIndex{idx-z}{\ensuremath{\square_z}}{\ensuremath{z}}{zaměstnanec}
+\DeclareIndex{idx-Z}{\ensuremath{\square_Z}}{\ensuremath{Z}}{zaměstnavatel}
+\DeclareIndex{idx-SP}{\ensuremath{\square_{SP}}}{\ensuremath{SP}}{sociální pojištění}
+\DeclareIndex{idx-ZP}{\ensuremath{\square_{ZP}}}{\ensuremath{ZP}}{zdravotní pojištění}
+\DeclareIndex{idx-SD}{\ensuremath{\square_{SD}}}{\ensuremath{SD}}{starobní důchod}
+\DeclareIndex{idx-KS}{\ensuremath{\square_{KS}}}{\ensuremath{KS}}{kolektivní smlouva}
+\DeclareIndex{idx-U}{\ensuremath{\square_U}}{\ensuremath{U}}{odbory (trade union)}
+\DeclareIndex{idx-i}{\ensuremath{\square_i}}{\ensuremath{i}}{pořadové číslo pozorování}
+\DeclareIndex{idx-min}{\ensuremath{\square_{min}}}{\ensuremath{min}}{minimální}
+\DeclareIndex{idx-max}{\ensuremath{\square_{max}}}{\ensuremath{max}}{maximální}
+\DeclareIndex{idx-0}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční}
+
+% ---------------------------------------------------------------------------
+%  Accent indices — argument-taking macros
+%
+%  Accents apply to a variable, so they cannot be expressed via the `index`
+%  property (which renders an inert symbol). Use the helper macros below
+%  whenever you would otherwise write \tilde{X} / \bar{X} / \hat{X}; they
+%  register usage so the entry appears in the indices list.
+%
+%      \acidxtilde{\acs{var-w}}   →   \tilde{w}      (medián)
+%      \acidxbar{\acs{var-M}}     →   \bar{M}        (aritmetický průměr)
+%      \acidxhat{\acs{var-y}}     →   \hat{y}        (odhad)
+%
+%  The list entry shows the placeholder form (\tilde{\square} etc.).
+% ---------------------------------------------------------------------------
+\DeclareIndex{idx-tilde}{\ensuremath{\tilde{\square}}}{\ensuremath{\tilde{\square}}}{medián veličiny}
+\DeclareIndex{idx-bar}{\ensuremath{\bar{\square}}}{\ensuremath{\bar{\square}}}{aritmetický průměr veličiny}
+\DeclareIndex{idx-hat}{\ensuremath{\hat{\square}}}{\ensuremath{\hat{\square}}}{odhad veličiny}
+
+\newcommand\acidxtilde[1]{\acuse{idx-tilde}\ensuremath{\tilde{#1}}}
+\newcommand\acidxbar[1]{\acuse{idx-bar}\ensuremath{\bar{#1}}}
+\newcommand\acidxhat[1]{\acuse{idx-hat}\ensuremath{\hat{#1}}}
 
 % ---------------------------------------------------------------------------
 %  Base variables

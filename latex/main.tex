@@ -166,6 +166,10 @@
 		\printacronyms[include=vel,name=\CTUvelname,preamble={}]\label{ch:veliciny}
 		\thispagestyle{plain}%
 	}{}
+	\CTUifIndexListNonemptyTF{% print indices list only if at least one used index exists
+		\printacronyms[include=idx,name=\CTUidxname,preamble={}]\label{ch:indexy}
+		\thispagestyle{plain}%
+	}{}
 \fi
 
 % Table of Contents (roman page numbering continues here).
