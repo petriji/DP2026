@@ -1341,38 +1341,21 @@
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
 % Global flags: true when at least one captioned figure / table exists in the
-% document.  Set by hooking \caption@beginex (caption.sty's caption emitter,
-% which underlies every figure/table \caption); falls back to wrapping the
-% kernel \@caption when caption.sty is not loaded.  The hook is installed at
-% \AtBeginDocument so it sits on top of caption.sty's own redefinition.
-% This is robust against hyperref's later patch of \addcontentsline (which
-% is why the flags can't reliably be set there).
-% \edef captures the type token (caption.sty passes \@captype, not the literal
-% string "figure"/"table") so \ifx compares the expanded value.
+% document.  Detected at \listoffigures / \listoftables call time by probing
+% for the .lof / .lot files written by \@starttoc in the previous latexmk
+% pass — this is robust against hyperref's \addcontentsline patch and any
+% other package that wraps the TOC-writing machinery.
+%
+% First-run behaviour: on a clean build no .lof/.lot exists yet, so the list
+% chapter is skipped on pass 1.  Pass 1 still writes the files via \@starttoc
+% calls inside \caption; pass 2 then detects them and emits the chapter.
+% latexmk automatically reruns to resolve cross-references, so the finished
+% PDF always contains the correct lists.
 \newif\if@CTUhasfigures
 \newif\if@CTUhastables
 \AtBeginDocument{%
-  \@ifpackageloaded{caption}{%
-    \let\CTU@orig@beginex\caption@beginex
-    \renewcommand\caption@beginex[3]{%
-      \edef\CTU@cap@type{#1}%
-      \def\CTU@cap@fig{figure}%
-      \def\CTU@cap@tab{table}%
-      \ifx\CTU@cap@type\CTU@cap@fig\global\@CTUhasfigurestrue\fi
-      \ifx\CTU@cap@type\CTU@cap@tab\global\@CTUhastablestrue\fi
-      \CTU@orig@beginex{#1}{#2}{#3}%
-    }%
-  }{%
-    \let\CTU@orig@@caption\@caption
-    \long\def\@caption#1[#2]#3{%
-      \edef\CTU@cap@type{#1}%
-      \def\CTU@cap@fig{figure}%
-      \def\CTU@cap@tab{table}%
-      \ifx\CTU@cap@type\CTU@cap@fig\global\@CTUhasfigurestrue\fi
-      \ifx\CTU@cap@type\CTU@cap@tab\global\@CTUhastablestrue\fi
-      \CTU@orig@@caption{#1}[{#2}]{#3}%
-    }%
-  }%
+  \IfFileExists{\jobname.lof}{\@CTUhasfigurestrue}{}%
+  \IfFileExists{\jobname.lot}{\@CTUhastablestrue}{}%
 }
 \newcommand\listoffigures{%
     \if@CTUhasfigures
