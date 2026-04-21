@@ -1,12 +1,11 @@
 % Editable figure definition for korelace_scatter
 % Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strKorelaceScatterCaption{\centering Korelace pokrytí KV a veličin trhu práce, EU27. Zdroj dat: OECD\,ICTWSS~\cite{oecd_aias_ictwss_CBC_ERB_pct}, Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}.\protect\footnotemark}%
+\def\strKorelaceScatterCaption{Korelace pokrytí \acs{KV} a~veličin trhu práce, \acs{EU}, 2024. Zdroj dat: \acs{OECD}~\acs{ICTWSS}\cite{oecd_aias_ictwss_CBC_ERB_pct}, Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}.}%
 %
 \begin{figure}[htbp]
   \centering
-  \resizebox{0.98\linewidth}{!}{\input{../python/figures/korelace_scatter.pgf}}
+  \resizebox{\linewidth}{!}{\input{../python/figures/korelace_scatter.pgf}}
   \caption{\strKorelaceScatterCaption}
   \label{fig:korelace_scatter}
 \end{figure}
-\footnotetext{Irsko (IE) vyřazeno: HDP/ob.~v~PPS $\approx 237$ (EU27\,=\,100) je zkresleno přesunem zisků nadnárodních korporací se sídlem v~Irsku (transfer pricing, relokace~IP) --- nereprezentuje skutečnou životní úroveň ani podmínky trhu práce. Data nedostupná: EE, LV --- chybějící hodnoty v~ICTWSS~\textit{AdjCov}; LU --- data dostupná pouze před rokem 2004.}
