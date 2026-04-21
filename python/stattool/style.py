@@ -123,6 +123,9 @@ PGF_PREAMBLE = r"""
 \DeclareSIUnit\czk{Kč}
 \DeclareSIUnit\rok{rok}
 \DeclareSIUnit\person{os.}
+\DeclareSIUnit\pp{p.\,b.}
+\DeclareSIUnit\week{týd.}
+\DeclareSIUnit\month{měs.}
 \sisetup{output-decimal-marker={,}, per-mode=symbol}
 \usepackage[pdftex]{contour}
 \contourlength{0.6pt}
