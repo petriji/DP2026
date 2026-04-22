@@ -8,5 +8,11 @@ Dánsko a~Rakousko startují vysoko již v~prvním decilu a~křivka stoupá rela
 \ac{ČR} a~Polsko mají naopak nízkou úroveň D1 i~D9, přičemž rozdíl mezi nimi (\enquote{šíře distribuce}) je~malý --- nízká nerovnost vyjádřená Giniho koeficientem se tedy realizuje na~nízké příjmové úrovni.
 Slovensko pak setrvale leží pod ostatními zeměmi v~celém spektru distribuce, což ilustruje, že ani relativní rovnost nemůže nahradit absolutní úroveň.
 Vyšší decily Německa se přibližují rakouským, zatímco~Dánsko si udržuje nejvyšší dolní hranici devátého decilu napříč šestici.
-
+Alternativní pohled na~rozložení odměn za~práci poskytuje Eurostat \texttt{earn\_ses\_hourly} (\emph{Structure of Earnings Survey}).
+Na~rozdíl od~předchozího obrázku zobrazuje \emph{hrubou hodinovou mzdu zaměstnance} před~zdaněním a~odvody, v~\ac{PPS} na~hodinu a~v~pokrytí \ac{NACE}~B--S bez~O (tedy bez~veřejné správy).
+\acs{SES} je sice harmonizovaný, ale publikuje pouze tři body distribuce (D1, medián, D9) a~vychází ze~čtyřletého cyklu --- referenční rok je proto 2022, nový sběr proběhne až~za~rok 2026.
+Křivky v~obrázku jsou log-normálním fitem metodou nejmenších čtverců na~zveřejněných decilech, pokrytí zahrnuje podniky s~alespoň \SI{10}{\person}, sekce \acs{NACE}~B--S bez~O, obě pohlaví a~všechny pracovní úvazky; přerušované svislé čáry vyznačují mediány.
+Výsledek potvrzuje ranking domácnostního pohledu: Dánsko, Rakousko a~Německo dominují ve~všech třech bodech, zatímco \ac{ČR}, Polsko a~Slovensko zůstávají pod~úrovní D1 rakouského mediánu.
+Klíčový rozdíl oproti domácnostnímu pohledu spočívá v~jednotce analýzy: \acs{SES} neeviduje sociální transfery, daně ani~strukturu domácnosti.
+Užší rozpětí mezi D1 a~D9 v~\acloc{ČR} a~na~Slovensku proto vyjadřuje mzdovou kompresi na~pracovním trhu, nikoliv přerozdělovací účinek daňového systému, který v~ekvivalizovaném čistém příjmu působí mimo rámec mzdy.
 \input{texparts/python/eu_prijem_distribuce}
