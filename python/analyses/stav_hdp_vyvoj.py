@@ -72,8 +72,8 @@ print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 STRINGS = {
-    "title": r"\acs{HDP} na obyvatele",
-    "ylabel": r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
+    "title": r"Konvergence \acs{HDP} na obyvatele",
+    "ylabel": r"\acs{HDP}/cap. (\acs{PPS}, \acs{geo-EU}27 = 100) [\si{\percent}]",
 }
 fig = timeline(
     ds,

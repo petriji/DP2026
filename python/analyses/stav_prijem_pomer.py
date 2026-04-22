@@ -115,8 +115,8 @@ print(f"Ratio data: {len(ds_ratio.countries)} countries, "
 
 # ── 5. Plot ───────────────────────────────────────────────────────────────────
 STRINGS = {
-    "title": r"Čistý příjem jako podíl \acs{HDP} na obyvatele",
-    "ylabel": r"čistý příjem / \acs{HDP} na obyvatele [\acs{geo-EU}27 = 100]",
+    "title": r"Konvergence poměru čistého příjmu k~\acs{HDP} (na obyvatele, roční)",
+    "ylabel": r"čistý příjem / \acs{HDP} (\acs{PPS}, \acs{geo-EU}27 = 100) [\si{\percent}]",
 }
 fig = timeline(
     ds_ratio,
