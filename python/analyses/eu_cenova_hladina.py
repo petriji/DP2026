@@ -39,6 +39,8 @@ from stattool.style import (
 )
 from statout.map_europe import choropleth
 
+COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
+
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 START_YEAR = 2015
@@ -95,7 +97,7 @@ fig = choropleth(
     vmax=_vmax,
     diverging=False,
     label_countries=True,
-    highlight_colorbar=["CZ"],
+    highlight_colorbar=COUNTRIES,
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
