@@ -199,6 +199,29 @@ for country in COUNTRIES:
             f"{country} {latest[country]} {d} (p={p:.1f}): {q:,.0f} PPS",
         )
 
+# ── Inline country labels (replace legend) ────────────────────────────────────
+# Order along x-axis (left → right) as given; positions span the central 50 %
+# of the x-axis range, uniformly spaced; each label is offset above the
+# country's curve y-value at that x, left-aligned.
+LABEL_ORDER = ["SK", "CZ", "PL", "DK", "AT", "DE"]
+x_span = X_MAX - X_MIN
+x_start = X_MIN + 0.25 * x_span
+x_step = (0.5 * x_span) / (len(LABEL_ORDER) - 1)
+for i, country in enumerate(LABEL_ORDER):
+    if country not in fits:
+        continue
+    mu, sigma = fits[country]
+    x_lab = x_start + i * x_step
+    y_lab = lognormal_pdf(np.array([x_lab]), mu, sigma)[0] * y_scale
+    color = COUNTRY_COLORS.get(country, "#888888")
+    ax.annotate(
+        f"\\acs{{geo-{country}}}",
+        xy=(x_lab / 1_000.0, y_lab),
+        xytext=(2, 4), textcoords="offset points",
+        fontsize=FONT_SIZE - 1, color=color,
+        ha="left", va="bottom", zorder=6,
+    )
+
 STRINGS = {
     "title": rf"Modelové rozložení čistého disponibilního příjmu domácností ({ref_year})",
     "xlabel": r"ekvivalizovaný čistý disponibilní příjem [tis.\,\acs{PPS}/rok]",
@@ -216,6 +239,7 @@ ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda v, _: f"{v:.1f}".replace(".", ","))
 )
+ax.tick_params(axis="both", labelsize=FONT_SIZE - 1)
 ax.set_xlim(X_MIN / 1_000.0, X_MAX / 1_000.0)
 ax.set_ylim(bottom=0)
 ax.set_title(
@@ -227,15 +251,6 @@ ax.set_title(
 ax.minorticks_on()
 ax.grid(which="major", axis="both", linestyle=":", linewidth=0.5, alpha=0.6)
 ax.grid(which="minor", axis="both", linestyle=":", linewidth=0.3, alpha=0.3)
-
-ax.legend(
-    handles=handles,
-    ncol=len(handles),
-    loc="lower center",
-    bbox_to_anchor=(0.5, -0.22),
-    frameon=False,
-    fontsize=FONT_SIZE - 1,
-)
 
 # ── 5. Save ───────────────────────────────────────────────────────────────────
 median_str = "; ".join(
