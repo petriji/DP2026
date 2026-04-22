@@ -331,7 +331,10 @@ def _parse_mzs_percentile_sheet(path: Path, sheet: str) -> pd.DataFrame | None:
         df = df[df[col_map["p50"]] > 1_000]
         if len(df) < 3:
             return None
-        out = pd.DataFrame({"sector": df[label_col].values})
+        out = pd.DataFrame({
+            "code": df[0].astype(str).str.strip().values,
+            "sector": df[label_col].values,
+        })
         for pname, col in col_map.items():
             out[pname] = df[col].values
         return out
@@ -591,11 +594,24 @@ try:
         start_period=START_YEAR,
     )
     from stattool.dataset import Dataset
-    ds_gpg = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
-                                   source_url="Eurostat/earn_gr_gpgr2")
+    ds_gpg_raw = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
+                                       source_url="Eurostat/earn_gr_gpgr2")
+    # Normalize each country's GPG to EU27_2020 GPG = 100 (per year).
+    _gpg_df = ds_gpg_raw.df.copy()
+    _eu_per_year = (
+        _gpg_df[_gpg_df["geo"] == "EU27_2020"]
+        .groupby("time")["value"].mean()
+        .rename("eu_gpg")
+    )
+    _gpg_df = _gpg_df.merge(_eu_per_year, left_on="time", right_index=True, how="inner")
+    _gpg_df = _gpg_df[_gpg_df["eu_gpg"] > 0].copy()
+    _gpg_df["value"] = _gpg_df["value"] / _gpg_df["eu_gpg"] * 100.0
+    _gpg_df = _gpg_df.drop(columns=["eu_gpg"])
+    ds_gpg = Dataset(_gpg_df, name="GPG vs EU27", unit="EU27=100",
+                     source_url="Eurostat/earn_gr_gpgr2")
 
     STRINGS_GPG = {
-        "ylabel": r"nekorigovaný \acs{GPG} [\%]",
+        "ylabel": r"nekorigovaný \acs{GPG} (\acs{geo-EU}27\,=\,100) [\%]",
     }
     fig_b = timeline(
         ds_gpg,
@@ -661,11 +677,17 @@ if ispv_path is not None:
         print("  No percentile columns found in ISPV workbook")
 
 if pct_df is not None and "p50" in pct_df.columns:
+    # Use only top-level CZ-ISCO major groups (single-digit codes 1–9)
+    # to keep the chart readable; falls back to all rows if filter empties.
+    if "code" in pct_df.columns:
+        _major = pct_df[pct_df["code"].str.fullmatch(r"\d")]
+        if len(_major) >= 3:
+            pct_df = _major
     # Sort by median descending
     pct_df = pct_df.sort_values("p50", ascending=True).reset_index(drop=True)
     n = len(pct_df)
 
-    fig_c, ax_c = plt.subplots(figsize=cm2in(16, max(9, n * 0.65)))
+    fig_c, ax_c = plt.subplots(figsize=cm2in(16, max(9, n * 0.75)))
 
     y_pos = np.arange(n)
     labels = [str(s) for s in pct_df["sector"]]
@@ -695,20 +717,27 @@ if pct_df is not None and "p50" in pct_df.columns:
             ax_c.plot([p75, p90], [i, i], color="gray", linewidth=1.0, alpha=0.7)
 
     ax_c.set_yticks(y_pos)
-    ax_c.set_yticklabels(labels, fontsize=FONT_SIZE - 1)
+    ax_c.set_yticklabels(labels, fontsize=max(FONT_SIZE, 10))
+    ax_c.tick_params(axis="x", labelsize=max(FONT_SIZE, 10))
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
+    ax_c.set_xlim(0, 200_000)
+    ax_c.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
+    ax_c.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
+    ax_c.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
+    ax_c.tick_params(axis="y", which="minor", left=False)
+    ax_c.set_axisbelow(True)
     STRINGS_PCT = {
-        "title": rf"\acs{{geo-CZ}}: rozložení mezd podle odvětví \acs{{NACE}} (\acs{{ISPV}} {ispv_year}/H2); P25--P75 (\acs{{IQR}}) a medián",
+        "title": rf"\acs{{geo-CZ}}: rozložení mezd podle hlavních skupin CZ-ISCO (\acs{{ISPV}} {ispv_year}/H2); P25--P75 (\acs{{IQR}}) a~medián",
         "xlabel": r"hrubá měsíční mzda [\si{\czk}]",
     }
-    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=FONT_SIZE)
+    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=max(FONT_SIZE, 10))
     ax_c.set_title(
         STRINGS_PCT["title"],
-        fontsize=FONT_SIZE,
+        fontsize=max(FONT_SIZE, 10),
     )
-    ax_c.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
+    ax_c.legend(frameon=False, fontsize=max(FONT_SIZE, 10), loc="lower right")
 
     savefig_pgf(fig_c, "problemy_sektor_percentily", strings=STRINGS_PCT)
     save_figure_tex_pgf(
