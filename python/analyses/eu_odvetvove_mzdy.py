@@ -184,7 +184,7 @@ ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
 ax1.set_ylabel(STRINGS_BAR["ylabel"])
 ax1.set_title(STRINGS_BAR["title"])
-ax1.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=4)
+ax1.legend(frameon=False, fontsize=FONT_SIZE, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
 ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
@@ -232,7 +232,7 @@ if "EU27_2020" in lc_pps.index:
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
     ax2.set_xlabel(STRINGS_ODCH["xlabel"])
     ax2.set_title(STRINGS_ODCH["title"])
-    ax2.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=6)
+    ax2.legend(frameon=False, fontsize=FONT_SIZE, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
@@ -315,7 +315,7 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
 
 fig_maps.suptitle(
     STRINGS_MAP["title"],
-    fontsize=12,
+    fontsize=FONT_SIZE + 4,
     y=0.98,
 )
 
@@ -328,8 +328,8 @@ sm_shared.set_array([])
 cax_vert = fig_maps.add_axes([0.485, 0.18, 0.018, 0.62])
 cb_v = fig_maps.colorbar(sm_shared, cax=cax_vert,
                          label=STRINGS_MAP["colorbar_label"], orientation="vertical")
-cb_v.ax.tick_params(labelsize=max(FONT_SIZE, 10))
-cb_v.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE, 10))
+cb_v.ax.tick_params(labelsize=max(FONT_SIZE + 1, 10))
+cb_v.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE + 2, 10))
 
 # Make room in the middle: shrink each subplot horizontally.
 fig_maps.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.04,

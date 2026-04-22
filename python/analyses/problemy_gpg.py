@@ -302,12 +302,12 @@ STRINGS_STRAT = {
     "xlabel": "percentil mzdové distribuce",
     "ylabel": r"rozdíl \((M-F)\) [\si{\pps\per\hour}]",
 }
-ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE)
-ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE)
+ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE + 1)
+ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE + 1)
 ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.1f}"))
 ax_b.set_title(
     STRINGS_STRAT["title"],
-    fontsize=FONT_SIZE,
+    fontsize=FONT_SIZE + 2,
 )
 
 # Invisible hover tooltips at every (rank, gap) point.

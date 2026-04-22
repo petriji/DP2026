@@ -218,7 +218,7 @@ for i, country in enumerate(LABEL_ORDER):
         f"\\acs{{geo-{country}}}",
         xy=(x_lab / 1_000.0, y_lab),
         xytext=(2, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 1, color=color,
+        fontsize=FONT_SIZE, color=color,
         ha="left", va="bottom", zorder=6,
     )
 
@@ -229,22 +229,22 @@ STRINGS = {
 }
 ax.set_xlabel(
     STRINGS["xlabel"],
-    fontsize=FONT_SIZE,
+    fontsize=FONT_SIZE + 1,
 )
 ax.set_ylabel(
     STRINGS["ylabel"],
-    fontsize=FONT_SIZE,
+    fontsize=FONT_SIZE + 1,
 )
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda v, _: f"{v:.1f}".replace(".", ","))
 )
-ax.tick_params(axis="both", labelsize=FONT_SIZE - 1)
+ax.tick_params(axis="both", labelsize=FONT_SIZE)
 ax.set_xlim(X_MIN / 1_000.0, X_MAX / 1_000.0)
 ax.set_ylim(bottom=0)
 ax.set_title(
     STRINGS["title"],
-    fontsize=FONT_SIZE,
+    fontsize=FONT_SIZE + 2,
 )
 
 # Minor grid
