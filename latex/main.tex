@@ -260,23 +260,27 @@
 	% tabulka porovnávající ČMKOS a ASO-ČR a organizace zaměstnavatelů
 	\input{texparts/commentary/stav_hustota_vyvoj_2004}
 	% IPP — vývoj vyjednaných mezd v~kolektivních smlouvách ČR (ipp_wage_growth.py):
-	\input{texparts/commentary/stav_ipp_doplnkove}
-	\input{texparts/commentary/stav_arope_dual}
+	\input{texparts/commentary/stav_ipp_mzdy}
+	\input{texparts/commentary/stav_ipp_rozsah}
 	% \input{texparts/stav.tex}
-	\section{Trh práce}\label{sec:problemy}
-		% Regionální diferenciace Praha vs.\ zbytek ČR, genderová stratifikace,
-		% brain drain, platy ve veřejném sektoru, agenturní zaměstnávání, mzdová netransparentnost.
+	\section{Aktuální stav trhu práce}\label{sec:problemy}
+		% Kontext - Český trh práce: struktura zaměstnanosti, vývoj HDP, poměr příjmu k~HDP, zaměstnanost.
+		% vybrané země EU
+		\input{texparts/commentary/prakticka_srovnani}
 		\input{texparts/commentary/stav_hdp_vyvoj}
 		\input{texparts/commentary/stav_prijem_pomer}
 		\input{texparts/commentary/stav_zamestnanost}
 		% \input{texparts/trh_prace.tex}
-		\section{Daňové zatížení a OSVČ}\label{sec:danove_zatizeni}
+		\subsection{Daňové zatížení a OSVČ}\label{ssec:danove_zatizeni}
+			\input{texparts/commentary/eu_danovy_klin}
+			\input{texparts/commentary/eu_danovy_klin_vyvoj}
 			\input{texparts/commentary/problemy_danovy_klin_cz}
 			\input{texparts/commentary/problemy_cisty_prijem_cz}
-			\input{texparts/commentary/problemy_sp_odvody_cz}
+
 			\input{texparts/commentary/eu_osvc_mapa}
 			% \input{texparts/problemy/dane_osvc.tex}
-		\section{Mzdy a důchody}\label{sec:mzdy_duchody}
+		\subsection{Mzdy a důchody}\label{ssec:mzdy_duchody}
+			\input{texparts/commentary/problemy_sp_odvody_cz}
 			\input{texparts/commentary/problemy_mzda_duchod}
 			\input{texparts/commentary/problemy_duchod_solidarita}
 			\input{texparts/commentary/problemy_duchod_sp_pomer}
@@ -293,16 +297,39 @@
 			\paragraph{Regionální diferenciace}\label{par:regionalni_diferenciace}
 				\input{texparts/commentary/problemy_regiony_mapa}
 				% \input{texparts/problemy/mzdy_regiony.tex}
-			\paragraph{Práce v~zahraničí}\label{par:zahranici}
-				\input{texparts/commentary/problemy_dojezdeni_vyvoj}
-				\input{texparts/commentary/problemy_dojezdeni_mapa}
-				\input{texparts/commentary/problemy_dojezdeni_nuts2}
-				% \input{texparts/problemy/mzdy_zahranici.tex}
+			\paragraph{Odvětvová diferenciace}\label{par:odvetvova_diferenciace}
+				\input{texparts/commentary/eu_odvetvove_mzdy_bar}
+				\input{texparts/commentary/eu_odvetvove_mzdy_mapa}
+				% \input{texparts/problemy/mzdy_odvetvi.tex}
 			\paragraph{Odvětvová diferenciace}\label{par:odvetvova_diferenciace}
 				\input{texparts/commentary/problemy_sektor_percentily}
 				\input{texparts/commentary/problemy_sektor_disperze}
 				\input{texparts/commentary/problemy_sektor_lci}
 				% \input{texparts/problemy/mzdy_odvetvi.tex}
+		\subsection{Příjmy, distribuce a bohatství}\label{ssec:prijmy_distribuce}
+			\input{texparts/commentary/stav_arope_dual}
+			\input{texparts/commentary/eu_konvergence}
+			\input{texparts/commentary/eu_cenova_hladina}		
+			\input{texparts/commentary/eu_prijem_pps}
+			\input{texparts/commentary/eu_gini_prijem}
+			\input{texparts/commentary/eu_prijem_distribuce}
+			\input{texparts/commentary/eu_mzda_distribuce}
+			\input{texparts/commentary/eu_bohatstvi_mapa}
+			% \input{texparts/problemy/prijmy_distibuce.tex}
+		\subsection{Práce v~zahraničí}\label{ssec:zahranici}
+			\input{texparts/commentary/problemy_dojezdeni_vyvoj}
+			\input{texparts/commentary/problemy_dojezdeni_mapa}
+			\input{texparts/commentary/problemy_dojezdeni_nuts2}
+			% \input{texparts/problemy/prace_zahranici.tex}
+		\subsection{Pokrytí kolektivními smlouvami}\label{sec:eu_pokryti_kv}
+			\input{texparts/commentary/eu_pokryti_kv_mapa}
+			\input{texparts/commentary/eu_pay_equity_schema}
+			\input{texparts/commentary/eu_hustota_mapa}
+			% \input{texparts/problemy/pokryti_kv.tex}
+		\subsection{Aktivní politika zaměstnanosti}\label{ssec:apz}
+			\input{texparts/commentary/eu_apz_vydaje_2004}
+			\input{texparts/commentary/eu_apz_mapa}
+			% \input{texparts/problemy/apz.tex}
 	\section{Výhledové faktory}\label{sec:vyhled}
 		% \input{texparts/vyhled/vyhled_uvod.tex}
 		\paragraph{Demografický vývoj a závislostní poměr}\label{par:demografie}
@@ -329,47 +356,23 @@
 			% OSVČ a Švarc systém — erodování sociální báze, platformové zaměstnávání.
 			% Zdroje: ČMKOS Zpráva 2025 kap. 3.6.6, Polents/Dvořáková
 			% \input{texparts/vyhled/imigrace.tex}
-	\section{Evropský kontext}\label{sec:evropsky_kontext}
-		\input{texparts/commentary/prakticka_srovnani}
-		% \input{texparts/evropsky_kontext/eu_uvod.tex}
-		\subsection{Příjmy, distribuce a bohatství}\label{ssec:prijmy_distribuce}
-			\label{sec:eu_konvergence}
-			\input{texparts/commentary/eu_konvergence}
-			\input{texparts/commentary/eu_cenova_hladina}
-			\label{sec:eu_danovy_klin}
-			\input{texparts/commentary/eu_danovy_klin}
-			\input{texparts/commentary/eu_prijem_pps}
-			\input{texparts/commentary/eu_gini_prijem}
-			\input{texparts/commentary/eu_prijem_distribuce}
-			\input{texparts/commentary/eu_mzda_distribuce}
-			\input{texparts/commentary/eu_bohatstvi_mapa}
-		\subsection{Odvětvové mzdy}\label{ssec:odvetvi_eu}
-			\input{texparts/commentary/eu_odvetvove_mzdy_bar}
-			\input{texparts/commentary/eu_odvetvove_mzdy_mapa}
-		\subsection{Pokrytí kolektivními smlouvami}\label{sec:eu_pokryti_kv}
-			\input{texparts/commentary/eu_pokryti_kv_mapa}
-			\input{texparts/commentary/eu_pay_equity_schema}
-			\input{texparts/commentary/eu_hustota_mapa}
-		\subsection{Aktivní politika zaměstnanosti}\label{ssec:apz}
-			\input{texparts/commentary/eu_apz_vydaje_2004}
-			\input{texparts/commentary/eu_apz_mapa}
-		\subsection{Evropské modely trhu práce}\label{ssec:modely}
+	\section{Evropské modely trhu práce}\label{sec:modely}
 			% \input{texparts/modely/modely_uvod.tex}
-			\paragraph{Dánský model flexicurity}\label{par:dk_model}
+			\subsection{Dánský model flexicurity}\label{ssec:dk_model}
 				% Zlatý trojúhelník: flexibilní propouštění + štědré dávky + aktivní APZ.
 				% Kritika EU propagace: Keune/Jepsen (2007), ETUC reakce na flexinovelu.
 				% Zdroje: Andersen/Mailand 2005, Jde to pružně (DK), ETUC Communication on Flexicurity
 				% \input{texparts/modely/modely_dk.tex}
-			\paragraph{Rakouský model (Kammer-system)}\label{par:at_model}
+			\subsection{Rakouský model (Kammer-system)}\label{ssec:at_model}
 				% Téměř automatické rozšíření KSVS → 98~\% pokrytí i při 26~\% hustotě.
 				% Zdroje: ÖGB, Eurostat ICTWSS AT
 				% \input{texparts/modely/modely_at.tex}
-			\paragraph{Německý model (Mitbestimmung)}\label{par:de_model}
+			\subsection{Německý model (Mitbestimmung)}\label{ssec:de_model}
 				% Spolurozhodování v~dozorčích radách, závodní rady (Betriebsrat).
 				% Hartz reformy — varování před flexibilizací bez dostatečné jistoty.
 				% Zdroje: Jde to pružně DE model, Eurostat ICTWSS DE
 				% \input{texparts/modely/modely_de.tex}
-			\paragraph{Polský a slovenský model}\label{par:pl_sk_model}
+			\subsection{Polský a slovenský model}\label{ssec:pl_sk_model}
 				% PL: slabý SD podobný CZ, ale větší ekonomická váha → jiné tlaky.
 				% SK: nejnižší GINI (21.6), ale nízké HDP i nízké KV pokrytí (35~\%).
 				% Zdroje: Eurostat ICTWSS PL/SK
