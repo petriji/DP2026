@@ -54,6 +54,7 @@ from stattool.style import (
     savefig_pgf,
     save_figure_tex_pgf,
     apply_geo_labels_pgf,
+    add_pgf_tooltips,
     cm2in,
 )
 from statout.map_europe import choropleth
@@ -61,6 +62,7 @@ from statout.map_europe import choropleth
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 COUNTRY_LABELS = {"CZ": "CZ", "AT": "AT", "DE": "DE", "DK": "DK", "PL": "PL", "SK": "SK"}
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 apply_style_pgf()
 
@@ -242,30 +244,42 @@ print(f"  SES snapshot rows: {len(ses_snap)}")
 ses_year = int(ses_snap["time"].mode()[0]) if not ses_snap.empty else 2022
 _HAS_SES_DATA = len(ses_snap) >= 4
 
-fig_b, ax_b = plt.subplots(figsize=cm2in(15, 10))
+fig_b, ax_b = plt.subplots(figsize=cm2in(15, 9))
 
 ses_ok = False
 if _HAS_SES_DATA and s_indic and s_sex and s_geo:
     ses_ok = True
 
+# Compute per-country gap (M − F) / M · 100 [%] at each percentile rank.
+_gap_pivot_cols: dict[str, pd.Series] = {}
+_xmax_rank = max(_INDIC_RANK.values())
 for country in COUNTRIES:
     color = COUNTRY_COLORS.get(country, "#888888")
     sub = ses_snap[ses_snap[s_geo] == country].sort_values("_rank") if s_geo else pd.DataFrame()
+    if not (ses_ok and not sub.empty and s_sex):
+        continue
+    sub_f = sub[sub[s_sex].astype(str).str.upper() == "F"].set_index("_rank")[s_val]
+    sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"].set_index("_rank")[s_val]
+    common = sub_f.index.intersection(sub_m.index)
+    if len(common) == 0:
+        continue
+    gap = ((sub_m.loc[common] - sub_f.loc[common]) / sub_m.loc[common] * 100.0).sort_index()
+    ax_b.plot(gap.index, gap.values, color=color, linewidth=1.8, zorder=3)
+    # Line-end country label (nudgeable via \Nudge…{} macros in TeX).
+    last_rank = gap.index.max()
+    ax_b.annotate(
+        rf"\acs{{geo-{country}}}",
+        xy=(last_rank, gap.loc[last_rank]),
+        xytext=(4, 0),
+        textcoords="offset points",
+        fontsize=FONT_SIZE - 1,
+        ha="left",
+        va="center",
+        color=color,
+    )
+    _gap_pivot_cols[country] = gap
 
-    if ses_ok and not sub.empty and s_sex:
-        sub_f = sub[sub[s_sex].astype(str).str.upper() == "F"]
-        sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"]
-
-        if not sub_f.empty:
-            ax_b.plot(sub_f["_rank"], sub_f[s_val],
-                      color=color, linewidth=1.8, linestyle="-",
-                      marker="o", markersize=5, zorder=3)
-        if not sub_m.empty:
-            ax_b.plot(sub_m["_rank"], sub_m[s_val],
-                      color=color, linewidth=1.8, linestyle="--",
-                      marker="o", markersize=5, zorder=3)
-
-if not ses_ok:
+if not ses_ok or not _gap_pivot_cols:
     ax_b.text(0.5, 0.5, "data\nnedostupná",
               ha="center", va="center",
               transform=ax_b.transAxes, fontsize=FONT_SIZE, color="grey")
@@ -275,10 +289,16 @@ if not ses_ok:
 ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
 ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
+# Extend x-range slightly to accommodate line-end country labels.
+ax_b.set_xlim(min(ranks) - 5, max(ranks) + 10)
+ax_b.axhline(0, color="grey", linewidth=0.6, linestyle="--", alpha=0.7, zorder=1)
+ax_b.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
+ax_b.grid(which="minor", axis="y", linewidth=0.3, alpha=0.4)
+ax_b.grid(which="major", axis="y", linewidth=0.6, alpha=0.7)
 STRINGS_STRAT = {
-    "title": rf"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
+    "title": rf"Mzdový rozdíl mužů nad ženami podle percentilu ({ses_year})",
     "xlabel": "percentil mzdové distribuce",
-    "ylabel": r"hodinová mzda [\si{\pps\per\hour}]",
+    "ylabel": r"rozdíl \((M-F)/M\) [\%]",
 }
 ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE - 1)
 ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE - 1)
@@ -288,33 +308,23 @@ ax_b.set_title(
     fontsize=FONT_SIZE,
 )
 
-country_handles = [
-    plt.Line2D([0], [0], color=COUNTRY_COLORS.get(c, "#888888"),
-               linewidth=1.8, marker="o", markersize=5, label=c)
-    for c in COUNTRIES
-]
-style_handles = [
-    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="-",
-               marker="o", markersize=4, label="ženy"),
-    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="--",
-               marker="o", markersize=4, label="muži"),
-]
-ax_b.legend(handles=country_handles + style_handles,
-            ncol=len(COUNTRIES) + 2,
-            loc="lower center", bbox_to_anchor=(0.5, -0.18),
-            frameon=False, fontsize=FONT_SIZE - 1)
+# Invisible hover tooltips at every (rank, gap) point.
+if _gap_pivot_cols:
+    _gap_pivot = pd.DataFrame(_gap_pivot_cols).sort_index()
+    add_pgf_tooltips(ax_b, _gap_pivot, fmt="{:.1f}")
 
-savefig_pgf(fig_b, "problemy_gpg_stratifikace", strings=STRINGS_STRAT)
+savefig_pgf(fig_b, "problemy_gpg_stratifikace", strings=STRINGS_STRAT, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "problemy_gpg_stratifikace",
     caption=(
-        f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
+        f"Mzdový rozdíl mužů nad ženami \\((M-F)/M\\) podle percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_ses_hourly",
     strings=STRINGS_STRAT,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
