@@ -314,11 +314,13 @@ for i, row in df_plot.iterrows():
 ax_a.set_yticks(y)
 ax_a.set_yticklabels(
     [f"{row['code']}  {row['label']}" for _, row in df_plot.iterrows()],
-    fontsize=FONT_SIZE - 0.5,
+    fontsize=FONT_SIZE,
 )
+ax_a.tick_params(axis="x", labelsize=FONT_SIZE)
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
+ax_a.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 STRINGS_A = {
     "title": rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR}); chybové úsečky P25--P75 (\acs{{IQR}})",
     "xlabel": r"hrubá měsíční mzda/plat -- medián [tis.\,\si{\czk}]",
@@ -332,8 +334,10 @@ ax_a.set_title(
 patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (soukromý sektor, ~3\u00a0010\u00a0tis.\u00a0osob)")
 patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (veřejný sektor, ~684\u00a0tis.\u00a0osob)")
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
-            fontsize=FONT_SIZE - 1, loc="lower right")
-ax_a.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
+            fontsize=FONT_SIZE, loc="lower right")
+ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
+ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
+ax_a.tick_params(axis="y", which="minor", left=False)
 ax_a.set_axisbelow(True)
 
 fig_a.tight_layout()
@@ -355,7 +359,12 @@ print("  Figure A done.")
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure B -- Overall distribution comparison (P10/P25/P50/P75/P90)
+# Commented out per user request — commentary merged into
+# texparts/commentary/problemy_verejny_soukromy.tex.
 # ════════════════════════════════════════════════════════════════════════════
+print("Figure B (problemy_verejny_soukromy_dist) skipped — commented out.")
+import sys as _sys
+_sys.exit(0)
 print("Building Figure B: overall distribution comparison …")
 
 # Overall distribution stats
