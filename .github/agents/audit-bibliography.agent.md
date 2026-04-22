@@ -1,5 +1,5 @@
 ---
-description: 'Use when: auditing socialnidialog.bib for ČSN ISO 690:2022 compliance, checking URL liveness, finding duplicate/mergeable bib entries, fixing missing urldate / [online] tags / publisher / edition fields, migrating @misc → @online / @dataset / @report, normalising author casing (kapitálky), title casing, sjednocení formátu „Dostupné z:" / [cit. YYYY-MM-DD]. Use for: cite audit, bib lint, bibliography health, ISO 690 compliance, broken links, dead URLs, merge cite keys. Do NOT use for: writing new commentary (use Komentuj analýzu), routine \cite{} insertion (use Citace a zkratky / Formatuj LaTeX).'
+description: 'Use when: auditing socialnidialog.bib for ČSN ISO 690:2022 compliance, checking URL liveness, finding duplicate/mergeable bib entries, fixing missing urldate / online markers / publisher / edition fields, migrating @misc → @online / @dataset / @report, normalising author casing (kapitálky), title casing, sjednocení formátu „Dostupné z:" / [cit. YYYY-MM-DD]. Use for: cite audit, bib lint, bibliography health, ISO 690 compliance, broken links, dead URLs, merge cite keys. Do NOT use for: writing new commentary (use Komentuj analýzu), routine \cite{} insertion (use Citace a zkratky / Formatuj LaTeX).'
 argumentHint: 'Optional: subset of bib keys / category to audit (e.g. "all", "eurostat_*", "zakon_*"). Default = all.'
 ---
 
@@ -53,7 +53,8 @@ Hard rules (each violation = report line):
 - `urldate` mandatory for every entry with `url`. Format `YYYY-MM-DD`.
 - `year` mandatory; for legislation use the original year of issue (e.g. zákon č. 262/2006 Sb. → `year = 2006`), put effective dates and amendments in `note`.
 - `title` in original language and case as on title page; sub-title in `subtitle` (book) or after colon. Do **not** ALL-CAPS titles.
-- For e-resources include the marker **„Online"** — in this project encoded via `howpublished = {... [online]}` (acceptable equivalent).
+- For `@online` entries in this project, enforce `howpublished = {online}` exactly (no brackets, no extra text).
+- If a database/dataset identifier is available (e.g. `\texttt{ilc\_di12}`, `\texttt{LMPEXP}`), keep it in `title`, not in `howpublished`.
 
 **3c. Identifiers (priority order)**
 
@@ -112,6 +113,7 @@ The following are applied automatically without confirmation. Each fix is report
 | `?utm_*` / `?_ga=*` query params | strip |
 | missing `urldate` but entry has `url` | add today's date `YYYY-MM-DD` |
 | corporate author in single braces (`author = {Eurostat}`) | wrap in `{{Eurostat}}` |
+| `@online` entry with non-standard `howpublished` | normalise to `howpublished = {online}` and move dataset/database key into `title` |
 | `month = {2}` numeric | leave as is (biblatex tolerant); flag only if inconsistent within file |
 
 ## Proposals (NOT auto-applied)
