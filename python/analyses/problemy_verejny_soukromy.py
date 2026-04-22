@@ -320,11 +320,8 @@ ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
 STRINGS_A = {
-    "title": (
-        rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR})\\"
-        r"Chybové úsečky = mezikvartilový rozsah P25--P75"
-    ),
-    "xlabel": r"hrubá měsíční mzda/plat -- medián [tis.\,\acs{czk}]",
+    "title": rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR}); chybové úsečky P25--P75 (\acs{{IQR}})",
+    "xlabel": r"hrubá měsíční mzda/plat -- medián [tis.\,\si{\czk}]",
 }
 ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE)
 ax_a.set_title(
@@ -458,7 +455,7 @@ ax_b.set_xticks(x_pos)
 ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FONT_SIZE - 0.5)
 STRINGS_B = {
     "title": rf"\acs{{geo-CZ}}: rozložení mezd a platů -- soukromý vs. veřejný sektor ({ISPV_YEAR})",
-    "ylabel": r"hrubá měsíční mzda/plat [tis.\,\acs{czk}]",
+    "ylabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
 ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FONT_SIZE)
 ax_b.yaxis.set_major_formatter(
