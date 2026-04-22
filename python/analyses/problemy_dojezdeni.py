@@ -295,7 +295,7 @@ try:
 
     STRINGS_NUTS2 = {
         "title": (
-            f"\\acs{{geo-CZ}} a~okolí NUTS2: přeshraniční dojíždění ({latest_nuts2}, \acs{{geo-DE}} nejnovější dostupný rok)\n"
+            f"\\acs{{geo-CZ}} a~okolí NUTS2: přeshraniční dojíždění ({latest_nuts2}, \\acs{{geo-DE}} nejnovější dostupný rok)\n"
             r"\% regionální pracovní síly pracující v~zahraničí"
         ),
         "colorbar_label": r"\% regionální pracovní síly pracující v zahraničí",
