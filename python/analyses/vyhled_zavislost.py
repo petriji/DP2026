@@ -85,7 +85,7 @@ fig = choropleth(
     vmin=_vmin,
     vmax=_vmax,
     label_countries=True,
-    highlight_colorbar=["CZ"],
+    highlight_colorbar=["CZ", "AT", "DE", "SK", "PL", "DK"],
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
