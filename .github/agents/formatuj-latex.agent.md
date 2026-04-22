@@ -151,6 +151,15 @@ After editing, use the new ID in the formatted text immediately.
 - If the citation key is unknown, write `\cite{TODO}` with a `% TODO: doplnit klíč` comment.
 - Multiple consecutive citations: `\cite{key1}\cite{key2}` (no space between).
 
+**Citation density discipline (MANDATORY):**
+
+- **Sparse, not dense.** A typical paragraph carries at most **one** `\cite{}` block (which may chain `\cite{a}\cite{b}` if multiple sources back the same logical block).
+- **At the end of a logical block, never mid-paragraph.** Place the citation at the end of the paragraph or at the boundary of a logical sub-block — not after individual sentences inside flowing argumentation.
+- **Do not repeat the same key across consecutive paragraphs.** Once a source has been cited at the end of a paragraph, it can be assumed to back the surrounding discussion; cite it again only when introducing a clearly distinct claim from the same source much later in the text.
+- **Generic / textbook claims may go uncited.** Definitional sentences ("tripartita zahrnuje vládu, zaměstnavatele a~zaměstnance") and well-known facts ("MOP byla založena v~roce 1919") do not need citation if the supporting source is cited elsewhere in the section.
+- **One cite per law per paragraph.** When a paragraph names several paragraphs of the same law, cite the law once (at the end of the block discussing it), not after each `§`.
+- The opposite extreme (no citations at all) is also wrong — every block that makes a non-trivial empirical or interpretive claim must end with a `\cite{}`.
+
 **Finding citation keys**: Read `\addbibresource{…}` lines in `latex/main.tex` to discover which `.bib` files are active, then search those files for the relevant entry.
 
 ### 3. Cross-references — `\label` and `\ref`
