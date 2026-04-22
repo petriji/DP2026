@@ -105,8 +105,12 @@ def _add_curve_tooltips(
         xs, ys = xs[mask], ys[mask]
         if xs.size == 0:
             continue
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
         idx = np.linspace(0, xs.size - 1, min(n, xs.size)).astype(int)
         for i in idx:
+            if not (x_min <= xs[i] <= x_max and y_min <= ys[i] <= y_max):
+                continue
             tip = (
                 f"x={x_fmt.format(xs[i])}"
                 + (f" {x_unit_a}" if x_unit_a else "")

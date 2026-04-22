@@ -294,10 +294,13 @@ def add_pgf_tooltips(
     if mpl.get_backend() != "pgf":
         return
     x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
     for geo in pivot.columns:
         series = pivot[geo].dropna()
         for year, val in series.items():
             if not (x_min <= float(year) <= x_max):
+                continue
+            if not (y_min <= float(val) <= y_max):
                 continue
             long = GEO_LONG_NAMES.get(str(geo), str(geo))
             tooltip_text = f"{long} {int(year)}: {fmt.format(val)}"
@@ -356,7 +359,13 @@ def add_pgf_tooltips_scatter(
     """
     if mpl.get_backend() != "pgf":
         return
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
     for _, row in merged.iterrows():
+        if not (x_min <= float(row["x"]) <= x_max):
+            continue
+        if not (y_min <= float(row["y"]) <= y_max):
+            continue
         geo = str(row["geo"])
         long = GEO_LONG_NAMES.get(geo, geo)
         # Keep tooltip short to prevent matplotlib PGF backend from splitting
