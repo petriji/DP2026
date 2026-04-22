@@ -44,6 +44,7 @@ Run
 
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 from typing import Literal
@@ -78,7 +79,7 @@ EMPLOYEE_HEALTH_RATE:   float = 0.045  # 4,5 % z hrubé mzdy (ZP, § 2 zák. č.
 OSVC_ZP_BASE_RATIO:   float = 0.50   # ZP VZ = 50 % ze ZD (§ 3a zák. č. 592/1992 Sb.)
 OSVC_SOCIAL_RATE:     float = 0.292  # 29,2 % z VZ SP (§ 7b zák. č. 589/1992 Sb.)
 OSVC_HEALTH_RATE:     float = 0.135  # 13,5 % z VZ ZP (§ 3 zák. č. 592/1992 Sb.)
-OSVC_MIN_HEALTH_BASE: int   = AVG_WAGE // 2  # 24 483 Kč/měsíc (2026; = 50 % prům. mzdy)
+OSVC_MIN_HEALTH_BASE: int   = math.ceil(AVG_WAGE / 2)  # 24 484 Kč/měsíc (2026; = 50 % prům. mzdy, MPSV)
 
 # ── Odvody zaměstnavatele / OSVČ ─────────────────────────────────────────────
 # Sources: zákon č. 589/1992 Sb. (SP), zákon č. 592/1992 Sb. (ZP), č. 270/2023 Sb.
@@ -86,19 +87,33 @@ EMPLOYER_INS_RATE: float   = 0.338   # 33,8 % z hrubé mzdy (SP 24,8 % + ZP 9,0 
 OSVC_BASE_RATIO: float     = 0.55    # SP VZ = 55 % ze základu daně (od 2024)
 OSVC_MIN_MONTHLY_BASE: int = 19_587  # min. VZ pro SP (hlavní činn., 2026 = 40 % prům. mzdy)
 
+# Maximální vyměřovací základ pro pojistné na sociální zabezpečení (§ 15a zák. č. 589/1992 Sb.)
+# Roční strop = 48× průměrné mzdy; měsíční ekvivalent = 4× průměrné mzdy = RH2.
+# Strop se vztahuje na CELÉ pojistné na SP (důchodové i nemocenské, zaměstnanec
+# i zaměstnavatel, OSVČ).  ZP žádný strop nemá (zrušen od 2013).
+MAX_SP_BASE_MONTHLY: int = 4 * AVG_WAGE   # 195 868 Kč/měsíc (2026)
+
 # ── Paušální daň ──────────────────────────────────────────────────────────────
-# Zákon č. 586/1992 Sb., § 2a. Formát: (max_příjem_Kč/měs., základ_Kč/měs.)
-PAUSALNI_DAN: list[tuple[int, int]] = [
-    (83_333,  22_527),   # pásmo 1: příjmy ≤ 1 000 000 Kč/rok
-    (125_000, 28_050),   # pásmo 2: příjmy ≤ 1 500 000 Kč/rok
-    (166_667, 42_900),   # pásmo 3: příjmy ≤ 2 000 000 Kč/rok
+# Zákon č. 586/1992 Sb., § 2a; sazby pro rok 2026.
+# SP VZ pásem = 1,15× / 1,4× / 2,0× minimální VZ pro hlavní činnost
+# (zákon č. 589/1992 Sb., § 14 odst. 6 ve znění zákona č. 270/2023 Sb.).
+# Single source of truth pro rozpis paušální daně po složkách:
+PAUSALNI_DAN_BREAKDOWN: list[dict[str, int]] = [
+    # pásmo 1: příjmy ≤ 1 000 000 Kč/rok
+    {"max_income": 83_333,  "sp_vz": 22_527, "sp": 6_578,  "zp": 3_306, "dpfo": 100,    "total": 9_984},
+    # pásmo 2: příjmy ≤ 1 500 000 Kč/rok
+    {"max_income": 125_000, "sp_vz": 28_050, "sp": 8_191,  "zp": 3_591, "dpfo": 4_963,  "total": 16_745},
+    # pásmo 3: příjmy ≤ 2 000 000 Kč/rok
+    {"max_income": 166_667, "sp_vz": 42_900, "sp": 12_527, "zp": 5_292, "dpfo": 9_320,  "total": 27_139},
 ]
 
-# Formát: (max_příjem_Kč/měs., celková_platba_Kč/měs.)
+# Backwards-compatible aliasy (konzumenti: problemy_cz_duchod, cz_calculator).
+# Formát: (max_příjem_Kč/měs., základ_Kč/měs.) resp. (max_příjem_Kč/měs., celková_platba_Kč/měs.)
+PAUSALNI_DAN: list[tuple[int, int]] = [
+    (b["max_income"], b["sp_vz"]) for b in PAUSALNI_DAN_BREAKDOWN
+]
 PAUSALNI_DAN_TOTAL: list[tuple[int, int]] = [
-    (83_333,   9_984),   # pásmo 1: daň 100 + soc. 6 578 + zdrav. 3 306
-    (125_000, 16_745),   # pásmo 2: daň 4 963 + soc. 8 191 + zdrav. 3 591
-    (166_667, 27_139),   # pásmo 3: daň 9 320 + soc. 12 527 + zdrav. 5 292
+    (b["max_income"], b["total"]) for b in PAUSALNI_DAN_BREAKDOWN
 ]
 
 # ── DPH ───────────────────────────────────────────────────────────────────────
@@ -125,15 +140,22 @@ def tax_wedge_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | flo
 
     Daňový klín = (celkové náklady − čistá mzda) / celkové náklady × 100.
 
-    Celkové náklady = hrubá mzda × (1 + EMPLOYER_INS_RATE).
-    Čistá mzda = hrubá − pojistné zaměstnance (SP 7,1 % + ZP 4,5 %) − DPFO.
+    Celkové náklady = hrubá mzda + SP zaměstnavatele (max. cap) + ZP zaměstnavatele.
+    Čistá mzda = hrubá − pojistné zaměstnance (SP 7,1 % cap + ZP 4,5 %) − DPFO.
     Základ DPFO = hrubá mzda (§ 6 odst. 12 ZDP; bez superhrubé od 2021).
     Sleva na poplatníka (2 570 Kč/měs.) odečtena od DPFO.
+    SP (zaměstnance i zaměstnavatele) zastropováno na 4× prům. mzdy/měs.
+    (§ 15a zák. č. 589/1992 Sb.); ZP žádný strop nemá.
     """
     x = np.asarray(total_labor_cost, dtype=float)
-    gross = x / (1 + EMPLOYER_INS_RATE)
-    employee_social = EMPLOYEE_SOCIAL_RATE * gross
-    employee_health = EMPLOYEE_HEALTH_RATE * gross
+    # Iteračně řešíme: x = gross + 0,248·min(gross, cap) + 0,09·gross
+    # Pod capem: gross = x / 1.338.  Nad capem: gross = (x − 0.248·cap) / 1.09.
+    gross_no_cap = x / (1 + EMPLOYER_INS_RATE)
+    gross_above  = (x - 0.248 * MAX_SP_BASE_MONTHLY) / (1 + 0.09)
+    gross = np.where(gross_no_cap <= MAX_SP_BASE_MONTHLY, gross_no_cap, gross_above)
+    sp_base = np.minimum(gross, MAX_SP_BASE_MONTHLY)
+    employee_social = EMPLOYEE_SOCIAL_RATE * sp_base       # 7,1 % SP zam. (s capem)
+    employee_health = EMPLOYEE_HEALTH_RATE * gross         # 4,5 % ZP (bez capu)
     dan_raw = (
         np.minimum(gross, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
         + np.maximum(gross - TAX_THRESHOLD_MONTHLY, 0) * INCOME_TAX_RATE_HIGH
@@ -150,12 +172,15 @@ def tax_wedge_osvc(profit: np.ndarray | float) -> np.ndarray | float:
 
     Pro skutečné výdaje: SP a ZP jsou odečitatelné od základu daně DPFO
     (§ 24 odst. 2 písm. e) ZDP).
-    SP VZ = max(55 % × zisk, min. základ) -- zákon č. 270/2023 Sb. (od 2024).
-    ZP VZ = max(50 % × zisk, min. základ) -- zákon č. 592/1992 Sb.
+    SP VZ = max(55 % × zisk, min. základ), zastropováno § 15a zák. 589/1992 Sb.
+    ZP VZ = max(50 % × zisk, min. základ) -- zákon č. 592/1992 Sb. (bez stropu).
     Sleva na poplatníka (2 570 Kč/měs.) odečtena od DPFO.
     """
     x = np.asarray(profit, dtype=float)
-    social_base = np.maximum(OSVC_BASE_RATIO * x, OSVC_MIN_MONTHLY_BASE)
+    social_base = np.minimum(
+        np.maximum(OSVC_BASE_RATIO * x, OSVC_MIN_MONTHLY_BASE),
+        MAX_SP_BASE_MONTHLY,
+    )
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * x, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
     health = OSVC_HEALTH_RATE * health_base
@@ -186,7 +211,10 @@ def tax_wedge_osvc_vydajovy(revenue: np.ndarray | float,
     x = np.asarray(revenue, dtype=float)
     actual_rev = _revenue_after_dph(x)           # příjmy po DPH (= x pod prahem)
     zd = (1.0 - expense_rate) * actual_rev       # základ daně = zisk (paušální výdaje)
-    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    social_base = np.minimum(
+        np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE),
+        MAX_SP_BASE_MONTHLY,
+    )
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
     health = OSVC_HEALTH_RATE * health_base
@@ -272,12 +300,19 @@ def tax_breakdown(
     }
 
     if mode == "employee":
-        gross = income / (1 + EMPLOYER_INS_RATE)
+        # Řešíme strop SP: pod capem gross = income/1.338; nad capem
+        # income = gross + 0.248*cap + 0.09*gross.
+        gross_no_cap = income / (1 + EMPLOYER_INS_RATE)
+        if gross_no_cap <= MAX_SP_BASE_MONTHLY:
+            gross = gross_no_cap
+        else:
+            gross = (income - 0.248 * MAX_SP_BASE_MONTHLY) / (1 + 0.09)
+        sp_base = min(gross, MAX_SP_BASE_MONTHLY)
         r["zd"]          = gross
-        r["employer_sp"] = gross * 0.248   # SP zaměstnavatel: 24,8 %
-        r["employer_zp"] = gross * 0.090   # ZP zaměstnavatel: 9,0 %
-        r["sp_vz"]       = gross
-        r["sp"]          = EMPLOYEE_SOCIAL_RATE * gross   # SP zaměstnanec: 7,1 %
+        r["employer_sp"] = sp_base * 0.248                # SP zaměstnavatel: 24,8 % (cap)
+        r["employer_zp"] = gross  * 0.090                 # ZP zaměstnavatel: 9,0 %
+        r["sp_vz"]       = sp_base
+        r["sp"]          = EMPLOYEE_SOCIAL_RATE * sp_base # SP zaměstnanec: 7,1 % (cap)
         r["zp_vz"]       = gross
         r["zp"]          = EMPLOYEE_HEALTH_RATE * gross   # ZP zaměstnanec: 4,5 %
         r["dpfo_base"]   = gross                          # základ DPFO = hrubá mzda
@@ -291,16 +326,23 @@ def tax_breakdown(
         r["total_charges"]   = income - (gross - r["sp"] - r["zp"] - r["dpfo_net"])
         r["net_income"]      = gross - r["sp"] - r["zp"] - r["dpfo_net"]
         r["tax_wedge_pct"]   = r["total_charges"] / income * 100
+        cap_note = (
+            f" SP zastropováno na {MAX_SP_BASE_MONTHLY:,} Kč/měs. (§ 15a zák. 589/1992)."
+            if gross > MAX_SP_BASE_MONTHLY else ""
+        )
         r["note"] = (
             "ZD DPFO = hrubá mzda; sleva na poplatníka uplatněna. "
-            "Daňový klín zahrnuje odvody zaměstnavatele i zaměstnance."
+            "Daňový klín zahrnuje odvody zaměstnavatele i zaměstnance." + cap_note
         )
 
     elif mode == "osvc_vydajovy":
         actual_rev = float(_revenue_after_dph(float(income)))
         dph = income - actual_rev                    # DPH odváděné státu (0 pod prahem)
         zd = (1.0 - expense_rate) * actual_rev       # základ daně = paušální zisk
-        sp_vz = max(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+        sp_vz = min(
+            max(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE),
+            MAX_SP_BASE_MONTHLY,
+        )
         zp_vz = max(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
         sp    = OSVC_SOCIAL_RATE * sp_vz
         zp    = OSVC_HEALTH_RATE * zp_vz
@@ -338,26 +380,24 @@ def tax_breakdown(
     elif mode == "osvc_pausalni":
         if pausalni_pasmo is None or pausalni_pasmo not in (1, 2, 3):
             raise ValueError("pausalni_pasmo must be 1, 2 or 3 for mode='osvc_pausalni'")
-        idx = pausalni_pasmo - 1
-        max_inc, sp_vz_fixed = PAUSALNI_DAN[idx]
-        _,       total_pay   = PAUSALNI_DAN_TOTAL[idx]
-        # Celková pevná platba = SP + ZP + DPFO (sleva na poplatníka již zahrnutá)
-        sp = OSVC_SOCIAL_RATE * sp_vz_fixed
-        # ZP = total_pay - sp - dpfo_net_pausalni
-        # Dopočet: PAUSALNI_DAN_TOTAL obsahuje net DPFO, ZP vypočítáme jako zbytek
-        # (viz komentář v konstantách: pásmo1: 100 daň + 6578 soc + 3306 zdrav = 9984)
-        zp_map   = [3_306, 3_591, 5_292]        # ZP pevně na pásmo 1/2/3
-        dpfo_net_pausalni = [100, 4_963, 9_320]  # DPFO (po slevě) na pásmo 1/2/3
-        zp       = zp_map[idx]
-        dpfo_net = dpfo_net_pausalni[idx]
-        r["zd"]              = float(sp_vz_fixed)   # OVZ = pevný základ důchodového poj.
+        band = PAUSALNI_DAN_BREAKDOWN[pausalni_pasmo - 1]
+        max_inc     = band["max_income"]
+        sp_vz_fixed = band["sp_vz"]
+        sp          = band["sp"]
+        zp          = band["zp"]
+        dpfo_net    = band["dpfo"]
+        total_pay   = band["total"]
+        # Dpoct DPFO před slevou: pevný ZD = sp_vz_fixed, sazba 15 %, sleva 2 570 Kč/měs.
+        # (Sleva na poplatníka je u paušální daně implicitně zahrnuta v dpfo_net.)
+        dpfo_implicit_gross = dpfo_net + SLEVA_POPLATNIK_MONTHLY
+        r["zd"]              = float(sp_vz_fixed)        # OVZ = pevný základ důchodového poj.
         r["sp_vz"]           = float(sp_vz_fixed)
-        r["sp"]              = sp
-        r["zp_vz"]           = float(zp / OSVC_HEALTH_RATE)  # přibližný ZP VZ
+        r["sp"]              = float(sp)
+        r["zp_vz"]           = round(zp / OSVC_HEALTH_RATE, 2)  # zpětně dopočítaný ZP VZ
         r["zp"]              = float(zp)
-        r["dpfo_base"]       = float("nan")        # základ DPFO pro paušál není odvozen
-        r["dpfo_gross"]      = float("nan")        # ze skutečného příjmu
-        r["sleva_poplatnik"] = float("nan")        # sleva zahrnuta ve výši DPFO
+        r["dpfo_base"]       = float(sp_vz_fixed)        # u paušálu shoda se SP VZ
+        r["dpfo_gross"]      = float(dpfo_implicit_gross)
+        r["sleva_poplatnik"] = float(SLEVA_POPLATNIK_MONTHLY)
         r["dpfo_net"]        = float(dpfo_net)
         r["total_charges"]   = float(total_pay)
         r["net_income"]      = income - total_pay  # čistý příjem = příjmy − pevná platba
@@ -365,7 +405,7 @@ def tax_breakdown(
         r["note"] = (
             f"paušální daň pásmo {pausalni_pasmo}: celková platba {total_pay} Kč/měs. "
             f"(max. příjem {max_inc} Kč/měs.). "
-            "Sleva na poplatníka je zahrnuta ve výši DPFO složky paušálu."
+            "Sleva na poplatníka je implicitně zahrnuta ve výši DPFO složky paušálu."
         )
     else:
         raise ValueError(f"Unknown mode: {mode!r}. Use 'employee', 'osvc_vydajovy' or 'osvc_pausalni'.")
@@ -378,11 +418,15 @@ def tax_breakdown(
 def net_income_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | float:
     """Čistý příjem zaměstnance (odchozí mzda) z celkových nákladů zaměstnavatele.
 
-    Čistý příjem = hrubá mzda − SP zaměstnance − ZP zaměstnance − DPFO (po slevě).
+    Čistý příjem = hrubá mzda − SP zaměstnance (cap) − ZP zaměstnance − DPFO (po slevě).
+    SP zastropováno na 4× prům. mzdy/měs. (§ 15a zák. č. 589/1992 Sb.).
     """
     x = np.asarray(total_labor_cost, dtype=float)
-    gross = x / (1 + EMPLOYER_INS_RATE)
-    employee_social = EMPLOYEE_SOCIAL_RATE * gross
+    gross_no_cap = x / (1 + EMPLOYER_INS_RATE)
+    gross_above  = (x - 0.248 * MAX_SP_BASE_MONTHLY) / (1 + 0.09)
+    gross = np.where(gross_no_cap <= MAX_SP_BASE_MONTHLY, gross_no_cap, gross_above)
+    sp_base = np.minimum(gross, MAX_SP_BASE_MONTHLY)
+    employee_social = EMPLOYEE_SOCIAL_RATE * sp_base
     employee_health = EMPLOYEE_HEALTH_RATE * gross
     dan_raw = (
         np.minimum(gross, TAX_THRESHOLD_MONTHLY) * INCOME_TAX_RATE_LOW
@@ -407,7 +451,10 @@ def net_income_osvc_vydajovy(revenue: np.ndarray | float,
     x = np.asarray(revenue, dtype=float)
     actual_rev = _revenue_after_dph(x)
     zd = (1.0 - expense_rate) * actual_rev
-    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    social_base = np.minimum(
+        np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE),
+        MAX_SP_BASE_MONTHLY,
+    )
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
     health = OSVC_HEALTH_RATE * health_base
@@ -423,13 +470,16 @@ def sp_employee(total_labor_cost: np.ndarray | float) -> np.ndarray | float:
     """Celkové sociální pojistné zaměstnance + zaměstnavatele [Kč/měs.].
 
     Zahrnuje:
-      • SP zaměstnance: 7,1 % z hrubé mzdy
-      • SP zaměstnavatele: 24,8 % z hrubé mzdy
-    Celkem: 31,9 % z hrubé mzdy = 31,9 / 133,8 × celkové náklady.
+      • SP zaměstnance: 7,1 % z hrubé mzdy (do stropu)
+      • SP zaměstnavatele: 24,8 % z hrubé mzdy (do stropu)
+    Strop SP = 4× prům. mzdy/měs. (§ 15a zák. č. 589/1992 Sb.).
     """
     x = np.asarray(total_labor_cost, dtype=float)
-    gross = x / (1 + EMPLOYER_INS_RATE)
-    return (0.248 + EMPLOYEE_SOCIAL_RATE) * gross
+    gross_no_cap = x / (1 + EMPLOYER_INS_RATE)
+    gross_above  = (x - 0.248 * MAX_SP_BASE_MONTHLY) / (1 + 0.09)
+    gross = np.where(gross_no_cap <= MAX_SP_BASE_MONTHLY, gross_no_cap, gross_above)
+    sp_base = np.minimum(gross, MAX_SP_BASE_MONTHLY)
+    return (0.248 + EMPLOYEE_SOCIAL_RATE) * sp_base
 
 
 def sp_osvc_vydajovy(revenue: np.ndarray | float,
@@ -442,6 +492,9 @@ def sp_osvc_vydajovy(revenue: np.ndarray | float,
     x = np.asarray(revenue, dtype=float)
     actual_rev = _revenue_after_dph(x)
     zd = (1.0 - expense_rate) * actual_rev
-    social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
+    social_base = np.minimum(
+        np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE),
+        MAX_SP_BASE_MONTHLY,
+    )
     return OSVC_SOCIAL_RATE * social_base
 
