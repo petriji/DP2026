@@ -79,12 +79,12 @@
 \DeclareIndex{idx-m}{\ensuremath{\square_m}}{\ensuremath{m}}{měsíční hodnota}
 \DeclareIndex{idx-h}{\ensuremath{\square_h}}{\ensuremath{h}}{hodinová hodnota}
 \DeclareIndex{idx-w}{\ensuremath{\square_w}}{\ensuremath{w}}{týdenní hodnota}
-\DeclareIndex{idx-a}{\ensuremath{\square_a}}{\ensuremath{a}}{roční hodnota (\textit{annual})}
+\DeclareIndex{idx-a}{\ensuremath{\square_a}}{\ensuremath{a}}{roční hodnota}
 \DeclareIndex{idx-pc}{\ensuremath{\square_{pc}}}{\ensuremath{pc}}{per capita (děleno $N$)}
-\DeclareIndex{idx-eq}{\ensuremath{\square_{eq}}}{\ensuremath{eq}}{ekvivalizovaná hodnota (modifikovaná OECD škála)}
-\DeclareIndex{idx-PPS}{\ensuremath{\square^{PPS}}}{\ensuremath{PPS}}{hodnota v~paritě kupní síly}
+\DeclareIndex{idx-eq}{\ensuremath{\square_{eq}}}{\ensuremath{eq}}{ekvivalizovaná hodnota}
+\DeclareIndex{idx-PPS}{\ensuremath{\square^{PPS}}}{\ensuremath{PPS}}{hodnota přepočtená dle parity kupní síly}
 \DeclareIndex{idx-EUR}{\ensuremath{\square^{EUR}}}{\ensuremath{EUR}}{nominální hodnota v~eurech}
-\DeclareIndex{idx-AW100}{\ensuremath{\square_{AW100}}}{\ensuremath{AW100}}{při \SI{100}{\percent} průměrné mzdy (Eurostat AW)}
+\DeclareIndex{idx-AW100}{\ensuremath{\square_{AW100}}}{\ensuremath{AW100}}{při \SI{100}{\percent} průměrné mzdy, svobodný stav, bezdětný}
 \DeclareIndex{idx-M}{\ensuremath{\square_M}}{\ensuremath{M}}{gender: muži}
 \DeclareIndex{idx-F}{\ensuremath{\square_F}}{\ensuremath{F}}{gender: ženy}
 \DeclareIndex{idx-z}{\ensuremath{\square_z}}{\ensuremath{z}}{zaměstnanec}
@@ -92,14 +92,13 @@
 \DeclareIndex{idx-SP}{\ensuremath{\square_{SP}}}{\ensuremath{SP}}{sociální pojištění}
 \DeclareIndex{idx-ZP}{\ensuremath{\square_{ZP}}}{\ensuremath{ZP}}{zdravotní pojištění}
 \DeclareIndex{idx-SD}{\ensuremath{\square_{SD}}}{\ensuremath{SD}}{starobní důchod}
-\DeclareIndex{idx-NP}{\ensuremath{\square_{NP}}}{\ensuremath{NP}}{náhradový poměr (\textit{net pension replacement})}
+\DeclareIndex{idx-NP}{\ensuremath{\square_{NP}}}{\ensuremath{NP}}{náhradový poměr}
 \DeclareIndex{idx-KS}{\ensuremath{\square_{KS}}}{\ensuremath{KS}}{kolektivní smlouva}
 \DeclareIndex{idx-APZ}{\ensuremath{\square_{APZ}}}{\ensuremath{APZ}}{aktivní politika zaměstnanosti}
-\DeclareIndex{idx-U}{\ensuremath{\square_U}}{\ensuremath{U}}{odbory (\textit{trade union})}
+\DeclareIndex{idx-U}{\ensuremath{\square_U}}{\ensuremath{U}}{odbory}
 \DeclareIndex{idx-i}{\ensuremath{\square_i}}{\ensuremath{i}}{pořadové číslo pozorování}
-\DeclareIndex{idx-x}{\ensuremath{\square_x}}{\ensuremath{x}}{označení vstupní (vysvětlující) proměnné}
-\DeclareIndex{idx-y}{\ensuremath{\square_y}}{\ensuremath{y}}{označení výstupní (vysvětlované) proměnné; též disponibilní příjem}
-\DeclareIndex{idx-xy}{\ensuremath{\square_{xy}}}{\ensuremath{xy}}{vztah dvou proměnných (např.\ Pearsonovo $r_{xy}$)}
+\DeclareIndex{idx-x}{\ensuremath{\square_x}}{\ensuremath{x}}{označení vstupní proměnné}
+\DeclareIndex{idx-y}{\ensuremath{\square_y}}{\ensuremath{y}}{označení výstupní proměnné; též čistý disponibilní příjem}
 \DeclareIndex{idx-min}{\ensuremath{\square_{min}}}{\ensuremath{min}}{minimální}
 \DeclareIndex{idx-max}{\ensuremath{\square_{max}}}{\ensuremath{max}}{maximální}
 \DeclareIndex{idx-0}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční / referenční stav}
@@ -131,99 +130,66 @@
 
 % --- Mzda, příjem, majetek -------------------------------------------------
 \DeclareVariable{var-w}{\ensuremath{w}}{%
-  mzda (\textit{wage}); kombinovat s~indexy: $b$ brutto, $n$ netto,
-  $h$/$w$/$m$ hodinová/týdenní/měsíční, $z$ zaměstnanec
-  [\SI{}{\czk\per\hour}, \SI{}{\eur\per\hour}, \SI{}{\pps\per\hour}]}
+  mzda (\textit{wage})}
 
 \DeclareVariable{var-y}{\ensuremath{y}}{%
-  příjem (\textit{income}); typicky disponibilní příjem domácnosti;
-  s~indexy $pc$ per capita, $eq$ ekvivalizovaný, $SD$ starobní důchod,
-  horní index $PPS$ v~paritě kupní síly
-  [\SI{}{\czk\per\month}, \SI{}{\pps}]}
+  čistý disponibilní příjem}
 
 \DeclareVariable{var-Y}{\ensuremath{Y}}{%
-  hrubý domácí produkt (\acs{HDP}); $Y_{pc}^{PPS}$ \acs{HDP} na obyvatele v~PPS
-  [\SI{}{\pps}, \SI{}{\eur}]}
+  \acf{HDP}}
 
 \DeclareVariable{var-M}{\ensuremath{M}}{%
-  majetek (\textit{wealth}); $M_i$ majetek $i$-tého jedince,
-  $\bar{M}$ aritmetický průměr
-  [\SI{}{\czk}]}
+  majetek (\textit{wealth})}
 
 % --- Práce, čas, hodiny ----------------------------------------------------
 \DeclareVariable{var-H}{\ensuremath{H}}{%
-  počet odpracovaných hodin; $H_w$ skutečné týdenní hodiny (Eurostat lfsa\_ewhan2),
-  $H_a$ roční pracovní fond
-  [\SI{}{\hour}]}
+  počet odpracovaných hodin v~kalendářním období}
 
 \DeclareVariable{var-T}{\ensuremath{T}}{%
-  délka časového úseku (období)
-  [rok, \SI{}{\week}, \SI{}{\day}]}
+  délka časového úseku (období)}
 
 \DeclareVariable{var-A}{\ensuremath{A}}{%
-  počet pracovních dní v~kalendářním období;
-  $A_z$ roční pracovní dny zaměstnance
-  [\SI{}{\day}]}
+  počet pracovních dní v~kalendářním období}
 
 % --- Odvody, daně ----------------------------------------------------------
 \DeclareVariable{var-c}{\ensuremath{c}}{%
-  odvod / pojistné příspěvek;
-  $c_{SP,z}$\,/\,$c_{SP,Z}$ pojistné na \acs{SP} zaměstnance/zaměstnavatele,
-  $c_{ZP}$ pojistné na zdravotní pojištění
-  [\SI{}{\czk\per\month}]}
+  odvod [\SI{}{\czk\per\month}]}
 
 \DeclareVariable{var-tau}{\ensuremath{\tau}}{%
-  daňový klín (\textit{tax wedge}); podíl odvodů a~daně z~příjmu na
+  daňový klín (tax wedge); podíl odvodů a~daně z~příjmu na
   celkových osobních nákladech zaměstnavatele
   [\SI{}{\percent}]}
 
 % --- Počty, populace, podskupiny -------------------------------------------
 \DeclareVariable{var-n}{\ensuremath{n}}{%
-  počet členů pojmenované podskupiny;
-  $n_U$ členové odborů, $n_{KS}$ pracovníci pokrytí kolektivní smlouvou
-  [\SI{}{\person}]}
+  počet členů skupiny [\SI{}{\person}]}
 
 \DeclareVariable{var-N}{\ensuremath{N}}{%
-  celkový počet (obyvatel, pozorování, zaměstnanců); horní mez sum
-  v~Giniho koeficientu, jmenovatel přepočtu \textit{per capita}
-  [\SI{}{\person}]}
+  celkový počet (obyvatel, pozorování, zaměstnanců)}
 
 \DeclareVariable{var-L}{\ensuremath{L}}{%
-  pracovní síla (ekonomicky aktivní obyvatelstvo)
+  národní pracovní síla (ekonomicky aktivní obyvatelstvo)
   [\SI{}{\person}]}
 
 % --- Kvantily, distribuce --------------------------------------------------
 \DeclareVariable{var-D3}{\ensuremath{D_3}}{%
-  horní hranice třetího decilu čistého ekvivalizovaného příjmu domácností
-  (kvantil distribuce, viz Eurostat ilc\_di01)
-  [\SI{}{\pps}]}
+  horní hranice třetího decilu (\SI{60}{\percent} mediánu -- hranice chudoby)}
 
 % --- Poměry, koeficienty ---------------------------------------------------
 \DeclareVariable{var-r}{\ensuremath{r}}{%
-  bezrozměrný poměr (\textit{ratio}) nebo Pearsonův koeficient korelace
-  $r_{xy}$ na intervalu $[-1,\,1]$;
-  $r_{KS}$ míra pokrytí \acsp{KS} ($= n_{KS}/L$),
-  $r_{y}$ poměr disponibilního příjmu k~\acs{HDP} per capita ($= y_{pc}^{PPS}/Y_{pc}^{PPS}$)
-  [1, \SI{}{\percent}]}
+  Pearsonův koeficient korelace [1]}
 
 \DeclareVariable{var-rho}{\ensuremath{\varrho}}{%
-  hustota podskupiny v~populaci nebo Spearmanův koeficient pořadové korelace;
-  $\varrho_U$ hustota odborové organizace ($= n_U/L$)
-  [\SI{}{\percent}, 1]}
+  hustota podskupiny v~populaci [\SI{}{\percent}]; Spearmanův koeficient pořadové korelace [1]}
 
 \DeclareVariable{var-R}{\ensuremath{R}}{%
-  poměr typu \textit{replacement ratio};
-  $R_{NP}$ náhradový poměr důchodu ($= y_{SD}/\tilde{w}_{n,m}$),
-  $R_{SP}$ poměr důchodu k~odvodům na \acs{SP} ($= y_{SD}/c_{SP}$)
-  [\SI{}{\percent}, 1]}
+  bezrozměrný poměr}
 
 \DeclareVariable{var-g}{\ensuremath{g}}{%
-  Giniho koeficient nerovnosti; $g_y$ příjmové, $g_M$ majetkové
-  [0--1]}
+  Gini koeficient nerovnosti}
 
 \DeclareVariable{var-G}{\ensuremath{G}}{%
-  vládní výdaje vyjádřené jako podíl \acs{HDP};
-  $G_{APZ}$ výdaje na aktivní politiku zaměstnanosti
+  vládní výdaje
   [\SI{}{\percent}]}
 
 % --- Statistický aparát (regrese, korelace) --------------------------------
@@ -232,16 +198,10 @@
   [obecná jednotka]}
 
 \DeclareVariable{var-alpha}{\ensuremath{\alpha}}{%
-  konstanta (\textit{intercept}) prosté lineární regrese;
-  $\hat{\alpha}$ bodový odhad metodou nejmenších čtverců
-  [obecná jednotka]}
+  regresní konstanta}
 
 \DeclareVariable{var-beta}{\ensuremath{\beta}}{%
-  sklonový koeficient (\textit{slope}) prosté lineární regrese;
-  $\hat{\beta}$ bodový odhad metodou nejmenších čtverců
-  [obecná jednotka]}
+  regresní koeficient}
 
 \DeclareVariable{var-Rdet}{\ensuremath{R^{2}}}{%
-  koeficient determinace; podíl rozptylu vysvětlený regresním modelem;
-  pro prostou regresi platí $R^2 = r_{xy}^{2}$
-  [0--1]}
+  koeficient determinace; podíl rozptylu vysvětlený regresním modelem}
