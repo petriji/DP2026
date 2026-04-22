@@ -1997,11 +1997,14 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  % In math mode, \pdfstringdef and \pdfstartlink/\leavevmode are invalid
-  % (they trigger "Command \pdfstringdef invalid in math mode" and break
-  % subsequent token parsing).  When called from \acs{var-X} or \acs{idx-Y}
-  % inside $...$, just emit the visible text without tooltip/link annotation.
-  \ifmmode #2\else
+  % \pdfstringdef and \pdfstartlink are not allowed in math mode.  When called
+  % from \acs{var-X} or \acs{idx-Y} inside $...$, switch to restricted
+  % horizontal mode via \mbox and re-enter math mode for the visible glyphs so
+  % the link annotation is built around the math content.  This produces
+  % clickable, tooltipped acronym links inside equations.
+  \ifmmode
+    \mbox{\CTU@tooltiplink{#1}{$#2$}{#3}}%
+  \else
   % NOTE: do NOT pass #1 through \HyperDestNameFilter / \pdfstringdef.
   % With hyperref's [unicode=true], \pdfstringdef encodes the destination name
   % as UTF-16BE (with BOM), which then no longer matches the raw ASCII names
