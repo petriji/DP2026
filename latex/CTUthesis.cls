@@ -1801,10 +1801,11 @@
   % list/template=xltabular: custom two-column table template defined below.
   % list/heading=chapter*: printed list gets an unnumbered chapter heading.
   \acsetup{%
-    make-links     = false,%
-    list/display   = used,%
-    list/template  = xltabular,%
-    list/heading   = chapter*%
+    make-links        = false,%
+    list/display      = used,%
+    list/template     = xltabular,%
+    list/heading      = chapter*,%
+    short-plural-form = {}%   % Czech: no "s" suffix on short plural forms
   }
   % --------------------------------------------------------------------------
   % Per-page GoBack button for acro lists
