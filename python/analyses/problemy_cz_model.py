@@ -438,8 +438,9 @@ def plot_pension_solidarity(
     matplotlib Figure objekt (dva panely sdílející osu x).
     """
     # ── Datové vektory ─────────────────────────────────────────────────────────
-    x    = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
-    x_rr = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    # Hrubý grid (100 bodů) — křivky jsou hladké, jemnější síť zbytečně nafukuje PGF.
+    x    = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 100)
+    x_rr = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 100)
 
     gross_emp    = x    / (1 + EMPLOYER_INS_RATE)
     gross_emp_rr = x_rr / (1 + EMPLOYER_INS_RATE)
