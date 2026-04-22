@@ -30,6 +30,35 @@ from stattool.style import (
     save_figure_tex_pgf,
 )
 
+# ── String dicts for per-figure editable labels (PGF macro substitution) ──────────
+XLABEL_NAKLADY = "celkové náklady zaměstnavatele / příjmy OSVČ [tis.~Kč/měsíc]"
+
+STRINGS_DUCHOD = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel": "starobní důchod [tis.~Kč/měsíc]",
+}
+STRINGS_SOLIDARITA = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel_top": "starobní důchod [tis.~Kč/měsíc]",
+    "ylabel_bot": "čistý náhradový poměr~[%]",
+}
+STRINGS_KLIN = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel": "daňový klín [%]",
+}
+STRINGS_NETINCOME = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel": "čistý příjem [tis.~Kč/měsíc]",
+}
+STRINGS_SP = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel": "odvody na SP [tis.~Kč/měsíc]",
+}
+STRINGS_POMER = {
+    "xlabel": XLABEL_NAKLADY,
+    "ylabel": "vyrovnání čerpání SD s odvody na SP -- roky",
+}
+
 # ── Pension-model calc helpers ────────────────────────────────────────────────
 from problemy_cz_duchod import (
     INSURANCE_YEARS,
@@ -1268,7 +1297,7 @@ def plot_tax_wedge_comparison(
 if __name__ == "__main__":
     # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
     fig_cmp = plot_pension_comparison()
-    savefig_pgf(fig_cmp, "problemy_duchod_prijem")
+    savefig_pgf(fig_cmp, "problemy_duchod_prijem", strings=STRINGS_DUCHOD)
     save_figure_tex_pgf(
         "problemy_duchod_prijem",
         caption=(
@@ -1276,13 +1305,13 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_prijem",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_DUCHOD,
     )
 
     # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
     fig_sol = plot_pension_solidarity()
-    savefig_pgf(fig_sol, "problemy_duchod_solidarita")
+    savefig_pgf(fig_sol, "problemy_duchod_solidarita", strings=STRINGS_SOLIDARITA)
     save_figure_tex_pgf(
         "problemy_duchod_solidarita",
         caption=(
@@ -1290,13 +1319,13 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_solidarita",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_SOLIDARITA,
     )
 
     # ── Obrázek 3: náhradový poměr vs. daňový klín (parametrický) ─────────────
     fig_tw = plot_tax_wedge_comparison()
-    savefig_pgf(fig_tw, "problemy_duchod_klin")
+    savefig_pgf(fig_tw, "problemy_duchod_klin", strings=STRINGS_KLIN)
     save_figure_tex_pgf(
         "problemy_duchod_klin",
         caption=(
@@ -1305,13 +1334,13 @@ if __name__ == "__main__":
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_duchod_klin",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_KLIN,
     )
 
     # ── Obrázek 4: daňový klín vs. příjmy ────────────────────────────────────
     fig_twi = plot_tax_wedge_vs_income()
-    savefig_pgf(fig_twi, "problemy_danovy_klin_cz")
+    savefig_pgf(fig_twi, "problemy_danovy_klin_cz", strings=STRINGS_KLIN)
     save_figure_tex_pgf(
         "problemy_danovy_klin_cz",
         caption=(
@@ -1319,13 +1348,13 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_danovy_klin_cz",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_KLIN,
     )
 
     # ── Obrázek 5: čistý příjem vs. příjmy ───────────────────────────────────
     fig_ni = plot_net_income_vs_income()
-    savefig_pgf(fig_ni, "problemy_cisty_prijem_cz")
+    savefig_pgf(fig_ni, "problemy_cisty_prijem_cz", strings=STRINGS_NETINCOME)
     save_figure_tex_pgf(
         "problemy_cisty_prijem_cz",
         caption=(
@@ -1333,13 +1362,13 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_cisty_prijem_cz",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_NETINCOME,
     )
 
     # ── Obrázek 7: odvody na SP vs. příjmy ───────────────────────────────────
     fig_spi = plot_sp_vs_income()
-    savefig_pgf(fig_spi, "problemy_sp_odvody_cz")
+    savefig_pgf(fig_spi, "problemy_sp_odvody_cz", strings=STRINGS_SP)
     save_figure_tex_pgf(
         "problemy_sp_odvody_cz",
         caption=(
@@ -1347,13 +1376,13 @@ if __name__ == "__main__":
         ),
         cite_keys=["zakon_sp_1992", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_sp_odvody_cz",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_SP,
     )
 
     # ── Obrázek 8: poměr důchod/SP vs. příjmy ────────────────────────────────
     fig_rsr = plot_pension_sp_ratio_vs_income()
-    savefig_pgf(fig_rsr, "problemy_duchod_sp_pomer")
+    savefig_pgf(fig_rsr, "problemy_duchod_sp_pomer", strings=STRINGS_POMER)
     save_figure_tex_pgf(
         "problemy_duchod_sp_pomer",
         caption=(
@@ -1362,8 +1391,8 @@ if __name__ == "__main__":
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_sp_1992", "nv_365_2025"],
         label="fig:problemy_duchod_sp_pomer",
-        resizebox_width=r"0.95\linewidth",
-        strings={},
+        resizebox_width=r"\linewidth",
+        strings=STRINGS_POMER,
     )
 
     print("Hotovo.")

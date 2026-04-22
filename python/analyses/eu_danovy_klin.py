@@ -87,7 +87,7 @@ save_figure_tex_pgf(
         f"EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_danovy_klin",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_earn_nt_taxwedge_PC_AW100",
     strings=STRINGS,
 )

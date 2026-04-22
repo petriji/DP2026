@@ -73,13 +73,18 @@ ds_gdp = Dataset.from_sdmx_csv(
     source_url="Eurostat/nama_10_pc",
 )
 
-# ── 3. Scatter plot ───────────────────────────────────────────────────────────
+STRINGS = {
+    "title": r"Korelace: pokrytí \acs{KV} a~\acs{HDP} na obyvatele",
+    "xlabel": r"pokrytí \acs{KV} [\%]",
+    "ylabel": r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
+}
+# ── 3. Scatter plot ───────────────────────────────────────────────────────────────
 fig = scatter_xy(
     ds_cbc,
     ds_gdp,
-    title=r"Korelace: pokrytí \acs{KV} a~\acs{HDP} na obyvatele",
-    xlabel=r"pokrytí \acs{KV} [\%]",
-    ylabel=r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
+    title=STRINGS["title"],
+    xlabel=STRINGS["xlabel"],
+    ylabel=STRINGS["ylabel"],
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
@@ -100,7 +105,7 @@ add_pgf_tooltips_scatter(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_pokryti_prijem")
+savefig_pgf(fig, "eu_pokryti_prijem", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 common_years = sorted(set(ds_cbc.years) & set(ds_gdp.years))
@@ -115,6 +120,7 @@ save_figure_tex_pgf(
     ),
     label="fig:eu_pokryti_prijem",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct,eurostat_nama_10_pc_PPS_EU27eq100",
+    strings=STRINGS,
 )
 
 print("Done.")

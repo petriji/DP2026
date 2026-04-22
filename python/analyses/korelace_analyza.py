@@ -224,9 +224,12 @@ print("Plotting combined scatter figure (2×2) …")
 
 _SUBCAPTIONS = ["(a)", "(b)", "(c)", "(d)"]
 
+STRINGS = {
+    "title": r"Korelace pokrytí \acs{KV} s\,vybranými ukazateli trhu práce (2024)",
+}
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
-    "Korelace pokrytí KV s vybranými ukazateli trhu práce (2024)",
+    STRINGS["title"],
     fontsize=max(FONT_SIZE, 10),
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
@@ -277,7 +280,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     for item in ax.get_xticklabels() + ax.get_yticklabels():
         item.set_fontsize(max(item.get_fontsize(), 10))
 fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
-savefig_pgf(fig_all, "korelace_scatter")
+savefig_pgf(fig_all, "korelace_scatter", strings=STRINGS)
 save_figure_tex_pgf(
     "korelace_scatter",
     caption=r"Korelace pokrytí \acs{KV} a~veličin trhu práce, \acs{EU}, 2024.",
@@ -286,7 +289,7 @@ save_figure_tex_pgf(
     cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
                "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
-    strings={},
+    strings=STRINGS,
 )
 print("  saved scatter_combined")
 
@@ -413,7 +416,7 @@ lines = [
     r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}.}",
     r"\label{tab:korelace_tabulka}",
     r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4cm}"
-    r"*{6}{>{\centering\arraybackslash}m{1.65cm}}@{}}",
+    r"*{6}{>{\centering\arraybackslash}m{1.5cm}}@{}}",
     r"\toprule",
     rf"\bfseries Ukazatel & \bfseries $n_{{\text{{panel}}}}$ "
     rf"& \bfseries $n_{{\text{{geo}}}}$ & \bfseries $r$ & "

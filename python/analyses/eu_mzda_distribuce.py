@@ -186,9 +186,14 @@ for country in COUNTRIES:
             f"{country} {latest[country]} {label}: {q:.2f} PPS/h",
         )
 
-ax.set_xlabel("hrubá hodinová mzda [PPS/h]", fontsize=FONT_SIZE)
+STRINGS = {
+    "title": rf"Modelové rozložení hrubé hodinové mzdy zaměstnanců ({ref_year})",
+    "xlabel": r"hrubá hodinová mzda [\si{\pps\per\hour}]",
+    "ylabel": r"podíl zaměstnanců v\,intervalu \SI{1}{\pps\per\hour} [\%]",
+}
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
 ax.set_ylabel(
-    "podíl zaměstnanců v\\,intervalu \\SI{1}{\\pps\\per\\hour} [\\%]",
+    STRINGS["ylabel"],
     fontsize=FONT_SIZE,
 )
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
@@ -198,7 +203,7 @@ ax.yaxis.set_major_formatter(
 ax.set_xlim(X_MIN, X_MAX)
 ax.set_ylim(bottom=0)
 ax.set_title(
-    f"Modelové rozložení hrubé hodinové mzdy zaměstnanců ({ref_year})",
+    STRINGS["title"],
     fontsize=FONT_SIZE,
 )
 
@@ -222,7 +227,7 @@ median_str = "; ".join(
     for c in COUNTRIES if c in medians
 )
 
-savefig_pgf(fig, "eu_mzda_distribuce")
+savefig_pgf(fig, "eu_mzda_distribuce", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_mzda_distribuce",
     caption=(
@@ -231,10 +236,8 @@ save_figure_tex_pgf(
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:eu_mzda_distribuce",
-    resizebox_width=r"0.95\linewidth",
-    strings={
-        "mediany": median_str,
-    },
+    resizebox_width=r"\linewidth",
+    strings={**STRINGS, "mediany": median_str},
 )
 
 print("Done.")

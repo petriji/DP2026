@@ -182,7 +182,7 @@ save_figure_tex_pgf(
     "vyhled_porodnost_vyvoj",
     caption=f"Úhrnná plodnost (\\acs{{TFR}}) ve vybraných zemích \\acs{{EU}}, {ds.years[0]}--{ds.years[-1]}.",
     label="fig:vyhled_porodnost_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys="eurostat_demo_find",
     strings=STRINGS_TIMELINE,
 )
@@ -225,7 +225,7 @@ save_figure_tex_pgf(
     "vyhled_porodnost_mapa",
     caption=f"Úhrnná plodnost (\\acs{{TFR}}), evropské země, {ds.latest_year}.",
     label="fig:vyhled_porodnost_mapa",
-    resizebox_width=r"0.85\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys="eurostat_demo_find",
     strings=map_strings,
 )

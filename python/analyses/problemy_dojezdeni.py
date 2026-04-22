@@ -192,11 +192,15 @@ ds_nat = Dataset(nat, name="Přeshraniční dojíždění", unit="% zaměstnaný
                  source_url="Eurostat/lfst_r_lfe2ecomm")
 
 if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
+    STRINGS_VYVOJ = {
+        "title": "Přeshraniční pracovní dojíždění",
+        "ylabel": r"podíl pracujících v~zahraničí [\%]",
+    }
     fig_a = timeline(
         ds_nat,
         countries=COUNTRIES,
-        title="Přeshraniční pracovní dojíždění",
-        ylabel=r"podíl pracujících v~zahraničí [\%]",
+        title=STRINGS_VYVOJ["title"],
+        ylabel=STRINGS_VYVOJ["ylabel"],
         highlight=HIGHLIGHT,
         annotate_last=True,
         show_eu_avg=False,
@@ -213,7 +217,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         index="time", columns="geo", values="value", aggfunc="mean"
     )
     add_pgf_tooltips(_ax_a, _pivot_a_bg, fmt="{:.2f}")
-    savefig_pgf(fig_a, "problemy_dojezdeni_vyvoj")
+    savefig_pgf(fig_a, "problemy_dojezdeni_vyvoj", strings=STRINGS_VYVOJ)
     yr_min = nat["time"].min()
     yr_max = nat["time"].max()
     save_figure_tex_pgf(
@@ -221,6 +225,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         caption=f"Přeshraniční pracovní dojíždění, vybrané země \\acs{{geo-EU}}, {yr_min}--{yr_max}",
         label="fig:problemy_dojezdeni_vyvoj",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
+        strings=STRINGS_VYVOJ,
     )
 
 # ── Figure B --- EU map ─────────────────────────────────────────────────────────
@@ -278,18 +283,22 @@ try:
         print("  NOTE: German NUTS2 data not available in lfst_r_lfe2ecomm --- "
               "DE regions render as 'data nedostupná'.")
 
+    STRINGS_NUTS2 = {
+        "title": (
+            f"\\acs{{geo-CZ}} NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
+            r"\% regionální pracovní síly pracující v~zahraničí"
+        ),
+        "colorbar_label": r"\% regionální pracovní síly pracující v zahraničí",
+    }
     fig_c = choropleth_cz(
         data_series,
         nuts_level_cz=2,
-        title=(
-            f"ČR NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
-            r"\% regionální pracovní síly pracující v~zahraničí"
-        ),
-        colorbar_label=r"\% regionální pracovní síly pracující v zahraničí",
+        title=STRINGS_NUTS2["title"],
+        colorbar_label=STRINGS_NUTS2["colorbar_label"],
         cmap="RdYlGn_r",
         label_cz=False,
     )
-    savefig_pgf(fig_c, "problemy_dojezdeni_nuts2")
+    savefig_pgf(fig_c, "problemy_dojezdeni_nuts2", strings=STRINGS_NUTS2)
     _de_note = (
         " Německé regiony nejsou v~datech dostupné."
         if _de_missing else ""
@@ -303,6 +312,7 @@ try:
         ),
         label="fig:problemy_dojezdeni_nuts2",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
+        strings=STRINGS_NUTS2,
     )
     print(f"  Figure C done ({latest_nuts2}).")
 except Exception as exc:

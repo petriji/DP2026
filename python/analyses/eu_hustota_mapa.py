@@ -73,7 +73,7 @@ save_figure_tex_pgf(
     caption=(
         f"Hustota odborů, EU mapa, {ds.latest_year}."),
     label="fig:eu_hustota_mapa",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
     strings=STRINGS,
 )

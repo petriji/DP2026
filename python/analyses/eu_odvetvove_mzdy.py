@@ -176,10 +176,14 @@ for xi, eu_val in zip(x, eu27_pps):
                    colors="#222222", linewidth=1.8, zorder=6)
 ax1.hlines([], [], [], colors="#222222", linewidth=1.8, linestyle="-", label="EU27")
 
+STRINGS_BAR = {
+    "title": rf"Hodinové náklady práce dle odvětví ({ref_year})",
+    "ylabel": r"hodinové náklady práce [\si{\pps\per\hour}]",
+}
 ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
-ax1.set_ylabel("hodinové náklady práce [PPS/h]")
-ax1.set_title(f"Hodinové náklady práce dle odvětví ({ref_year})")
+ax1.set_ylabel(STRINGS_BAR["ylabel"])
+ax1.set_title(STRINGS_BAR["title"])
 ax1.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
@@ -187,7 +191,7 @@ ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax1.grid(which="minor", axis="y", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
 ax1.tick_params(axis="x", which="minor", bottom=False)
 
-savefig_pgf(fig1, "eu_odvetvove_mzdy_bar")
+savefig_pgf(fig1, "eu_odvetvove_mzdy_bar", strings=STRINGS_BAR)
 save_figure_tex_pgf(
     "eu_odvetvove_mzdy_bar",
     caption=(
@@ -195,9 +199,9 @@ save_figure_tex_pgf(
         f"vybrané země EU, {ref_year}."
     ),
     label="fig:eu_odvetvove_mzdy_bar",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-    strings={},
+    strings=STRINGS_BAR,
 )
 print("Figure 1 saved.")
 
@@ -219,24 +223,28 @@ if "EU27_2020" in lc_pps.index:
                  color=COUNTRY_COLORS.get(country, "#999999"),
                  label=country, zorder=3)
 
+    STRINGS_ODCH = {
+        "title": rf"Odchylka nákladů práce od průměru \acs{{geo-EU}}27 ({ref_year})",
+        "xlabel": r"odchylka od průměru \acs{geo-EU}27 [\si{\pp}]",
+    }
     ax2.axvline(0, color="black", linewidth=0.9, zorder=2)
     ax2.set_yticks(y)
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
-    ax2.set_xlabel("odchylka od průměru EU27 [p.\\,b.]")
-    ax2.set_title(f"Odchylka nákladů práce od průměru EU27 ({ref_year})")
+    ax2.set_xlabel(STRINGS_ODCH["xlabel"])
+    ax2.set_title(STRINGS_ODCH["title"])
     ax2.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
     ax2.tick_params(axis="y", which="minor", left=False)
 
-    savefig_pgf(fig2, "eu_odvetvove_mzdy_odchylka")
+    savefig_pgf(fig2, "eu_odvetvove_mzdy_odchylka", strings=STRINGS_ODCH)
     save_figure_tex_pgf(
         "eu_odvetvove_mzdy_odchylka",
         caption=(
             f"Odchylka odvětvových nákladů práce od průměru EU27, vybrané země EU, {ref_year}."),
         label="fig:eu_odvetvove_mzdy_odchylka",
-        resizebox_width=r"0.95\linewidth",
+        resizebox_width=r"\linewidth",
         cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
         strings={},
     )

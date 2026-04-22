@@ -134,7 +134,7 @@ def _make_choropleth(
         stem,
         caption=caption,
         label=label,
-        resizebox_width=r"0.85\linewidth",
+        resizebox_width=r"\linewidth",
         cite_key="eurostat_edat_aes",
         strings=strings,
     )

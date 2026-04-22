@@ -76,7 +76,7 @@ save_figure_tex_pgf(
     "eu_apz_mapa",
     caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), EU mapa, {ds.latest_year}.",
     label="fig:eu_apz_mapa",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys="oecd_lmpexp",
     strings=STRINGS,
 )

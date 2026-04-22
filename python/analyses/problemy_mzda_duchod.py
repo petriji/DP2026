@@ -137,6 +137,13 @@ _SLEVA_POPLATNIK    = 2_570        # Kč/měsíc (sleva na poplatníka = 30 840 
 _COLOR_WAGE    = PALETTE[0]   # deep blue
 _COLOR_PENSION = PALETTE[4]   # vermillion
 
+# ── PGF string substitutions ──────────────────────────────────────────────────
+STRINGS = {
+    "title": r"Rozložení čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}",
+    "xlabel": r"čistá mzda / výše důchodu [tis.~Kč/měsíc]",
+    "ylabel": r"počet osob na 1\,tis.\,Kč [tis.]",
+}
+
 # ── CSSZ pension data URLs ────────────────────────────────────────────────────
 # CSSZ publishes the annual statistical yearbook as a ZIP archive containing
 # multiple Excel tables.  URL pattern (discovered 2026-04-14):
@@ -604,9 +611,9 @@ ax.axvline(
     label=f"Minimální důchod {MIN_PENSION:,} Kč",
 )
 
-ax.set_xlabel("čistá mzda / výše důchodu [tis. Kč/měsíc]", fontsize=FONT_SIZE)
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
 ax.set_ylabel(
-    "počet osob na 1\u00a0tis.\u00a0Kč [tis.]",
+    STRINGS["ylabel"],
     fontsize=FONT_SIZE,
 )
 ax.xaxis.set_major_formatter(
@@ -617,8 +624,11 @@ ax.yaxis.set_major_formatter(
 )
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
+STRINGS = {
+    "title": r"Rozložení čisté mzdy zaměstnanců a starobních důchodů -- \acs{geo-CZ}",
+}
 ax.set_title(
-    "Rozložení čisté mzdy zaměstnanců a starobních důchodů -- ČR",
+    STRINGS["title"],
     fontsize=FONT_SIZE,
 )
 ax.legend(
@@ -628,7 +638,7 @@ ax.legend(
     handlelength=1.8,
 )
 
-savefig_pgf(fig, "problemy_mzda_duchod")
+savefig_pgf(fig, "problemy_mzda_duchod", strings=STRINGS)
 save_figure_tex_pgf(
     "problemy_mzda_duchod",
     caption=(
@@ -637,8 +647,8 @@ save_figure_tex_pgf(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_mzda_duchod",
-    resizebox_width=r"0.95\linewidth",
-    strings={},
+    resizebox_width=r"\linewidth",
+    strings=STRINGS,
 )
 
 print("\nDone.")

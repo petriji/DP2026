@@ -62,11 +62,15 @@ ds = Dataset.from_sdmx_csv(
 print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
+STRINGS = {
+    "title": "Giniho koeficient příjmové nerovnosti",
+    "ylabel": "Giniho koeficient [0--100]",
+}
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Giniho koeficient příjmové nerovnosti",
-    ylabel="Giniho koeficient [0--100]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
@@ -95,17 +99,17 @@ for _child in ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_gini_prijem")
+savefig_pgf(fig, "eu_gini_prijem", strings=STRINGS)
 
-# ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
+# ── 5. Write LaTeX snippet ───────────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_gini_prijem",
     caption=(
         f"Giniho koeficient disponibilního příjmu, vybrané země EU, {START_YEAR}--{ds.years[-1]}."),
     label="fig:eu_gini_prijem",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_ilc_di12_Gini",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

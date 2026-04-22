@@ -92,7 +92,7 @@ save_figure_tex_pgf(
     caption=(
         f"Podíl top 10\\,\\% domácností na čistém jmění, EU mapa, do {ds.latest_year}."),
     label="fig:eu_bohatstvi_mapa",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",
     strings=STRINGS,
 )

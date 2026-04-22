@@ -162,16 +162,21 @@ ax.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.")
 )
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-ax.set_xlabel("rok", fontsize=FONT_SIZE)
-ax.set_ylabel("počet emigrantů [tis.]", fontsize=FONT_SIZE)
+STRINGS = {
+    "title": r"Emigrace občanů \acs{geo-CZ} podle věkové skupiny",
+    "xlabel": "rok",
+    "ylabel": "počet emigrantů [tis.]",
+}
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE)
 ax.set_title(
-    "Emigrace občanů ČR podle věkové skupiny",
+    STRINGS["title"],
     fontsize=FONT_SIZE,
 )
 ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "problemy_emigrace_vyvoj")
+savefig_pgf(fig, "problemy_emigrace_vyvoj", strings=STRINGS)
 
 yr_min = int(df["time"].min()) if not df.empty else START_YEAR
 yr_max = int(df["time"].max()) if not df.empty else 2023
@@ -181,8 +186,8 @@ save_figure_tex_pgf(
         f"Emigrace z~\\acs{{geo-CZ}} podle věkové skupiny, {yr_min}--{yr_max}."),
     cite_keys="eurostat_migr_emi1ctz",
     label="fig:problemy_emigrace_vyvoj",
-    resizebox_width=r"0.95\linewidth",
-    strings={},
+    resizebox_width=r"\linewidth",
+    strings=STRINGS,
 )
 
 print("Done.")

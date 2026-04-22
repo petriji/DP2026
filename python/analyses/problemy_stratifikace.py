@@ -498,9 +498,13 @@ if ispv_path is not None:
         bar_colors = [CZ_COLOR if v >= 100 else "#4393C3" for v in reg_idx]
         ax_a.barh(reg_idx.index, reg_idx.values, color=bar_colors, alpha=0.82, height=0.7)
         ax_a.axvline(100, color="gray", linewidth=1.2, linestyle="--", zorder=5)
-        ax_a.set_xlabel("Index (národní medián = 100)", fontsize=FONT_SIZE)
+        STRINGS_REG = {
+            "title": rf"\acs{{geo-CZ}}: mediánová mzda podle kraje (\acs{{ISPV}} {ispv_year}/H2)",
+            "xlabel": "Index (národní medián = 100)",
+        }
+        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FONT_SIZE)
         ax_a.set_title(
-            f"ČR: mediánová mzda podle kraje (ISPV {ispv_year}/H2)",
+            STRINGS_REG["title"],
             fontsize=FONT_SIZE,
         )
         ax_a.xaxis.set_major_formatter(
@@ -510,7 +514,7 @@ if ispv_path is not None:
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
         ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                     loc="lower right")
-        savefig_pgf(fig_a, "problemy_regiony")
+        savefig_pgf(fig_a, "problemy_regiony", strings=STRINGS_REG)
         save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
@@ -519,13 +523,11 @@ if ispv_path is not None:
             ),
             cite_keys="mpsv_ispv",
             label="fig:problemy_regiony",
-            resizebox_width=r"0.95\linewidth",
+            resizebox_width=r"\linewidth",
             cite_key="mpsv_ispv",
-            strings={},
+            strings=STRINGS_REG,
         )
         regional_done = True
-
-if not regional_done:
     # Fallback: download 14 regional ISPV workbooks (NUTS3)
     print("  ISPV regional data unavailable; trying 14 regional ISPV workbooks …")
     regional_medians = _fetch_ispv_regional_medians()
@@ -541,9 +543,13 @@ if not regional_done:
         bar_colors2 = [CZ_COLOR if v >= 100 else "#4393C3" for v in s_idx.values]
         ax_a2.barh(s_idx.index, s_idx.values, color=bar_colors2, alpha=0.82, height=0.7)
         ax_a2.axvline(100, color="gray", linewidth=1.2, linestyle="--", zorder=5)
-        ax_a2.set_xlabel("Index (národní medián = 100)", fontsize=FONT_SIZE)
+        STRINGS_REG2 = {
+            "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1, \acs{MPSV}/TREXIMA)",
+            "xlabel": "Index (národní medián = 100)",
+        }
+        ax_a2.set_xlabel(STRINGS_REG2["xlabel"], fontsize=FONT_SIZE)
         ax_a2.set_title(
-            "ČR: mediánová mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA)",
+            STRINGS_REG2["title"],
             fontsize=FONT_SIZE,
         )
         ax_a2.xaxis.set_major_formatter(
@@ -553,16 +559,16 @@ if not regional_done:
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
         ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                      loc="lower right")
-        savefig_pgf(fig_a2, "problemy_regiony")
+        savefig_pgf(fig_a2, "problemy_regiony", strings=STRINGS_REG2)
         save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
                 r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025"
             ),
             label="fig:problemy_regiony",
-            resizebox_width=r"0.95\linewidth",
+            resizebox_width=r"\linewidth",
             cite_key="mpsv_ispv",
-            strings={},
+            strings=STRINGS_REG2,
         )
         regional_done = True
     else:
@@ -588,6 +594,9 @@ try:
     ds_gpg = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
                                    source_url="Eurostat/earn_gr_gpgr2")
 
+    STRINGS_GPG = {
+        "ylabel": r"nekorigovaný \acs{GPG} [\%]",
+    }
     fig_b = timeline(
         ds_gpg,
         countries=COUNTRIES,
@@ -595,7 +604,7 @@ try:
         background_eu=True,
         annotate_last=True,
         show_eu_avg=True,
-        ylabel="nekorigovaný GPG [%]",
+        ylabel=STRINGS_GPG["ylabel"],
         title="",
     )
     ax_b = fig_b.axes[0]
@@ -622,16 +631,16 @@ try:
             if _txt in COUNTRIES:
                 _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-    savefig_pgf(fig_b, "problemy_gpg_sektor")
+    savefig_pgf(fig_b, "problemy_gpg_sektor", strings=STRINGS_GPG)
     save_figure_tex_pgf(
         "problemy_gpg_sektor",
         caption=(
             f"Nekorigovaný \\acs{{GPG}}, vybrané země \\acs{{geo-EU}}, "
             f"{START_YEAR}--{END_YEAR}"),
         label="fig:problemy_gpg_sektor",
-        resizebox_width=r"0.95\linewidth",
+        resizebox_width=r"\linewidth",
         cite_key="eurostat_gpg",
-        strings={},
+        strings=STRINGS_GPG,
     )
 except Exception as exc:
     print(f"Figure B (gender pay gap) failed: {exc}")
@@ -688,15 +697,21 @@ if pct_df is not None and "p50" in pct_df.columns:
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
-    ax_c.set_xlabel("hrubá měsíční mzda [Kč]", fontsize=FONT_SIZE)
+    STRINGS_PCT = {
+        "title": (
+            rf"\acs{{geo-CZ}}: rozložení mezd podle odvětví \acs{{NACE}} (\acs{{ISPV}} {ispv_year}/H2)\\"
+            r"mezikvartilový rozsah P25--P75 a medián"
+        ),
+        "xlabel": r"hrubá měsíční mzda [\acs{czk}]",
+    }
+    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=FONT_SIZE)
     ax_c.set_title(
-        f"ČR: rozložení mezd podle odvětví NACE (ISPV {ispv_year}/H2)\n"
-        "mezikvartilový rozsah P25--P75 a medián",
+        STRINGS_PCT["title"],
         fontsize=FONT_SIZE,
     )
     ax_c.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
 
-    savefig_pgf(fig_c, "problemy_sektor_percentily")
+    savefig_pgf(fig_c, "problemy_sektor_percentily", strings=STRINGS_PCT)
     save_figure_tex_pgf(
         "problemy_sektor_percentily",
         caption=(
@@ -704,9 +719,9 @@ if pct_df is not None and "p50" in pct_df.columns:
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_sektor_percentily",
-        resizebox_width=r"0.95\linewidth",
+        resizebox_width=r"\linewidth",
         cite_key="mpsv_ispv",
-        strings={},
+        strings=STRINGS_PCT,
     )
 else:
     print("Figure C (sector percentiles) skipped -- no percentile data available.")
