@@ -77,7 +77,7 @@ Výrazná divergence~$|\acs{var-r} - \acs{var-rho}|$ signalizuje přítomnost vl
 
 \emph{Prostá lineární regrese} metodou nejmenších čtverců (OLS):
 \begin{equation}\label{eq:ols}
-  \acs{var-yhat} = \hat{\alpha} + \hat{\beta}\,\acs{var-x},
+  \hat{\acs{var-y}} = \hat{\alpha} + \hat{\beta}\,\acs{var-x},
   \qquad
   \hat{\beta}
     = \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
@@ -88,13 +88,13 @@ Výrazná divergence~$|\acs{var-r} - \acs{var-rho}|$ signalizuje přítomnost vl
   \quad
   \hat{\alpha} = \bar{y} - \hat{\beta}\,\bar{x}.
 \end{equation}
-Parametr~$\hat{\beta}$ udává průměrnou změnu $\acs{var-yhat}$ při nárůstu pokrytí \ac{KS} o~jeden procentní bod.
+Parametr~$\hat{\beta}$ udává průměrnou změnu $\hat{\acs{var-y}}$ při nárůstu pokrytí \ac{KS} o~jeden procentní bod.
 
 \emph{Koeficient determinace}~$\acs{var-Rdet}$ vyjadřuje podíl rozptylu~$\acs{var-y}$ vysvětlený regresním modelem:
 \begin{equation}\label{eq:r2}
   \acs{var-Rdet}
   = 1 - \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
-                (\acs{var-y}_{\acs{idx-i}} - \acs{var-yhat}_{\acs{idx-i}})^{2}}
+             (\acs{var-y}_{\acs{idx-i}} - \hat{\acs{var-y}}_{\acs{idx-i}})^{2}}
              {\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
                 (\acs{var-y}_{\acs{idx-i}} - \bar{y})^{2}}
   = \acs{var-r}_{\acs{idx-xy}}^{\,2} \;\in\; [0,\,1],
@@ -103,7 +103,7 @@ kde rovnost $\acs{var-Rdet} = \acs{var-r}_{\acs{idx-xy}}^{\,2}$ platí pro prost
 
 \emph{Predikce dopadu změny pokrytí}~$\Delta \acs{var-x}$ na výstupní proměnnou:
 \begin{equation}\label{eq:delta_pred}
-  \Delta\acs{var-yhat} = \hat{\beta}\,\Delta \acs{var-x}.
+  \Delta\hat{\acs{var-y}} = \hat{\beta}\,\Delta \acs{var-x}.
 \end{equation}
 
 \paragraph{Kombinovaný pohled na asociace pokrytí KS s trhem práce}\label{par:scatter_combined}
@@ -189,7 +189,7 @@ Směrnice Evropského parlamentu a~Rady (EU) 2022/2041 o~přiměřených minimá
 
 Predikovaná změna výstupních proměnných při tomto nárůstu se dle rov.~\eqref{eq:delta_pred} vypočte jako:
 \begin{equation}\label{eq:model_cz}
-  \Delta\acs{var-yhat}_{\text{CZ}}
+  \Delta\hat{\acs{var-y}}_{\text{CZ}}
     = \hat{\beta}\,(\acs{var-x}_{1} - \acs{var-x}_{\acs{idx-0}})
     = \hat{\beta} \cdot 49{,}3\ \text{pp},
 \end{equation}
