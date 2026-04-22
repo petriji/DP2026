@@ -1,9 +1,6 @@
 r"""
 KS content breadth --- IPP-derived timeline (2007--2025).
 
-Data source: MPSV IPP (Informační systém o pracovních podmínkách, 2007--2025)
-Filter: podíl kolektivních smluv s tarify (A1a), s úpravou uvolňování (A19a sloupec 7) a podmínek odborů (A19a sloupec 9)
-
 Three indicators tracked from the MPSV IPP annual workbooks:
 
 1. Formal wage-tariff scale (``mzda_tarify`` A1a) -- share of CAs
@@ -25,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import FONT_SIZE, PALETTE
 from stattool.fetch import fetch_ipp
 from stattool.style import (
     add_pgf_tooltips,
@@ -161,7 +158,7 @@ for label, data, color, ls in SERIES:
         xy=(LAST_YEAR, last_v),
         xytext=(-2, 4),
         textcoords="offset points",
-        fontsize=FIGURE_LABEL_SIZE,
+        fontsize=FONT_SIZE,
         ha="right",
         va="bottom",
         color=color,
@@ -182,7 +179,7 @@ for yr, label in _EVENTS:
         xy=(yr, 0),
         xytext=(2, 4),
         textcoords="offset points",
-        fontsize=FIGURE_COMPACT_LABEL_SIZE,
+        fontsize=FONT_SIZE - 1,
         color="grey",
         ha="left",
         va="bottom",
@@ -194,12 +191,7 @@ ax.set_xlim(START_YEAR, LAST_YEAR)
 ax.set_ylim(0, 100)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
-ax.yaxis.set_minor_locator(ticker.MultipleLocator(5))
 ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
-ax.set_axisbelow(True)
-ax.grid(which="major", axis="both", linestyle="-", linewidth=0.5, alpha=0.20)
-ax.grid(which="minor", axis="both", linestyle="-", linewidth=0.35, alpha=0.12)
 
 STRINGS = {"title": r"Obsah \acs{KS} (\acs{geo-CZ})"}
 ax.set_title(STRINGS["title"])
