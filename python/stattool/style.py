@@ -810,7 +810,12 @@ def _suppress_hyperref_in_rotated_pgftext(pgf_path: Path) -> int:
     for i, line in enumerate(lines):
         if not pgftext_rot.search(line):
             continue
-        if r"\NoHyper" in line:
+        if r"\NoHyper\sffamily" in line:
+            continue
+        # Upgrade older wraps that lack the explicit \sffamily re-assertion.
+        if r"\NoHyper " in line and r"\endNoHyper" in line:
+            lines[i] = line.replace(r"\NoHyper ", r"\NoHyper\sffamily ", 1)
+            n += 1
             continue
         idx = line.find(marker)
         if idx < 0:
@@ -830,7 +835,7 @@ def _suppress_hyperref_in_rotated_pgftext(pgf_path: Path) -> int:
         payload = line[payload_start:payload_end]
         new_line = (
             line[:payload_start]
-            + r"\NoHyper " + payload + r" \endNoHyper"
+            + r"\NoHyper\sffamily " + payload + r" \endNoHyper"
             + tail
         )
         lines[i] = new_line
@@ -925,6 +930,7 @@ _CITE_PROVIDERS: list[tuple[str, str]] = [
     ("oecd",             "\\acs{OECD}"),
     ("mpsv_ipp",         "\\acs{MPSV}~\\acs{IPP}"),
     ("mpsv_ispv",        "\\acs{MPSV}~\\acs{ISPV}"),
+    ("cssz",             "\\acs{ČSSZ}"),
     ("zakon_",           "Model podle legislativy \\aca{geo-CZ}"),
     ("nv_",              "Model podle legislativy \\aca{geo-CZ}"),
     ("sdeleni_",         "Model podle legislativy \\aca{geo-CZ}"),
