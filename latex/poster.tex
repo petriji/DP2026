@@ -1,0 +1,116 @@
+% ============================================================================
+% poster.tex — A1 poster driver for CTUposter.cls
+% Build:  latexmk -pdf poster.tex
+%
+% Class options:
+%   czech    (default) — main language Czech; \postersummary{} holds the
+%                        English summary; bibliography labels in Czech
+%                        ("Dostupné z", "navštíveno") via czech-iso.
+%   english            — main language English; \postersummary{} holds the
+%                        Czech summary (heading auto-flips to "Shrnutí");
+%                        bibliography labels in English via english-iso.
+% ============================================================================
+\documentclass[czech]{CTUposter}
+%\documentclass[english]{CTUposter}   % English main, Czech summary variant
+
+% --- Bibliography sources (same as the thesis) -------------------------------
+\addbibresource{bibliography.bib}
+
+% --- Acronym & variable declarations (same files as the thesis) --------------
+% Loaded so that text fragments included verbatim from the thesis (with
+% \ac{KEY}, \acs{KEY}, \acp{KEY}) typeset correctly.  No list is printed.
+\input{texparts/references/acro.tex}
+\input{texparts/references/acro_variables.tex}
+
+% --- Metadata ----------------------------------------------------------------
+% Author / e-mail are inherited from build/main-gitauthor.tmp & main-gitemail.tmp
+% (written by latexmkrc from `git config user.name|user.email`).  Override only
+% if the git identity is wrong for this poster.
+\postertitle{Název diplomové práce}
+\postersubtitle{Volitelný podtitul či doplnění tématu}
+%\posterauthor{Jméno Příjmení}        % default: \@author from git
+%\posteremail{prijmeni@cvut.cz}       % default: \@email from git
+\posteraffiliation{ČVUT v~Praze \textbar{} MÚVS \textbar{} Katedra XYZ}
+\postersupervisor{Vedoucí: Ing. Jan Novák, CSc.}
+\posteryear{2026}
+%\posterphone{+420 000 000 000}       % OPTIONAL — omit to suppress the line
+% Repository URL is auto-derived from `git remote get-url origin`.  The tag
+% does NOT need to exist at compile time — set the intended publication tag
+% here and create it (`git tag poster-2026 && git push --tags`) before the
+% poster is printed/distributed.  Until then the link 404s; once pushed it
+% resolves to the exact source tree used to build this poster.
+\posterrepotag{poster-2026}
+%\posterrepo{https://github.com/owner/repo}  % override repo URL if needed
+\posterlogo{logo/logo_MUVS_cb.pdf}
+
+\begin{document}
+\makepostertitle
+
+\begin{posterbody}
+
+% ===== LEFT COLUMN ==========================================================
+\abstractCS{%
+  Stručný český abstrakt (cca 5--7 řádků). Shrnuje cíl práce, použitou
+  metodu a hlavní výsledek. Text je sázen kurzivou v~rámečku, aby
+  vizuálně oddělil úvodní shrnutí od hlavního textu plakátu.%
+}
+
+\abstractEN{%
+  Short English abstract (5--7 lines). States the research question, the
+  method used and the main finding. Set in italics inside a coloured frame
+  for visual emphasis at the top of the left column.%
+}
+
+\section{Úvod}
+Motivace tématu, výzkumná otázka, kontext. Lze použít odkazy na literaturu
+\cite{noauthor_penny_2026} a běžné LaTeX prostředky.
+
+\section{Metodika}
+Stručný popis dat, metod a předpokladů. Vzorec lze umístit přímo do textu:
+$y = \beta_0 + \beta_1 x + \varepsilon$, případně blokově:
+\begin{equation*}
+  \widehat{\beta} = (X^\top X)^{-1} X^\top y.
+\end{equation*}
+
+% ===== RIGHT COLUMN — explicit break is optional; multicol balances itself =
+%\columnbreak
+
+\section{Výsledky}
+Hlavní zjištění, ideálně podpořená obrázkem nebo grafem.
+
+% Figures inside multicols must use [H] or \captionof.
+\begin{center}
+  % \inputpgffigure{nazev_figury}      % when the .pgf exists
+  \fbox{\rule{0pt}{60mm}\rule{120mm}{0pt}}\par\medskip
+  \captionof{figure}{Ilustrační obrázek (nahraďte vlastním
+    \texttt{\textbackslash inputpgffigure\{...\}}).}
+\end{center}
+
+\section{Závěr}
+Shrnutí přínosu, limity a směr dalšího výzkumu.
+
+% ===== END-OF-BODY: English summary + contact block =========================
+\postersummary{%
+  English summary (about 20\,\% of the original text). Restates the
+  research question, the method, the key results and their practical
+  implications. Aimed at international readers who do not read the Czech
+  body. Keep it concise and self-contained.%
+}
+
+% Optional References section — typeset with [1] [2] … numbering matching
+% the in-text \cite{} format. The variant with all suffix prints all .bib
+% entries so the section is always visible even when the poster text cites
+% few sources.
+% Comment out to suppress.
+\posterbibliography
+
+% Inline thesis-wide statistics (normostran, figures, tables, attachments)
+% read from build/main-normostrana.tmp and build/main-stats.tmp.  Items with
+% a zero count are silently omitted.
+\posterthesisstats
+
+% Contact block is automatically pushed to the bottom of the current column.
+\postercontactblock
+
+\end{posterbody}
+\end{document}
