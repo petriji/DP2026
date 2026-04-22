@@ -13,6 +13,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -58,6 +59,53 @@ STRINGS_POMER = {
     "xlabel": XLABEL_NAKLADY,
     "ylabel": "vyrovnání čerpání SD s odvody na SP -- roky",
 }
+
+
+def _add_curve_tooltips(
+    ax: plt.Axes,
+    *,
+    n: int = 10,
+    x_unit: str = "tis. Kč",
+    y_unit: str = "",
+    x_fmt: str = "{:.1f}",
+    y_fmt: str = "{:.2f}",
+) -> None:
+    r"""Place invisible ``\pdftooltip`` phantoms along every plotted curve.
+
+    Walks ``ax.get_lines()`` and overlays zero-width markers carrying
+    ``x``/``y`` values that hover-capable PDF viewers (Adobe Acrobat, Foxit)
+    render as a tooltip. Reference lines created via ``axhline``/``axvline``
+    have only two data points and are skipped.
+
+    No-op when the active matplotlib backend is not ``pgf``.
+    """
+    if mpl.get_backend() != "pgf":
+        return
+    for line in ax.get_lines():
+        xs = np.asarray(line.get_xdata(), dtype=float)
+        ys = np.asarray(line.get_ydata(), dtype=float)
+        if xs.size < 3:
+            # Skip axhline / axvline reference lines (only 2 endpoints).
+            continue
+        mask = np.isfinite(xs) & np.isfinite(ys)
+        xs, ys = xs[mask], ys[mask]
+        if xs.size == 0:
+            continue
+        idx = np.linspace(0, xs.size - 1, min(n, xs.size)).astype(int)
+        for i in idx:
+            tip = (
+                f"x={x_fmt.format(xs[i])}"
+                + (f" {x_unit}" if x_unit else "")
+                + f" / y={y_fmt.format(ys[i])}"
+                + (f" {y_unit}" if y_unit else "")
+            )
+            ax.text(
+                float(xs[i]), float(ys[i]),
+                r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tip + r"}",
+                fontsize=FONT_SIZE - 2,
+                ha="center", va="center", clip_on=True, zorder=10,
+            )
+
 
 # ── Pension-model calc helpers ────────────────────────────────────────────────
 from problemy_cz_duchod import (
@@ -1297,6 +1345,9 @@ def plot_tax_wedge_comparison(
 if __name__ == "__main__":
     # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
     fig_cmp = plot_pension_comparison()
+    _add_curve_tooltips(
+        fig_cmp.axes[0], x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+    )
     savefig_pgf(fig_cmp, "problemy_duchod_prijem", strings=STRINGS_DUCHOD)
     save_figure_tex_pgf(
         "problemy_duchod_prijem",
@@ -1311,6 +1362,12 @@ if __name__ == "__main__":
 
     # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
     fig_sol = plot_pension_solidarity()
+    _add_curve_tooltips(
+        fig_sol.axes[0], x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+    )
+    _add_curve_tooltips(
+        fig_sol.axes[1], x_unit="tis. Kč/měs.", y_unit="%",
+    )
     savefig_pgf(fig_sol, "problemy_duchod_solidarita", strings=STRINGS_SOLIDARITA)
     save_figure_tex_pgf(
         "problemy_duchod_solidarita",
@@ -1325,6 +1382,9 @@ if __name__ == "__main__":
 
     # ── Obrázek 3: náhradový poměr vs. daňový klín (parametrický) ─────────────
     fig_tw = plot_tax_wedge_comparison()
+    _add_curve_tooltips(
+        fig_tw.axes[0], x_unit="% klín", y_unit="% náhrada",
+    )
     savefig_pgf(fig_tw, "problemy_duchod_klin", strings=STRINGS_KLIN)
     save_figure_tex_pgf(
         "problemy_duchod_klin",
@@ -1382,6 +1442,9 @@ if __name__ == "__main__":
 
     # ── Obrázek 8: poměr důchod/SP vs. příjmy ────────────────────────────────
     fig_rsr = plot_pension_sp_ratio_vs_income()
+    _add_curve_tooltips(
+        fig_rsr.axes[0], x_unit="tis. Kč/měs.", y_unit="let",
+    )
     savefig_pgf(fig_rsr, "problemy_duchod_sp_pomer", strings=STRINGS_POMER)
     save_figure_tex_pgf(
         "problemy_duchod_sp_pomer",
