@@ -84,7 +84,8 @@ fig.axes[0].set_xlim(START_YEAR, 2025)
 _add_tooltips_and_geo(fig.axes[0], COUNTRIES)
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_hustota_vyvoj", strings=STRINGS_FULL)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig, "stav_hustota_vyvoj", strings=STRINGS_FULL, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -97,6 +98,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
     strings=STRINGS_FULL,
+    nudge_labels=NUDGE_LABELS,
 )
 
 # ── 6. Second variant: 2004--latest (cropped x-axis) ──────────────────────────
@@ -121,7 +123,7 @@ fig2.axes[0].set_xlim(2004, 2025)
 fig2.axes[0].set_ylim(0, 80)
 _add_tooltips_and_geo(fig2.axes[0], COUNTRIES)
 
-savefig_pgf(fig2, "stav_hustota_vyvoj_2004", strings=STRINGS_2004)
+savefig_pgf(fig2, "stav_hustota_vyvoj_2004", strings=STRINGS_2004, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_hustota_vyvoj_2004",
     caption=(
@@ -132,6 +134,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
     strings=STRINGS_2004,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

@@ -217,7 +217,8 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         index="time", columns="geo", values="value", aggfunc="mean"
     )
     add_pgf_tooltips(_ax_a, _pivot_a_bg, fmt="{:.2f}")
-    savefig_pgf(fig_a, "problemy_dojezdeni_vyvoj", strings=STRINGS_VYVOJ)
+    NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+    savefig_pgf(fig_a, "problemy_dojezdeni_vyvoj", strings=STRINGS_VYVOJ, nudge_labels=NUDGE_LABELS)
     yr_min = nat["time"].min()
     yr_max = nat["time"].max()
     save_figure_tex_pgf(
@@ -226,6 +227,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         label="fig:problemy_dojezdeni_vyvoj",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
         strings=STRINGS_VYVOJ,
+        nudge_labels=NUDGE_LABELS,
     )
 
 # ── Figure B --- EU map ─────────────────────────────────────────────────────────

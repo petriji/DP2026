@@ -573,7 +573,7 @@ save_table_tex(
         r"Pokrytí \ac{KS}: \ac{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
+    col_format=r"@{}>{\raggedright\arraybackslash\rule[-0.6ex]{0pt}{2.8ex}}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
     italic_rows=italic_rows,

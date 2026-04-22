@@ -93,7 +93,8 @@ for _child in fig.axes[0].get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_vzdelani_vyvoj", strings=STRINGS)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig, "vyhled_vzdelani_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -106,6 +107,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

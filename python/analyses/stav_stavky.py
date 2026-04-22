@@ -291,7 +291,8 @@ for _child in fig.axes[0].get_children():
         if _txt in countries_present:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig, "stav_stavky", strings=STRINGS)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in countries_present]
+savefig_pgf(fig, "stav_stavky", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "stav_stavky",
@@ -309,6 +310,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "dst_abst1", "eurostat_lfsa_ewhun2"],
     strings={},
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
