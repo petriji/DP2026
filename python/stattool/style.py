@@ -1060,7 +1060,9 @@ def save_figure_tex_pgf(
             ]
             for key, value in (strings or {}).items():
                 macro = _macro_name(prefix, key)
-                lines.append(f"\\def{macro}{{{value}}}%")
+                # Escape unescaped % so they don't comment out the closing brace
+                value_esc = re.sub(r"(?<!\\)%", r"\\%", str(value))
+                lines.append(f"\\def{macro}{{{value_esc}}}%")
             if nudge_macros:
                 lines.append("% --- Per-label y-nudge knobs (override with \\renewcommand)")
                 lines.append("% Example: \\renewcommand" + nudge_macros[0] + "{-3pt}  % shift label up by 3pt")
