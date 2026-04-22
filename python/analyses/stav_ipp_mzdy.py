@@ -159,9 +159,14 @@ ax.set_xlim(START_YEAR, LAST_YEAR)
 ax.set_ylim(0, 14)
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
+ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}\\,\\%"))
+ax.set_axisbelow(True)
+ax.grid(which="major", axis="y", linewidth=0.5, alpha=0.28)
+ax.grid(which="minor", axis="y", linewidth=0.4, alpha=0.14)
 
-STRINGS = {"title": r"Sjednaný vs.\ skutečný mzdový nárůst, \acs{geo-CZ}"}
+STRINGS = {"title": r"Sjednaný vs.~skutečný mzdový nárůst v~\acs{geo-CZ}"}
 ax.set_title(STRINGS["title"])
 
 # ── 4. PGF tooltips (highlighted countries + IPP only — cloud lines stay clean) ──
@@ -179,10 +184,7 @@ year_range = f"{START_YEAR}--{LAST_YEAR}"
 savefig_pgf(fig, "stav_ipp_mzdy", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_ipp_mzdy",
-    caption=(
-        f"Sjednaný a~skutečný mzdový nárůst v~\\acs{{KS}}, "
-        f"\\acs{{geo-CZ}} a~vybrané země EU, {year_range}."
-    ),
+    caption=f"Mzdový nárůst sjednaný v~\\acs{{KS}} a~skutečný, \\acs{{EU}} srovnání, {year_range}.",
     label="fig:stav_ipp_mzdy",
     resizebox_width=r"\linewidth",
     cite_keys=["mpsv_ipp", "eurostat_lci"],
