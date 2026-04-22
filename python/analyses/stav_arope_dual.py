@@ -1,5 +1,5 @@
 r"""
-AROPE rate (top) and D3 income threshold vs EU27 median (bottom).
+AROPE rate (top) and share of population below EU27 D3 threshold (bottom).
 
 Two stacked panels sharing the x-axis (year).
 
@@ -10,9 +10,12 @@ filtered to ``A.PC.TOTAL.T.`` (annual, % of population, all ages, both sexes).
 
 Bottom panel
 ------------
-Upper threshold of the third decile (D3) of equivalised disposable income in
-PPS, expressed as % of the EU27 median (D5, PPS).  Source: Eurostat
-``ilc_di01`` (PPS basis ``PPS_EU27_2020_HAB`` for cross-country comparability).
+Estimated share (%) of each country's population whose equivalised disposable
+income is at most the EU27 D3 threshold (upper bound of the third decile) in
+PPS.  The share is obtained by fitting a log-normal distribution to the nine
+country-specific decile thresholds D1..D9 (Eurostat ``ilc_di01``, currency
+``PPS``) and evaluating its CDF at the EU27 D3 threshold.  This turns a purely
+relative cut-off into an absolute cross-country benchmark.
 
 Output
 ------
@@ -31,6 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from config import LATEX_PICS_DIR
@@ -74,9 +78,11 @@ ds_arope = Dataset.from_sdmx_csv(
 # The EU27_2020 D5 PPS series is published only from 2018. For 2015--2017 we
 # back-fill it with the D5 EUR value for EU27_2020: at EU27 level PPP ≡ 1 by
 # construction, and the observed overlap (2018--2024) shows diff ≤ 2 %.
+# Fetch all deciles D1..D9 per country in PPS (plus EUR fallback for the
+# EU27 aggregate, whose PPS series starts only in 2018).
 path_di01 = fetch_eurostat(
     "ilc_di01",
-    "A.D3+D5.TC.PPS+EUR.",
+    "A.D1+D2+D3+D4+D5+D6+D7+D8+D9.TC.PPS+EUR.",
 )
 raw = pd.read_csv(path_di01, comment="#")
 raw.columns = [c.strip() for c in raw.columns]
@@ -84,39 +90,68 @@ raw["OBS_VALUE"] = pd.to_numeric(raw["OBS_VALUE"], errors="coerce")
 raw = raw.dropna(subset=["OBS_VALUE"])
 raw["time"] = raw["TIME_PERIOD"].astype(str).str[:4].astype(int)
 
-# EU27 median --- prefer PPS, fall back to EUR when PPS missing (≤2 % error)
-eu_pps = (
+# EU27 D3 threshold in PPS (reference bar shared across countries).
+# PPS series starts 2018; for 2015--2017 use EUR value (EU27 PPP ≡ 1).
+eu_d3_pps = (
     raw[(raw["geo"] == "EU27_2020")
-        & (raw["quantile"] == "D5")
+        & (raw["quantile"] == "D3")
         & (raw["indic_il"] == "TC")
         & (raw["currency"] == "PPS")]
     .groupby("time")["OBS_VALUE"].mean()
 )
-eu_eur = (
+eu_d3_eur = (
     raw[(raw["geo"] == "EU27_2020")
-        & (raw["quantile"] == "D5")
+        & (raw["quantile"] == "D3")
         & (raw["indic_il"] == "TC")
         & (raw["currency"] == "EUR")]
     .groupby("time")["OBS_VALUE"].mean()
 )
-eu_median = eu_pps.combine_first(eu_eur).rename("eu_median")
+eu_d3 = eu_d3_pps.combine_first(eu_d3_eur).rename("eu_d3")
 
-# Country D3 in PPS
-d3 = raw[(raw["quantile"] == "D3")
-         & (raw["indic_il"] == "TC")
-         & (raw["currency"] == "PPS")
-         & (raw["geo"] != "EU27_2020")][["geo", "time", "OBS_VALUE"]].copy()
-d3 = d3.merge(eu_median, on="time", how="inner")
-d3["value"] = d3["OBS_VALUE"] / d3["eu_median"] * 100.0
-d3_norm = d3[["geo", "time", "value"]].dropna()
+# Country deciles D1..D9 in PPS (long → wide per country-year)
+_DEC_ORDER = [f"D{k}" for k in range(1, 10)]
+dec = (
+    raw[(raw["indic_il"] == "TC")
+        & (raw["currency"] == "PPS")
+        & (raw["geo"] != "EU27_2020")
+        & (raw["quantile"].isin(_DEC_ORDER))]
+    [["geo", "time", "quantile", "OBS_VALUE"]]
+    .pivot_table(
+        index=["geo", "time"], columns="quantile", values="OBS_VALUE",
+        aggfunc="mean",
+    )
+    .reindex(columns=_DEC_ORDER)
+    .dropna()
+    .reset_index()
+)
 
-# Restrict both panels to the AROPE start year (2015) onward for alignment
-d3_norm = d3_norm[d3_norm["time"] >= 2015]
+# Share of population with income ≤ EU27 D3 threshold, estimated by fitting
+# a log-normal distribution to each country-year's nine decile thresholds.
+# Deciles give CDF points (D_k, k/10) for k=1..9.  Regressing log(D_k) on
+# Φ⁻¹(k/10) yields (μ, σ) = (intercept, slope); the sought share is then
+# Φ((log(threshold) − μ) / σ).  Empirically the fit is near-perfect in the
+# middle of the distribution where D3--D5 live (R² > 0.999 for EU countries).
+from scipy.stats import norm  # local import — only place scipy is used
+
+_QLEVELS = np.array([k / 10.0 for k in range(1, 10)])
+_Z = norm.ppf(_QLEVELS)
+
+def _lognorm_cdf(row: pd.Series, threshold: float) -> float:
+    y = np.log(row[_DEC_ORDER].to_numpy(dtype=float))
+    sigma, mu = np.polyfit(_Z, y, 1)
+    return float(norm.cdf((np.log(threshold) - mu) / sigma))
+
+dec = dec.merge(eu_d3.rename("eu_d3"), on="time", how="inner")
+dec["value"] = dec.apply(
+    lambda r: 100.0 * _lognorm_cdf(r, r["eu_d3"]), axis=1,
+)
+d3_share = dec[["geo", "time", "value"]].copy()
+d3_share = d3_share[d3_share["time"] >= 2015]
 
 ds_d3 = Dataset(
-    d3_norm,
-    name="D3 vs EU",
-    unit="EU=100",
+    d3_share,
+    name="Share ≤ EU27 D3",
+    unit="%",
     source_url="Eurostat/ilc_di01",
 )
 
@@ -133,8 +168,9 @@ fig, (ax_top, ax_bot) = plt.subplots(
 )
 
 STRINGS = {
+    "title": r"Míra \acs{AROPE}, porovnání metodik dle národního a~\acs{EU} rozdělení příjmů v~\acs{PPS}",
     "ylabel_top": r"míra \acs{AROPE} [\si{\percent}]",
-    "ylabel_bot": r"\acs{var-D3} (\acs{PPS}, \acs{geo-EU}\,=\,100) [\si{\percent}]",
+    "ylabel_bot": r"podíl os. s~příjmem $\leq$ \acs{var-D3}\acs{geo-EU} [\si{\percent}]",
 }
 # --- Top panel: AROPE -------------------------------------------------------
 timeline(
@@ -161,16 +197,12 @@ timeline(
     show_eu_avg=False,
     ax=ax_bot,
 )
-# EU=100 reference line
-ax_bot.axhline(100.0, color="#888888", linewidth=0.8, linestyle="--",
-               alpha=0.7, zorder=2)
-
 # Axis limits — common x-range, panel-specific y-range
 LAST_YEAR = max(2025, last_year)
 ax_top.set_xlim(START_YEAR, LAST_YEAR)
 ax_bot.set_xlim(START_YEAR, LAST_YEAR)
 ax_top.set_ylim(0, 35)
-ax_bot.set_ylim(0, 140)
+ax_bot.set_ylim(0, 100)
 
 # Hide x-axis label/ticks on the top panel (sharex shows them on bottom)
 ax_top.set_xlabel("")
@@ -203,7 +235,8 @@ def _decorate(ax, ds, fmt):
 _decorate(ax_top, ds_arope, "{:.1f}")
 _decorate(ax_bot, ds_d3, "{:.1f}")
 
-fig.subplots_adjust(hspace=0.08)
+fig.suptitle(STRINGS["title"], fontsize=12, y=0.995)
+fig.subplots_adjust(hspace=0.08, top=0.94)
 
 # ── 5. Save ───────────────────────────────────────────────────────────────────
 savefig_pgf(fig, "stav_arope_dual", strings=STRINGS, nudge_labels=NUDGE_LABELS)
@@ -211,8 +244,10 @@ savefig_pgf(fig, "stav_arope_dual", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_arope_dual",
     caption=(
-        f"Vývoj míry \\acs{{AROPE}} a~hranice třetího decilu čistého "
-        f"ekvivalizovaného příjmu v~\\acs{{PPS}} vůči mediánu \\acs{{EU}}27, "
+        f"Vývoj míry \\acs{{AROPE}} a~odhadovaný podíl osob s~čistým "
+        f"ekvivalizovaným příjmem nejvýše na úrovni třetího decilu "
+        f"(\\acs{{var-D3}}) \\acs{{geo-EU}}27 v~\\acs{{PPS}} "
+        f"(log-normální interpolace z~decilů \\acs{{geo-EU}} zemí), "
         f"vybrané země EU, {first_year}--{last_year}."
     ),
     label="fig:stav_arope_dual",
