@@ -23,6 +23,11 @@ script   = "analyses/eu_danovy_klin.py"
 texparts = ["eu_danovy_klin"]
 pics     = ["eu_danovy_klin"]
 
+[taxwedge_vyvoj]
+script   = "analyses/eu_danovy_klin_vyvoj.py"
+texparts = ["eu_danovy_klin_vyvoj"]
+pics     = ["eu_danovy_klin_vyvoj"]
+
 [arope]
 script   = "analyses/stav_arope.py"
 texparts = ["stav_arope_mapa_*"]
@@ -78,11 +83,6 @@ pics     = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
 script   = "analyses/stav_ipp_mzdy.py"
 texparts = ["stav_ipp_mzdy"]
 pics     = ["stav_ipp_mzdy"]
-
-[ipp_supplementary]
-script   = "analyses/stav_ipp_doplnkove.py"
-texparts = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
-pics     = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
 
 [ipp_ca_breadth]
 script   = "analyses/stav_ipp_rozsah.py"
