@@ -82,6 +82,8 @@ _values = (
 _vmin = min(_values.values())
 _vmax = max(_values.values())
 
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+
 STRINGS = {
     "title": f"Index cenové hladiny \\acs{{HDP}} ({ds.latest_year})",
     "colorbar_label": r"\acs{PLI} [\acs{geo-EU}27 = 100]",
@@ -102,7 +104,7 @@ fig = choropleth(
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
 
-savefig_pgf(fig, "eu_cenova_hladina", strings=STRINGS)
+savefig_pgf(fig, "eu_cenova_hladina", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ─────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -113,6 +115,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_prc_ppp_ind_PLI_GDP",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
