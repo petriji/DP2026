@@ -2062,6 +2062,12 @@
   bibencoding = UTF8,
 ]{biblatex}
 
+% Bibliography list: render numeric labels as [N] (square brackets) to match
+%   the in-text \cite[N] format produced by \DeclareCiteCommand below.
+%   iso-numeric default is "N." (period); we override to "[N]".
+\DeclareFieldFormat{labelnumberwidth}{\mkbibbrackets{#1}}
+\setlength{\biblabelsep}{1em}
+
 % \CTUaddtotoc{title}: conditionally add a back-matter entry to the TOC.
 %   When \ifCTUbackmattertoc is true, writes a dotted-leader (section-style)
 %   TOC entry via \addcontentsline{toc}{section}{title}.  The section level
