@@ -755,6 +755,23 @@ try:
         "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1) --- index (medián \acs{geo-CZ}~=~100)",
         "colorbar_label": r"index (medián \acs{geo-CZ} = 100)",
     }
+    # CZ NUTS3 region names (for PGF tooltips on region labels).
+    _CZ_NUTS3_NAMES = {
+        "CZ010": "Hlavní město Praha",
+        "CZ020": "Středočeský kraj",
+        "CZ031": "Jihočeský kraj",
+        "CZ032": "Plzeňský kraj",
+        "CZ041": "Karlovarský kraj",
+        "CZ042": "Ústecký kraj",
+        "CZ051": "Liberecký kraj",
+        "CZ052": "Královéhradecký kraj",
+        "CZ053": "Pardubický kraj",
+        "CZ063": "Kraj Vysočina",
+        "CZ064": "Jihomoravský kraj",
+        "CZ071": "Olomoucký kraj",
+        "CZ072": "Zlínský kraj",
+        "CZ080": "Moravskoslezský kraj",
+    }
     fig_d = choropleth_cz(
         wage_series,
         nuts_level_cz=3,
@@ -764,6 +781,9 @@ try:
         vmax=100 + _delta,
         colorbar_label=STRINGS_D["colorbar_label"],
         label_fmt="{:.0f}",
+        label_fontsize=FONT_SIZE - 1,
+        label_names=_CZ_NUTS3_NAMES,
+        label_tooltip_fmt="index {:.1f} (medián ČR = 100)",
     )
 
     savefig_pgf(fig_d, "problemy_regiony_mapa", strings=STRINGS_D)
