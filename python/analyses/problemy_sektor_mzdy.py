@@ -355,6 +355,15 @@ else:
     print("Figure A (ISPV sector bars) skipped -- ISPV data unavailable.")
 
 # ════════════════════════════════════════════════════════════════════════════
+# Figures B & C (problemy_sektor_lci, problemy_sektor_disperze) commented
+# out per user request — commentary merged into
+# texparts/commentary/problemy_sektor_percentily.tex.
+# ════════════════════════════════════════════════════════════════════════════
+print("Figures B/C (sektor_lci, sektor_disperze) skipped — commented out.")
+import sys as _sys
+_sys.exit(0)
+
+# ════════════════════════════════════════════════════════════════════════════
 # Figure B -- Eurostat LCI growth by NACE sector (CZ)
 # ════════════════════════════════════════════════════════════════════════════
 if lci_by_nace:
