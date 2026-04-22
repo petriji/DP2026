@@ -28,9 +28,10 @@
     \def\cE{9.6}
 
     % --- Y-souřadnice čtyř řádků obdélníků ---
-    \def\rowI{8.0}     % řádek 1 — KSVS s mzdovou strukturou (A–C) + Bez KSVS (D–E)
-    \def\rowII{6.7}    % řádek 2 — KSVS bez mzdové struktury (C–D), kreslena nad šipkami
-    \def\rowIII{3.0}   % řádek 3 — podnikové KS (A, D)
+    % Jednotná rozteč = 0.75 × původní rozteč řádků III–IV (0.75×2.2 = 1.65)
+    \def\rowI{5.75}    % řádek 1 — KSVS s mzdovou strukturou (A–C) + Bez KSVS (D–E)
+    \def\rowII{4.10}   % řádek 2 — KSVS bez mzdové struktury (C–D), kreslena nad šipkami
+    \def\rowIII{2.45}  % řádek 3 — podnikové KS (A, D)
     \def\rowIV{0.8}    % řádek 4 — horní hrana podniků A–E (anchor=north)
 
     % --- Řádek 1: KSVS s mzdovou strukturou (A–C) a Bez odvětvové KS (D–E) ---
@@ -58,11 +59,9 @@
     \draw[medArrow] (sPay.south  -| compB.north) -- (compB.north);
     % Sloupec C: KSVS s mzd. strukturou + KSVS bez mzd. struktury (oba vlivy)
     \draw[medArrow]  (sPay.south   -| compC.north) -- (compC.north);
-    % Sloupec D: KSVS bez mzd. struktury + Bez KSVS, oba scénáře přes podnikovou KS
-    \draw[medArrow] (sNone.south -| cDca.north) -- (cDca.north);
+    % Sloupec D: vliv pouze přes KSVS bez mzd. struktury (řádek 2) -> podniková KS -> podnik D
     \draw[medArrow]  (cDca.south) -- (compD.north);
-    % Sloupec E: Bez KSVS -> přímo podnik E
-    \draw[thinArrow] (sNone.south -| compE.north) -- (compE.north);
+    % Sloupec E: Bez odvětvové KS — žádná šipka
 
     % --- Řádek 2: KSVS bez mzdové struktury — kreslena AŽ NYNÍ, leží nad šipkami ---
     \node[sectoralNoPay, minimum width=4.0cm] (sNoPay)
@@ -71,14 +70,14 @@
     \draw[thinArrow] (sNoPay.south -| compC.north) -- (compC.north);
     \draw[dashArrow] (sNoPay.south -| cDca.north) -- (cDca.north);
 
-    % --- Horní vodorovná šipka „Horizontální přístupy" ---
+    % --- Horní vodorovná šipka „Horizontální přístupy" — zprava doleva ---
     \draw[bigArrow]
-      ({\cA-1.7},9.6) -- ({\cE+1.7},9.6)
+      ({\cE+1.7},7.35) -- ({\cA-1.7},7.35)
       node[midway, above=2pt, font=\sffamily\bfseries] {Horizontální přístupy};
 
     % --- Levá svislá šipka „Vertikální vliv" ---
     \draw[bigArrow]
-      (-2.2,8.7) -- (-2.2,-1.9)
+      (-2.2,6.45) -- (-2.2,-1.9)
       node[midway, left=4pt, rotate=90, anchor=south, font=\sffamily\bfseries] {Vertikální vliv};
   \end{tikzpicture}}
   \caption{\strEuPayEquitySchemaCaption}
