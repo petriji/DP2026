@@ -198,7 +198,7 @@ ax.set_axisbelow(True)
 ax.grid(which="major", axis="both", linestyle="-", linewidth=0.5, alpha=0.20)
 ax.grid(which="minor", axis="both", linestyle="-", linewidth=0.35, alpha=0.12)
 
-STRINGS = {"title": r"Institucionální obsah kolektivních smluv (\acs{geo-CZ})"}
+STRINGS = {"title": r"Obsah \acs{KS} (\acs{geo-CZ})"}
 ax.set_title(STRINGS["title"])
 
 # ── 4. Tooltips ───────────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ year_range = f"{START_YEAR}--{LAST_YEAR}"
 savefig_pgf(fig, "stav_ipp_rozsah", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_ipp_rozsah",
-    caption=rf"Institucionální obsah kolektivních smluv, \acs{{geo-CZ}}, {year_range}.",
+    caption=rf"Obsah \acs{{KS}}, \acs{{geo-CZ}}, {year_range}.",
     cite_keys="mpsv_ipp",
     label="fig:stav_ipp_rozsah",
     resizebox_width=r"\linewidth",
