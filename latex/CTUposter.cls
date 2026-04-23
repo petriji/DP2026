@@ -154,7 +154,12 @@
 \definecolor{CTUgrey}{RGB}{84,88,90}
 \definecolor{CTUlight}{RGB}{235,238,243}
 
+% Keep map labels readable on colored backgrounds (same as thesis class).
+\RequirePackage[pdftex]{contour}
+\contourlength{0.6pt}
+
 \RequirePackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
@@ -179,6 +184,13 @@
   bookmarks     = false,
   pdfpagelayout = SinglePage,
 ]{hyperref}
+
+% Tooltip annotations used by generated PGF assets.
+\RequirePackage{pdfcomment}
+
+% Compatibility macro referenced by generated PGF strings from thesis pipeline.
+% On posters we keep the tooltip but do not create a goto destination link.
+\newcommand{\CTUtooltiplink}[3]{\pdftooltip{#2}{#3}}
 
 \RequirePackage[
   backend     = biber,
