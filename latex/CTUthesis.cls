@@ -282,10 +282,14 @@
 \gdef\CTU@pdfkeywordsen{}
 \gdef\CTU@pdfpagelayout{SinglePage}
 % \CTU@setpdfmetadata: populate the output PDF metadata from thesis metadata.
+%   Uses the \Author / \Title / \TitleSecond / \Course snapshot macros (set in
+%   \AtBeginDocument) instead of \@author / \@title / \@titlesecond / \@course,
+%   because \maketitle clears the \@... originals and \CTUabstract calls this
+%   command a second time (after \maketitle) to refresh keyword metadata.
 \newcommand\CTU@setpdfmetadata{%
-  \pdfstringdef\CTU@pdftitle{\@title\ifx\@titlesecond\@empty\else: \@titlesecond\fi}%
-  \pdfstringdef\CTU@pdfauthor{\@author}%
-  \pdfstringdef\CTU@pdfsubject{\@course}%
+  \pdfstringdef\CTU@pdftitle{\Title\ifx\TitleSecond\@empty\else: \TitleSecond\fi}%
+  \pdfstringdef\CTU@pdfauthor{\Author}%
+  \pdfstringdef\CTU@pdfsubject{\Course}%
   \ifCTUenglish
     \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordsen}%
   \else
@@ -2153,6 +2157,31 @@
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
   {\usebibmacro{postnote}}
+
+% \ref / \autoref hover tooltips: show the full name of the referenced label on
+%   hover using the PDF /Contents annotation mechanism (\CTU@tooltiplink).
+%   Tooltip text is produced by \nameref{label} (the section/caption title for
+%   the referenced label) and stripped of formatting by \pdfstringdef.
+%   Both commands are wrapped in \AtBeginDocument so that the redefinitions run
+%   after hyperref has installed its own versions of \ref and \autoref.
+%   \ref*  / \autoref* are hyperref's non-linking variants; they are used as the
+%   visible text inside \CTU@tooltiplink to avoid nested link annotations.
+%   Labels that are undefined at the time of rendering fall back to the original
+%   hyperref command so that missing-reference warnings remain visible.
+\AtBeginDocument{%
+  \let\CTU@orig@ref\ref
+  \let\CTU@orig@autoref\autoref
+  \renewcommand{\ref}[1]{%
+    \@ifundefined{r@#1}%
+      {\CTU@orig@ref{#1}}%
+      {\CTU@tooltiplink{#1}{\CTU@orig@ref*{#1}}{\nameref{#1}}}%
+  }%
+  \renewcommand{\autoref}[1]{%
+    \@ifundefined{r@#1}%
+      {\CTU@orig@autoref{#1}}%
+      {\CTU@tooltiplink{#1}{\CTU@orig@autoref*{#1}}{\nameref{#1}}}%
+  }%
+}
 
 % ==============================================================================
 % Back Matter Command
