@@ -286,19 +286,19 @@
 %   \AtBeginDocument) instead of \@author / \@title / \@titlesecond / \@course,
 %   because \maketitle clears the \@... originals and \CTUabstract calls this
 %   command a second time (after \maketitle) to refresh keyword metadata.
+%   Do NOT pre-encode these fields with \pdfstringdef: hyperref already encodes
+%   PDF metadata when \hypersetup runs, so pre-encoding would UTF-16BE-encode
+%   the strings twice and produce garbled values in the PDF Info dictionary.
 \newcommand\CTU@setpdfmetadata{%
-  \pdfstringdef\CTU@pdftitle{\Title\ifx\TitleSecond\@empty\else: \TitleSecond\fi}%
-  \pdfstringdef\CTU@pdfauthor{\Author}%
-  \pdfstringdef\CTU@pdfsubject{\Course}%
   \ifCTUenglish
-    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordsen}%
+    \let\CTU@pdfkeywords\CTU@pdfkeywordsen
   \else
-    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordscz}%
+    \let\CTU@pdfkeywords\CTU@pdfkeywordscz
   \fi
   \hypersetup{%
-    pdftitle={\CTU@pdftitle},%
-    pdfauthor={\CTU@pdfauthor},%
-    pdfsubject={\CTU@pdfsubject},%
+    pdftitle={\Title\ifx\TitleSecond\@empty\else: \TitleSecond\fi},%
+    pdfauthor={\Author},%
+    pdfsubject={\Course},%
     pdfkeywords={\CTU@pdfkeywords}%
   }%
 }
