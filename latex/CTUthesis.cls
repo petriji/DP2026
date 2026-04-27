@@ -2071,6 +2071,21 @@
 \DeclareFieldFormat{labelnumberwidth}{\mkbibbrackets{#1}}
 \setlength{\biblabelsep}{1em}
 
+% Global bibliography output policy (keeps .bib content intact):
+%   - do not print the note field,
+%   - shorten long personal-author lists to "et al.",
+%   - keep full author lists for online/misc/report items
+%     (typically institutions or contract parties).
+\ExecuteBibliographyOptions{maxbibnames=2,minbibnames=1}
+\AtEveryBibitem{%
+  \clearfield{note}%
+  \ifentrytype{online}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+  \ifentrytype{misc}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+  \ifentrytype{report}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+}
+\DefineBibliographyStrings{czech}{andothers = {et\addabbrvspace al\adddot}}
+\DefineBibliographyStrings{english}{andothers = {et\addabbrvspace al\adddot}}
+
 % \CTUaddtotoc{title}: conditionally add a back-matter entry to the TOC.
 %   When \ifCTUbackmattertoc is true, writes a dotted-leader (section-style)
 %   TOC entry via \addcontentsline{toc}{section}{title}.  The section level
