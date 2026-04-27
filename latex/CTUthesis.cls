@@ -1191,6 +1191,9 @@
 %   rendering; the loop uses \@tempcnta as the running page index.
 \newcommand\CTUassignment[1]{%
   \IfFileExists{#1}{%
+    % Suppress hyperref page-anchor generation for included pages to avoid
+    % duplicate name{page.I} destination warnings (pdfTeX warning ext4).
+    \hypersetup{pageanchor=false}%
     \if@twoside
       % Count pages in the PDF so we can loop page-by-page.
       \pdfximage{#1}%
@@ -1207,6 +1210,7 @@
     \else
       \includepdf[pages=-,pagecommand={\thispagestyle{empty}}]{#1}%
     \fi
+    \hypersetup{pageanchor=true}%
   }{%
     % File not found: emit a blank page with a visible warning.
     \clearpage
