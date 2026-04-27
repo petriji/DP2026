@@ -297,7 +297,8 @@
     pdftitle={\CTU@pdftitle},%
     pdfauthor={\CTU@pdfauthor},%
     pdfsubject={\CTU@pdfsubject},%
-    pdfkeywords={\CTU@pdfkeywords}%
+    pdfkeywords={\CTU@pdfkeywords},%
+    pdflang={\ifCTUenglish en-GB\else cs-CZ\fi}%
   }%
 }
 % Quality-check counter macros --- populated from latexmkrc-generated tmp files.
@@ -2060,6 +2061,16 @@
 %   (back matter uses \Roman{page}, which would make \pageref*{LastPage} return
 %   a Roman numeral).
 \RequirePackage{lastpage}
+% pdfcomment: hover tooltip annotations in PDF viewers (Adobe Acrobat, Foxit).
+%   Must be loaded AFTER hyperref (it uses hyperref internally).
+%   Used via \pdftooltip{displayed}{tooltip text} in PGF figures.
+%   Annotations are invisible in non-interactive viewers and in print.
+\RequirePackage{pdfcomment}
+% hyperxmp: writes an XMP metadata packet into the PDF document catalog,
+%   satisfying ISO 32000-1 §14.3.2. Reads all fields already set via
+%   \hypersetup (title, author, subject, keywords, pdflang) and serialises
+%   them as RDF/XMP automatically. Must be loaded AFTER hyperref and pdfcomment.
+\RequirePackage{hyperxmp}
 
 % ==============================================================================
 % Packages: Bibliography
