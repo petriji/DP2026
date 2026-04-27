@@ -1358,31 +1358,31 @@
   \IfFileExists{\jobname.lot}{\@CTUhastablestrue}{}%
 }
 \newcommand\listoffigures{%
-    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
-    \chapter*{\CTUlofname}%
+    \if@CTUhasfigures
+      \chapter*{\CTUlofname}%
       \chaptermark{\CTUlofname}%
+    \fi
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
-    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
-    \chapter*{\CTUlotname}%
+    \if@CTUhastables
+      \chapter*{\CTUlotname}%
       \chaptermark{\CTUlotname}%
+    \fi
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
@@ -1801,11 +1801,11 @@
   % list/template=xltabular: custom two-column table template defined below.
   % list/heading=chapter*: printed list gets an unnumbered chapter heading.
   \acsetup{%
-    make-links        = false,%
-    list/display      = used,%
-    list/template     = xltabular,%
-    list/heading      = chapter*,%
-    short-plural-form = {}%   % Czech: no "s" suffix on short plural forms
+    make-links          = false,%
+    list/display        = used,%
+    list/template       = xltabular,%
+    list/heading        = chapter*,%
+    short-plural-ending = {}%
   }
   % --------------------------------------------------------------------------
   % Per-page GoBack button for acro lists
@@ -1879,10 +1879,6 @@
         \acroifT{foreign}{\acrowrite{foreign}\acroifT{extra}{,}}%
         \acroifT{extra}{\acrowrite{extra}}%
         \acroifanyT{foreign,extra}{)}%
-        \acropagefill
-        \acropages
-          {\acrotranslate{page}\nobreakspace}
-          {\acrotranslate{pages}\nobreakspace}%
         \\}}
     {\AcroRerun}%
     \acroheading
@@ -1918,9 +1914,12 @@
   %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
   %   catcodes (colon and underscore as letters).
   \ExplSyntaxOn
+  % Helper: emit visible text with a tooltip and no GoTo link.  This avoids
+  % unresolved destination warnings when an acronym destination is not present.
+  \cs_new:Npn \CTU@acro_tooltip:nn #1#2 { \pdftooltip{#1}{#2} }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
-      \CTU@tooltiplink{\AcronymID}{%
+      \CTU@acro_tooltip:nn {%
         \acrowrite{long}%
         \acspace(%
         \acrowrite{short}%
@@ -1930,9 +1929,13 @@
       }{ \acro_property_get:Vn \AcronymID { long } }%
     }%
     {%
-      \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+      \CTU@acro_tooltip:nn {\acrowrite{short}}
         { \acro_property_get:Vn \AcronymID { long } }%
     }%
+  }
+  \RenewAcroTemplate{long}{%
+    \CTU@acro_tooltip:nn {\acrowrite{long}}
+      { \acro_property_get:Vn \AcronymID { long } }%
   }
   % short template: when `index` is set (subscript/superscript index variable)
   %   show only the index part in text; otherwise show the normal short form.
@@ -1941,11 +1944,11 @@
   \RenewAcroTemplate{short}{%
     \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+        \CTU@acro_tooltip:nn {\acrowrite{short}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
       {%  index property set — show only the index part in text
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
+        \CTU@acro_tooltip:nn {\acrowrite{index}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
   }
@@ -2161,6 +2164,35 @@
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
   \fi}
+
+
+
+% ==============================================================================
+% \inputpgffigure{name} — include a matplotlib PGF figure
+% ==============================================================================
+% Includes the editable figure definition from texparts/figures/<name>.tex.
+% The PGF file is expected at ../python/figures/<name>.pgf (relative to the
+% latex/ directory, matching \graphicspath{{../python/figures/}}).
+%
+% If the .pgf file does not exist (script not yet run), a visible warning box
+% is shown in the PDF instead of a hard compilation error.
+%
+% Usage in commentary files:  \inputpgffigure{vyhled_porodnost_vyvoj}
+\newcommand{\inputpgffigure}[1]{%
+  \IfFileExists{../python/figures/#1.pgf}{%
+    \input{texparts/figures/#1}%
+  }{%
+    \begin{center}
+      \fboxsep=8pt
+      \colorbox{yellow!40}{%
+        \parbox{0.85\linewidth}{%
+          \color{red!70!black}\bfseries
+          \texttt{[#1.pgf]} chybí --- spusťte odpovídající Python skript.%
+        }%
+      }%
+    \end{center}%
+  }%
+}
 
 \endinput
 %%
