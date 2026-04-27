@@ -14,9 +14,12 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import matplotlib as mpl
+
+if TYPE_CHECKING:
+    import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
