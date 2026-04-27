@@ -1991,6 +1991,10 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% User-level alias used by Python-generated PGF labels.
+% Keep this tooltip-only (no GoTo destination) so geo labels in figures do
+% not emit unresolved name{geo-XX} warnings when geo acronyms use hyper=false.
+\newcommand{\CTUtooltiplink}[3]{\pdftooltip{#2}{#3}}
 % \CTU@tooltiplink{destination}{visible text}{tooltip text}
 %   Creates a single GoTo Link annotation whose /Contents entry is the tooltip.
 %   This is the standard PDF mechanism for hover tooltips on hyperlinks and is
