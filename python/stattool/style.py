@@ -246,14 +246,13 @@ def apply_geo_labels_pgf(
         if txt not in codes:
             continue
         if values is not None and txt in values:
-            # Use \CTUtooltiplink (public alias for \CTU@tooltiplink) so that
-            # the label text can be typeset after the preamble where @ has
-            # catcode 12 (not a letter).  CTUthesis.cls defines
-            # \CTUtooltiplink as \CTU@tooltiplink{#1}{#2}{#3}.
+            # Keep map labels as pure tooltips (no GoTo destination links).
+            # This avoids unresolved name{geo-XX} warnings when geo acronyms
+            # are configured with hyper=false.
             display = rf"\contour{{white}}{{{txt}}}" if halo else txt
             val_str = tooltip_fmt.format(values[txt])
             long = GEO_LONG_NAMES.get(txt, txt)
-            label = rf"\CTUtooltiplink{{geo-{txt}}}{{{display}}}{{{long}: {val_str}}}"
+            label = rf"\pdftooltip{{{display}}}{{{long}: {val_str}}}"
         else:
             label = rf"\acs{{geo-{txt}}}"
             if halo:
