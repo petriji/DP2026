@@ -187,6 +187,8 @@
 % 12pt → \@ptsize=2; oneside → no mirrored even/odd margins.
 \ExecuteOptions{a4paper,12pt,oneside,onecolumn,final,openany}
 \ProcessOptions
+% Allow PDF 1.7 input files (thesis assignment, declaration) without version warnings.
+\pdfminorversion=7
 % size10.clo / size11.clo / size12.clo: defines \normalsize, \small, \large,
 %   \footnotesize etc. for the selected base point size.
 \input{size1\@ptsize.clo}
