@@ -1358,31 +1358,31 @@
   \IfFileExists{\jobname.lot}{\@CTUhastablestrue}{}%
 }
 \newcommand\listoffigures{%
+    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
-    \if@CTUhasfigures
-      \chapter*{\CTUlofname}%
+    \chapter*{\CTUlofname}%
       \chaptermark{\CTUlofname}%
-    \fi
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
+    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
+    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
       \@restonecolfalse
     \fi
-    \if@CTUhastables
-      \chapter*{\CTUlotname}%
+    \chapter*{\CTUlotname}%
       \chaptermark{\CTUlotname}%
-    \fi
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
+    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
