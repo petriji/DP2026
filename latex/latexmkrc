@@ -1,4 +1,45 @@
 $out_dir = 'build';
+
+# The thesis can legitimately need more than latexmk's default five LaTeX
+# passes after a clean build: biber, acro, hyperref bookmarks, page references,
+# and CTUthesis back-matter links all settle gradually.
+$max_repeat = 10;
+
+# soulpos writes .upa/.upb sidecar caches near \end{document}. They are generated
+# by LaTeX and may be rewritten around the time they are read, which should not
+# by itself keep latexmk in a rerun loop.
+push @generated_exts, 'upa', 'upb';
+$hash_calc_ignore_pattern{'upa'} = '^';
+$hash_calc_ignore_pattern{'upb'} = '^';
+
+# ── Auto-generate figures before LaTeX build ──────────────────────────────────
+# Calls python/stats_analytics.py to regenerate figure PDFs and .tex snippets.
+# Skipped by default — run only when RUN_PYTHON_ANALYTICS=1 is set.
+# Use the "Analytics + latexmk" VS Code recipe to trigger this automatically.
+#
+# The venv is resolved in order:
+#   1. python/.venv   (created by python/setup_venv.sh, preferred)
+#   2. ~/.venvs/dp_thesis  (legacy location)
+#   3. plain python3  (system Python, if deps are installed globally)
+{
+    if ($ENV{RUN_PYTHON_ANALYTICS}) {
+        my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
+        my $script = "$proj/../python/stats_analytics.py";
+
+        if (-f $script) {
+            my $venv1  = "$proj/../python/.venv/bin/python";
+            my $venv2  = "$ENV{HOME}/.venvs/dp_thesis/bin/python";
+            my $python = -f $venv1 ? $venv1
+                       : -f $venv2 ? $venv2
+                       : 'python3';
+
+            my $rc = system($python, $script);
+            if ($rc != 0) {
+                die "stats_analytics.py failed (exit " . ($rc >> 8) . "). Aborting LaTeX build.\n";
+            }
+        }
+    }
+}
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
 $biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source dir, not build/
@@ -7,6 +48,37 @@ $biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source d
 # uncomment the second line below and comment the first when required.
 $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S';
 # $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -shell-escape %O %S';
+
+# Remove corrupted build intermediates (typically after interrupted TeX runs).
+# If a previous pdflatex process is killed, main.aux/main.bcf may contain NUL
+# bytes; latexmk and biber then fail with "invalid \0" / malformed bcf errors.
+sub ctu_file_has_nul {
+    my ($path) = @_;
+    return 0 unless -f $path;
+    open my $fh, '<', $path or return 0;
+    binmode $fh;
+    my $buf;
+    while (read($fh, $buf, 65536)) {
+        if (index($buf, "\0") >= 0) {
+            close $fh;
+            return 1;
+        }
+    }
+    close $fh;
+    return 0;
+}
+
+sub ctu_quarantine_corrupt_build_files {
+    my @targets = ("$out_dir/main.aux", "$out_dir/main.bcf", "$out_dir/main.bbl");
+    for my $f (@targets) {
+        next unless ctu_file_has_nul($f);
+        my $bak = $f . '-SAVE-CORRUPT';
+        unlink $bak if -e $bak;
+        rename $f, $bak;
+        print "Latexmk: Corrupted file '$f' (NUL bytes) moved to '$bak'.\n";
+    }
+}
+add_hook('before_xlatex', \&ctu_quarantine_corrupt_build_files);
 
 # Generate git author/email metadata files before each compilation.
 # CTUthesis.cls reads these via \InputIfFileExists after inputenc is loaded.
