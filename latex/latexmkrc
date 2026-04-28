@@ -1,6 +1,7 @@
 $out_dir = 'build';
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
+$biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source dir, not build/
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
 # The -shell-escape flag is needed only when the tikzextern option is active;
 # uncomment the second line below and comment the first when required.
