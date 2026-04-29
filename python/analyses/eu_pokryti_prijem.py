@@ -113,11 +113,7 @@ display_year = common_years[-1] if common_years else "?"
 
 save_figure_tex_pgf(
     "eu_pokryti_prijem",
-    caption=(
-        f"Pokrytí \\acs{{KV}} a~\\acs{{HDP}} na obyvatele v~paritě kupní síly "
-        f"(\\acs{{geo-EU}}27\u00a0=\u00a0100), pro státy OECD/\\acs{{geo-EU}}, "
-        f"{display_year}. Přerušovaná čára -- regrese OLS."
-    ),
+    caption=f"Pokrytí \\acs{{KS}} a~\\acs{{HDP}} na obyvatele v~paritě kupní síly (\\acs{{geo-EU27}} = 100), pro státy OECD/\\acs{{geo-EU}}, {display_year}. Přerušovaná čára -- regrese \\acs{{MNČ}}",
     label="fig:eu_pokryti_prijem",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct,eurostat_nama_10_pc_PPS_EU27eq100",
     strings=STRINGS,

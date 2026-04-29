@@ -109,8 +109,7 @@ savefig_pgf(fig, "eu_cenova_hladina", strings=STRINGS, nudge_labels=NUDGE_LABELS
 # ── 5. Write LaTeX snippet ─────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_cenova_hladina",
-    caption=(
-        f"Index cenové hladiny \\acs{{HDP}}, EU mapa, {ds.latest_year}."),
+    caption=f"Index cenové hladiny \\acs{{HDP}}, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
     label="fig:eu_cenova_hladina",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_prc_ppp_ind_PLI_GDP",

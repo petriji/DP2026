@@ -108,7 +108,7 @@ savefig_pgf(fig, "eu_gini_prijem", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_gini_prijem",
     caption=(
-        f"Giniho koeficient disponibilního příjmu, vybrané země EU, {START_YEAR}--{ds.years[-1]}."),
+        f"Giniho koeficient disponibilního příjmu, vybrané země \\acs{{EU}}, {START_YEAR}--{ds.years[-1]}."),
     label="fig:eu_gini_prijem",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_ilc_di12_Gini",

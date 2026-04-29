@@ -83,7 +83,7 @@ COUNTRIES = ["CZ", "DK", "AT", "DE", "PL", "SK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Podíl \\acp{{OSVČ}} na zaměstnanosti ({ds.latest_year})",
+    "title": f"Podíl \\acs{{OSVČ}} na zaměstnanosti ({ds.latest_year})",
     "colorbar_label": r"podíl \acp{OSVČ} [\%]",
 }
 
@@ -107,7 +107,7 @@ savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_osvc_mapa",
-    caption=f"Podíl \\acs{{OSVČ}} na celkové zaměstnanosti, EU mapa, {ds.latest_year}.",
+    caption=f"Podíl \\acs{{OSVČ}} na celkové zaměstnanosti, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
     label="fig:eu_osvc_mapa",
     resizebox_width=r"\linewidth",
     cite_keys="eurostat_lfsa_egaps",

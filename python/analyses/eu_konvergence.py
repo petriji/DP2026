@@ -209,7 +209,7 @@ savefig_pgf(fig, "eu_konvergence", strings=STRINGS)
 last_year = lp_years[-1]
 save_figure_tex_pgf(
     "eu_konvergence",
-    caption=f"Konvergence produktivity práce a~čistého příjmu k~\\acs{{geo-EU}}27, vybrané země EU, {START_YEAR}--{last_year}.",
+    caption=f"Konvergence produktivity práce a~čistého příjmu k~průměru \\acs{{geo-EU27}}, 2004--{last_year}",
     cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:eu_konvergence",
     resizebox_width=r"\linewidth",

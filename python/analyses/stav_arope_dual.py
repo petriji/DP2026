@@ -243,13 +243,7 @@ savefig_pgf(fig, "stav_arope_dual", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "stav_arope_dual",
-    caption=(
-        f"Vývoj míry \\acs{{AROPE}} a~odhadovaný podíl osob s~čistým "
-        f"ekvivalizovaným příjmem nejvýše na úrovni třetího decilu "
-        f"(\\acs{{var-D3}}) \\acs{{geo-EU}}27 v~\\acs{{PPS}} "
-        f"(log-normální interpolace z~decilů \\acs{{geo-EU}} zemí), "
-        f"vybrané země EU, {first_year}--{last_year}."
-    ),
+    caption=f"Vývoj míry \\acs{{AROPE}} a~odhadovaný podíl osob s~čistým ekvivalizovaným příjmem nejvýše na úrovni třetího decilu \\acs{{var-D3}} \\acs{{geo-EU27}} v~\\acs{{PPS}} (log-normální interpolace z~decilů), vybrané země EU, 2015--{last_year}",
     label="fig:stav_arope_dual",
     cite_keys=[
         "eurostat_ilc_peps01n_PC_pop",

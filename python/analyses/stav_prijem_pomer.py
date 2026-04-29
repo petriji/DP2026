@@ -153,7 +153,7 @@ savefig_pgf(fig, "stav_prijem_pomer", strings=STRINGS, nudge_labels=NUDGE_LABELS
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
 save_figure_tex_pgf(
     "stav_prijem_pomer",
-    caption=f"Poměr čistého příjmu k~\\acs{{HDP}} na obyvatele (\\acs{{EU}}27\\,=\\,100), vybrané země EU, {START_YEAR}--{last_year}.",
+    caption=f"Konvergence poměru čistého příjmu k~\\acs{{HDP}} na obyvatele (\\acs{{geo-EU27}}\\,=\\,100), \\acs{{EU}}, 2004--{last_year}",
     label="fig:stav_prijem_pomer",
     resizebox_width=r"\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],

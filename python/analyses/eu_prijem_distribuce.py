@@ -261,10 +261,7 @@ median_str = "; ".join(
 savefig_pgf(fig, "eu_prijem_distribuce", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_prijem_distribuce",
-    caption=(
-        f"Modelové rozložení ekvivalizovaného čistého disponibilního "
-        f"příjmu domácností, vybrané země EU, {ref_year}."
-    ),
+    caption=f"Modelové rozložení ekvivalizovaného čistého disponibilního příjmu domácností, vybrané země \\acs{{EU}}, {ref_year}",
     cite_keys="eurostat_ilc_di01",
     label="fig:eu_prijem_distribuce",
     resizebox_width=r"\linewidth",

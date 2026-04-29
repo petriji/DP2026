@@ -90,10 +90,7 @@ savefig_pgf(fig, "stav_hustota_vyvoj", strings=STRINGS_FULL, nudge_labels=NUDGE_
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "stav_hustota_vyvoj",
-    caption=(
-        f"Vývoj hustoty odborových organizací, vybrané země EU, "
-        f"{START_YEAR}--{ds.years[-1]}."
-    ),
+    caption="Vývoj odborové organizovanosti, vybrané země EU, 1993--2024",
     label="fig:stav_hustota_vyvoj",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",

@@ -126,10 +126,7 @@ savefig_pgf(fig, "stav_zamestnanost", strings=STRINGS, nudge_labels=NUDGE_LABELS
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "stav_zamestnanost",
-    caption=(
-        f"Míra zaměstnanosti (20--64 let), vybrané země EU, "
-        f"{ds.years[0]}--{ds.years[-1]}."
-    ),
+    caption=f"Konvergence míry zaměstnanosti (20--64 let, \\acs{{geo-EU27}}\\,=\\,100), \\acs{{EU}}, 2009--2025",
     label="fig:stav_zamestnanost",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_lfsi_emp_a",

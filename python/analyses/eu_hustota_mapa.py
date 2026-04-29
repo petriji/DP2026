@@ -48,8 +48,8 @@ _vmax = max(_values.values())
 COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 STRINGS = {
-    "title": f"Hustota odborů ({ds.latest_year})",
-    "colorbar_label": r"hustota odborů [\% zaměstnanců]",
+    "title": f"Odborová organizovanost ({ds.latest_year})",
+    "colorbar_label": r"odborová organizovanost [\% zaměstnanců]",
 }
 
 fig = choropleth(
@@ -72,7 +72,7 @@ savefig_pgf(fig, "eu_hustota_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_hustota_mapa",
     caption=(
-        f"Hustota odborů, EU mapa, {ds.latest_year}."),
+        f"Odborová organizovanost, \\acs{{geo-EU27}} mapa, {ds.latest_year}."),
     label="fig:eu_hustota_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
