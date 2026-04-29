@@ -172,6 +172,7 @@ add_hook('before_xlatex', \&ctu_update_citcount);
 # Counts:
 #   figures      — \contentsline {figure} entries in build/main.lof
 #   tables       — \contentsline {table}  entries in build/main.lot
+#                  (fallback: corresponding \@writefile entries in build/main.aux)
 #   attachments  — \item lines in texparts/references/list_attachments.tex
 #                  (simple regex; ignores commented-out lines)
 # Git:
@@ -185,19 +186,28 @@ sub ctu_update_poster_stats {
     my $tmp = "$out_dir/main-stats.tmp";
     my $lof = "$out_dir/main.lof";
     my $lot = "$out_dir/main.lot";
+    my $aux = "$out_dir/main.aux";
     my $att = 'texparts/references/list_attachments.tex';
 
     # mtime guard: rerun when any source is newer than the tmp.
-    return unless ctu_needs_update($tmp, $lof, $lot, $att);
+    return unless ctu_needs_update($tmp, $lof, $lot, $aux, $att);
 
     my $nfig = 0;
     if (-f $lof && open my $fh, '<', $lof) {
         while (<$fh>) { $nfig++ if /\\contentsline\s*\{figure\}/; }
         close $fh;
     }
+    if ($nfig == 0 && -f $aux && open my $fh, '<', $aux) {
+        while (<$fh>) { $nfig++ if /\\@writefile\{lof\}\{\\contentsline\s*\{figure\}/; }
+        close $fh;
+    }
     my $ntab = 0;
     if (-f $lot && open my $fh, '<', $lot) {
         while (<$fh>) { $ntab++ if /\\contentsline\s*\{table\}/; }
+        close $fh;
+    }
+    if ($ntab == 0 && -f $aux && open my $fh, '<', $aux) {
+        while (<$fh>) { $ntab++ if /\\@writefile\{lot\}\{\\contentsline\s*\{table\}/; }
         close $fh;
     }
     my $natt = 0;
