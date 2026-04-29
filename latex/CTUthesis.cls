@@ -277,6 +277,9 @@
 %   N = total body character count / 1800 (ISO 690 / Czech thesis convention).
 %   Omit or leave commented to suppress the line entirely.
 \gdef\@normostrana{}
+\gdef\@CTUnfigures{0}
+\gdef\@CTUntables{0}
+\gdef\@CTUnattachments{0}
 \newcommand{\normostrana}[1]{\gdef\@normostrana{#1}}
 % Raw keyword text captured from the files passed to \CTUabstract; used for
 %   language-dependent PDF metadata.
@@ -700,6 +703,7 @@
   \ifx\@normostrana\@empty
     \InputIfFileExists{build/\jobname-normostrana.tmp}{}{}%
   \fi
+  \InputIfFileExists{build/\jobname-stats.tmp}{}{}%
   % Run quality checks: loads abstract/keyword/citcount tmp files and emits a
   %   ClassWarning to the .log for each violated threshold.  Debug-mode PDF
   %   highlights are accumulated in \CTU@debugwarnlist and rendered later by
@@ -1060,13 +1064,25 @@
     \@normostrana
   \fi}
 % \CTU@citation@scope: "Rozsah práce" line shown below the citation text.
-%   Shows only the normostrana count (with debug highlight when below minimum).
+%   Shows normostrana count plus figure/table/attachment totals when available.
 %   Suppressed entirely when normostrana is not set (no latexmk run yet).
 \newcommand\CTU@citation@scope{%
   \ifx\@normostrana\@empty\else
     \ifCTUenglish Scope of thesis\else Rozsah pr\'{a}ce\fi:\space
     \CTU@normohighlight\space
     \ifCTUenglish standard pages\else normostran\fi\@addpunct{.}%
+    \ifnum\@CTUnfigures>0\par
+      \ifCTUenglish Figures\else Obr\'{a}zk\r{u}\fi:\space
+      \@CTUnfigures\@addpunct{.}%
+    \fi
+    \ifnum\@CTUntables>0\par
+      \ifCTUenglish Tables\else Tabulek\fi:\space
+      \@CTUntables\@addpunct{.}%
+    \fi
+    \ifnum\@CTUnattachments>0\par
+      \ifCTUenglish Attachments\else P\v{r}\'{{\i}}loh\fi:\space
+      \@CTUnattachments\@addpunct{.}%
+    \fi
   \fi}%
 %
 % \CTUcitationpage[key]: isolated page containing the thesis self-citation.
