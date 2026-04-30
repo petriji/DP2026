@@ -34,8 +34,28 @@ $biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source d
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
 # The -shell-escape flag is needed only when the tikzextern option is active;
 # uncomment the second line below and comment the first when required.
-$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S';
+$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -cnf-line=extra_mem_bot=8000000 -cnf-line=extra_mem_top=8000000 %O %S';
 # $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -shell-escape %O %S';
+
+# Write generated TeX inputs only when their byte content changes.  latexmk
+# tracks these .tmp files after TeX reads them; rewriting identical content on
+# every pass creates a false rerun loop and can exhaust latexmk's pass limit.
+sub ctu_write_if_changed {
+    my ($target, $content) = @_;
+    mkdir $out_dir unless -d $out_dir;
+    if (-f $target && open my $in, '<', $target) {
+        binmode $in;
+        local $/;
+        my $old = <$in>;
+        close $in;
+        return 0 if defined $old && $old eq $content;
+    }
+    open my $out, '>', $target or die "Cannot write $target: $!\n";
+    binmode $out;
+    print $out $content;
+    close $out;
+    return 1;
+}
 
 # Generate git author/email metadata files before each compilation.
 # CTUthesis.cls reads these via \InputIfFileExists after inputenc is loaded.
@@ -47,13 +67,8 @@ $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S
     chomp $author;  chomp $email;
     $author ||= 'Name Surname';
     $email  ||= 'address@e-mail.xy';
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $fh, '>', "$out_dir/main-gitauthor.tmp") {
-        print $fh '\gdef\@author{' . $author . "}\n";
-    }
-    if (open my $fh2, '>', "$out_dir/main-gitemail.tmp") {
-        print $fh2 '\gdef\@email{' . $email . "}\n";
-    }
+    ctu_write_if_changed("$out_dir/main-gitauthor.tmp", '\gdef\@author{' . $author . "}\n");
+    ctu_write_if_changed("$out_dir/main-gitemail.tmp",  '\gdef\@email{'  . $email  . "}\n");
 }
 
 # ---------------------------------------------------------------------------
@@ -97,9 +112,7 @@ sub ctu_needs_update {
             # Round to nearest normostrana (round half-up).
             my $normo = int(($total + 900) / 1800);
             $normo = 1 if $normo < 1;
-            if (open my $fh, '>', $tmp) {
-                print $fh '\normostrana{' . $normo . "}\n";
-            }
+            ctu_write_if_changed($tmp, '\normostrana{' . $normo . "}\n");
         }
     }
 }
@@ -126,14 +139,13 @@ sub ctu_needs_update {
         my $nae = ctu_texcount_chars('texparts/mandatory/abstract_en.tex');
         my $nk  = ctu_texcount_chars('texparts/mandatory/keywords.tex');
         my $nke = ctu_texcount_chars('texparts/mandatory/keywords_en.tex');
-        if (open my $fh, '>', $tmp) {
-            print $fh "\\makeatletter\n";
-            print $fh '\gdef\@CTUabstractchars{'   . $na  . "}\n";
-            print $fh '\gdef\@CTUabstractenchars{' . $nae . "}\n";
-            print $fh '\gdef\@CTUkeywordschars{'   . $nk  . "}\n";
-            print $fh '\gdef\@CTUkeywordsenchars{' . $nke . "}\n";
-            print $fh "\\makeatother\n";
-        }
+        my $content = "\\makeatletter\n"
+                    . '\gdef\@CTUabstractchars{'   . $na  . "}\n"
+                    . '\gdef\@CTUabstractenchars{' . $nae . "}\n"
+                    . '\gdef\@CTUkeywordschars{'   . $nk  . "}\n"
+                    . '\gdef\@CTUkeywordsenchars{' . $nke . "}\n"
+                    . "\\makeatother\n";
+        ctu_write_if_changed($tmp, $content);
     }
 }
 
@@ -155,12 +167,10 @@ sub ctu_update_citcount {
         while (<$fh>) { $count++ if /\\entry\{/; }
         close $fh;
     }
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $out, '>', $tmp) {
-        print $out "\\makeatletter\n";
-        print $out '\gdef\@CTUcitcount{' . $count . "}\n";
-        print $out "\\makeatother\n";
-    }
+    my $content = "\\makeatletter\n"
+                . '\gdef\@CTUcitcount{' . $count . "}\n"
+                . "\\makeatother\n";
+    ctu_write_if_changed($tmp, $content);
 }
 add_hook('before_xlatex', \&ctu_update_citcount);
 
@@ -237,16 +247,14 @@ sub ctu_update_poster_stats {
     my $sha = `git rev-parse --short HEAD 2>/dev/null` // '';
     chomp $sha;
 
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $out, '>', $tmp) {
-        print $out "\\makeatletter\n";
-        print $out '\gdef\@CTUnfigures{'     . $nfig . "}\n";
-        print $out '\gdef\@CTUntables{'      . $ntab . "}\n";
-        print $out '\gdef\@CTUnattachments{' . $natt . "}\n";
-        print $out '\gdef\@CTUgitrepo{'      . $repo . "}\n";
-        print $out '\gdef\@CTUgittag{'       . $tag  . "}\n";
-        print $out '\gdef\@CTUgitsha{'       . $sha  . "}\n";
-        print $out "\\makeatother\n";
-    }
+    my $content = "\\makeatletter\n"
+                . '\gdef\@CTUnfigures{'     . $nfig . "}\n"
+                . '\gdef\@CTUntables{'      . $ntab . "}\n"
+                . '\gdef\@CTUnattachments{' . $natt . "}\n"
+                . '\gdef\@CTUgitrepo{'      . $repo . "}\n"
+                . '\gdef\@CTUgittag{'       . $tag  . "}\n"
+                . '\gdef\@CTUgitsha{'       . $sha  . "}\n"
+                . "\\makeatother\n";
+    ctu_write_if_changed($tmp, $content);
 }
 add_hook('before_xlatex', \&ctu_update_poster_stats);

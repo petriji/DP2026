@@ -1070,19 +1070,17 @@
   \ifx\@normostrana\@empty\else
     \ifCTUenglish Scope of thesis\else Rozsah pr\'{a}ce\fi:\space
     \CTU@normohighlight\space
-    \ifCTUenglish standard pages\else normostran\fi\@addpunct{.}%
-    \ifnum\@CTUnfigures>0\par
-      \ifCTUenglish Figures\else Obr\'{a}zk\r{u}\fi:\space
-      \@CTUnfigures\@addpunct{.}%
+    \ifCTUenglish standard pages\else normostran\fi%
+    \ifnum\@CTUnfigures>0
+      ;\space\@CTUnfigures\space\ifCTUenglish figures\else obr\'{a}zk\r{u}\fi%
     \fi
-    \ifnum\@CTUntables>0\par
-      \ifCTUenglish Tables\else Tabulek\fi:\space
-      \@CTUntables\@addpunct{.}%
+    \ifnum\@CTUntables>0
+      ;\space\@CTUntables\space\ifCTUenglish tables\else tabulek\fi%
     \fi
-    \ifnum\@CTUnattachments>0\par
-      \ifCTUenglish Attachments\else P\v{r}\'{{\i}}loh\fi:\space
-      \@CTUnattachments\@addpunct{.}%
+    \ifnum\@CTUnattachments>0
+      ;\space\@CTUnattachments\space\ifCTUenglish attachments\else p\v{r}\'{{\i}}loh\fi%
     \fi
+    \@addpunct{.}%
   \fi}%
 %
 % \CTUcitationpage[key]: isolated page containing the thesis self-citation.
