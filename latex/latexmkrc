@@ -208,7 +208,7 @@ sub ctu_update_poster_stats {
         close $fh;
     }
     if ($nfig == 0 && -f $aux && open my $fh, '<', $aux) {
-        while (<$fh>) { $nfig++ if /\\@writefile\{lof\}\{\\contentsline\s*\{figure\}/; }
+        while (<$fh>) { $nfig++ if /\\\@writefile\{lof\}\{\\contentsline\s*\{figure\}/; }
         close $fh;
     }
     my $ntab = 0;
@@ -217,7 +217,7 @@ sub ctu_update_poster_stats {
         close $fh;
     }
     if ($ntab == 0 && -f $aux && open my $fh, '<', $aux) {
-        while (<$fh>) { $ntab++ if /\\@writefile\{lot\}\{\\contentsline\s*\{table\}/; }
+        while (<$fh>) { $ntab++ if /\\\@writefile\{lot\}\{\\contentsline\s*\{table\}/; }
         close $fh;
     }
     my $natt = 0;
