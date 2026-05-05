@@ -1816,12 +1816,20 @@
 %   harmlessly gobbled by the stub.
 \ifCTUacro
   \RequirePackage{acro}
+  % The custom xltabular lists do not print acronym page references.  Disable
+  % acro's page-recording aux writes as well; otherwise \ACRO{recordpage}
+  % entries are still emitted and can leave groups open when captions/lists are
+  % written during clean builds with many acro uses in moving arguments.
+  \ExplSyntaxOn
+  \cs_set_protected:Npn \acro_record_page:n #1 { }
+  \ExplSyntaxOff
+  \protected\def\CTUacroHyperlink#1#2{\hyperlink{#1}{#2}}%
   % --------------------------------------------------------------------------
   % Global options
-  % make-links=false: links and /Contents tooltips are created manually via
-  %   \CTU@tooltiplink in the renewed templates below.  acro's built-in link
-  %   mechanism only produces plain \hyperlink annotations with no /Contents,
-  %   so it cannot carry the hover tooltip needed for Acrobat Reader.
+  % make-links=false: links are created manually in the renewed display
+  %   templates below.  Acronym links intentionally use hyperref's robust
+  %   \hyperlink rather than low-level \pdfstartlink, because acronyms also
+  %   occur in math and moving arguments such as captions/list entries.
   % list/display=used: \printacronyms omits entries that never appear in text.
   % list/template=xltabular: custom two-column table template defined below.
   % list/heading=chapter*: printed list gets an unnumbered chapter heading.
@@ -1921,11 +1929,9 @@
   }
   % --------------------------------------------------------------------------
   % Display templates for \ac{} (long-short) and \acs{} (short).
-  %   make-links=false means acro creates no link annotations.  All links and
-  %   /Contents tooltips are created here via \CTU@tooltiplink (defined after
-  %   hyperref below), which wraps the text in a single GoTo Link annotation
-  %   that carries /Contents — the tooltip mechanism supported by Acrobat Reader,
-  %   Acrobat Pro, and PDF.js (LaTeX Workshop preview).
+  %   make-links=false means acro creates no link annotations.  Links for
+  %   printed acronym groups are created here with \hyperlink; hidden groups
+  %   (geo, nolist) remain tooltip-only because they have no printed target.
   %
   %   The tooltip text is the long form of the acronym.  \acrowrite{long} is a
   %   non-expandable \NewDocumentCommand so it cannot be used directly inside
@@ -1939,27 +1945,50 @@
   %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
   %   catcodes (colon and underscore as letters).
   \ExplSyntaxOn
-  % Helper: emit visible text with a tooltip and no GoTo link.  This avoids
-  % unresolved destination warnings when an acronym destination is not present.
-  \cs_new:Npn \CTU@acro_tooltip:nn #1#2 { \pdftooltip{#1}{#2} }
+  % Helper: emit visible text with a pdfcomment tooltip and no GoTo link.
+  % Used for hidden acronym groups (geo, nolist) that have no list destination.
+  % In PDF-string context \pdftooltip is disabled via DisableCommands → plain text.
+  \cs_new:Npn \CTU@acro_tooltip:nn #1#2
+    { \pdftooltip{#1}{#2} }
+  % Helper: link entries that are printed in an acronym/variable/index list;
+  % keep hidden entries tooltip-only to avoid missing destination warnings.
+  \cs_generate_variant:Nn \acro_boolean_property_if:nnTF { VnTF }
+  % Thin wrapper so we can generate an e-expanding variant for \AcronymID:
+  \cs_new:Npn \CTU@acro_link:nnn #1#2#3 { \CTU@tooltiplink{#1}{#2}{#3} }
+  \cs_generate_variant:Nn \CTU@acro_link:nnn { enn }
+  \cs_new:Npn \CTU@acro_display:nn #1#2
+    {
+      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo }
+        { \CTU@acro_tooltip:nn {#1}{#2} }
+        {
+          \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { nolist }
+            { \CTU@acro_tooltip:nn {#1}{#2} }
+            {
+              \acro_boolean_property_if:VnTF \AcronymID { used }
+                { \CTU@acro_link:enn { \AcronymID } {#1}{#2} }
+                { \CTU@acro_tooltip:nn {#1}{#2} }
+            }
+        }
+    }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
-      \CTU@acro_tooltip:nn {%
+      \CTU@acro_display:nn {%
         \acrowrite{long}%
         \acspace(%
         \acrowrite{short}%
-        \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
         \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
-        \acrogroupcite)%
+        )%
       }{ \acro_property_get:Vn \AcronymID { long } }%
+      \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
+      \acrogroupcite
     }%
     {%
-      \CTU@acro_tooltip:nn {\acrowrite{short}}
+      \CTU@acro_display:nn {\acrowrite{short}}
         { \acro_property_get:Vn \AcronymID { long } }%
     }%
   }
   \RenewAcroTemplate{long}{%
-    \CTU@acro_tooltip:nn {\acrowrite{long}}
+    \CTU@acro_display:nn {\acrowrite{long}}
       { \acro_property_get:Vn \AcronymID { long } }%
   }
   % short template: when `index` is set (subscript/superscript index variable)
@@ -1969,11 +1998,11 @@
   \RenewAcroTemplate{short}{%
     \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
-        \CTU@acro_tooltip:nn {\acrowrite{short}}
+        \CTU@acro_display:nn {\acrowrite{short}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
       {%  index property set — show only the index part in text
-        \CTU@acro_tooltip:nn {\acrowrite{index}}
+        \CTU@acro_display:nn {\acrowrite{index}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
   }
@@ -2016,6 +2045,10 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% refcount: retrieve hyperref's stored anchor name for a label.  \ref{label}
+% cannot use the label key itself as a PDF destination; the real destination is
+% the fourth field in the .aux record (e.g. section.3.1 or figure.caption.7).
+\RequirePackage{refcount}
 % User-level alias used by Python-generated PGF labels.
 % Keep this tooltip-only (no GoTo destination) so geo labels in figures do
 % not emit unresolved name{geo-XX} warnings when geo acronyms use hyper=false.
@@ -2029,6 +2062,11 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
+  % In PDF-string context (bookmark generation, \pdfstringdef for captions)
+  % output only the visible text — \pdfstartlink is not allowed there.
+  \ifHy@pdfstring
+    #2%
+  \else
   % \pdfstringdef and \pdfstartlink are not allowed in math mode.  When called
   % from \acs{var-X} or \acs{idx-Y} inside $...$, switch to restricted
   % horizontal mode via \mbox and re-enter math mode for the visible glyphs so
@@ -2050,11 +2088,37 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
-  \Hy@colorlink\@linkcolor
+  \pdfstartlink attr{\Hy@tempa} goto name{#1}\relax
   #2%
-  \Hy@endcolorlink
   \pdfendlink
+  \fi
+  \fi
+}
+\protected\def\CTUciteTooltipLink#1#2#3{\CTU@tooltiplink{#1}{#2}{#3}}%
+% Tooltip-text cache: \CTU@tip@<label> stores the pre-expanded nameref title.
+% Populated via .aux writes in the \label hook (installed at begindocument/end)
+% so the title is available from the very first token of each subsequent pass,
+% even when \ref{} precedes the figure's \input{} in document order.
+% \CTU@labeltipauxdef is written to .aux by the \label patch and executed when
+% the .aux is read back at \begin{document}.
+\newcommand{\CTU@labeltipauxdef}[2]{%
+  % \gdef (no expansion): stored tokens may contain \SI{}, \acs{} etc.,
+  % which are unexpandable; \pdfstringdef handles them via DisableCommands.
+  \expandafter\gdef\csname CTU@tip@#1\endcsname{#2}%
+}
+\newcommand{\CTU@tooltipref}[2]{%
+  \edef\CTU@dest{\getrefbykeydefault{#1}{anchor}{}}%
+  \ifx\CTU@dest\@empty
+    #2%
+  \else
+    % Look up the cached title.  Falls back to plain ref on cache miss (first
+    % ever pass with no aux, or label truly undefined).
+    \expandafter\let\expandafter\CTU@tiplookup\csname CTU@tip@#1\endcsname
+    \ifx\CTU@tiplookup\relax
+      #2%
+    \else
+      \expandafter\CTU@tooltiplink\expandafter{\CTU@dest}{#2}{\CTU@tiplookup}%
+    \fi
   \fi
 }
 % Strip formatting and normalise dashes in PDF tooltip strings.
@@ -2072,6 +2136,15 @@
   % Make \exp_not:n a pass-through so storage wrappers don't block expansion.
   % \csname produces the expl3 cs regardless of the catcode of : in scope here.
   \expandafter\let\csname exp_not:n\endcsname\@firstofone%
+  % siunitx v3 commands use unexpandable expl3 internals; strip them to plain
+  % text so the cached caption tokens don't crash \pdfstringdef:
+  %   \SI{N}{unit} -> N   (number only; unit dropped)
+  %   \si{unit}    -> ()  (pure-unit call; drop silently)
+  \def\SI#1#2{#1}%
+  \def\si#1{}%
+  % pdfcomment \pdftooltip{visible}{tip} → plain visible text in PDF strings
+  % (called by \CTU@acro_tooltip:nn for geo/nolist acro entries in headings)
+  \def\pdftooltip#1#2{#1}%
 }
 % lastpage: sets the LastPage label at the end of the document; also stores
 %   \@abspage@last (a plain Arabic integer) in the .aux file so self-citation
@@ -2163,7 +2236,7 @@
 \DeclareCiteCommand{\cite}[\mkbibbrackets]
   {\usebibmacro{prenote}}
   {\usebibmacro{citeindex}%
-   \CTU@tooltiplink{cite.\the\c@refsection @\thefield{entrykey}}
+   \CTUciteTooltipLink{cite.\the\c@refsection @\thefield{entrykey}}
      {\thefield{labelnumber}}
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
@@ -2173,24 +2246,41 @@
 %   hover using the PDF /Contents annotation mechanism (\CTU@tooltiplink).
 %   Tooltip text is produced by \nameref{label} (the section/caption title for
 %   the referenced label) and stripped of formatting by \pdfstringdef.
-%   Both commands are wrapped in \AtBeginDocument so that the redefinitions run
-%   after hyperref has installed its own versions of \ref and \autoref.
+%   Both commands are wrapped in the late begin-document hook so that the
+%   redefinitions run after hyperref/nameref and any package-level hooks have
+%   installed their own versions of \ref and \autoref.
 %   \ref* / \autoref* are hyperref's non-linking variants; they are used as the
 %   visible text inside \CTU@tooltiplink to avoid nested link annotations.
 %   Labels that are undefined at the time of rendering fall back to the original
 %   hyperref command so that missing-reference warnings remain visible.
-\AtBeginDocument{%
+\AddToHook{begindocument/end}{%
   \let\CTU@orig@ref\ref
   \let\CTU@orig@autoref\autoref
   \renewcommand{\ref}[1]{%
-    \@ifundefined{r@#1}%
-      {\CTU@orig@ref{#1}}%
-      {\CTU@tooltiplink{#1}{\CTU@orig@ref*{#1}}{\nameref{#1}}}%
+    \CTU@tooltipref{#1}{\CTU@orig@ref*{#1}}%
   }%
   \renewcommand{\autoref}[1]{%
-    \@ifundefined{r@#1}%
-      {\CTU@orig@autoref{#1}}%
-      {\CTU@tooltiplink{#1}{\CTU@orig@autoref*{#1}}{\nameref{#1}}}%
+    \CTU@tooltipref{#1}{\CTU@orig@autoref*{#1}}%
+  }%
+  % Patch \eqref (amsmath) to show a bare number like \ref instead of (N.n).
+  % amsmath's default wraps \ref in \tagform@ which adds the round brackets;
+  % we skip that wrapper so equation references are visually consistent with
+  % figure/table/section references.
+  \renewcommand{\eqref}[1]{%
+    \CTU@tooltipref{#1}{\CTU@orig@ref*{#1}}%
+  }%
+  % Patch \label to write the current nameref title to .aux as
+  % \CTU@labeltipauxdef{key}{title}.  Executed when the .aux is read back on
+  % subsequent passes: populates \CTU@tip@<key> before the document body
+  % starts so tooltips work even for \ref{} calls that precede the figure's
+  % \input{}.  \protected@write expands non-robust tokens (e.g. \strXCaption)
+  % to their text at write time, when they are already defined.
+  \let\CTU@orig@label\label
+  \renewcommand{\label}[1]{%
+    \CTU@orig@label{#1}%
+    \protected@write\@auxout{}{%
+      \string\CTU@labeltipauxdef{#1}{\@currentlabelname}%
+    }%
   }%
 }
 
