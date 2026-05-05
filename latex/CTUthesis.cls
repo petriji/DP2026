@@ -2183,6 +2183,16 @@
 \DeclareFieldFormat{labelnumberwidth}{\mkbibbrackets{#1}}
 \setlength{\biblabelsep}{1em}
 
+% biblatex-iso690 treats howpublished as a medium marker and wraps every
+% literal value in brackets.  This project also stores legal-source strings
+% such as "In: \emph{Zákony pro lidi} [online]. AION CS" there; only the
+% recognised medium string itself should be bracketed.
+\DeclareFieldFormat{howpublished}{%
+  \ifbibstring{#1}
+    {\mainlangbibstring[\mkbibbrackets]{#1}}
+    {#1}%
+}
+
 % Global bibliography output policy (keeps .bib content intact):
 %   - do not print the note field,
 %   - shorten long personal-author lists to "et al.",
