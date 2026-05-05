@@ -1365,25 +1365,10 @@
 \newcommand*\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
-% Global flags: true when at least one captioned figure / table exists in the
-% document.  Detected at \listoffigures / \listoftables call time by probing
-% for the .lof / .lot files written by \@starttoc in the previous latexmk
-% pass — this is robust against hyperref's \addcontentsline patch and any
-% other package that wraps the TOC-writing machinery.
-%
-% First-run behaviour: on a clean build no .lof/.lot exists yet, so the list
-% chapter is skipped on pass 1.  Pass 1 still writes the files via \@starttoc
-% calls inside \caption; pass 2 then detects them and emits the chapter.
-% latexmk automatically reruns to resolve cross-references, so the finished
-% PDF always contains the correct lists.
-\newif\if@CTUhasfigures
-\newif\if@CTUhastables
-\AtBeginDocument{%
-  \IfFileExists{\jobname.lof}{\@CTUhasfigurestrue}{}%
-  \IfFileExists{\jobname.lot}{\@CTUhastablestrue}{}%
-}
+% Lists are always opened when back matter is enabled.  Calling \@starttoc is
+% what creates/refreshes .lof and .lot; guarding on the files' prior existence
+% makes a clean build self-blocking and prevents the lists from ever appearing.
 \newcommand\listoffigures{%
-    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1393,11 +1378,9 @@
       \chaptermark{\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
-    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1407,7 +1390,6 @@
       \chaptermark{\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
