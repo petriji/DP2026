@@ -1067,6 +1067,26 @@
   \else
     \@normostrana
   \fi}
+% \CTU@czplural{N}{one}{two-four}{other}: Czech count-dependent noun form.
+% Uses the academic/publishing convention (not the literary last-digit rule):
+%   N=1       → singular   (#2)   e.g. "1 obrázek"
+%   N=2,3,4   → paucal     (#3)   e.g. "3 obrázky"
+%   N≥5       → gen.plural (#4)   e.g. "42 obrázků"
+% This matches the poster (which always uses genitive plural for real counts)
+% and avoids the unnatural "42 obrázky" produced by the literary last-digit rule.
+\newcommand\CTU@czplural[4]{%
+  \begingroup
+    \@tempcnta=#1\relax
+    \ifnum\@tempcnta=1
+      #2%
+    \else
+      \ifnum\@tempcnta<5
+        #3%
+      \else
+        #4%
+      \fi
+    \fi
+  \endgroup}
 % \CTU@citation@scope: "Rozsah práce" line shown below the citation text.
 %   Shows normostrana count plus figure/table/attachment totals when available.
 %   Suppressed entirely when normostrana is not set (no latexmk run yet).
@@ -1074,15 +1094,23 @@
   \ifx\@normostrana\@empty\else
     \ifCTUenglish Scope of thesis\else Rozsah pr\'{a}ce\fi:\space
     \CTU@normohighlight\space
-    \ifCTUenglish standard pages\else normostran\fi%
+    \ifCTUenglish standard pages\else
+      \CTU@czplural{\@normostrana}{normostrana}{normostrany}{normostran}%
+    \fi%
     \ifnum\@CTUnfigures>0
-      ;\space\@CTUnfigures\space\ifCTUenglish figures\else obr\'{a}zk\r{u}\fi%
+      ;\space\@CTUnfigures\space\ifCTUenglish figures\else
+        \CTU@czplural{\@CTUnfigures}{obr\'{a}zek}{obr\'{a}zky}{obr\'{a}zk\r{u}}%
+      \fi%
     \fi
     \ifnum\@CTUntables>0
-      ;\space\@CTUntables\space\ifCTUenglish tables\else tabulek\fi%
+      ;\space\@CTUntables\space\ifCTUenglish tables\else
+        \CTU@czplural{\@CTUntables}{tabulka}{tabulky}{tabulek}%
+      \fi%
     \fi
     \ifnum\@CTUnattachments>0
-      ;\space\@CTUnattachments\space\ifCTUenglish attachments\else p\v{r}\'{{\i}}loh\fi%
+      ;\space\@CTUnattachments\space\ifCTUenglish attachments\else
+        \CTU@czplural{\@CTUnattachments}{p\v{r}\'{\i}loha}{p\v{r}\'{\i}lohy}{p\v{r}\'{\i}loh}%
+      \fi%
     \fi
     \@addpunct{.}%
   \fi}%
