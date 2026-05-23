@@ -1,9 +1,10 @@
 r"""
-ICT-workforce share of women -- EU choropleth map.
+ICT-training participation by women -- EU choropleth map.
 
-Shows the share of female individuals (aged 16--74) who are employed in
-ICT-related occupations. Used in the GPG-analysis section to illustrate that CZ women are under-
-represented in ICT employment, which contributes to the structural GPG
+Shows the share of female individuals (aged 16--74) who participated in
+training activities to increase their ICT/internet skills in the last year.
+Used in the GPG-analysis section to illustrate that CZ women are under-
+represented in ICT upskilling, which contributes to the structural GPG
 through occupational segregation into lower-paying sectors.
 
 Data source: Eurostat ``isoc_sks_itsps``
@@ -26,7 +27,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -46,7 +46,7 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# isoc_sks_itsps: ICT employment participation
+# isoc_sks_itsps: ICT training participation
 # Dimensions: freq · unit · sex · age · geo
 # Filter to: annual, % of individuals, females, 16–74 years, all geos.
 path = fetch_eurostat(
@@ -57,30 +57,26 @@ path = fetch_eurostat(
 # ── 2. Parse ──────────────────────────────────────────────────────────────────
 ds = Dataset.from_sdmx_csv(
     path,
-    name="Účast žen v ICT",
-    unit="% žen",
+    name="Účast žen v ICT školení",
+    unit="% žen (16–74 let)",
     source_url="Eurostat/isoc_sks_itsps",
-    filters={"unit": "PC", "sex": "F"},
+    filters={"unit": "PC_IND", "sex": "F", "age": "Y16_74"},
 )
 
 print(f"Countries: {len(ds.countries)}  |  Years: {ds.years}")
 print(f"Display year (latest): {ds.latest_year}")
-warn_non_target_year(source="Eurostat isoc_sks_itsps", year=ds.latest_year, context="Women in ICT map reference year")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
-_years_used = ds.df.sort_values("time").groupby("geo")["time"].last().to_dict()
-warn_years("Eurostat isoc_sks_itsps", _years_used.values(), context="Women in ICT map country fill years")
 _values = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
-_vmin = min(_values.values())
 _vmax = max(_values.values())
 
-NUDGE_LABELS = [(c, c) for c in COUNTRIES]
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Podíl žen na zaměstnanosti v ICT ({ds.latest_year})",
+    "title": f"Účast žen v ICT školení ({ds.latest_year})",
     "colorbar_label": r"podíl žen (16--74 let) [\%]",
 }
 
@@ -90,7 +86,7 @@ fig = choropleth(
     title=STRINGS["title"],
     colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn",
-    vmin=_vmin,
+    vmin=0,
     vmax=_vmax,
     label_countries=True,
     fill_latest=True,
@@ -106,7 +102,7 @@ savefig_pgf(fig, "eu_ict_gender", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_ict_gender",
     caption=(
-        r"Podíl žen (16--74 let) mezi zaměstnanci v~\acs{ICT}, "
+        r"Podíl žen (16--74 let) účastnících se \acs{ICT} školení v~posledním roce, "
         f"mapa Evropy, {ds.latest_year}."
     ),
     label="fig:eu_ict_gender",
