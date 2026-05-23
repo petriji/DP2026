@@ -270,13 +270,13 @@
 % ----------------------------------------------------------------------------
 % Acro — loaded so that thesis text reused on the poster (with \ac{}, \acs{},
 % \acp{}, \acl{}) typesets without errors.  No list is ever printed on the
-% poster, so list-related templates from the thesis are deliberately omitted.
+% poster, so list-related templates and acronym links are deliberately omitted.
 % Per-thesis declaration files (acro.tex, acro_variables.tex) must still be
 % \input in the poster preamble — same as in main.tex.
 % ----------------------------------------------------------------------------
 \RequirePackage{acro}
 \acsetup{
-  make-links   = true,    % clickable but no list target → harmless
+  make-links   = false,   % no acronym list target exists in the poster
   list/display = used,    % no effect (we never call \printacronyms)
   single       = false,   % expand on first use even if used only once
 }
@@ -546,14 +546,14 @@
   % Heading — same look as \section but no \section{} so no TOC entry attempt.
   {\sffamily\bfseries\color{CTUblue}\fontsize{30}{36}\selectfont
     \CTUP@lbl@references\par}%
-  \vspace{2mm}%
-  % Tighter list metrics for a poster column.
-  \renewcommand*{\bibfont}{\small}%
-  \setlength{\bibitemsep}{0.4\baselineskip}%
-  \setlength{\bibhang}{1.6em}%
-  % Force the bibliography strings („Dostupné z“ / „Available from“, etc.)
-  % to the chosen biblio language regardless of per-entry langid by switching
-  % babel main language for the duration of \printbibliography.
+  \vspace{1mm}%
+  \renewcommand*{\bibfont}{\scriptsize}%
+  \setlength{\bibitemsep}{0.15\baselineskip}%
+  \setlength{\bibhang}{1.2em}%
+  % Allow generous inter-word spacing so long URLs and author names break
+  % at the column boundary without producing overfull hboxes:
+  \emergencystretch=2em
+  \sloppy
   \selectlanguage{\CTUP@biblang}%
   \printbibliography[heading=none,#1]%
   \endgroup
