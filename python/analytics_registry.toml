@@ -246,3 +246,9 @@ pics     = ["vyhled_vzdelani_vyvoj"]
 script   = "analyses/vyhled_digit_dovednosti.py"
 texparts = ["vyhled_digit_dovednosti_mapa"]
 pics     = ["vyhled_digit_dovednosti_mapa"]
+
+[ict_gender]
+script   = "analyses/eu_ict_gender.py"
+texparts = ["eu_ict_gender"]
+pics     = ["eu_ict_gender"]
+
