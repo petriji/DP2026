@@ -177,6 +177,36 @@ def _draw_grid_and_ticks(ax: plt.Axes) -> None:
                 ha="center", va="center", fontsize=_FS, color="#222222")
 
 
+def _draw_equilibrium_distance_circles(
+    ax: plt.Axes,
+    levels: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8),
+) -> None:
+    """Draw concentric circles around the barycentric equilibrium point.
+
+    The circles represent increasing Euclidean distance from equilibrium
+    (A=B=C=1/3). Styling follows the minor ternary grid (dotted, subtle).
+    """
+    center_x = 0.5
+    center_y = _H / 3.0
+    max_radius = _H / 3.0  # inradius of the unit equilateral triangle
+
+    for lvl in levels:
+        if lvl <= 0.0:
+            continue
+        radius = max_radius * min(lvl, 1.0)
+        circle = plt.Circle(
+            (center_x, center_y),
+            radius,
+            fill=False,
+            color=_GRID_COLOR,
+            linestyle=":",
+            linewidth=0.28,
+            alpha=0.25,
+            zorder=2,
+        )
+        ax.add_patch(circle)
+
+
 # ── Axis arrows, corner labels, and 0/100 end-markers ─────────────────────────
 
 def _draw_axis_arrows(
@@ -383,6 +413,7 @@ def ternary_diagram(
     label_angle_nudges: dict[str, float] | None = None,
     label_radius_pts: float = 9.0,
     background_data: dict[str, tuple[float, float, float]] | None = None,
+    show_equilibrium_circles: bool = False,
 ) -> plt.Figure:
     """Build and return a ternary diagram figure.
 
@@ -429,6 +460,9 @@ def ternary_diagram(
         Optional mapping of background entities (e.g. EU27) to ``(A%, B%, C%)``
         shares.  Drawn as grey dots behind the main ``data`` points.
         Pass ``None`` (default) to disable.
+    show_equilibrium_circles:
+        If True, draw 4 concentric dotted circles around equilibrium
+        (A=B=C=1/3), matching minor-grid visual styling.
 
     Returns
     -------
@@ -450,6 +484,9 @@ def ternary_diagram(
 
     # ── Grid + tick marks ─────────────────────────────────────────────────
     _draw_grid_and_ticks(ax)
+
+    if show_equilibrium_circles:
+        _draw_equilibrium_distance_circles(ax)
 
     # ── Triangle boundary ─────────────────────────────────────────────────
     ax.plot([0.0, 1.0, 0.5, 0.0], [0.0, 0.0, _H, 0.0],
