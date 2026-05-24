@@ -55,11 +55,14 @@ import sys
 import tomllib
 from pathlib import Path
 
+from config import LATEX_PICS_DIR
+
 PYTHON_DIR  = Path(__file__).parent.resolve()
 DP_DIR      = PYTHON_DIR.parent
 LATEX_DIR   = DP_DIR / "latex"
-PICS_DIR    = DP_DIR / "pics" / "python"
+PICS_DIR    = Path(LATEX_PICS_DIR)
 TEX_DIR     = LATEX_DIR / "texparts" / "python"
+FIG_EXTS    = (".pgf", ".pdf", ".png", ".svg")
 
 # ── Registry ──────────────────────────────────────────────────────────────────
 # Loaded from registry.toml (same directory as this script).
@@ -136,18 +139,15 @@ def _any_missing(entry: dict, referenced: set[str]) -> bool:
                 if not (TEX_DIR / f"{pattern}.tex").exists():
                     return True
 
-    # Check pic PDF files
+    # Check figure files in configured output dir.
+    # Some analyses produce .pgf, others .pdf/.png/.svg.
     for pattern in entry.get("pics", []):
-        matching = [s for s in referenced
-                    if fnmatch.fnmatch(s, pattern.replace("_map_*", "_map_*"))]
-        # For pic patterns derived from texpart stems:
-        # re-resolve against referenced stems
         matched_stems = [s for s in referenced if fnmatch.fnmatch(s, pattern)]
         for stem in matched_stems:
-            if not (PICS_DIR / f"{stem}.pdf").exists():
+            if not any((PICS_DIR / f"{stem}{ext}").exists() for ext in FIG_EXTS):
                 return True
         if not matched_stems and "*" not in pattern and pattern in referenced:
-            if not (PICS_DIR / f"{pattern}.pdf").exists():
+            if not any((PICS_DIR / f"{pattern}{ext}").exists() for ext in FIG_EXTS):
                 return True
 
     return False
@@ -165,6 +165,64 @@ def _run(key: str, entry: dict) -> None:
             flush=True,
         )
         sys.exit(result.returncode)
+
+
+def _covered_stems(referenced: set[str]) -> set[str]:
+    """Return referenced stems covered by at least one registry texpart pattern."""
+    covered: set[str] = set()
+    for entry in REGISTRY.values():
+        for pattern in entry["texparts"]:
+            for stem in referenced:
+                if fnmatch.fnmatch(stem, pattern):
+                    covered.add(stem)
+    return covered
+
+
+def _run_fallback_for_uncovered(referenced: set[str]) -> None:
+    """Run analyses/<stem>.py for referenced stems missing from registry.
+
+    This makes "Clean + Analytics + Build all" robust for freshly-added
+    analyses before registry.toml is updated.
+    """
+    uncovered = sorted(referenced - _covered_stems(referenced))
+    if not uncovered:
+        return
+
+    for stem in uncovered:
+        texpart = TEX_DIR / f"{stem}.tex"
+        if texpart.exists():
+            continue
+
+        candidate = PYTHON_DIR / "analyses" / f"{stem}.py"
+        if not candidate.exists():
+            continue
+
+        print(
+            f"[stats_analytics] fallback: running unregistered analysis {candidate.name}",
+            flush=True,
+        )
+        result = subprocess.run([sys.executable, str(candidate)], cwd=PYTHON_DIR)
+        if result.returncode != 0:
+            print(
+                f"[stats_analytics] ERROR: fallback {candidate.name} exited with code {result.returncode}",
+                flush=True,
+            )
+            sys.exit(result.returncode)
+
+    still_missing = [s for s in uncovered if not (TEX_DIR / f"{s}.tex").exists()]
+    if still_missing:
+        print(
+            "[stats_analytics] ERROR: referenced python texparts are not covered by analytics_registry.toml "
+            "and no fallback script produced them:",
+            flush=True,
+        )
+        for stem in still_missing:
+            print(f"  - {stem}", flush=True)
+        print(
+            "[stats_analytics] Add/update entries in python/analytics_registry.toml.",
+            flush=True,
+        )
+        sys.exit(2)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -193,6 +251,8 @@ def main() -> None:
     # Discover which python texparts are referenced in the .tex project
     main_tex   = LATEX_DIR / "main.tex"
     referenced = _tex_stems(main_tex)
+
+    _run_fallback_for_uncovered(referenced)
 
     if args.list:
         print("Referenced texparts/python/ stems:")
