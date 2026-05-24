@@ -15,14 +15,14 @@ Indicator set (2025 / latest available):
   6.  Low-wage earners [% employees, < 2/3 med.] -- earn_ses_pub1s
   7.  Gini coefficient                           -- ilc_di12
   8.  Employment rate 20--64 [%]                  -- lfsi_emp_a
-  9.  Job vacancy rate [%, B--S excl. O]          -- jvs_a_nace2  (→ -- on 404)
+    9.  Job vacancy rate [%, non-sector aggregate]  -- jvs_a_r21
   10. CB coverage [%]                            -- OECD ICTWSS AdjCov / CBC ERB, 2022--2024
   11. Trade union density [%]                    -- OECD ICTWSS TUD, 2022--2024
   12. Active LMP spending [% GDP]                -- OECD LMPEXP (→ -- on error)
   13. Old-age dependency ratio (65+) [%]         -- demo_pjanind OLDDEP1
 
-Row labels embed \cite{} for non-italic rows; caption contains year only.
-Sub-rows (↳) and the derived row 5 are wrapped in \textit{} via italic_rows.
+Row labels embed \cite{} for non-derived rows; caption contains year only.
+The derived row italicizes only its descriptive label; the unit and values stay upright.
 
 Output
 ------
@@ -116,9 +116,6 @@ def _row(label: str, values: dict[str, float], fmt: str = "{:.1f}",
 def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, float],
                 fmt: str = "{:.1f}", idx_fmt: str = "{:.0f}", unit: str = "") -> dict:
     r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (\SI{idx}{\percent})``.
-
-    When the whole row is italic (derived indicator), the caller wraps via italic_rows
-    in table.py --- \textit{} around the cell content preserves the \newline.
     """
     def _cell(c: str) -> str:
         v = values.get(c)
@@ -211,41 +208,95 @@ ds_emp = Dataset.from_sdmx_csv(
     source_url="Eurostat/lfsi_emp_a",
 )
 
-# Job vacancy rate (B--S excl. O) --- robust full-dataset extraction
-# jvs_a_nace2 dimensions usually include: freq · nace_r2 · sizeclas · indic_em · geo
-# Note: startPeriod causes 400 on this dataset --- omit it.
+# Job vacancy rate --- robust full-dataset extraction from jvs_a_r21.
+# Non-sector NACE priority: B-S_X_O -> TOTAL -> B-S -> B-O.
+# If the primary filter is missing for a core country, allow a narrower
+# replacement for at most 3 countries (e.g., B-N), with explicit logging.
 ds_jvr: "Dataset | None" = None
 try:
-    _jvr_path = fetch_eurostat("jvs_a_nace2", force=True)
+    _jvr_path = fetch_eurostat("jvs_a_r21", force=True)
     _jvr_raw = pd.read_csv(_jvr_path, na_values=["", ":", ": "])
     _jvr_raw = _jvr_raw.rename(columns={"TIME_PERIOD": "time", "OBS_VALUE": "value"})
     _jvr_raw = _jvr_raw.drop(columns=[c for c in ("DATAFLOW", "LAST UPDATE", "OBS_FLAG", "CONF_STATUS") if c in _jvr_raw.columns])
     _jvr_raw["value"] = pd.to_numeric(_jvr_raw["value"], errors="coerce")
     _jvr_raw = _jvr_raw.dropna(subset=["value"])
     _jvr_raw = _jvr_raw[_jvr_raw["geo"].isin(COUNTRIES)].copy()
+    _jvr_raw["time"] = _jvr_raw["time"].astype(str).str[:4].astype(int)
 
     if "freq" in _jvr_raw.columns:
         _jvr_raw = _jvr_raw[_jvr_raw["freq"].isin(["A", "ANNUAL"]) ]
-    if "indic_em" in _jvr_raw.columns:
-        _jvr_raw = _jvr_raw[_jvr_raw["indic_em"].isin(["JVR", "JV_RATE", "JVAC_RATE"]) ]
-    if "nace_r2" in _jvr_raw.columns:
-        for _nace in ["B-S_X_O", "B-S", "TOTAL"]:
-            _tmp = _jvr_raw[_jvr_raw["nace_r2"] == _nace]
+
+    _jvr_all = _jvr_raw.copy()
+
+    _nace_col = "nace_r2" if "nace_r2" in _jvr_raw.columns else (
+        "nace_r2_1" if "nace_r2_1" in _jvr_raw.columns else None
+    )
+    _chosen_nace = None
+    if _nace_col:
+        for _nace in ["B-S_X_O", "TOTAL", "B-S", "B-O"]:
+            _tmp = _jvr_raw[_jvr_raw[_nace_col] == _nace]
             if not _tmp.empty:
                 _jvr_raw = _tmp
+                _chosen_nace = _nace
                 break
+
+    _chosen_unit = None
+    if "unit" in _jvr_raw.columns:
+        for _u in ["AVG_3Y", "AVG_A"]:
+            _tmp = _jvr_raw[_jvr_raw["unit"] == _u]
+            if not _tmp.empty:
+                _jvr_raw = _tmp
+                _chosen_unit = _u
+                break
+
+    _chosen_size = None
     if "sizeclas" in _jvr_raw.columns:
         for _sz in ["GE10", "TOTAL"]:
             _tmp = _jvr_raw[_jvr_raw["sizeclas"] == _sz]
             if not _tmp.empty:
                 _jvr_raw = _tmp
+                _chosen_size = _sz
                 break
 
+    _country_overrides: list[str] = []
+    if _nace_col and _chosen_nace:
+        _base = _jvr_raw.copy()
+        _have = set(_base.loc[_base["time"] <= YEAR, "geo"].unique())
+        _missing = [c for c in COUNTRIES if c not in _have]
+        _alts = ["B-N", "B-O", "B-S", "TOTAL"]
+        _parts = [_base]
+        for _geo in _missing:
+            if len(_country_overrides) >= 3:
+                break
+            for _alt in _alts:
+                if _alt == _chosen_nace:
+                    continue
+                _cand = _jvr_all[_jvr_all[_nace_col] == _alt]
+                if _cand.empty:
+                    continue
+                if _chosen_unit and "unit" in _cand.columns:
+                    _cand = _cand[_cand["unit"] == _chosen_unit]
+                if _chosen_size and "sizeclas" in _cand.columns:
+                    _cand = _cand[_cand["sizeclas"] == _chosen_size]
+                _cand_geo = _cand[(_cand["geo"] == _geo) & (_cand["time"] <= YEAR)]
+                if _cand_geo.empty:
+                    continue
+                _parts.append(_cand[_cand["geo"] == _geo])
+                _country_overrides.append(f"{_geo}:{_alt}")
+                break
+        _jvr_raw = pd.concat(_parts, ignore_index=True)
+
+    print(
+        "  jvs_a_r21:",
+        f"nace={_chosen_nace or 'n/a'}, unit={_chosen_unit or 'n/a'},",
+        "country-overrides=" + (", ".join(_country_overrides) if _country_overrides else "none"),
+    )
+
     if not _jvr_raw.empty:
-        ds_jvr = Dataset(_jvr_raw[["geo", "time", "value"]], name="Job vacancy rate", unit="%", source_url="Eurostat/jvs_a_nace2")
-        print(f"  jvs_a_nace2: extracted {len(ds_jvr.df)} rows")
+        ds_jvr = Dataset(_jvr_raw[["geo", "time", "value"]], name="Job vacancy rate", unit="%", source_url="Eurostat/jvs_a_r21")
+        print(f"  jvs_a_r21: extracted {len(ds_jvr.df)} rows")
 except Exception as _e:
-    print(f"  jvs_a_nace2: {_e}")
+    print(f"  jvs_a_r21: {_e}")
 if ds_jvr is None:
     print("  WARNING: job vacancy rate unavailable --- row 9 will show --")
 
@@ -381,7 +432,7 @@ try:
     _path_tud = fetch_oecd("TUD", start_period=YEAR - 10)
     ds_density = Dataset.from_oecd_csv(
         _path_tud,
-        name="Hustota odborů", unit="%",
+        name="Odborová organizovanost", unit="%",
         source_url="OECD AIAS ICTWSS / TUD",
         filters={"INDICATOR": "TUD"},
     )
@@ -449,7 +500,7 @@ _year_map: dict[str, dict[str, int]] = {
     "APZ výdaje":        _yr_apz,
     "Nízkopříjm. zaměst.": _yr_lowwage,
     "Pokrytí KV":        _yr_cba,
-    "Hustota odborů":    _yr_density,
+    "Odborová organizovanost":    _yr_density,
 }
 
 _deviations: list[tuple[str, str, int]] = [
@@ -499,13 +550,13 @@ L_GDP      = _m(r"HDP [\si{\pps\per\person\per\hour}]~\cite{eurostat_nama_10_pc}
 L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
 L_HRS      = _m(r"Odpracované hodiny \newline (průměr) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
 L_TAX      = _m(r"Daňový klín \newline (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
-L_DISP     = r"Čistý disponibilní příjem \newline (průměrný) [\si{\pps\per\hour}]"  # italic --- derived, no \cite{}
+L_DISP     = r"\textit{Čistý disponibilní příjem \newline (průměrný)} [\si{\pps\per\hour}]"  # derived, no \cite{}
 L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci \newline (\SI{67}{\percent} mediánu)~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost \newline (20--64~let)~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
-L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_nace2}", "JVR")
-L_CBA      = _m(r"Pokrytí \ac{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
-L_DENSITY  = _m(r"Hustota odborů~\cite{oecd_aias_ictwss_TUD_pct}", "Hustota odborů")
+L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_r21}", "JVR")
+L_CBA      = _m(r"Pokrytí \acs{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
+L_DENSITY  = _m(r"Odborová organizovanost~\cite{oecd_aias_ictwss_TUD_pct}", "Odborová organizovanost")
 L_APZ      = _m(r"Výdaje na \acs{APZ} \newline (poměr k~\acs{HDP})~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 
@@ -520,7 +571,7 @@ rows = [
     _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", unit=r"\hour"),
     # ── Tax group ─────────────────────────────────────────────────────────────
     _row(L_TAX,      v_tax,      fmt="{:.1f}",  unit=r"\percent"),
-    # ── Derived disposable income (italic, no \cite{}) + CZ=100 index ────────
+    # ── Derived disposable income (italic label, no \cite{}) + CZ=100 index ──
     _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Low-wage earners ──────────────────────────────────────────────────────
     _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  unit=r"\percent"),
@@ -543,11 +594,7 @@ df_table = (
 )
 df_table = df_table[[COUNTRY_LABELS[c] for c in COUNTRIES]]
 
-# ── 5. Structural parameters ──────────────────────────────────────────────────
-
-italic_rows = [L_DISP]  # derived row --- whole row italic
-
-# ── 6. Write LaTeX table ──────────────────────────────────────────────────────
+# ── 5. Write LaTeX table ──────────────────────────────────────────────────────
 
 # Build footnote: one entry per fallback year with its letter marker.
 _deviation_note = ""
@@ -570,13 +617,12 @@ save_table_tex(
     note=(
         r"Úplné náklady práce v~\si{\pps\per\hour} přepočteny z~\si{\eur\per\hour} současným \acs{PLI}. "
         r"Daňový klín pro bezdětnou svobodnou osobu. "
-        r"Pokrytí \ac{KS}: \ac{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
+        r"Pokrytí \acs{KS}: \acs{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format=r"@{}>{\raggedright\arraybackslash\rule[-0.6ex]{0pt}{2.8ex}}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
-    italic_rows=italic_rows,
     long_table=True,
     arraystretch=1.3,
     sans_serif=False,
