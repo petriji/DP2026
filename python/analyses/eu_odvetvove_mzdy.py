@@ -302,7 +302,7 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         vmax=vmax_global,
         ax=ax_i,
         label_countries=True,
-        show_colorbar=False,
+        show_colorbar=False,  # shared colorbar added centrally below
     )
     apply_geo_labels_pgf(
         ax_i,
@@ -319,26 +319,36 @@ fig_maps.suptitle(
     y=0.98,
 )
 
-# Shared VERTICAL colorbar placed in the middle (between left and right panels).
+# Shared central colorbar — uses the EXACT same inset_axes(width=0.10, height=2.10)
+# code path as the standard choropleth helper, so the raster strip is byte-identical
+# and deduplicates to the same _shared/ PNG as all other RdYlGn choropleths.
+# bbox_transform=transFigure lets bbox_to_anchor=(0.5, 0.5) mean "figure centre".
 import matplotlib as mpl_lib
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
 norm_shared = mpl_lib.colors.Normalize(vmin=vmin_global, vmax=vmax_global)
 sm_shared = mpl_lib.cm.ScalarMappable(cmap="RdYlGn", norm=norm_shared)
 sm_shared.set_array([])
-# Manually-positioned axes in figure coords: vertical strip in the centre.
-cax_vert = fig_maps.add_axes([0.485, 0.18, 0.018, 0.62])
-cb_v = fig_maps.colorbar(sm_shared, cax=cax_vert,
-                         label=STRINGS_MAP["colorbar_label"], orientation="vertical")
-cb_v.ax.tick_params(labelsize=max(FONT_SIZE + 1, 10))
-cb_v.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE + 2, 10))
+cax_center = _inset_axes(
+    axes[0, 0],                        # parent axes (positional anchor only)
+    width=0.10, height=2.10,           # identical to choropleth helper → same PNG
+    loc="center",
+    bbox_to_anchor=(0.5, 0.5),         # figure centre
+    bbox_transform=fig_maps.transFigure,
+    borderpad=0,
+)
+cb_center = fig_maps.colorbar(sm_shared, cax=cax_center,
+                               label=STRINGS_MAP["colorbar_label"])
+cb_center.ax.tick_params(labelsize=max(FONT_SIZE + 1, 10))
+cb_center.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE + 2, 10))
 
-# Make room in the middle: shrink each subplot horizontally.
+# Subplot spacing — no large central gap needed; colorbar is an inset overlay.
 fig_maps.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.04,
-                         wspace=0.30, hspace=0.10)
+                         wspace=0.14, hspace=0.10)
 # Prevent savefig's tight_layout from clobbering the manual layout.
 fig_maps._tight_layout_kwargs = {"pad": 0.4}
 fig_maps._subplots_adjust_kwargs = {"left": 0.02, "right": 0.98,
                                     "top": 0.92, "bottom": 0.04,
-                                    "wspace": 0.30, "hspace": 0.10}
+                                    "wspace": 0.14, "hspace": 0.10}
 
 savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP)
 save_figure_tex_pgf(
