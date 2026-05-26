@@ -110,10 +110,16 @@ def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
                     stems.add(stem)
                     break
             else:
-                # Recurse into other \input{} calls
-                candidate = (base / arg).with_suffix(".tex") if not arg.endswith(".tex") \
-                            else base / arg
-                stems |= _tex_stems(candidate, visited)
+                # Recurse into other \input{} calls.
+                # Try both file-relative and latex-root-relative resolution because
+                # this project commonly uses \input{texparts/...} from nested files.
+                arg_with_ext = arg if arg.endswith(".tex") else f"{arg}.tex"
+                candidates = [base / arg_with_ext]
+                if arg.startswith(("texparts/", "texparts\\")):
+                    candidates.append(LATEX_DIR / arg_with_ext)
+
+                for candidate in candidates:
+                    stems |= _tex_stems(candidate, visited)
 
     return stems
 
