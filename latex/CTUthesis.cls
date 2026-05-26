@@ -985,6 +985,29 @@
       \bfseries #1%
       \@endparpenalty\@M
     \end{center}}
+% \CTU@abstractblock{heading}{abstract-file}{keywords-heading}{keywords-file}
+% One language block without page-level spacing control.
+\newcommand\CTU@abstractblock[4]{%
+  \@beginparpenalty\@lowpenalty
+  \begin{center}%
+    \bfseries #1%
+    \@endparpenalty\@M
+  \end{center}%
+  \input{#2}%
+  \CTU@abshead{#3}%
+  \begin{center}%
+    \textit{\input{#4}}%
+  \end{center}%
+}
+% \CTU@abstractpage{heading}{abstract-file}{keywords-heading}{keywords-file}
+% Typesets one language block on its own vertically centered page.
+\newcommand\CTU@abstractpage[4]{%
+  \clearpage
+  \thispagestyle{nonum}%
+  \null\vfil
+  \CTU@abstractblock{#1}{#2}{#3}{#4}%
+  \par\vfil\null\clearpage
+}
 % \CTUabstract{cz-abstract}{cz-keywords}{en-abstract}{en-keywords}
 % Convenience command: wraps the abstract environment and inserts the four
 % section headings automatically, language-aware (\ifCTUenglish).
@@ -992,47 +1015,46 @@
   \CatchFileDef\CTU@pdfkeywordscz{#2}{}%
   \CatchFileDef\CTU@pdfkeywordsen{#4}{}%
   \CTU@setpdfmetadata
-  \begin{abstract}%
+  % First measure both language blocks together; if they fit, keep one page.
+  % Otherwise split to two independently centered pages.
+  \setbox\z@=\vbox{%
+    \hsize=\textwidth
     \ifCTUenglish
-      % English thesis: EN block first (matches \abstractname = "Abstract"),
-      %   then CZ block with Czech headings.
-      \input{#3}%
-      \CTU@abshead{Keywords}%
-      \begin{center}%
-        \textit{\input{#4}}%
-      \end{center}%
-      \CTU@abshead{Abstrakt}%
-      \input{#1}%
-      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
-      \begin{center}%
-        \textit{\input{#2}}%
-      \end{center}%
+      \CTU@abstractblock{Abstract}{#3}{Keywords}{#4}%
+      \CTU@abstractblock{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
     \else
-      % Czech thesis: CZ block first (matches \abstractname = "Abstrakt"),
-      %   then EN block with English headings.
-      \input{#1}%
-      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
-      \begin{center}%
-        \textit{\input{#2}}%
-      \end{center}%
-      \CTU@abshead{Abstract}%
-      \input{#3}%
-      \CTU@abshead{Keywords}%
-      \begin{center}%
-        \textit{\input{#4}}%
-      \end{center}%
+      \CTU@abstractblock{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+      \CTU@abstractblock{Abstract}{#3}{Keywords}{#4}%
     \fi
-  \end{abstract}}
-\newenvironment{abstract}{%
+  }%
+  \ifdim\dimexpr\ht\z@+\dp\z@\relax<\dimexpr\textheight-2\baselineskip\relax
     \clearpage
     \thispagestyle{nonum}%
     \null\vfil
+    \unvbox\z@
+    \par\vfil\null\clearpage
+  \else
+  \ifCTUenglish
+    % English thesis: EN block first, then CZ block.
+    \CTU@abstractpage{Abstract}{#3}{Keywords}{#4}%
+    \CTU@abstractpage{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+  \else
+    % Czech thesis: CZ block first, then EN block.
+    \CTU@abstractpage{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+    \CTU@abstractpage{Abstract}{#3}{Keywords}{#4}%
+  \fi
+  \fi}
+\newenvironment{abstract}{%
+    \clearpage
+    \thispagestyle{nonum}%
+    % Keep abstract top-aligned; global vfill centering breaks multi-page layout.
+    \vspace*{\CTU@frontskip}%
     \@beginparpenalty\@lowpenalty
     \begin{center}%
       \bfseries \ifCTUenglish Abstract\else Abstrakt\fi
       \@endparpenalty\@M
     \end{center}}%
-   {\par\vfil\null\clearpage}
+   {\par\clearpage}
 % (verse, quotation, quote purged: unused in all CTUthesis projects.)
 % LaTeX2e titlepage: page counter starts at 1; twoside restores it after.
 \newenvironment{titlepage}
