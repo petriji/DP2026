@@ -28,6 +28,8 @@ from stattool.fetch import fetch
 from stattool.style import cm2in
 
 # ── Natural Earth countries shapefile (110m) ──────────────────────────────────
+# 110m keeps thesis-wide PGF output compact. Malta is added via a fallback
+# marker when needed, so we do not have to load heavier 50m polygons globally.
 _NE_URL = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
 _WORLD: "gpd.GeoDataFrame | None" = None
 
@@ -38,6 +40,10 @@ _LAEA = "EPSG:3035"
 # East and north cropped ~10 % to remove excess Russia/Scandinavia whitespace.
 _EU_XLIM = (2_500_000, 6_640_000)
 _EU_YLIM_DEFAULT = (1_400_000, 5_090_000)
+
+# Malta centroid in EPSG:3035; used when 110m Natural Earth omits MT geometry.
+_MT_FALLBACK_XY = (4_719_360, 1_442_124)
+_MT_LABEL_DX = 70_000
 
 
 def _get_world() -> gpd.GeoDataFrame:
@@ -101,7 +107,9 @@ def choropleth(
     fill_latest: bool = True,
     ylim_south: Optional[float] = None,
     highlight_colorbar: Optional[list[str]] = None,
+    plain_highlight_labels: bool = False,
     show_colorbar: bool = True,
+    malta_fallback_marker: bool = True,
 ) -> plt.Figure:
     # Default markers on every choropleth colorbar (key reference economies).
     if highlight_colorbar is None:
@@ -122,6 +130,9 @@ def choropleth(
         Annotate each filled country with its ISO-2 code (default True).
         Centroid is computed after clipping to the EU bounding box to avoid
         overseas-territory displacement (e.g. France).
+    malta_fallback_marker:
+        Draw Malta as a compact point marker when MT has data but 110m source
+        geometry omits it. Keeps PDF size low while preserving MT visibility.
     ylim_south:
         Lower y-limit in EPSG:3035 metres.  Raise to crop southern extent:
         1_700_000 roughly crops Turkey; default 1_400_000 keeps it.
@@ -242,7 +253,9 @@ def choropleth(
                 [-0.12], [val], marker=">", markersize=4,
                 color=color, clip_on=False, zorder=6, transform=trans,
             )
-            lbl = rf"\acs{{geo-{geo}}}" if _pgf else geo
+            # In PGF/main.tex context, acro labels render as \acs{geo-XX}.
+            # For standalone PDF exports, callers can force plain ISO labels.
+            lbl = geo if plain_highlight_labels else (rf"\acs{{geo-{geo}}}" if _pgf else geo)
             # Place label 3pt to the left of the marker using an offset transform.
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(
@@ -272,12 +285,58 @@ def choropleth(
             if (_EU_XLIM[0] <= pt.x <= _EU_XLIM[1] and
                     eu_ylim[0] <= pt.y <= eu_ylim[1]):
                 ax.text(pt.x, pt.y, code,
-                        fontsize=FONT_SIZE, ha="center", va="center",
+                        fontsize=FONT_SIZE - 1, ha="center", va="center",
                         color="black", fontweight="bold",
                         path_effects=[
                             __import__("matplotlib.patheffects", fromlist=["withStroke"])
                             .withStroke(linewidth=1.5, foreground="white")
                         ])
+
+    # Malta fallback for lightweight 110m source: if MT has data but no geometry,
+    # draw a colored point and label so maps still show Malta without 50m bloat.
+    if malta_fallback_marker:
+        has_mt_geom = bool((europe["iso_a2"] == "MT").any())
+        mt_vals = row.loc[row[ds.geo_col] == "MT", ds.value_col].dropna()
+        if (not has_mt_geom) and (not mt_vals.empty):
+            mt_val = float(mt_vals.iloc[-1])
+            mx, my = _MT_FALLBACK_XY
+            if (_EU_XLIM[0] <= mx <= _EU_XLIM[1]) and (eu_ylim[0] <= my <= eu_ylim[1]):
+                mt_color = sm.cmap(norm(mt_val))
+                ax.scatter(
+                    [mx], [my],
+                    s=28,
+                    marker="o",
+                    c=[mt_color],
+                    edgecolors="white",
+                    linewidths=0.5,
+                    zorder=8,
+                )
+                ax.text(
+                    mx + _MT_LABEL_DX,
+                    my,
+                    "MT",
+                    fontsize=FONT_SIZE - 1,
+                    ha="left",
+                    va="center",
+                    color="black",
+                    fontweight="bold",
+                    path_effects=[
+                        __import__("matplotlib.patheffects", fromlist=["withStroke"])
+                        .withStroke(linewidth=1.5, foreground="white")
+                    ],
+                    zorder=9,
+                )
+                if mpl.get_backend() == "pgf":
+                    tip = f"MT: {mt_val:.2f}"
+                    ax.text(
+                        mx,
+                        my,
+                        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tip + r"}",
+                        fontsize=FONT_SIZE,
+                        ha="center",
+                        va="center",
+                        zorder=10,
+                    )
 
     ax.set_xlim(_EU_XLIM)
     ax.set_ylim(eu_ylim)
