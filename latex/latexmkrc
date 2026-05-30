@@ -1,3 +1,5 @@
+use File::Find qw(find);
+
 $out_dir = 'build';
 
 # ── Auto-generate figures before LaTeX build ──────────────────────────────────
@@ -84,13 +86,50 @@ sub ctu_needs_update {
     return 0;
 }
 
+sub ctu_all_tex_sources {
+    my @sources = ('main.tex');
+    if (-d 'texparts') {
+        find(
+            sub {
+                return unless -f $_;
+                return unless /\.tex\z/;
+                push @sources, $File::Find::name;
+            },
+            'texparts'
+        );
+    }
+    return @sources;
+}
+
+sub ctu_prepare_normostrana_main {
+    my ($source, $target) = @_;
+    open my $in, '<', $source or die "Cannot read $source: $!\n";
+    open my $out, '>', $target or die "Cannot write $target: $!\n";
+
+    my $in_preamble = 1;
+    while (my $line = <$in>) {
+        if ($in_preamble && $line =~ /^\s*\\begin\{document\}/) {
+            $in_preamble = 0;
+        }
+        if ($in_preamble && $line =~ /^\s*\\input\{texparts\/references\/acro(?:_variables)?\.tex\}\s*$/) {
+            print {$out} "% $line";
+            next;
+        }
+        print {$out} $line;
+    }
+
+    close $out;
+    close $in;
+}
+
 # Auto-compute normostrana (Czech standard pages = 1800 chars) using texcount.
 # The result is written to build/main-normostrana.tmp and loaded by CTUthesis.cls
 # at \AtBeginDocument only when \normostrana{} has NOT been set manually.
 #
 # Only body text chars are counted (N from "N+M+P" = text, no headers/captions),
-# and only within regions NOT wrapped in %TC:ignore...%TC:endignore in main.tex
-# (so front matter, TOC, and acronym lists are excluded from the count).
+# and only within regions NOT wrapped in %TC:ignore...%TC:endignore in main.tex.
+# texcount still counts preamble \input files with -inc, so the temporary copy
+# used here comments out the acronym declaration inputs before counting.
 # This matches the Czech normostrana standard (body text only, ČSN ISO 5966).
 #
 # texcount is skipped when no .tex file is newer than the cached tmp — this
@@ -98,13 +137,16 @@ sub ctu_needs_update {
 # other non-.tex files.
 {
     my $tmp = "$out_dir/main-normostrana.tmp";
+    my @sources = ctu_all_tex_sources();
     mkdir $out_dir unless -d $out_dir;
-    if (ctu_needs_update($tmp, 'main.tex', glob('texparts/*.tex'))) {
-        my $tc = `texcount -brief -char -inc main.tex 2>/dev/null`;
+    if (ctu_needs_update($tmp, @sources)) {
+        my $texcount_main = 'main.normostrana.texcount.tmp';
+        ctu_prepare_normostrana_main('main.tex', $texcount_main);
+        my $tc = `texcount -brief -char -inc "$texcount_main" 2>/dev/null`;
+        unlink $texcount_main;
         # texcount outputs one "N+M+P (…) File: …" line per file and a final
         # "N+M+P … File(s) total:" summary.  Grab the LAST N+M+P match so we
-        # always use the grand total (sum across all -inc'd files) and %TC:ignore
-        # regions are already excluded by texcount before the sum is printed.
+        # always use the grand total (sum across all -inc'd files).
         # Use body chars only (first number N = text, excludes headers / captions).
         my $total = 0;
         while ($tc =~ /(\d+)\+\d+\+\d+/g) { $total = $1; }
