@@ -777,6 +777,7 @@
   \if@titlepage
   \begin{titlepage}%
 \thispagestyle{empty}
+  \begingroup\sffamily
 
   \begin{flushright}
 	{\large
@@ -820,6 +821,7 @@
   {\normalsize \if@draftmode\@date\else\number\year\fi \par}%
   \end{center}\par
 %  \@thanks
+  \endgroup
   \end{titlepage}%
   \setcounter{footnote}{0}%
   \global\let\thanks\relax
@@ -1147,6 +1149,7 @@
 \newcommand\CTUcitationpage[1][]{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \noindent
   \@ifempty{#1}{\CTU@selfcite}{\fullcite{#1}}%
   \par\vspace{2\baselineskip}%
@@ -1156,6 +1159,7 @@
   \ifx\@facultylogo\@empty\else
     \noindent\includegraphics[height=2.5\baselineskip]{\@facultylogo}\par
   \fi
+  \endgroup
   \clearpage
 }
 %
