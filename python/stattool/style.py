@@ -29,6 +29,9 @@ from config import (
     FIGURE_DPI,
     FIGURE_FORMAT,
     FIGURE_HEIGHT_CM,
+    FIGURE_LABEL_SIZE,
+    FIGURE_TEXT_SIZE,
+    FIGURE_TITLE_SIZE,
     FIGURE_WIDTH_CM,
     FIGURES_DIR,
     FONT_SIZE,
@@ -62,13 +65,13 @@ def apply_style() -> None:
     mpl.rcParams.update(
         {
             # --- Typography ---
-            "font.size": FONT_SIZE,
-            "axes.titlesize": FONT_SIZE,
-            "axes.labelsize": FONT_SIZE,
-            "xtick.labelsize": FONT_SIZE,
-            "ytick.labelsize": FONT_SIZE,
-            "legend.fontsize": FONT_SIZE,
-            "figure.titlesize": FONT_SIZE + 1,
+            "font.size": FIGURE_TEXT_SIZE,
+            "axes.titlesize": FIGURE_TITLE_SIZE,
+            "axes.labelsize": FIGURE_LABEL_SIZE,
+            "xtick.labelsize": FIGURE_LABEL_SIZE,
+            "ytick.labelsize": FIGURE_LABEL_SIZE,
+            "legend.fontsize": FIGURE_LABEL_SIZE,
+            "figure.titlesize": FIGURE_TITLE_SIZE,
             # Latin Modern Sans matches the CMU sans-serif font used in
             # the CTUthesis LaTeX document. Falls back to DejaVu Sans.
             "font.family": "sans-serif",
@@ -241,7 +244,12 @@ def apply_geo_labels_pgf(
 
     Call this function *after* all plotting is done, *before* ``savefig_pgf()``.
     """
-    codes = geo_set if geo_set is not None else GEO_ACRO
+    if geo_set is not None:
+        codes = geo_set
+    elif values is not None:
+        codes = frozenset(values.keys())
+    else:
+        codes = GEO_ACRO
     for child in ax.get_children():
         if not hasattr(child, "get_text"):
             continue
@@ -407,13 +415,13 @@ def apply_style_pgf() -> None:
             # --- Typography (must match document) ---
             "font.family": "sans-serif",
             "font.sans-serif": ["Latin Modern Sans", "CMU Sans Serif", "DejaVu Sans"],
-            "font.size": FONT_SIZE,
-            "axes.titlesize": FONT_SIZE + 2,
-            "axes.labelsize": FONT_SIZE,
-            "xtick.labelsize": FONT_SIZE,
-            "ytick.labelsize": FONT_SIZE,
-            "legend.fontsize": FONT_SIZE,
-            "figure.titlesize": FONT_SIZE + 2,
+            "font.size": FIGURE_TEXT_SIZE,
+            "axes.titlesize": FIGURE_TITLE_SIZE,
+            "axes.labelsize": FIGURE_LABEL_SIZE,
+            "xtick.labelsize": FIGURE_LABEL_SIZE,
+            "ytick.labelsize": FIGURE_LABEL_SIZE,
+            "legend.fontsize": FIGURE_LABEL_SIZE,
+            "figure.titlesize": FIGURE_TITLE_SIZE,
             "axes.titlepad": 6,
             # --- Lines & ticks ---
             "axes.linewidth": 0.6,
@@ -641,6 +649,16 @@ def _nudge_macro_name(prefix: str, label_id: str) -> str:
         f"Invalid TeX cs name: {macro!r} (prefix={prefix!r}, label_id={label_id!r})"
     )
     return macro
+
+
+def _extract_figure_tex_macro_value(content: str, macro: str) -> str | None:
+    r"""Return the value of a ``\def\str...{...}%`` macro from a figure wrapper."""
+    import re as _re
+
+    macro_name = macro[1:] if macro.startswith("\\") else macro
+    pattern = _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE)
+    match = pattern.search(content)
+    return match.group(1) if match else None
 
 
 def _apply_label_nudges_pgf(
@@ -1111,6 +1129,7 @@ def save_figure_tex_pgf(
     if strings is not None or nudge_labels:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
+        caption_macro = _macro_name(prefix, "caption")
         strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
         strings_input_path = f"texparts/figures/{name}"
         # Build list of nudge macros (auto-derived names).
@@ -1125,7 +1144,6 @@ def save_figure_tex_pgf(
                     label_id, _ = entry
                 nudge_macros.append(_nudge_macro_name(prefix, label_id))
         if not strings_file.exists():
-            caption_macro = _macro_name(prefix, "caption")
             lines = [
                 f"% Editable figure definition for {name}",
                 f"% Edit freely --- Python will NOT overwrite this file.",
@@ -1157,27 +1175,49 @@ def save_figure_tex_pgf(
             strings_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
             print(f"  Created figure tex: {strings_file}")
         else:
-            # File exists: do NOT overwrite, but ensure any newly-introduced
-            # nudge macros have a default \providecommand so the build does
-            # not break when the .pgf references them.
+            # File exists: do NOT overwrite the wrapper. Keep user-authored
+            # string macros intact and only warn if Python defaults drift.
+            # Nudge defaults may still be added because they are additive.
+            existing = strings_file.read_text(encoding="utf-8")
+            stale_macros: list[str] = []
+            expected_macros = {caption_macro: caption_str}
+            for key, value in (strings or {}).items():
+                expected_macros[_macro_name(prefix, key)] = str(value)
+            for macro, expected in expected_macros.items():
+                actual = _extract_figure_tex_macro_value(existing, macro)
+                expected_esc = re.sub(r"(?<!\\)%", r"\\%", expected)
+                if actual is None:
+                    stale_macros.append(f"{macro}=missing")
+                    continue
+                if actual != expected_esc:
+                    stale_macros.append(macro)
+            missing_nudges: list[str] = []
             if nudge_macros:
-                existing = strings_file.read_text(encoding="utf-8")
-                missing = [m for m in nudge_macros if m not in existing]
-                if missing:
-                    add = ["", "% --- Auto-added nudge knobs (override with \\renewcommand)"]
-                    for m in missing:
-                        add.append(f"\\providecommand{m}{{0pt}}%")
-                    # Insert before the \begin{figure} line so defaults are
-                    # in scope when \input{...pgf} expands.
-                    marker = "\\begin{figure}"
-                    if marker in existing:
-                        existing = existing.replace(
-                            marker, "\n".join(add) + "\n" + marker, 1
-                        )
-                    else:
-                        existing = existing + "\n".join(add) + "\n"
-                    strings_file.write_text(existing, encoding="utf-8")
-                    print(f"  Added {len(missing)} nudge default(s) to: {strings_file}")
+                missing_nudges = [m for m in nudge_macros if m not in existing]
+                if missing_nudges:
+                    add_blocks = [
+                        "",
+                        "% --- Auto-added nudge knobs (override with \\renewcommand)",
+                        *(f"\\providecommand{m}{{0pt}}%" for m in missing_nudges),
+                    ]
+                # Insert before the \begin{figure} line so defaults are in
+                # scope when \input{...pgf} expands.
+                marker = "\\begin{figure}"
+                if marker in existing:
+                    existing = existing.replace(
+                        marker, "\n".join(add_blocks) + "\n" + marker, 1
+                    )
+                else:
+                    existing = existing + "\n".join(add_blocks) + "\n"
+                strings_file.write_text(existing, encoding="utf-8")
+                print(f"  Added {len(missing_nudges)} nudge default(s) to: {strings_file}")
+            if stale_macros:
+                preview = ", ".join(stale_macros[:4])
+                extra = "" if len(stale_macros) <= 4 else f" (+{len(stale_macros) - 4} more)"
+                print(
+                    "  WARNING: figure tex macros differ from current Python defaults; "
+                    f"kept custom wrapper as-is: {strings_file} [{preview}{extra}]"
+                )
             print(f"  Figure tex exists (kept): {strings_file}")
 
         # Wrapper is a one-line macro call --- always regenerated, no user content.
