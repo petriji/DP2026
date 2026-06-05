@@ -213,23 +213,51 @@ _pli.columns = ["_pli_geo", "_pli_time", "_pli"]
 _pli["_pli_time"] = _pli["_pli_time"].astype(str).str[:4].astype(int)
 _pli["_pli"] = pd.to_numeric(_pli["_pli"], errors="coerce") / 100.0  # EU27=1.0
 
+_pli_latest = (
+    _pli.sort_values("_pli_time")
+    .groupby("_pli_geo", dropna=False)["_pli"]
+    .last()
+    .rename("_pli_latest")
+)
+
 ses_raw = ses_raw.merge(
     _pli,
     left_on=[s_geo, "time"],
     right_on=["_pli_geo", "_pli_time"],
     how="left",
 )
-_has_pli = ses_raw["_pli"].notna().any()
-if _has_pli:
-    ses_raw[s_val] = ses_raw[s_val] / ses_raw["_pli"]
-    print("  EUR → PPS conversion applied")
-else:
-    print("  WARNING: PLI unavailable --- keeping EUR values")
+ses_raw = ses_raw.merge(_pli_latest, left_on=s_geo, right_index=True, how="left")
+
+_use_latest = ses_raw["_pli"].isna() & ses_raw["_pli_latest"].notna()
+if _use_latest.any():
+    _countries = sorted(set(ses_raw.loc[_use_latest, s_geo].astype(str)))
     warn_fallback(
-        "PLI unavailable; SES percentile profiles remain in EUR instead of PPS",
+        "PLI missing for exact SES year; latest available country PLI used for conversion "
+        + ", ".join(_countries),
         source="Eurostat prc_ppp_ind",
     )
-ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
+    ses_raw.loc[_use_latest, "_pli"] = ses_raw.loc[_use_latest, "_pli_latest"]
+
+_missing_pli = ses_raw["_pli"].isna()
+if _missing_pli.any():
+    _countries_missing = sorted(set(ses_raw.loc[_missing_pli, s_geo].astype(str)))
+    warn_fallback(
+        "PLI unavailable for some SES rows; dropping unconvertible EUR rows (no EUR fallback) for "
+        + ", ".join(_countries_missing),
+        source="Eurostat prc_ppp_ind",
+    )
+    ses_raw = ses_raw[~_missing_pli].copy()
+
+if ses_raw.empty:
+    warn_fallback(
+        "PLI unavailable for all SES rows; percentile profile omitted because EUR→PPS conversion is impossible",
+        source="Eurostat prc_ppp_ind",
+    )
+else:
+    ses_raw[s_val] = ses_raw[s_val] / ses_raw["_pli"]
+    print("  EUR → PPS conversion applied")
+
+ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli", "_pli_latest"], errors="ignore")
 
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)
 _INDIC_RANK = {"D1_E_EUR": 10, "MED_E_EUR": 50, "D9_E_EUR": 90}
