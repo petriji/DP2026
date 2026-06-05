@@ -179,6 +179,7 @@ def to_latex(
         lines.append("\\end{xltabular}")
     else:
         lines = [
+            r"\par",
             f"\\begin{{table}}[{position}]",
             "  \\centering",
             f"  \\{fontsize}",
