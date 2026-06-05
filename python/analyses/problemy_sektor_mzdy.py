@@ -81,7 +81,8 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_ispv, fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -262,6 +263,10 @@ if ispv_wages is not None and len(ispv_wages) >= 5:
     print(f"  ISPV 2025 (GUID): {len(ispv_wages)} NACE sectors parsed")
 else:
     # Fallback: try legacy fetch_ispv() URL pattern
+    warn_fallback(
+        "GUID 2025 ISPV workbook unavailable, trying legacy ISPV endpoints",
+        source="MPSV/TREXIMA ISPV",
+    )
     for yr in range(END_YEAR, START_YEAR - 1, -1):
         try:
             path_ispv = fetch_ispv(yr, half=2, sphere="podnikatelska")
@@ -275,7 +280,16 @@ else:
             print(f"  ISPV {yr}H2: skipped ({type(exc).__name__}: {exc})")
 
 if ispv_wages is None:
-    print("  ISPV unavailable -- sector bar chart will be skipped or use Eurostat fallback.")
+    warn_fallback(
+        "ISPV unavailable; sector bar chart will use Eurostat fallback or be skipped",
+        source="MPSV/TREXIMA ISPV",
+    )
+else:
+    warn_non_target_year(
+        source="MPSV/TREXIMA ISPV",
+        year=ispv_year,
+        context="Sector wage bar input",
+    )
 
 # ════════════════════════════════════════════════════════════════════════════
 # 2. Fetch Eurostat LCI by NACE for CZ
@@ -332,14 +346,14 @@ if ispv_wages is not None:
         "title": rf"\acs{{geo-CZ}}: mediánová mzda podle odvětví \acs{{NACE}} (\acs{{ISPV}} {ispv_year})",
         "xlabel": "index (medián ekonomiky = 100)",
     }
-    ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE)
+    ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
     ax_a.set_title(
         STRINGS_A["title"],
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_TEXT_SIZE,
     )
     above = mpatches.Patch(color=CZ_COLOR, alpha=0.8, label="Nadprůměrné mzdy (≥ průměr ekonomiky)")
     below = mpatches.Patch(color="#4393C3", alpha=0.8, label="Podprůměrné mzdy (< průměr ekonomiky)")
-    ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
+    ax_a.legend(handles=[above, below], frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="lower right")
 
     savefig_pgf(fig_a, "problemy_sektor_mzdy_cz", strings=STRINGS_A)
     save_figure_tex_pgf(
@@ -396,14 +410,14 @@ if lci_by_nace:
         "xlabel": "rok",
         "ylabel": r"meziroční nárůst \acs{LCI} [\%]",
     }
-    ax_b.set_xlabel(STRINGS_B["xlabel"], fontsize=FONT_SIZE)
-    ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FONT_SIZE)
+    ax_b.set_xlabel(STRINGS_B["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+    ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FIGURE_LABEL_SIZE)
     ax_b.set_title(
         STRINGS_B["title"],
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax_b.legend(
-        frameon=False, fontsize=FONT_SIZE - 1.5, loc="upper left",
+        frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="upper left",
         ncol=2, handlelength=1.5,
     )
     yr0 = min(s.index.min() for s in lci_by_nace.values())
@@ -471,17 +485,17 @@ if cv_by_country:
             bar.get_x() + bar.get_width() / 2,
             val + 0.5,
             f"{val:.1f}",
-            ha="center", va="bottom", fontsize=FONT_SIZE - 1.5,
+            ha="center", va="bottom", fontsize=FIGURE_COMPACT_LABEL_SIZE,
         )
 
     STRINGS_C = {
         "title": rf"Variace nárůstu \acs{{LCI}} napříč odvětvími, vybrané země \acs{{geo-EU}} ({latest_yr})",
         "ylabel": r"variační koeficient nárůstu \acs{LCI} [\%]",
     }
-    ax_c.set_ylabel(STRINGS_C["ylabel"], fontsize=FONT_SIZE)
+    ax_c.set_ylabel(STRINGS_C["ylabel"], fontsize=FIGURE_LABEL_SIZE)
     ax_c.set_title(
         STRINGS_C["title"],
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax_c.yaxis.set_major_formatter(
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%")

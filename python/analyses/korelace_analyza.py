@@ -44,10 +44,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, LATEX_TEXPARTS_DIR
+from config import (
+    COUNTRY_COLORS,
+    FIGURE_TEXT_SIZE,
+    FIGURE_COMPACT_TEXT_SIZE,
+    LATEX_PICS_DIR,
+)
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
+from stattool.style import (
+    add_pgf_tooltips_scatter,
+    apply_style_pgf,
+    cm2in,
+    load_angle_nudges_from_figure_tex,
+    save_figure_tex_pgf,
+    savefig_pgf,
+)
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_cb_coverage, load_union_density
@@ -55,6 +68,8 @@ from analyses._shared_data import load_cb_coverage, load_union_density
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK", "IT", "SE"]
+LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
+PANEL_KEYS = ["A", "B", "C", "D"]
 START_YEAR = 2004
 
 # Extend COUNTRY_COLORS at runtime for IT/SE (config.py not modified on disk)
@@ -225,14 +240,23 @@ print("Plotting combined scatter figure (2×2) …")
 _SUBCAPTIONS = ["(a)", "(b)", "(c)", "(d)"]
 
 STRINGS = {
-    "title": r"Korelace pokrytí \acs{KV} s\,vybranými ukazateli trhu práce (2024)",
+    "title": (
+        r"Korelace pokrytí \acs{KV}"
+        "\n"
+        r"s\,vybranými ukazateli trhu práce (2024)"
+    ),
+}
+_scatter_angle_nudges_by_panel = {
+    panel: load_angle_nudges_from_figure_tex("korelace_scatter", LABEL_ANGLE_NUDGES, scope=panel)
+    for panel in PANEL_KEYS
 }
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
     STRINGS["title"],
-    fontsize=max(FONT_SIZE, 10),
+    fontsize=FIGURE_TEXT_SIZE,
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
+    panel_key = PANEL_KEYS[idx]
     row_bottom = idx >= 2
     scatter_xy(
         spec["ds_x"],
@@ -247,6 +271,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         ax=ax,
         countries=EU27_LIST,
         year_tolerance=9,
+        label_angle_nudges=_scatter_angle_nudges_by_panel[panel_key],
     )
     # ── PGF tooltips & geo labels (───────────────────────────────────────────
     add_pgf_tooltips_scatter(
@@ -264,7 +289,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     ax.text(
         0.03, 0.97, _SUBCAPTIONS[idx],
         transform=ax.transAxes,
-        fontsize=max(FONT_SIZE, 10), fontweight="bold",
+        fontsize=FIGURE_COMPACT_TEXT_SIZE, fontweight="bold",
         va="top", ha="left",
     )
     # Hide x-axis tick labels for top row
@@ -278,7 +303,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         )
     )
     for item in ax.get_xticklabels() + ax.get_yticklabels():
-        item.set_fontsize(max(item.get_fontsize(), 10))
+        item.set_fontsize(max(item.get_fontsize(), FIGURE_COMPACT_TEXT_SIZE))
 fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
 savefig_pgf(fig_all, "korelace_scatter", strings=STRINGS)
 save_figure_tex_pgf(
@@ -290,6 +315,8 @@ save_figure_tex_pgf(
                "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
     strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
+    angle_labels_scoped={panel: LABEL_ANGLE_NUDGES for panel in PANEL_KEYS},
 )
 print("  saved scatter_combined")
 
@@ -453,6 +480,7 @@ TARGET_COVERAGE = 80.0
 _cbc_cz = ds_cbc.df[ds_cbc.df[ds_cbc.geo_col] == "CZ"].dropna(subset=[ds_cbc.value_col])
 _cz_cov_val = float(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.value_col].iloc[-1])
 _cz_cov_year = int(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.time_col].iloc[-1])
+warn_non_target_year(source="ICTWSS AdjCov + OECD CBC ERB", year=_cz_cov_year, context="Correlation predictions current CZ coverage")
 _delta_x = TARGET_COVERAGE - _cz_cov_val
 
 
@@ -462,7 +490,9 @@ def _get_cz_latest(ds: "Dataset") -> tuple[float, int]:
     if df_cz.empty:
         return float("nan"), 0
     row = df_cz.sort_values(ds.time_col).iloc[-1]
-    return float(row[ds.value_col]), int(row[ds.time_col])
+    year = int(row[ds.time_col])
+    warn_non_target_year(source=str(ds.source_url), year=year, context=f"Correlation predictions current CZ value for {ds.name}")
+    return float(row[ds.value_col]), year
 
 
 def _ols_beta(ds_x: "Dataset", ds_y: "Dataset") -> float:

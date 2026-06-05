@@ -34,7 +34,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import COUNTRY_COLORS, FONT_SIZE
+from config import COUNTRY_COLORS, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from statout.timeline import EU27
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
@@ -160,7 +160,7 @@ def _tooltip(ax, x, y, text):
     ax.text(
         x, y,
         r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         ha="center", va="center", clip_on=True, zorder=10,
     )
 
@@ -218,7 +218,7 @@ for i, country in enumerate(LABEL_ORDER):
         f"\\acs{{geo-{country}}}",
         xy=(x_lab / 1_000.0, y_lab),
         xytext=(2, 4), textcoords="offset points",
-        fontsize=FONT_SIZE, color=color,
+        fontsize=FIGURE_LABEL_SIZE, color=color,
         ha="left", va="bottom", zorder=6,
     )
 
@@ -229,22 +229,22 @@ STRINGS = {
 }
 ax.set_xlabel(
     STRINGS["xlabel"],
-    fontsize=FONT_SIZE + 1,
+    fontsize=FIGURE_LABEL_SIZE,
 )
 ax.set_ylabel(
     STRINGS["ylabel"],
-    fontsize=FONT_SIZE + 1,
+    fontsize=FIGURE_LABEL_SIZE,
 )
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda v, _: f"{v:.1f}".replace(".", ","))
 )
-ax.tick_params(axis="both", labelsize=FONT_SIZE)
+ax.tick_params(axis="both", labelsize=FIGURE_LABEL_SIZE)
 ax.set_xlim(X_MIN / 1_000.0, X_MAX / 1_000.0)
 ax.set_ylim(bottom=0)
 ax.set_title(
     STRINGS["title"],
-    fontsize=FONT_SIZE + 2,
+    fontsize=FIGURE_TEXT_SIZE,
 )
 
 # Minor grid

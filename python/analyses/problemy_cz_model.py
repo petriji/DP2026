@@ -20,7 +20,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.style import (
     cm2in,
     _fmt_czk,
@@ -120,7 +120,7 @@ def _add_curve_tooltips(
             ax.text(
                 float(xs[i]), float(ys[i]),
                 r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tip + r"}",
-                fontsize=FONT_SIZE - 2,
+                fontsize=FIGURE_COMPACT_LABEL_SIZE,
                 ha="center", va="center", clip_on=True, zorder=10,
             )
 
@@ -376,26 +376,26 @@ def plot_pension_comparison(
     p_end_emp = float(pension_employee(float(gross_end), years)) / 1_000
     ax.annotate("zaměstnanec", (x_end / 1_000, p_end_emp),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     # Labely pro hline (min. důchod a chudoba) -- vpravo venku
     ax.annotate(
         "min. důchod",
         xy=(x_end / 1_000, min_pension_kczk),
         xytext=(3, 0), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="center",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", va="center",
     )
     ax.annotate(
         "chudoba",
         xy=(x_end / 1_000, poverty_kczk),
         xytext=(3, 0), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#aa0000", va="center",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#aa0000", va="center",
     )
     for expense_rate, _label, color in OSVC_TYPES:
         p_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years)) / 1_000
         ax.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                     (x_end / 1_000, p_end_o),
                     xytext=(3, -4 if expense_rate == 0.80 else 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
     labeled_pidx_cmp: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
         segs = PAUSALNI_SEGS[expense_rate]
@@ -407,18 +407,18 @@ def plot_pension_comparison(
             x_lab = float(min(income_max, x_e)) / 1_000
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab, p_val),
                         xytext=(3, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_cmp.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
     p_no_exp_end = float(pension_osvc_vydajovy(float(x_end), 0.0, years)) / 1_000
     ax.annotate("bez~výdajů", (x_end / 1_000, p_no_exp_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     p_svarc_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, p_svarc_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 
@@ -573,26 +573,26 @@ def plot_pension_solidarity(
     p_end_emp_top = float(pension_employee(float(gross_end), years)) / 1_000
     ax_top.annotate("zaměstnanec", (x_end / 1_000, p_end_emp_top),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     # Label pro min. důchod -- vpravo venku
     ax_top.annotate(
         "min. důchod",
         xy=(x_end / 1_000, min_pension_kczk),
         xytext=(3, 0), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="center",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", va="center",
     )
     ax_top.annotate(
         "chudoba",
         xy=(x_end / 1_000, poverty_kczk),
         xytext=(3, 0), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#aa0000", va="center",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#aa0000", va="center",
     )
     for expense_rate, _label, color in OSVC_TYPES:
         p_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years)) / 1_000
         ax_top.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                         (x_end / 1_000, p_end_o),
                         xytext=(3, -4 if expense_rate == 0.80 else 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
     labeled_pidx_sol: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
         segs = PAUSALNI_SEGS[expense_rate]
@@ -604,18 +604,18 @@ def plot_pension_solidarity(
             x_lab = float(min(income_max, x_e)) / 1_000
             ax_top.annotate(f"paušál~{p_idx + 1}", (x_lab, p_val),
                             xytext=(3, 0), textcoords="offset points",
-                            fontsize=FONT_SIZE - 2, color=color, va="center")
+                            fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_sol.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc (horní panel)
     p_no_exp_top = float(pension_osvc_vydajovy(float(x_end), 0.0, years)) / 1_000
     ax_top.annotate("bez~výdajů", (x_end / 1_000, p_no_exp_top),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     p_svarc_top = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
     ax_top.annotate("16\,\%~výdajů", (x_end / 1_000, p_svarc_top),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
 
     # ══════════════════════════════════════════════════════════════════════════
     # DOLNÍ PANEL -- náhradový poměr [%] = důchod / čistý příjem × 100
@@ -713,7 +713,7 @@ def plot_pension_solidarity(
         rr_end_emp = p_end_emp_rr / ni_end_emp * 100
         ax_bot.annotate("zaměstnanec", (x_end_rr / 1_000, rr_end_emp),
                         xytext=(3, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     for expense_rate, _label, color in OSVC_TYPES:
         if expense_rate == 0.40:  # přeskočit OSVČ 40 % -- překryv
             continue
@@ -726,7 +726,7 @@ def plot_pension_solidarity(
             ax_bot.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                             (x_end_rr / 1_000, rr_end_o),
                             xytext=(3, 0), textcoords="offset points",
-                            fontsize=FONT_SIZE - 2, color=color, va="center")
+                            fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc (dolní panel)
     p_no_bot = float(pension_osvc_vydajovy(float(x_end_rr), 0.0, years))
@@ -736,7 +736,7 @@ def plot_pension_solidarity(
         if rr_no_bot <= _RR_CAP:
             ax_bot.annotate("bez~výdajů", (x_end_rr / 1_000, rr_no_bot),
                             xytext=(3, 0), textcoords="offset points",
-                            fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                            fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax_bot, hspace=0.08)
     return fig
 
@@ -800,14 +800,14 @@ def plot_tax_wedge_vs_income(
     tw_end_emp = float(tax_wedge_employee(x_end))
     ax.annotate("zaměstnanec", (x_end / 1_000, tw_end_emp),
                 xytext=(4, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
 
     for expense_rate, _label, color in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
         osvc_label = f"OSVČ~{int(expense_rate * 100)}\\,%"
         ax.annotate(osvc_label, (x_end / 1_000, tw_end_o),
                     xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
 
     # Paušální pásmo -- popisky na konci každého pásma; barva dle OSVČ typu
     labeled_pidx2: set[int] = set()
@@ -821,18 +821,18 @@ def plot_tax_wedge_vs_income(
             tw_lab = float(total_pay) / x_lab * 100
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab / 1_000, tw_lab),
                         xytext=(4, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx2.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
     tw_no_end = float(tax_wedge_osvc_vydajovy(x_end, 0.0))
     ax.annotate("bez~výdajů", (x_end / 1_000, tw_no_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     tw_sv_end = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, tw_sv_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 
@@ -899,7 +899,7 @@ def plot_net_income_vs_income(
         "chudoba",
         xy=(income_max / 1_000, poverty_kczk),
         xytext=(3, 0), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#aa0000", va="center",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#aa0000", va="center",
     )
 
     # Inline popisky křivek
@@ -907,13 +907,13 @@ def plot_net_income_vs_income(
     ni_end_emp = float(net_income_employee(x_end)) / 1_000
     ax.annotate("zaměstnanec", (x_end / 1_000, ni_end_emp),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     for expense_rate, _label, color in OSVC_TYPES:
         ni_end_o = float(net_income_osvc_vydajovy(x_end, expense_rate)) / 1_000
         ax.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                     (x_end / 1_000, ni_end_o),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
     labeled_pidx_ni: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
         segs = PAUSALNI_SEGS[expense_rate]
@@ -925,18 +925,18 @@ def plot_net_income_vs_income(
             ni_lab = (x_lab - float(total_pay)) / 1_000
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab / 1_000, ni_lab),
                         xytext=(3, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_ni.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
     ni_no_end = float(net_income_osvc_vydajovy(x_end, 0.0)) / 1_000
     ax.annotate("bez~výdajů", (x_end / 1_000, ni_no_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     ni_sv_end = float(net_income_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, ni_sv_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 
@@ -997,13 +997,13 @@ def plot_sp_vs_income(
     sp_end_emp = float(sp_employee(x_end)) / 1_000
     ax.annotate("zaměstnanec", (x_end / 1_000, sp_end_emp),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     for expense_rate, _label, color in OSVC_TYPES:
         sp_end_o = float(sp_osvc_vydajovy(x_end, expense_rate)) / 1_000
         ax.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                     (x_end / 1_000, sp_end_o),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=c_emp if expense_rate == 0 else color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp if expense_rate == 0 else color, va="center")
     labeled_pidx_sp: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
         segs = PAUSALNI_SEGS[expense_rate]
@@ -1015,18 +1015,18 @@ def plot_sp_vs_income(
             x_lab = float(min(income_max, x_e))
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab / 1_000, sp_lab),
                         xytext=(3, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_sp.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
     sp_no_end = float(sp_osvc_vydajovy(x_end, 0.0)) / 1_000
     ax.annotate("bez~výdajů", (x_end / 1_000, sp_no_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     sp_sv_end = float(sp_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, sp_sv_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 
@@ -1103,7 +1103,7 @@ def plot_pension_sp_ratio_vs_income(
         "průměrná délka pobírání\ndůchodu (24,7 let, 2024)",
         xy=(income_max * 0.98 / 1_000, 24.7),
         xytext=(-3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="bottom", ha="right",
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", va="bottom", ha="right",
     )
 
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
@@ -1139,7 +1139,7 @@ def plot_pension_sp_ratio_vs_income(
     by_end_emp = INSURANCE_YEARS / (pen_end_emp / max(sp_end_emp_total, 1.0))
     ax.annotate("zaměstnanec", (x_end / 1_000, by_end_emp),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
     for expense_rate, _label, color in OSVC_TYPES:
         pen_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years))
         sp_end_o = float(sp_osvc_vydajovy(float(x_end), expense_rate))
@@ -1147,7 +1147,7 @@ def plot_pension_sp_ratio_vs_income(
         ax.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                     (x_end / 1_000, by_end_o),
                     xytext=(3, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
     labeled_pidx_rs: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
         segs = PAUSALNI_SEGS[expense_rate]
@@ -1161,7 +1161,7 @@ def plot_pension_sp_ratio_vs_income(
             x_lab = float(min(income_max, x_e))
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab / 1_000, by_band),
                         xytext=(3, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_rs.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
@@ -1170,13 +1170,13 @@ def plot_pension_sp_ratio_vs_income(
     by_no_end  = INSURANCE_YEARS / (pen_no_end / max(sp_no_end, 1.0))
     ax.annotate("bez~výdajů", (x_end / 1_000, by_no_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     pen_sv_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years))
     sp_sv_end  = float(sp_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE))
     by_sv_end  = INSURANCE_YEARS / (pen_sv_end / max(sp_sv_end, 1.0))
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, by_sv_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 
@@ -1281,7 +1281,7 @@ def plot_tax_wedge_comparison(
             ax.plot(tw_e, rr_e, "o", color=col, markersize=5, zorder=5)
             ax.annotate(lbl, (tw_e, rr_e), xytext=(4, 4),
                         textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=col)
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=col)
             for expense_rate_ref, _label, color_ref in OSVC_TYPES:
                 ni_o = float(net_income_osvc_vydajovy(float(x_ref), expense_rate_ref))
                 if ni_o <= 0:
@@ -1308,7 +1308,7 @@ def plot_tax_wedge_comparison(
     rr_end_emp = float(pension_employee(gross_end, years)) / float(net_income_employee(x_end)) * 100
     ax.annotate("zaměstnanec", (tw_end_emp, rr_end_emp),
                 xytext=(4, 0), textcoords="offset points",
-                fontsize=FONT_SIZE - 2, color=c_emp, va="center")
+                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
 
     for expense_rate, label, color in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
@@ -1316,7 +1316,7 @@ def plot_tax_wedge_comparison(
         short = f"OSVČ~{int(expense_rate * 100)}\\,%"
         ax.annotate(short, (tw_end_o, rr_end_o),
                     xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=color, va="center")
+                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
 
     labeled_pidx: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
@@ -1335,7 +1335,7 @@ def plot_tax_wedge_comparison(
             rr_lab  = p_val / net_lab * 100
             ax.annotate(f"paušál~{p_idx + 1}", (tw_lab, rr_lab),
                         xytext=(4, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color=color, va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
@@ -1346,7 +1346,7 @@ def plot_tax_wedge_comparison(
         if rr_no_cmp <= _RR_CAP:
             ax.annotate("bez~výdajů", (tw_no_cmp, rr_no_cmp),
                         xytext=(4, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     tw_sv_cmp = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
     ni_sv_cmp = float(net_income_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
     if ni_sv_cmp > 0:
@@ -1354,7 +1354,7 @@ def plot_tax_wedge_comparison(
         if rr_sv_cmp <= _RR_CAP:
             ax.annotate("16\,\%~výdajů", (tw_sv_cmp, rr_sv_cmp),
                         xytext=(4, 0), textcoords="offset points",
-                        fontsize=FONT_SIZE - 2, color="#888888", va="center")
+                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     _apply_figure_layout(ax)
     return fig
 

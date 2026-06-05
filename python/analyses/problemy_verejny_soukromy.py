@@ -58,7 +58,8 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import FONT_SIZE, LATEX_PICS_DIR
+from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from stattool.data_quality import warn_fallback
 from stattool.fetch import fetch
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -314,9 +315,9 @@ for i, row in df_plot.iterrows():
 ax_a.set_yticks(y)
 ax_a.set_yticklabels(
     [f"{row['code']}  {row['label']}" for _, row in df_plot.iterrows()],
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
 )
-ax_a.tick_params(axis="x", labelsize=FONT_SIZE)
+ax_a.tick_params(axis="x", labelsize=FIGURE_LABEL_SIZE)
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
@@ -325,16 +326,16 @@ STRINGS_A = {
     "title": rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR}); chybové úsečky P25--P75 (\acs{{IQR}})",
     "xlabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
-ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE + 1)
+ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
 ax_a.set_title(
     STRINGS_A["title"],
-    fontsize=FONT_SIZE + 2,
+    fontsize=FIGURE_TEXT_SIZE,
 )
 
 patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (soukromý sektor, ~3\u00a0010\u00a0tis.\u00a0osob)")
 patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (veřejný sektor, ~684\u00a0tis.\u00a0osob)")
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
-            fontsize=FONT_SIZE, loc="lower right")
+            fontsize=FIGURE_LABEL_SIZE, loc="lower right")
 ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
 ax_a.tick_params(axis="y", which="minor", left=False)
@@ -377,12 +378,20 @@ _stat_defaults = {
     "pls": {"p10": 32_099, "p25": 39_252, "median": 48_064, "p75": 64_016, "p90": 97_225, "mean": 59_543},
 }
 
-def _stat(parsed: dict, key: str, default: float) -> float:
+def _stat(parsed: dict, key: str, default: float, *, sphere: str) -> float:
     v = parsed.get(key)
-    return float(v) if v is not None and pd.notna(v) else default
+    if v is not None and pd.notna(v):
+        return float(v)
+    warn_fallback(
+        f"Using hardcoded {sphere} distribution fallback for {key}",
+        source="MPSV/TREXIMA ISPV",
+        year=ISPV_YEAR,
+        hardcoded=True,
+    )
+    return default
 
-mzs_stat = {k: _stat(_overall_mzs, k, _stat_defaults["mzs"][k]) for k in _stat_defaults["mzs"]}
-pls_stat = {k: _stat(_overall_pls, k, _stat_defaults["pls"][k]) for k in _stat_defaults["pls"]}
+mzs_stat = {k: _stat(_overall_mzs, k, _stat_defaults["mzs"][k], sphere="MZS") for k in _stat_defaults["mzs"]}
+pls_stat = {k: _stat(_overall_pls, k, _stat_defaults["pls"][k], sphere="PLS") for k in _stat_defaults["pls"]}
 
 # Extract the actual P90 value from the M0 totals in the parsed files if available
 if p_mzs is not None:
@@ -444,7 +453,7 @@ for bars, vals in [(bars_m, mzs_vals), (bars_p, pls_vals)]:
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.4,
             f"{val / 1_000:.1f}",
-            ha="center", va="bottom", fontsize=FONT_SIZE - 1.5,
+            ha="center", va="bottom", fontsize=FIGURE_COMPACT_LABEL_SIZE,
         )
 
 # Arrow annotations for premium at median
@@ -455,26 +464,26 @@ ax_b.annotate(
     f"+{prem_pct:.1f}\u00a0%",
     xy=(2 + bar_w / 2, med_p + 0.5),
     xytext=(2 + bar_w * 1.2, med_p + 2.5),
-    fontsize=FONT_SIZE - 1,
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
     arrowprops=dict(arrowstyle="->", color="gray", lw=0.9),
     color="gray",
 )
 
 ax_b.set_xticks(x_pos)
-ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FONT_SIZE - 0.5)
+ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FIGURE_COMPACT_LABEL_SIZE)
 STRINGS_B = {
     "title": rf"\acs{{geo-CZ}}: rozložení mezd a platů -- soukromý vs. veřejný sektor ({ISPV_YEAR})",
     "ylabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
-ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FONT_SIZE)
+ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax_b.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: f"{y:.0f} tis. Kč")
 )
 ax_b.set_title(
     STRINGS_B["title"],
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_TEXT_SIZE,
 )
-ax_b.legend(frameon=False, fontsize=FONT_SIZE, loc="upper left")
+ax_b.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, loc="upper left")
 ax_b.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_b.set_axisbelow(True)
 

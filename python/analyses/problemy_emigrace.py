@@ -35,7 +35,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -167,19 +168,20 @@ STRINGS = {
     "xlabel": "rok",
     "ylabel": "počet emigrantů [tis.]",
 }
-ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
-ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE)
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax.set_title(
     STRINGS["title"],
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_TEXT_SIZE,
 )
-ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
+ax.legend(frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
 savefig_pgf(fig, "problemy_emigrace_vyvoj", strings=STRINGS)
 
 yr_min = int(df["time"].min()) if not df.empty else START_YEAR
 yr_max = int(df["time"].max()) if not df.empty else 2023
+warn_non_target_year(source="Eurostat migr_emi1ctz", year=yr_max, context="Emigration age-profile timeline latest available year")
 save_figure_tex_pgf(
     "problemy_emigrace_vyvoj",
     caption=(

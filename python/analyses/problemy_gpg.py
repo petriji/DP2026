@@ -46,7 +46,8 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -120,6 +121,7 @@ gpg_snap = (
 )
 print(f"  GPG snapshot rows: {len(gpg_snap)}, median year: {gpg_snap['time'].median()}")
 snap_year = int(gpg_snap["time"].mode()[0]) if not gpg_snap.empty else 2022
+warn_non_target_year(source="Eurostat earn_gr_gpgr2", year=snap_year, context="Gender pay gap snapshot")
 
 # Build Dataset for choropleth
 gpg_df = (
@@ -223,6 +225,10 @@ if _has_pli:
     print("  EUR → PPS conversion applied")
 else:
     print("  WARNING: PLI unavailable --- keeping EUR values")
+    warn_fallback(
+        "PLI unavailable; SES percentile profiles remain in EUR instead of PPS",
+        source="Eurostat prc_ppp_ind",
+    )
 ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
 
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)
@@ -244,6 +250,7 @@ ses_snap = (
 print(f"  SES snapshot rows: {len(ses_snap)}")
 ses_year = int(ses_snap["time"].mode()[0]) if not ses_snap.empty else 2022
 _HAS_SES_DATA = len(ses_snap) >= 4
+warn_non_target_year(source="Eurostat earn_ses_hourly", year=ses_year, context="SES percentile profile snapshot")
 
 fig_b, ax_b = plt.subplots(figsize=cm2in(15, 9))
 
@@ -273,7 +280,7 @@ for country in COUNTRIES:
         xy=(last_rank, gap.loc[last_rank]),
         xytext=(4, 0),
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         ha="left",
         va="center",
         color=color,
@@ -283,31 +290,31 @@ for country in COUNTRIES:
 if not ses_ok or not _gap_pivot_cols:
     ax_b.text(0.5, 0.5, "data\nnedostupná",
               ha="center", va="center",
-              transform=ax_b.transAxes, fontsize=FONT_SIZE, color="grey")
+              transform=ax_b.transAxes, fontsize=FIGURE_LABEL_SIZE, color="grey")
     ax_b.set_xticks([])
     ax_b.set_yticks([])
 
 ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
-ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE)
+ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FIGURE_LABEL_SIZE)
 # Extend x-range slightly to accommodate line-end country labels.
 ax_b.set_xlim(min(ranks) - 5, max(ranks) + 10)
 ax_b.axhline(0, color="grey", linewidth=0.6, linestyle="--", alpha=0.7, zorder=1)
 ax_b.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax_b.grid(which="minor", axis="y", linewidth=0.3, alpha=0.4)
 ax_b.grid(which="major", axis="y", linewidth=0.6, alpha=0.7)
-ax_b.tick_params(axis="both", labelsize=FONT_SIZE)
+ax_b.tick_params(axis="both", labelsize=FIGURE_LABEL_SIZE)
 STRINGS_STRAT = {
     "title": rf"Mzdový rozdíl mužů nad ženami podle percentilu ({ses_year})",
     "xlabel": "percentil mzdové distribuce",
     "ylabel": r"rozdíl \((M-F)\) [\si{\pps\per\hour}]",
 }
-ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE + 1)
-ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE + 1)
+ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.1f}"))
 ax_b.set_title(
     STRINGS_STRAT["title"],
-    fontsize=FONT_SIZE + 2,
+    fontsize=FIGURE_TEXT_SIZE,
 )
 
 # Invisible hover tooltips at every (rank, gap) point.
