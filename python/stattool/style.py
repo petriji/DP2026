@@ -717,10 +717,45 @@ def _angle_macro_name(prefix: str, label_id: str) -> str:
 
 
 def _extract_figure_tex_macro_value(content: str, macro: str) -> str | None:
-    r"""Return the value of a ``\def\str...{...}%`` macro from a figure wrapper."""
+    r"""Return the value of a ``\def``/``\providecommand`` macro from wrapper."""
     import re as _re
 
     macro_name = macro[1:] if macro.startswith("\\") else macro
+    patterns = [
+        _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE),
+        _re.compile(rf"^\\providecommand\\{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE),
+    ]
+    for pattern in patterns:
+        match = pattern.search(content)
+        if match:
+            return _strip_acro_markup(match.group(1))
+    return None
+
+
+def _strip_acro_markup(text: str) -> str:
+    r"""Remove acro command wrappers while keeping their inner text.
+
+    This is only for Python-side roundtrip comparison/propagation; the LaTeX
+    figure wrappers themselves still retain the original commands.
+    """
+    import re as _re
+
+    # Strip common acro forms repeatedly until no wrapper remains.
+    patterns = [
+        _re.compile(r"\\ac[a-zA-Z]*\{([^{}]*)\}"),
+        _re.compile(r"\\acs\{([^{}]*)\}"),
+        _re.compile(r"\\acl\{([^{}]*)\}"),
+        _re.compile(r"\\acf\{([^{}]*)\}"),
+    ]
+    prev = None
+    cur = text
+    while cur != prev:
+        prev = cur
+        for pattern in patterns:
+            cur = pattern.sub(r"\1", cur)
+    return cur
+
+
 def load_angle_nudges_from_figure_tex(
     name: str,
     default_angles: dict[str, float],
