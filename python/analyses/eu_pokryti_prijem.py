@@ -30,6 +30,7 @@ from stattool.fetch import fetch_oecd, fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
+    load_angle_nudges_from_figure_tex,
     savefig_pgf,
     save_figure_tex_pgf,
 )
@@ -39,6 +40,7 @@ from statout.timeline import EU27
 # ── Parameters ─────────────────────────────────────────────────────────────────
 
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
+LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
 START_YEAR = 2010
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────────
@@ -90,6 +92,7 @@ fig = scatter_xy(
     x_min=0,
     countries=sorted(EU27),
     year_tolerance=3,
+    label_angle_nudges=load_angle_nudges_from_figure_tex("eu_pokryti_prijem", LABEL_ANGLE_NUDGES),
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
@@ -105,6 +108,7 @@ save_figure_tex_pgf(
     label="fig:eu_pokryti_prijem",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct,eurostat_nama_10_pc_PPS_EU27eq100",
     strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
 )
 
 print("Done.")

@@ -29,6 +29,7 @@ from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
+    add_pgf_tooltips_scatter,
     apply_style_pgf,
     load_angle_nudges_from_figure_tex,
     save_figure_tex_pgf,
@@ -48,6 +49,7 @@ EU27_ISO2 = {
 }
 START_YEAR = 2010
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
+LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
@@ -92,6 +94,7 @@ fig = scatter_xy(
     x_min=0,
     countries=sorted(EU27),
     year_tolerance=3,
+    label_angle_nudges=load_angle_nudges_from_figure_tex("korelace_hustota_gini", LABEL_ANGLE_NUDGES),
 )
 
 for _child in fig.axes[0].get_children():
@@ -115,6 +118,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],
     strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
 )
 
 print("Done.")

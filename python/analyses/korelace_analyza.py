@@ -59,6 +59,7 @@ from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
+    add_pgf_tooltips_scatter,
     apply_style_pgf,
     cm2in,
     load_angle_nudges_from_figure_tex,
@@ -254,12 +255,7 @@ _scatter_angle_nudges_by_panel = {
     panel: load_angle_nudges_from_figure_tex("korelace_scatter", LABEL_ANGLE_NUDGES, scope=panel)
     for panel in PANEL_KEYS
 }
-# Poster: match the ternary panel's rendered aspect (height/width = 14.1/15)
-# so the two bottom poster figures share a common bottom line when both are
-# scaled to the same half-column width. Thesis main export keeps the square
-# 16×16 grid.
-_KOR_FIGSIZE = cm2in(16, 16 * 14.1 / 15.0) if IS_POSTER_RUN else cm2in(16, 16)
-fig_all, axes = plt.subplots(2, 2, figsize=_KOR_FIGSIZE, sharex=True)
+fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
     _POSTER_TITLE if IS_POSTER_RUN else STRINGS["title"],
     fontsize=FIGURE_TEXT_SIZE,
@@ -282,6 +278,13 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         countries=EU27_LIST,
         year_tolerance=9,
         label_angle_nudges=_scatter_angle_nudges_by_panel[panel_key],
+    )
+    # ── PGF tooltips & geo labels (───────────────────────────────────────────
+    add_pgf_tooltips_scatter(
+        ax, fig_all._scatter_merged,
+        fmt_x="{:.1f}", fmt_y="{:.1f}",
+        label_x=spec["xlabel"].replace("\n", " "),
+        label_y=spec["ylabel"].replace("\n", " "),
     )
     for _schild in ax.get_children():
         if hasattr(_schild, "get_text"):
@@ -307,47 +310,20 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     )
     for item in ax.get_xticklabels() + ax.get_yticklabels():
         item.set_fontsize(max(item.get_fontsize(), FIGURE_COMPACT_TEXT_SIZE))
-    ax.yaxis.labelpad = 1.5
-    if IS_POSTER_RUN:
-        # Poster: axis labels two tiers smaller (7pt → ultra remap) so the long
-        # multi-word x/y labels fit the compact half-column 2×2 layout without
-        # being clipped at the figure edges.
-        ax.xaxis.label.set_fontsize(POSTER_FIGURE_COMPACT_LABEL_SIZE - 2)
-        ax.yaxis.label.set_fontsize(POSTER_FIGURE_COMPACT_LABEL_SIZE - 2)
-# Subplots adjust: poster needs more top headroom for suptitle in half-column.
-if IS_POSTER_RUN:
-    # The two-line poster title (real newline) is measured correctly by
-    # matplotlib and snugged just above the panels; keep the standard top.
-    # Extra bottom room so the (LaTeX-inflated) x-axis labels are not clipped.
-    _left, _right, _top, _bottom = 0.155, 0.985, 0.89, 0.10
-    _wspace, _hspace = 0.30, 0.18
-else:
-    _left, _right, _top, _bottom = 0.11, 0.985, 0.86, 0.075
-    _wspace, _hspace = 0.28, 0.14
-fig_all.subplots_adjust(left=_left, right=_right, top=_top, bottom=_bottom, wspace=_wspace, hspace=_hspace)
-fig_all._tight_layout_kwargs = {"pad": 0.4}
-fig_all._subplots_adjust_kwargs = {
-    "left": _left,
-    "right": _right,
-    "top": _top,
-    "bottom": _bottom,
-    "wspace": _wspace,
-    "hspace": _hspace,
-}
-savefig_pgf(fig_all, poster_stem("korelace_scatter"), strings=STRINGS)
-if not IS_POSTER_RUN:
-    save_figure_tex_pgf(
-        "korelace_scatter",
-        caption=r"Korelace pokrytí \acs{KV} a~veličin trhu práce, \acs{EU}, 2024.",
-        label="fig:korelace_scatter",
-        resizebox_width=r"\linewidth",
-        cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
-                   "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
-                   "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
-        strings=STRINGS,
-        angle_labels=LABEL_ANGLE_NUDGES,
-        angle_labels_scoped={panel: LABEL_ANGLE_NUDGES for panel in PANEL_KEYS},
-    )
+fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
+savefig_pgf(fig_all, "korelace_scatter", strings=STRINGS)
+save_figure_tex_pgf(
+    "korelace_scatter",
+    caption=r"Korelace pokrytí \acs{KV} a~veličin trhu práce, \acs{EU}, 2024.",
+    label="fig:korelace_scatter",
+    resizebox_width=r"\linewidth",
+    cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
+               "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
+               "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
+    strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
+    angle_labels_scoped={panel: LABEL_ANGLE_NUDGES for panel in PANEL_KEYS},
+)
 print("  saved scatter_combined")
 
 # ── 5. Correlation table ──────────────────────────────────────────────────────

@@ -39,7 +39,6 @@ from statout.map_europe import choropleth
 from stattool.dataset import Dataset
 from statout.ternary import ternary_diagram
 from stattool.style import (
-    cm2in,
     apply_geo_labels_pgf,
     apply_style_pgf,
     load_angle_nudges_from_figure_tex,
@@ -125,10 +124,6 @@ _LABEL_ANGLE_NUDGES: dict[str, float] = {
 }
 _LABEL_Y_NUDGES = [(geo, geo) for geo in _FEATURED_GEOS]
 
-# Match CTUthesis text width (~15 cm) so wrapper resizebox{\linewidth}
-# does not downscale typography (title should remain effectively 12 pt).
-_TERNARY_FIGSIZE = cm2in(15.0, 14.1)
-
 
 # ── Entry point ──────────────────────────────────────────────────────────────
 
@@ -185,17 +180,31 @@ def main() -> None:
         title=_TITLE,
         show_corner_labels=True,
         label_angle_nudges=angle_nudges,
-        figsize=_TERNARY_FIGSIZE,
+        figsize=(6.4, 6.0),
         bg_alpha=bg_alpha,
         background_data=cloud,
         show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
     )
     pgf_path = savefig_pgf(
         fig_pgf,
-        poster_stem(PLOT_STEM),
+        PLOT_STEM,
         out_dir=FIGURES_DIR,
         strings=strings_main,
         nudge_labels=_LABEL_Y_NUDGES,
+    )
+
+    # Companion PDF for visual inspection.
+    fig_pdf = ternary_diagram(
+        data=COUNTRY_SHARES,
+        colors=COUNTRY_POINT_COLORS,
+        vertex_labels=_VERTEX_LABELS,
+        title=_TITLE,
+        show_corner_labels=True,
+        label_angle_nudges=_LABEL_ANGLE_NUDGES,
+        figsize=(6.4, 6.0),
+        bg_alpha=bg_alpha,
+        background_data=cloud,
+        show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
     )
 
     if ENABLE_PDF_EXPORT:
@@ -290,7 +299,7 @@ def main() -> None:
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption=f"Průměr modelových os (A+B+C)/3 (souhrnné skóre sociálních partnerů), \\acs{{EU}}",
+        caption=f"Praktická tripartitní rovnováha v~\\acs{{EU}} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát)",
         cite_keys=[
             "eurostat_jvs_a_r21",
             "oecd_cts_cit",
