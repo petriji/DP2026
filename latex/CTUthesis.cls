@@ -2163,7 +2163,50 @@
 % pair 0xC3 0xAD for U+00ED í) can be processed by hyperref's UTF-8→UTF-16BE
 % machinery inside \pdfstringdef's \edef.  The change is local to each
 % \pdfstringdef call (the PreHook runs inside its \begingroup).
+% Citation commands are intentionally dropped in tooltip strings as a robust
+% fallback: this avoids exposing raw bib keys when hierarchical label mapping
+% is unavailable in the cached caption title path.
+\makeatletter
+\def\CTUpdfcite@stripopt{%
+  \@ifnextchar[%
+    {\CTUpdfcite@stripopt@i}%
+    {\CTUpdfcite@grab}%
+}
+\def\CTUpdfcite@stripopt@i[#1]{%
+  \@ifnextchar[%
+    {\CTUpdfcite@stripopt@ii}%
+    {\CTUpdfcite@grab}%
+}
+\def\CTUpdfcite@stripopt@ii[#1]{\CTUpdfcite@grab}
+\def\CTUpdfcite@grab#1{%
+  % Tooltip fallback: suppress citation text entirely.
+}
+\def\CTUpdfcite@formatlist#1{%
+  \CTUpdfcite@loop#1,\@nil,\@nil
+}
+\def\CTUpdfcite@loop#1,#2,#3{%
+  \CTUpdfcite@ifnil{#2}%
+    {\CTUpdfcite@onekey{#1}}%
+    {\CTUpdfcite@onekey{#1}, \CTUpdfcite@loop#2,#3,\@nil}%
+}
+\def\CTUpdfcite@ifnil#1{%
+  \ifx\@nil#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi
+}
+\def\CTUpdfcite@onekey#1{%
+  \edef\CTUpdfcite@key{\zap@space#1 \@empty}%
+  \expandafter\ifx\csname CTU@displaylabel@\CTUpdfcite@key\endcsname\relax
+    ??%
+  \else
+    \csname CTU@displaylabel@\CTUpdfcite@key\endcsname
+  \fi
+}
+\makeatother
+
 \pdfstringdefDisableCommands{%
+  \def\cite{\CTUpdfcite@stripopt}%
+  \def\parencite{\CTUpdfcite@stripopt}%
+  \def\autocite{\CTUpdfcite@stripopt}%
+  \def\textcite{\CTUpdfcite@stripopt}%
   \def\textit#1{#1}%
   \def\emph#1{#1}%
   \def\textbf#1{#1}%
@@ -2213,10 +2256,237 @@
   bibencoding = UTF8,
 ]{biblatex}
 
-% Bibliography list: render numeric labels as [N] (square brackets) to match
-%   the in-text \cite[N] format produced by \DeclareCiteCommand below.
-%   iso-numeric default is "N." (period); we override to "[N]".
-\DeclareFieldFormat{labelnumberwidth}{\mkbibbrackets{#1}}
+% Dynamic dataset subindexing for grouped citation labels used in \cite.
+% Output format in text: [N_group.k], e.g. [35.1], [35.2] for eurostat_* keys.
+% Save \@auxout to \ctuauxout (without @) so it can be safely used inside \ExplSyntaxOn
+\makeatletter
+\let\ctuauxout\@auxout
+\AtBeginDocument{\let\ctuauxout\@auxout}
+\ExplSyntaxOn
+\seq_new:N \g_ctu_cite_subidx_prefixes_seq
+\seq_new:N \g_ctu_bib_sorted_seq     % items: {{sortint}{entrykey}} for bibliography sort
+\seq_new:N \g_ctu_bib_added_keys_seq % tracks added keys to avoid duplicates
+\prop_new:N \g_ctu_cite_subidx_by_key_prop
+\prop_new:N \g_ctu_cite_group_base_label_prop
+\prop_new:N \g_ctu_cite_subidx_group_counter_prop
+\tl_new:N \l_ctu_cite_subidx_group_tl
+\tl_new:N \l_ctu_cite_subidx_label_tl
+
+\cs_if_exist:NF \tl_to_str:e
+  {
+    \cs_new_nopar:Npn \tl_to_str:e #1 { \exp_args:Ne \tl_to_str:n { #1 } }
+  }
+
+\cs_new:Npn \ctu_cite_subidx_canon_literal:n #1
+  {
+    \tl_to_str:n {#1}
+  }
+
+\cs_new_protected:Npn \ctu_cite_subidx_set_prefixes:n #1
+  {
+    \seq_gclear:N \g_ctu_cite_subidx_prefixes_seq
+    \clist_map_inline:nn {#1}
+      {
+        \tl_set:Nx \l_tmpa_tl { \ctu_cite_subidx_canon_literal:n {##1} }
+        \tl_if_blank:VTF \l_tmpa_tl
+          {}
+          { \seq_gput_right:NV \g_ctu_cite_subidx_prefixes_seq \l_tmpa_tl }
+      }
+  }
+
+\cs_new_protected:Npn \ctu_cite_subidx_group_for_key:n #1
+  {
+    \tl_clear:N \l_ctu_cite_subidx_group_tl
+    \seq_map_inline:Nn \g_ctu_cite_subidx_prefixes_seq
+      {
+        \tl_if_blank:VTF \l_ctu_cite_subidx_group_tl
+          {
+            \int_set:Nn \l_tmpa_int { \str_count:n {##1} }
+            \str_if_eq:eeT
+              {
+                \str_range:nnn {#1} { 1 } { \l_tmpa_int }
+              }
+              {##1}
+              { \tl_set:Nn \l_ctu_cite_subidx_group_tl {##1} }
+          }
+          {}
+      }
+  }
+
+\ExplSyntaxOn
+\int_new:N \g_ctu_consec_major_int
+\int_new:N \l_ctu_sortnum_int
+
+\cs_new_protected:Nn \ctu_init_consec:
+  {
+    \int_gset:Nn \g_ctu_consec_major_int { 0 }
+    \seq_map_inline:Nn \g_ctu_cite_subidx_prefixes_seq
+      {
+        \cs_gset_eq:cN { g_ctu_grp_base_ ##1 } \tex_relax:D
+        \cs_gset_eq:cN { g_ctu_grp_sub_ ##1 } \tex_relax:D
+      }
+  }
+
+\cs_new_protected:Nn \ctu_assign_displaylabel:n
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \ctu_cite_subidx_group_for_key:n {#1}
+    \tl_set_eq:NN \l_tmpb_tl \l_ctu_cite_subidx_group_tl
+    \tl_if_blank:VTF \l_tmpb_tl
+      {
+        % Nongroup items advance the shared major sequence.
+        \int_gincr:N \g_ctu_consec_major_int
+        \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} } { \int_use:N \g_ctu_consec_major_int }
+        \int_set:Nn \l_ctu_sortnum_int { \g_ctu_consec_major_int * 1000 }
+      }
+      {
+        \cs_if_exist:cTF { g_ctu_grp_base_ \l_tmpb_tl }
+          {
+            \int_gincr:c { g_ctu_grp_sub_ \l_tmpb_tl }
+            \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+              {
+                \use:c { g_ctu_grp_base_ \l_tmpb_tl } . \int_use:c { g_ctu_grp_sub_ \l_tmpb_tl }
+              }
+            \int_set:Nn \l_ctu_sortnum_int
+              { \use:c { g_ctu_grp_base_ \l_tmpb_tl } * 1000 + \int_use:c { g_ctu_grp_sub_ \l_tmpb_tl } }
+          }
+          {
+            % First item of a grouped prefix takes the NEXT shared major label,
+            % so group majors and nongroup items share one consecutive sequence
+            % (prevents [N] vs [N.k] collisions, e.g. [1] and [1.1]).
+            \int_gincr:N \g_ctu_consec_major_int
+            \tl_gset:cx { g_ctu_grp_base_ \l_tmpb_tl } { \int_use:N \g_ctu_consec_major_int }
+            \int_new:c { g_ctu_grp_sub_ \l_tmpb_tl }
+            \int_gset:cn { g_ctu_grp_sub_ \l_tmpb_tl } { 1 }
+            \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+              {
+                \int_use:N \g_ctu_consec_major_int . 1
+              }
+            \int_set:Nn \l_ctu_sortnum_int { \g_ctu_consec_major_int * 1000 + 1 }
+          }
+      }
+    % Record {sortnum}{key} so the printed bibliography can be ordered by the
+    % hierarchical label (major then minor) instead of biblatex's own order.
+    \seq_gput_right:Nx \g_ctu_bib_sorted_seq
+      { { \int_use:N \l_ctu_sortnum_int } { \tl_to_str:n {#1} } }
+    % Define the display label immediately (assignment runs at \AtDataInput,
+    % before the document body) so in-text \cite and PDF tooltips resolve.
+    \CTUsetdisplaylabel { \tl_to_str:n {#1} }
+      { \use:c { g_ctu_runtime_label_ \tl_to_str:n {#1} } }
+    % Mirror the label into the .aux as resilience: if a future biblatex
+    % version inputs reference data lazily, the previous run's .aux still
+    % supplies the label to in-text \cite rendered before the bibliography.
+    \iow_now:Nx \ctuauxout
+      {
+        \string \CTUsetdisplaylabel
+          { \tl_to_str:n {#1} }
+          { \tl_to_str:c { g_ctu_runtime_label_ \tl_to_str:n {#1} } }
+      }
+  }
+
+\cs_new:Npn \ctu_get_displaylabel:nn #1#2
+  {
+    % #2 is expanded ONCE (it is passed as \abx@field@entrykey, the raw key
+    % macro, matching how \ctu_assign_displaylabel:n built the csname) and then
+    % stringified.  \thefield{entrykey} must NOT be used here: it is \protected
+    % and would stringify to the literal tokens instead of the key value.
+    \exp_args:No \ctu_get_displaylabel_str:nn {#2} {#1}
+  }
+\cs_new:Npn \ctu_get_displaylabel_str:nn #1#2
+  {
+    \cs_if_exist:cTF { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+      {
+        \use:c { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+      }
+      {
+        \cs_if_exist:cTF { g_ctu_displaylabel_ \tl_to_str:n {#1} }
+          {
+            \use:c { g_ctu_displaylabel_ \tl_to_str:n {#1} }
+          }
+          {#2}
+      }
+  }
+
+\newcommand{\CTUsetdisplaylabel}[2]{%
+  \tl_gset:cn { g_ctu_displaylabel_ \tl_to_str:n {#1} } {#2}%
+  \expandafter\gdef\csname CTU@displaylabel@#1\endcsname{#2}%
+}
+
+\newcommand{\CTUlabelnumberwithsubindexfrom}[2]{%
+  \ctu_get_displaylabel:nn{#1}{#2}%
+}
+
+\newcommand{\CTUSetCitationSubindexPrefixes}[1]{%
+  \ctu_cite_subidx_set_prefixes:n {#1}%
+}
+
+\AtBeginBibliography{%
+  \ctu_init_consec:%
+}
+
+\cs_generate_variant:Nn \ctu_assign_displaylabel:n { o }
+% Assign hierarchical labels once per entry at data-input time (before the
+% document body), in biblatex's entry order.  Doing this here rather than
+% \AtEveryBibitem decouples label numbering from the printed list order, so
+% \CTUprintbibliography can re-order the list by (major, minor) without
+% disturbing the assigned numbers.
+\AtDataInput{%
+  \ctu_assign_displaylabel:o { \abx@field@entrykey }%
+}
+\ExplSyntaxOff
+
+% Bibliography ordered by hierarchical label.  iso-numeric uses sorting=none,
+% so biber emits .bbl entries in citation order.  To group entries by their
+% [N] / [N.k] label, the sorted key order computed in one run is written to the
+% .aux; the NEXT run reads it (before the body) and \nocite's the keys in that
+% order, so biber re-emits entries already in hierarchical-label order and a
+% single plain \printbibliography prints them sorted.  The order is derived
+% from the {sortnum}{key} pairs accumulated by \ctu_assign_displaylabel:n at
+% data-input time (sortnum = major*1000 + minor).
+\ExplSyntaxOn
+\cs_new_protected:Npn \ctu_finalize_bibsort:
+  {
+    \seq_sort:Nn \g_ctu_bib_sorted_seq
+      {
+        \int_compare:nNnTF { \use_i:nn ##1 } > { \use_i:nn ##2 }
+          { \sort_return_swapped: }
+          { \sort_return_same: }
+      }
+  }
+\cs_new_protected:Npn \ctu_write_bibsort_order:
+  {
+    \ctu_finalize_bibsort:
+    \seq_if_empty:NF \g_ctu_bib_sorted_seq
+      {
+        \tl_clear:N \l_tmpa_tl
+        \seq_map_inline:Nn \g_ctu_bib_sorted_seq
+          {
+            \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
+            \tl_put_right:Nx \l_tmpa_tl { \use_ii:nn ##1 }
+          }
+        \iow_now:Nx \ctuauxout
+          { \string \CTUbibsortorder { \l_tmpa_tl } }
+      }
+  }
+\cs_new_eq:NN \CTUwritebibsortorder \ctu_write_bibsort_order:
+\ExplSyntaxOff
+
+% \CTUbibsortorder{key,key,...}: emitted to the .aux every run.  When the next
+% run reads the .aux (before the body) it \nocite's the keys in sorted order,
+% prepending them to biber's citation order so the sorting=none bibliography
+% follows the hierarchical labels.  Defined as a no-op-safe \nocite.
+\newcommand{\CTUbibsortorder}[1]{\nocite{#1}}
+\AtEndDocument{\CTUwritebibsortorder}
+
+\newcommand{\CTUprintbibliography}{%
+  \printbibliography[heading=none]%
+}
+
+% Bibliography list: render numeric labels as [N.k] (square brackets) to match
+%   the in-text \cite[N.k] format produced by \DeclareCiteCommand below.
+%   iso-numeric default is "N." (period); we override to "[N.k]".
+\DeclareFieldFormat{labelnumberwidth}{%
+  \mkbibbrackets{\CTUlabelnumberwithsubindexfrom{#1}{\abx@field@entrykey}}}
 \setlength{\biblabelsep}{1em}
 
 % biblatex-iso690 treats howpublished as a medium marker and wraps every
@@ -2265,6 +2535,31 @@
   \chaptermark{#1}%
   \CTUaddtotoc{#1}}
 
+% ctubibinline: bib environment that emits \item[label] into an enclosing
+%   list without creating its own \list frame.  Used by \CTUprintbibliography
+%   to collect all sorted entries into a single outer ctu@biblist.
+\defbibenvironment{ctubibinline}
+  {}
+  {}
+  {\item[{\mkbibbrackets{%
+      \CTUlabelnumberwithsubindexfrom
+        {\thefield{labelnumber}}{\thefield{entrykey}}}}]}
+% ctubiblist: outer list frame for the [N.k]-sorted bibliography.
+%   Name has no @ so it can be used inside \ExplSyntaxOff without \makeatletter.
+%   Geometry mirrors iso-numeric; \topsep=0pt prevents extra vertical space
+%   when multiple \printbibliography calls share this single outer frame.
+\newenvironment{ctubiblist}
+  {\list{}
+    {\setlength\labelwidth\bibhang
+     \setlength\leftmargin\labelwidth
+     \addtolength\leftmargin\labelsep
+     \setlength\labelsep\biblabelsep
+     \setlength\itemsep\bibitemsep
+     \setlength\parsep\bibparsep
+     \setlength\topsep{0pt}}%
+   \renewcommand*\makelabel[1]{\hss##1}}
+  {\endlist}
+
 % \cite hover tooltips: each [N] in text gets a GoTo link with /Contents tooltip
 %   showing the entry's title (and year when present).
 %   \DeclareCiteCommand overrides iso-numeric's default \cite so every key in a
@@ -2283,7 +2578,9 @@
   {\usebibmacro{prenote}}
   {\usebibmacro{citeindex}%
    \CTUciteTooltipLink{cite.\the\c@refsection @\thefield{entrykey}}
-     {\thefield{labelnumber}}
+     {\iffieldundef{labelnumber}
+      {\thefield{entrykey}}
+      {\CTUlabelnumberwithsubindexfrom{\thefield{labelnumber}}{\abx@field@entrykey}}}
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
   {\usebibmacro{postnote}}
@@ -2299,6 +2596,7 @@
 %   visible text inside \CTU@tooltiplink to avoid nested link annotations.
 %   Labels that are undefined at the time of rendering fall back to the original
 %   hyperref command so that missing-reference warnings remain visible.
+\makeatletter
 \AddToHook{begindocument/end}{%
   \let\CTU@orig@ref\ref
   \let\CTU@orig@autoref\autoref
@@ -2329,6 +2627,7 @@
     }%
   }%
 }
+\makeatletter
 
 % ==============================================================================
 % Back Matter Command
@@ -2356,8 +2655,11 @@
   \renewcommand{\thepage}{\Roman{page}}%
   \phantomsection
   \ifCTUbiblio
-    \printbibliography[heading=CTUbib]%
+    \chapter*{\CTUbibname}%
+    \chaptermark{\CTUbibname}%
+    \CTUaddtotoc{\CTUbibname}%
     \label{ch:bibliography}%
+    \CTUprintbibliography
   \fi
   \ifCTUsoftware
     \chapter*{\CTUsoftwarename}%

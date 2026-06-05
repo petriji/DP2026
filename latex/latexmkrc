@@ -2,6 +2,21 @@ use File::Find qw(find);
 
 $out_dir = 'build';
 
+# Resolve current latexmk root jobname (without path / extension).
+# Falls back to 'main' when latexmk has not initialised $root_filename yet.
+sub ctu_jobname {
+    my $job = $root_filename // 'main';
+    $job =~ s{\\}{/}g;
+    $job =~ s{.*/}{};
+    $job =~ s{\.tex\z}{};
+    $job = 'main' if !defined($job) || $job eq '';
+    return $job;
+}
+
+sub ctu_roottex {
+    return ctu_jobname() . '.tex';
+}
+
 # ── Auto-generate figures before LaTeX build ──────────────────────────────────
 # Calls python/stats_analytics.py to regenerate figure PDFs and .tex snippets.
 # Skipped by default — run only when RUN_PYTHON_ANALYTICS=1 is set.
@@ -69,8 +84,9 @@ sub ctu_write_if_changed {
     chomp $author;  chomp $email;
     $author ||= 'Name Surname';
     $email  ||= 'address@e-mail.xy';
-    ctu_write_if_changed("$out_dir/main-gitauthor.tmp", '\gdef\@author{' . $author . "}\n");
-    ctu_write_if_changed("$out_dir/main-gitemail.tmp",  '\gdef\@email{'  . $email  . "}\n");
+    my $job = ctu_jobname();
+    ctu_write_if_changed("$out_dir/$job-gitauthor.tmp", '\gdef\@author{' . $author . "}\n");
+    ctu_write_if_changed("$out_dir/$job-gitemail.tmp",  '\gdef\@email{'  . $email  . "}\n");
 }
 
 # ---------------------------------------------------------------------------
@@ -87,7 +103,7 @@ sub ctu_needs_update {
 }
 
 sub ctu_all_tex_sources {
-    my @sources = ('main.tex');
+    my @sources = (ctu_roottex());
     if (-d 'texparts') {
         find(
             sub {
@@ -136,12 +152,14 @@ sub ctu_prepare_normostrana_main {
 # avoids running it on every incremental recompile that touches only .bib or
 # other non-.tex files.
 {
-    my $tmp = "$out_dir/main-normostrana.tmp";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-normostrana.tmp";
     my @sources = ctu_all_tex_sources();
     mkdir $out_dir unless -d $out_dir;
     if (ctu_needs_update($tmp, @sources)) {
-        my $texcount_main = 'main.normostrana.texcount.tmp';
-        ctu_prepare_normostrana_main('main.tex', $texcount_main);
+        my $root_tex = ctu_roottex();
+        my $texcount_main = "$job.normostrana.texcount.tmp";
+        ctu_prepare_normostrana_main($root_tex, $texcount_main);
         my $tc = `texcount -brief -char -inc "$texcount_main" 2>/dev/null`;
         unlink $texcount_main;
         # texcount outputs one "N+M+P (…) File: …" line per file and a final
@@ -172,7 +190,8 @@ sub ctu_prepare_normostrana_main {
         return $1 if $tc =~ /(\d+)\+\d+\+\d+/;
         return -1;
     }
-    my $tmp = "$out_dir/main-textchecks.tmp";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-textchecks.tmp";
     mkdir $out_dir unless -d $out_dir;
     my @srcs = ('texparts/mandatory/abstract.tex', 'texparts/mandatory/abstract_en.tex',
                 'texparts/mandatory/keywords.tex', 'texparts/mandatory/keywords_en.tex');
@@ -201,8 +220,9 @@ sub ctu_prepare_normostrana_main {
 # of the current build.  The mtime guard ensures the file is only rewritten
 # when the .bbl has actually changed.
 sub ctu_update_citcount {
-    my $bbl = "$out_dir/main.bbl";
-    my $tmp = "$out_dir/main-citcount.tmp";
+    my $job = ctu_jobname();
+    my $bbl = "$out_dir/$job.bbl";
+    my $tmp = "$out_dir/$job-citcount.tmp";
     return unless ctu_needs_update($tmp, $bbl);
     my $count = 0;
     if (-f $bbl && open my $fh, '<', $bbl) {
@@ -235,10 +255,11 @@ add_hook('before_xlatex', \&ctu_update_citcount);
 #   exposed so the class can choose.  The user may override either via
 #   \posterrepo{}/\posterrepotag{} in the poster preamble.
 sub ctu_update_poster_stats {
-    my $tmp = "$out_dir/main-stats.tmp";
-    my $lof = "$out_dir/main.lof";
-    my $lot = "$out_dir/main.lot";
-    my $aux = "$out_dir/main.aux";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-stats.tmp";
+    my $lof = "$out_dir/$job.lof";
+    my $lot = "$out_dir/$job.lot";
+    my $aux = "$out_dir/$job.aux";
     my $att = 'texparts/references/list_attachments.tex';
 
     # mtime guard: rerun when any source is newer than the tmp.
