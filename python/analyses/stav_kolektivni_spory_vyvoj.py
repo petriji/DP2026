@@ -1,8 +1,10 @@
 r"""
 Casovy vyvoj poctu kolektivnich sporu v CR (2013--2025).
 
-Data source: ČMKOS (Zpráva o průběhu kolektivního vyjednávání v ČR, počty sporů před zprostředkovatelem a rozhodcem, 2013--2025)
-Filter: roční vývoj celkového počtu kolektivních sporů v ČR
+Data source
+-----------
+* CMKOS: Zprava o prubehu kolektivniho vyjednavani na vyssim stupni
+  a na podnikove urovni v roce 2025 (sekce 7: kolektivni spory).
 
 Output
 ------
@@ -67,7 +69,7 @@ ax.bar(
     df["collective_disputes_total"],
     color=COUNTRY_COLORS.get("CZ", "#D62728"),
     alpha=0.35,
-    label="kolektivní spory",
+    label="kolektivni spory (rizeni pred zprostredkovatelem)",
 )
 
 ax.plot(
@@ -76,7 +78,7 @@ ax.plot(
     color="#1f3b73",
     marker="o",
     linewidth=1.8,
-    label="stávkové pohotovosti",
+    label="stavkove pohotovosti",
 )
 ax.plot(
     x,
@@ -84,7 +86,7 @@ ax.plot(
     color="#2b8c2b",
     marker="s",
     linewidth=1.6,
-    label="stávky",
+    label="stavky",
 )
 
 ax.set_xticks(x)
@@ -93,7 +95,7 @@ ax.set_xlim(-0.6, len(df) - 0.4)
 ax.set_ylim(0, max(df["collective_disputes_total"]) + 5)
 
 STRINGS = {
-    "title": r"Kolektivní spory, stávkové pohotovosti a stávky, \acs{geo-CZ}",
+    "title": r"Kolektivni spory, stavkove pohotovosti a stavky, \acs{geo-CZ}",
     "ylabel": "počet případů",
 }
 ax.set_title(STRINGS["title"])
