@@ -314,9 +314,9 @@
 \newcommand\CTUP@lbl@phone     {Tel.}
 \newcommand\CTUP@lbl@repo      {Repozitář}
 \newcommand\CTUP@lbl@references{Literatura}
-\newcommand\CTUP@lbl@stats@figs{obrázků}
+\newcommand\CTUP@lbl@stats@figs{obr\'{á}zk\r{u}}
 \newcommand\CTUP@lbl@stats@tabs{tabulek}
-\newcommand\CTUP@lbl@stats@atts{příloh}
+\newcommand\CTUP@lbl@stats@atts{p\v{r}\'{\i}loh}
 \newcommand\CTUP@lbl@stats@nstr{normostran}
 \AtBeginDocument{%
   \ifCTUP@english
@@ -509,23 +509,52 @@
 %   Output:  62 normostran · 18 obrázků · 7 tabulek · 3 přílohy
 % ----------------------------------------------------------------------------
 \newif\ifCTUP@firststat
-\newcommand{\CTUP@statitem}[2]{%
-  % #1 = number  #2 = label.  Print "N label" only when N > 0.
+% Czech pluralization used by thesis counters (1, 2-4, 5+).
+\newcommand\CTUP@czplural[4]{%
+  \begingroup
+    \@tempcnta=#1\relax
+    \ifnum\@tempcnta=1
+      #2%
+    \else
+      \ifnum\@tempcnta<5
+        #3%
+      \else
+        #4%
+      \fi
+    \fi
+  \endgroup}
+\newcommand{\CTUP@enplural}[3]{%
+  \ifnum#1=1 #2\else #3\fi
+}
+\newcommand{\CTUP@statitem}[6]{%
+  % #1 = number
+  % #2/#3/#4 = Czech forms (1, 2-4, 5+)
+  % #5/#6    = English forms (1, plural)
+  % Prints "N label" only when N > 0.
   \ifnum#1>0
     \ifCTUP@firststat\else\space\textbullet\space\fi
     \CTUP@firststatfalse
-    #1~#2%
+    #1~\ifCTUP@english
+      \CTUP@enplural{#1}{#5}{#6}%
+    \else
+      \CTUP@czplural{#1}{#2}{#3}{#4}%
+    \fi
   \fi
 }
 \newcommand{\posterthesisstats}{%
   \CTUP@firststattrue
   \begingroup\sffamily\small\color{CTUgrey}
     \ifx\@normostrana\@empty\else
-      \CTUP@firststatfalse \@normostrana~\CTUP@lbl@stats@nstr
+      \CTUP@firststatfalse
+      \@normostrana~\ifCTUP@english
+        \CTUP@enplural{\@normostrana}{standard page}{standard pages}%
+      \else
+        \CTUP@czplural{\@normostrana}{normostrana}{normostrany}{normostran}%
+      \fi
     \fi
-    \CTUP@statitem{\@CTUnfigures}    {\CTUP@lbl@stats@figs}%
-    \CTUP@statitem{\@CTUntables}     {\CTUP@lbl@stats@tabs}%
-    \CTUP@statitem{\@CTUnattachments}{\CTUP@lbl@stats@atts}%
+    \CTUP@statitem{\@CTUnfigures}    {obr\'{a}zek}{obr\'{a}zky}{obr\'{a}zk\r{u}}{figure}{figures}%
+    \CTUP@statitem{\@CTUntables}     {tabulka}{tabulky}{tabulek}{table}{tables}%
+    \CTUP@statitem{\@CTUnattachments}{p\v{r}\'{\i}loha}{p\v{r}\'{\i}lohy}{p\v{r}\'{\i}loh}{attachment}{attachments}%
   \par\endgroup
 }
 
