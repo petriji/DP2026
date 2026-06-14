@@ -2627,7 +2627,48 @@
     }%
   }%
 }
-\makeatletter
+
+% Redefine \paragraph and \subparagraph to call \phantomsection. This ensures
+% that any \label inside/following a paragraph or subparagraph generates a
+% unique hyperlink anchor to the paragraph's exact location, while its
+% printed reference resolves to the parent sectioning number (since
+% paragraph is unnumbered).
+\let\CTU@orig@paragraph\paragraph
+\newcommand{\CTU@starparagraph}[1]{%
+  \CTU@orig@paragraph*{#1}%
+  \phantomsection
+}
+\newcommand{\CTU@paragraph}[2][]{%
+  \ifx\\#1\\%
+    \CTU@orig@paragraph{#2}%
+  \else
+    \CTU@orig@paragraph[#1]{#2}%
+  \fi
+  \phantomsection
+}
+\renewcommand{\paragraph}{%
+  \@ifstar
+    {\CTU@starparagraph}%
+    {\CTU@paragraph}%
+}
+\let\CTU@orig@subparagraph\subparagraph
+\newcommand{\CTU@starsubparagraph}[1]{%
+  \CTU@orig@subparagraph*{#1}%
+  \phantomsection
+}
+\newcommand{\CTU@subparagraph}[2][]{%
+  \ifx\\#1\\%
+    \CTU@orig@subparagraph{#2}%
+  \else
+    \CTU@orig@subparagraph[#1]{#2}%
+  \fi
+  \phantomsection
+}
+\renewcommand{\subparagraph}{%
+  \@ifstar
+    {\CTU@starsubparagraph}%
+    {\CTU@subparagraph}%
+}
 
 % ==============================================================================
 % Back Matter Command
