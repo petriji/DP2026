@@ -88,7 +88,7 @@ _vmax = max(_values.values())
 NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Zaměstnanost v podnikových skupinách ({ds.latest_year})",
+    "title": f"Podíl zaměstnanosti v nadnárodních podnicích ({ds.latest_year})",
     "colorbar_label": r"podíl zaměstnanosti v podnik. skupinách [\%]",
 }
 

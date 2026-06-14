@@ -158,7 +158,7 @@ savefig_pgf(fig, "eu_bohatstvi_top1_wid", strings=STRINGS)
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_bohatstvi_top1_wid",
-    caption=f"Podíl top 1\\,\\% domácností na čistém jmění, \\acs{{geo-EU27}} mapa, do~{display_year}. Zdroj dat: \\acs{{WID}}~\\cite{{wid_world_shweal}}.",
+    caption=f"Podíl top 1\\,\\% domácností na čistém jmění, \\acs{{geo-EU27}} mapa, do~{display_year}",
     label="fig:eu_bohatstvi_top1_wid",
     resizebox_width=r"\linewidth",
     cite_key="wid_world_shweal",

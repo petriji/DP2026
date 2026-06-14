@@ -73,10 +73,11 @@ fig = choropleth(
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
 
 # ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, poster_stem("eu_pokryti_kv_mapa"), strings=STRINGS, nudge_labels=NUDGE_LABELS)
-if not IS_POSTER_RUN:
-    save_figure_tex_pgf(
-        "eu_pokryti_kv_mapa",
+savefig_pgf(fig, "eu_pokryti_kv_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+
+# ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
+save_figure_tex_pgf(
+    "eu_pokryti_kv_mapa",
     caption=f"Pokrytí \\acpins{{KS}}, mapa Evropy, {ds.latest_year}",
     label="fig:eu_pokryti_kv_mapa",
     resizebox_width=r"\linewidth",
