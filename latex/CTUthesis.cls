@@ -2511,14 +2511,13 @@
 % Global bibliography output policy (keeps .bib content intact):
 %   - do not print the note field,
 %   - shorten long personal-author lists to "et al.",
-%   - keep full author lists for online/misc/report items
+%   - keep full author lists for online/misc items
 %     (typically institutions or contract parties).
 \ExecuteBibliographyOptions{maxbibnames=2,minbibnames=1}
 \AtEveryBibitem{%
   \clearfield{note}%
-  \ifentrytype{online}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
-  \ifentrytype{misc}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
-  \ifentrytype{report}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+  %\ifentrytype{online}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+  %\ifentrytype{misc}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
 }
 \DefineBibliographyStrings{czech}{andothers = {et\addabbrvspace al\adddot}}
 \DefineBibliographyStrings{english}{andothers = {et\addabbrvspace al\adddot}}
@@ -2746,6 +2745,8 @@
 %
 % Usage in commentary files:  \inputpgffigure{vyhled_porodnost_vyvoj}
 \newcommand{\inputpgffigure}[1]{%
+  % Ensure figure wrappers from texparts/figures/* start in outer paragraph mode.
+  \par
   \IfFileExists{../python/figures/#1.pgf}{%
     \input{texparts/figures/#1}%
   }{%
@@ -2754,11 +2755,12 @@
       \colorbox{yellow!40}{%
         \parbox{0.85\linewidth}{%
           \color{red!70!black}\bfseries
-          \texttt{[#1.pgf]} chybí --- spusťte odpovídající Python skript.%
+          \texttt{[\detokenize{#1}.pgf]} chybí --- spusťte odpovídající Python skript.%
         }%
       }%
     \end{center}%
   }%
+  \par
 }
 
 \endinput
