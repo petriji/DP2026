@@ -184,6 +184,8 @@
   bookmarks     = false,
   pdfpagelayout = SinglePage,
 ]{hyperref}
+% Improve URL line breaking (important in narrow poster bibliography columns).
+\RequirePackage{xurl}
 
 % Tooltip annotations used by generated PGF assets.
 \RequirePackage{pdfcomment}
@@ -579,12 +581,28 @@
   \renewcommand*{\bibfont}{\scriptsize}%
   \setlength{\bibitemsep}{0.15\baselineskip}%
   \setlength{\bibhang}{1.2em}%
+  % Encourage URL/token wrapping so entries stay inside the column width.
+  \setcounter{biburlnumpenalty}{1}%
+  \setcounter{biburlucpenalty}{1}%
+  \setcounter{biburllcpenalty}{1}%
+  \Urlmuskip=0mu plus 2mu\relax
+  % Fallback breakpoints for stubborn URL-like tokens.
+  \def\UrlBreaks{\do\/\do\-\do\_\do\?\do\&\do\#\do\=\do\%}%
   % Allow generous inter-word spacing so long URLs and author names break
   % at the column boundary without producing overfull hboxes:
-  \emergencystretch=2em
+  \emergencystretch=8em
+  \raggedright
   \sloppy
   \selectlanguage{\CTUP@biblang}%
-  \printbibliography[heading=none,#1]%
+  \begin{NoHyper}%
+    \printbibliography[heading=none,#1]%
+  \end{NoHyper}%
+}
+\newcommand{\posterbibliography}[1][]{%
+  \par\vspace{2mm}%
+  \begingroup
+  \CTUP@posterbibcontent{#1}%
+  \par
   \endgroup
 }
 
