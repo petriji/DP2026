@@ -335,9 +335,9 @@ def _add_ternary_tooltips(
         country_label = GEO_LONG_NAMES.get(country, country)
         tip = (
             f"{country_label}: "
-            f"{a_lbl} {int(round(a))}\\% / "
-            f"{b_lbl} {int(round(b))}\\% / "
-            f"{c_lbl} {int(round(c))}\\%"
+            f"{a_lbl}\\space{int(round(a))}\\%\\space/\\space"
+            f"{b_lbl}\\space{int(round(b))}\\%\\space/\\space"
+            f"{c_lbl}\\space{int(round(c))}\\%"
         )
         ax.text(
             px, py,
