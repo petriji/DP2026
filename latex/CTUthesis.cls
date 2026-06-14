@@ -1224,10 +1224,12 @@
 \newenvironment{declaration}{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \vspace*{\CTU@frontskip}%
   \noindent\ignorespaces
 }{%
   \CTU@declsig
+  \endgroup
   \clearpage
 }
 %
@@ -1246,10 +1248,17 @@
 \newenvironment{remarkspage}{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \vspace*{\CTU@frontskip}%
   \noindent\ignorespaces
 }{%
-  \par\clearpage
+  \par
+  \ifx\@remarksqrcode\@empty\else
+    \vspace*{\fill}%
+    \noindent\hfill\qrcode[height=2.5\baselineskip]{\@remarksqrcode}\par
+  \fi
+  \endgroup
+  \clearpage
 }
 %
 % \CTUassignment{file}: include the thesis assignment form as a full-page PDF.
