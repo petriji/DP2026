@@ -1978,6 +1978,11 @@
   %   printed acronym groups are created here with \hyperlink; hidden groups
   %   (geo, nolist) remain tooltip-only because they have no printed target.
   %
+  %   For entries with nonzero usage, \hyperlink targets are created in the
+  %   printed list template (xltabular).  For entries with zero usage but
+  %   referenced in prose (via display=all or referenced-only modes),
+  %   \hyperlink is skipped to avoid orphaned references.
+  %
   %   The tooltip text is the long form of the acronym.  \acrowrite{long} is a
   %   non-expandable \NewDocumentCommand so it cannot be used directly inside
   %   \pdfstringdef.  \acro_property_get:Vn IS expandable (defined with
