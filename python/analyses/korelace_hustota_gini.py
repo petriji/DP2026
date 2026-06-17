@@ -28,7 +28,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
+from stattool.style import (
+    apply_style_pgf,
+    load_angle_nudges_from_figure_tex,
+    save_figure_tex_pgf,
+    savefig_pgf,
+)
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_union_density
@@ -89,13 +94,6 @@ fig = scatter_xy(
     year_tolerance=3,
 )
 
-# ── PGF tooltips & geo labels ───────────────────────────────────────────
-add_pgf_tooltips_scatter(
-    fig.axes[0], fig._scatter_merged,
-    fmt_x="{:.1f}", fmt_y="{:.1f}",
-    label_x="hustota odborů [%]",
-    label_y="Giniho koeficient",
-)
 for _child in fig.axes[0].get_children():
     if hasattr(_child, "get_text"):
         _txt = _child.get_text().strip()

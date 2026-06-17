@@ -38,7 +38,13 @@ from config import COUNTRY_COLORS, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_C
 from statout.timeline import EU27
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
-from stattool.style import apply_style_pgf, cm2in, save_figure_tex_pgf, savefig_pgf
+from stattool.style import (
+    apply_style_pgf,
+    add_pgf_tooltips_scatter,
+    cm2in,
+    save_figure_tex_pgf,
+    savefig_pgf,
+)
 
 # -- Parameters ----------------------------------------------------------------
 
@@ -246,6 +252,21 @@ y_min = max(0, country_panel["income_pps_hour"].min() - 1.5)
 y_max = country_panel["income_pps_hour"].max() + 2.0
 ax.set_xlim(x_min, x_max)
 ax.set_ylim(y_min, y_max)
+
+# PGF hover tooltips for all trajectory points (selected countries, EU27, cloud).
+_tooltip_points = (
+    panel[["geo", "prod", "income_pps_hour"]]
+    .dropna(subset=["prod", "income_pps_hour"])
+    .rename(columns={"prod": "x", "income_pps_hour": "y"})
+)
+add_pgf_tooltips_scatter(
+    ax,
+    _tooltip_points,
+    fmt_x="{:.1f}",
+    fmt_y="{:.1f}",
+    label_x="prod",
+    label_y="net",
+)
 
 # Re-apply reference label after limits are fixed.
 for child in ax.get_children():

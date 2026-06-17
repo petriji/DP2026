@@ -32,7 +32,6 @@ from stattool.style import (
     apply_style_pgf,
     savefig_pgf,
     save_figure_tex_pgf,
-    add_pgf_tooltips_scatter,
 )
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
@@ -91,17 +90,6 @@ fig = scatter_xy(
     x_min=0,
     countries=sorted(EU27),
     year_tolerance=3,
-)
-
-# Hover tooltips on every data point (PGF/Acrobat).
-ax = fig.axes[0]
-add_pgf_tooltips_scatter(
-    ax,
-    fig._scatter_merged,  # type: ignore[attr-defined]
-    fmt_x="{:.1f}",
-    fmt_y="{:.1f}",
-    label_x="pokrytí KV [%]",
-    label_y="HDP/ob. [PPS]",
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
