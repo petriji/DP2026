@@ -22,7 +22,15 @@ import pandas as pd
 from shapely.geometry import box as shapely_box
 from shapely.ops import unary_union
 
-from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, COUNTRY_COLORS, FONT_SIZE
+from config import (
+    CMAP_SEQUENTIAL,
+    CMAP_DIVERGING,
+    COUNTRY_COLORS,
+    FIGURE_LABEL_SIZE,
+    FIGURE_TEXT_SIZE,
+    FIGURE_TITLE_SIZE,
+    MAP_COUNTRY_LABEL_SIZE,
+)
 from stattool.dataset import Dataset
 from stattool.fetch import fetch
 from stattool.style import cm2in
@@ -110,6 +118,7 @@ def choropleth(
     plain_highlight_labels: bool = False,
     show_colorbar: bool = True,
     malta_fallback_marker: bool = True,
+    country_label_size: Optional[float] = None,
 ) -> plt.Figure:
     # Default markers on every choropleth colorbar (key reference economies).
     if highlight_colorbar is None:
@@ -133,11 +142,18 @@ def choropleth(
     malta_fallback_marker:
         Draw Malta as a compact point marker when MT has data but 110m source
         geometry omits it. Keeps PDF size low while preserving MT visibility.
+    country_label_size:
+        Font size for ISO country labels drawn on the map. If None, uses
+        ``FIGURE_LABEL_SIZE``.
     ylim_south:
         Lower y-limit in EPSG:3035 metres.  Raise to crop southern extent:
         1_700_000 roughly crops Turkey; default 1_400_000 keeps it.
     """
     year = year or ds.latest_year
+    label_fs = (
+        MAP_COUNTRY_LABEL_SIZE if country_label_size is None
+        else float(country_label_size)
+    )
 
     if fill_latest:
         exact = ds.for_year(year).set_index(ds.geo_col)[ds.value_col]
@@ -260,7 +276,7 @@ def choropleth(
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(
                 -0.12, val, lbl,
-                color=color, fontsize=FONT_SIZE - 1,
+                color=color, fontsize=FIGURE_LABEL_SIZE,
                 va="center", ha="right",
                 transform=_label_trans, clip_on=False,
             )
@@ -271,7 +287,7 @@ def choropleth(
                 cbar.ax.text(
                     -0.12, val,
                     r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + val_str + r"}",
-                    fontsize=FONT_SIZE, va="center", ha="center",
+                    fontsize=FIGURE_LABEL_SIZE, va="center", ha="center",
                     transform=trans, clip_on=False, zorder=7,
                 )
 
@@ -285,7 +301,7 @@ def choropleth(
             if (_EU_XLIM[0] <= pt.x <= _EU_XLIM[1] and
                     eu_ylim[0] <= pt.y <= eu_ylim[1]):
                 ax.text(pt.x, pt.y, code,
-                        fontsize=FONT_SIZE - 1, ha="center", va="center",
+                    fontsize=label_fs, ha="center", va="center",
                         color="black", fontweight="bold",
                         path_effects=[
                             __import__("matplotlib.patheffects", fromlist=["withStroke"])
@@ -315,7 +331,7 @@ def choropleth(
                     mx + _MT_LABEL_DX,
                     my,
                     "MT",
-                    fontsize=FONT_SIZE - 1,
+                    fontsize=label_fs,
                     ha="left",
                     va="center",
                     color="black",
@@ -332,7 +348,7 @@ def choropleth(
                         mx,
                         my,
                         r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tip + r"}",
-                        fontsize=FONT_SIZE,
+                        fontsize=FIGURE_LABEL_SIZE,
                         ha="center",
                         va="center",
                         zorder=10,
@@ -349,7 +365,7 @@ def choropleth(
     if title:
         fig.subplots_adjust(top=0.85)
         fig._subplots_adjust_kwargs = {"top": 0.85}
-        fig.suptitle(title, fontsize=plt.rcParams.get("axes.titlesize", 9),
+        fig.suptitle(title, fontsize=FIGURE_TITLE_SIZE,
                      y=0.95, ha="center")
 
     return fig

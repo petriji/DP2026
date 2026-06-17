@@ -34,8 +34,16 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import (
+    COUNTRY_COLORS,
+    FIGURE_COMPACT_LABEL_SIZE,
+    FIGURE_COMPACT_TEXT_SIZE,
+    FIGURE_LABEL_SIZE,
+    MAP_COUNTRY_LABEL_SIZE,
+    LATEX_PICS_DIR,
+)
 from stattool.fetch import fetch_eurostat
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.dataset import Dataset
 from stattool.style import (
     cm2in,
@@ -82,6 +90,7 @@ lc = raw_lc[raw_lc["TIME_PERIOD"] == ref_year].pivot_table(
     index="geo", columns="nace_r2", values="OBS_VALUE", aggfunc="first"
 )
 print(f"Sector wages year: {ref_year}  [D1_D4_MD5]")
+warn_non_target_year(source="Eurostat lc_lci_lev", year=int(ref_year), context="Sector wages snapshot")
 
 raw_lc_all = pd.read_csv(path_lc_all)
 raw_lc_all = raw_lc_all[["geo", "nace_r2", "TIME_PERIOD", "OBS_VALUE"]].dropna(subset=["OBS_VALUE"])
@@ -106,6 +115,7 @@ pli = raw_pli[raw_pli["TIME_PERIOD"] == pli_year].set_index("geo")["OBS_VALUE"]
 pli["EU27_2020"] = 100.0   # EU27 PLI = 100 by definition
 print(f"PLI year: {pli_year}")
 print("PLI:", pli[COUNTRIES_EU].to_dict())
+warn_non_target_year(source="Eurostat prc_ppp_ind", year=int(pli_year), context="PLI snapshot for PPS conversion")
 
 # ── 3. Convert EUR/h → PPS/h ──────────────────────────────────────────────────
 # PPS_wage = EUR_wage / (PLI / 100)
@@ -128,12 +138,20 @@ lc_6 = lc_pps.loc[[c for c in COUNTRIES if c in lc_pps.index]]
 _EU27_GEO = "EU27_2020"
 if _EU27_GEO not in lc_pps.index:
     lc_pps.loc[_EU27_GEO] = float("nan")
+_fallback_sectors: list[str] = []
 for s in SECTORS:
     if pd.isna(lc_pps.loc[_EU27_GEO, s]) if s in lc_pps.columns else True:
         if s in lc_pps_all.columns:
             fallback_eu = lc_pps_all[s].dropna().mean()
             lc_pps.loc[_EU27_GEO, s] = fallback_eu
+            _fallback_sectors.append(s)
             print(f"  EU27 fallback mean used for sector {s}: {fallback_eu:.2f} PPS/h")
+if _fallback_sectors:
+    warn_fallback(
+        f"EU27 sector benchmark missing for {', '.join(_fallback_sectors)}; cross-country mean used",
+        source="Eurostat lc_lci_lev + prc_ppp_ind",
+        year=int(ref_year),
+    )
 
 # ── 3b. EU27=100 index (needed for deviation chart only) ────────────────────────
 _eu27_sector = lc_pps.loc["EU27_2020", list(SECTORS.keys())]
@@ -184,7 +202,7 @@ ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
 ax1.set_ylabel(STRINGS_BAR["ylabel"])
 ax1.set_title(STRINGS_BAR["title"])
-ax1.legend(frameon=False, fontsize=FONT_SIZE, ncol=4)
+ax1.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
 ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
@@ -232,7 +250,7 @@ if "EU27_2020" in lc_pps.index:
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
     ax2.set_xlabel(STRINGS_ODCH["xlabel"])
     ax2.set_title(STRINGS_ODCH["title"])
-    ax2.legend(frameon=False, fontsize=FONT_SIZE, ncol=6)
+    ax2.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
@@ -246,7 +264,7 @@ if "EU27_2020" in lc_pps.index:
         label="fig:eu_odvetvove_mzdy_odchylka",
         resizebox_width=r"\linewidth",
         cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-        strings={},
+        strings=STRINGS_ODCH,
     )
     print("Figure 2 saved.")
 
@@ -265,7 +283,9 @@ all_vals = pd.concat(
 vmin_global = all_vals.min()
 vmax_global = all_vals.max()
 
-fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(28, 22))
+# Keep canvas close to final LaTeX width to avoid aggressive downscaling
+# by \resizebox{\linewidth}{!}{...}, which would shrink text too much.
+fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(15, 12))
 panel_labels = iter("abcd")
 
 STRINGS_MAP = {
@@ -302,6 +322,7 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         vmax=vmax_global,
         ax=ax_i,
         label_countries=True,
+        country_label_size=MAP_COUNTRY_LABEL_SIZE,
         show_colorbar=False,  # shared colorbar added centrally below
     )
     apply_geo_labels_pgf(
@@ -311,11 +332,15 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         tooltip_fmt="{:.1f}",
     )
     lbl = next(panel_labels)
-    ax_i.set_title(f"({lbl}) {sec_title}", fontsize=max(FONT_SIZE, 10), pad=4)
+    ax_i.set_title(
+        f"({lbl}) {sec_title}",
+        fontsize=FIGURE_COMPACT_TEXT_SIZE,
+        pad=4,
+    )
 
 fig_maps.suptitle(
     STRINGS_MAP["title"],
-    fontsize=FONT_SIZE + 4,
+    fontsize=FIGURE_COMPACT_TEXT_SIZE,
     y=0.98,
 )
 
@@ -338,8 +363,11 @@ cax_center = _inset_axes(
 )
 cb_center = fig_maps.colorbar(sm_shared, cax=cax_center,
                                label=STRINGS_MAP["colorbar_label"])
-cb_center.ax.tick_params(labelsize=max(FONT_SIZE + 1, 10))
-cb_center.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE + 2, 10))
+cb_center.ax.tick_params(labelsize=FIGURE_COMPACT_LABEL_SIZE)
+cb_center.set_label(
+    STRINGS_MAP["colorbar_label"],
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
+)
 
 # Subplot spacing — no large central gap needed; colorbar is an inset overlay.
 fig_maps.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.04,

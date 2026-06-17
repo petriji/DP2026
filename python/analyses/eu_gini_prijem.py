@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips

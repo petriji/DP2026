@@ -1303,7 +1303,7 @@ def _apply_figure_layout(ax: plt.Axes, *,
     title_text = ax_top.get_title()
     if title_text:
         ax_top.set_title("")
-        fig.suptitle(title_text, y=1.0, fontsize=FONT_SIZE, va="bottom")
+        fig.suptitle(title_text, y=1.0, fontsize=FIGURE_TITLE_SIZE, va="bottom")
 
 
 def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
@@ -1345,7 +1345,7 @@ def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
     title_text = ax_top.get_title()
     if title_text:
         ax_top.set_title("")               # remove the axes-level title
-        fig.suptitle(title_text, y=1.0, fontsize=FONT_SIZE,
+        fig.suptitle(title_text, y=1.0, fontsize=FIGURE_TITLE_SIZE,
                      va="bottom")
 
 

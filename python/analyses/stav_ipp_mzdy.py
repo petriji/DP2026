@@ -29,7 +29,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, PALETTE
+from config import COUNTRY_COLORS, FIGURE_LABEL_SIZE, PALETTE
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -80,6 +81,9 @@ ds_lci = Dataset.from_sdmx_csv(
     source_url="Eurostat/lc_lci_r2_a",
 )
 print(f"LCI countries: {len(ds_lci.countries)}  |  years: {ds_lci.years[0]}--{ds_lci.years[-1]}")
+warn_non_target_year(source="Eurostat lc_lci_r2_a", year=int(ds_lci.years[-1]), context="Actual wage-growth timeline latest year")
+if not ipp_series.empty:
+    warn_non_target_year(source="MPSV IPP", year=int(ipp_series.index.max()), context="Negotiated wage-growth timeline latest year")
 LAST_YEAR = max(2025, int(ds_lci.years[-1]),
                 int(ipp_series.index.max()) if not ipp_series.empty else 0)
 
@@ -118,7 +122,7 @@ for geo in COUNTRIES:
         xy=(s.index[-1], s.iloc[-1]),
         xytext=(4, 0),
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         va="center",
         color=color,
     )
@@ -137,7 +141,7 @@ if not ipp_series.empty:
         xy=(ipp_series.index[-1], ipp_series.iloc[-1]),
         xytext=(4, 0),
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         va="center",
         color=COUNTRY_COLORS["CZ"],
     )
@@ -149,7 +153,7 @@ style_handles = [
     mlines.Line2D([], [], color="#444444", linewidth=1.4, linestyle="--",
                   label=r"sjednaný (\acs{IPP})"),
 ]
-ax.legend(handles=style_handles, frameon=False, fontsize=FONT_SIZE,
+ax.legend(handles=style_handles, frameon=False, fontsize=FIGURE_LABEL_SIZE,
           loc="upper left", borderaxespad=0.3)
 
 ax.axhline(0, color="grey", linewidth=0.6, linestyle=":", alpha=0.6, zorder=2)

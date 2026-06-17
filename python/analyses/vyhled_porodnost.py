@@ -25,7 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR, FONT_SIZE
+from config import LATEX_PICS_DIR, FIGURE_LABEL_SIZE
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 import pandas as pd
@@ -158,7 +159,7 @@ ax.annotate(
     xy=(ds.years[-1], REPLACEMENT),
     xytext=(-120, 5),
     textcoords="offset points",
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
     color="gray",
     alpha=0.9,
 )
@@ -171,7 +172,7 @@ ax.annotate(
     xy=(cz_min_yr, cz_min_val),
     xytext=(10, -14),
     textcoords="offset points",
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
     arrowprops=dict(arrowstyle="-", color="#888888", lw=0.7),
 )
 
@@ -193,6 +194,7 @@ save_figure_tex_pgf(
 print("Figure A done.")
 
 # ── 5. Choropleth map ─────────────────────────────────────────────────────────
+warn_non_target_year(source="Eurostat demo_find", year=ds.latest_year, context="Fertility map latest year")
 map_title = STRINGS_MAP["title_tpl"].format(year=ds.latest_year)
 map_strings = {
     "title": map_title,
