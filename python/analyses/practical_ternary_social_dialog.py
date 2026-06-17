@@ -38,6 +38,7 @@ from statout.map_europe import choropleth
 from stattool.dataset import Dataset
 from statout.ternary import ternary_diagram
 from stattool.style import (
+    cm2in,
     apply_geo_labels_pgf,
     apply_style_pgf,
     load_angle_nudges_from_figure_tex,
@@ -111,6 +112,7 @@ PLOT_STEM = "practical_ternary_social_dialog"
 STRENGTH_STEM = "practical_ternary_strength_map"
 
 _VERTEX_LABELS = (r"Zam\v{e}stnanci", "Firmy", r"Vl\'ada")
+_TOOLTIP_VERTEX_LABELS = ("Zaměstnanci", "Firmy", "Vláda")
 _TITLE = "Tripartitní rovnováha v~EU"
 _LABEL_ANGLE_NUDGES: dict[str, float] = {
     "CZ": 25.0,
@@ -121,6 +123,10 @@ _LABEL_ANGLE_NUDGES: dict[str, float] = {
     "AT": 160.0,
 }
 _LABEL_Y_NUDGES = [(geo, geo) for geo in _FEATURED_GEOS]
+
+# Match CTUthesis text width (~15 cm) so wrapper resizebox{\linewidth}
+# does not downscale typography (title should remain effectively 12 pt).
+_TERNARY_FIGSIZE = cm2in(15.0, 14.1)
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
@@ -174,10 +180,11 @@ def main() -> None:
         data=COUNTRY_SHARES,
         colors=COUNTRY_POINT_COLORS,
         vertex_labels=_VERTEX_LABELS,
+        tooltip_labels=_TOOLTIP_VERTEX_LABELS,
         title=_TITLE,
         show_corner_labels=True,
         label_angle_nudges=angle_nudges,
-        figsize=(6.4, 6.0),
+        figsize=_TERNARY_FIGSIZE,
         bg_alpha=bg_alpha,
         background_data=cloud,
         show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
@@ -195,10 +202,11 @@ def main() -> None:
             data=COUNTRY_SHARES,
             colors=COUNTRY_POINT_COLORS,
             vertex_labels=_VERTEX_LABELS,
+            tooltip_labels=_TOOLTIP_VERTEX_LABELS,
             title=_TITLE,
             show_corner_labels=True,
             label_angle_nudges=angle_nudges,
-            figsize=(6.4, 6.0),
+            figsize=_TERNARY_FIGSIZE,
             bg_alpha=bg_alpha,
             background_data=cloud,
             show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
