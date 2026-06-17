@@ -1949,7 +1949,7 @@
     \AcroNeedPackage{xltabular}%
     \acronymsmapF{%
       \AcroAddRow{%
-        \hypertarget{\AcronymID}{\textbf{\acrowrite{short}}}%
+        \pdfdest name{\AcronymID} xyz \textbf{\acrowrite{short}}%
         \acroifT{alt}{/\acrowrite{alt}}%
         &
         \acrowrite{list}%
