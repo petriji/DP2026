@@ -35,6 +35,8 @@ import numpy as np
 import pandas as pd
 
 from config import (
+    CHOROPLETH_BLEND_WITH_WHITE,
+    CHOROPLETH_WHITE_BLEND_PCT,
     COUNTRY_COLORS,
     FIGURE_COMPACT_LABEL_SIZE,
     FIGURE_COMPACT_TEXT_SIZE,
@@ -351,7 +353,15 @@ fig_maps.suptitle(
 import matplotlib as mpl_lib
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
 norm_shared = mpl_lib.colors.Normalize(vmin=vmin_global, vmax=vmax_global)
-sm_shared = mpl_lib.cm.ScalarMappable(cmap="RdYlGn", norm=norm_shared)
+_base_cmap = mpl_lib.cm.get_cmap("RdYlGn")
+_rgba = _base_cmap(np.linspace(0.0, 1.0, 256))
+if CHOROPLETH_BLEND_WITH_WHITE:
+    _blend = min(1.0, max(0.0, float(CHOROPLETH_WHITE_BLEND_PCT) / 100.0))
+    _rgba[:, :3] = _rgba[:, :3] * (1.0 - _blend) + _blend
+_shared_cmap = mpl_lib.colors.LinearSegmentedColormap.from_list(
+    f"{_base_cmap.name}_wb{int(round(CHOROPLETH_WHITE_BLEND_PCT))}", _rgba, N=256
+)
+sm_shared = mpl_lib.cm.ScalarMappable(cmap=_shared_cmap, norm=norm_shared)
 sm_shared.set_array([])
 cax_center = _inset_axes(
     axes[0, 0],                        # parent axes (positional anchor only)
