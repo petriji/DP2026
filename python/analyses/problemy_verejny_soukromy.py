@@ -319,7 +319,7 @@ ax_a.set_yticklabels(
 )
 ax_a.tick_params(axis="x", labelsize=FIGURE_LABEL_SIZE)
 ax_a.xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
+    ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}")
 )
 ax_a.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 STRINGS_A = {
@@ -330,12 +330,13 @@ ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
 ax_a.set_title(
     STRINGS_A["title"],
     fontsize=FIGURE_TEXT_SIZE,
+    loc="center",
 )
 
-patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (soukromý sektor, ~3\u00a0010\u00a0tis.\u00a0osob)")
-patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (veřejný sektor, ~684\u00a0tis.\u00a0osob)")
+patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (~3\u00a0010\u00a0tis.\u00a0osob)")
+patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (~684\u00a0tis.\u00a0osob)")
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
-            fontsize=FIGURE_LABEL_SIZE, loc="lower right")
+            fontsize=FIGURE_LABEL_SIZE, loc="lower right", markerfirst=False)
 ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
 ax_a.tick_params(axis="y", which="minor", left=False)
