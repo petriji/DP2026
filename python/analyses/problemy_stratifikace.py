@@ -77,7 +77,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_TITLE_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
@@ -753,7 +753,7 @@ if pct_df is not None and "p50" in pct_df.columns:
     ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=max(FIGURE_LABEL_SIZE, 10))
     ax_c.set_title(
         STRINGS_PCT["title"],
-        fontsize=max(FIGURE_LABEL_SIZE, 10),
+        fontsize=FIGURE_TITLE_SIZE,
     )
     ax_c.legend(frameon=False, fontsize=max(FIGURE_LABEL_SIZE, 10), loc="lower right")
 

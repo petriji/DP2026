@@ -32,6 +32,7 @@ from config import (
     CMAP_DIVERGING,
     CHOROPLETH_BLEND_WITH_WHITE,
     CHOROPLETH_WHITE_BLEND_PCT,
+    FIGURE_LABEL_SIZE,
     FIGURE_TEXT_SIZE,
     FIGURE_TITLE_SIZE,
     MAP_COUNTRY_LABEL_SIZE,
@@ -317,8 +318,8 @@ def choropleth_cz(
     )
     cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
     if colorbar_label:
-        cb.set_label(colorbar_label, fontsize=MAP_COUNTRY_LABEL_SIZE)
-    cb.ax.tick_params(labelsize=MAP_COUNTRY_LABEL_SIZE)
+        cb.set_label(colorbar_label, fontsize=FIGURE_LABEL_SIZE)
+    cb.ax.tick_params(labelsize=FIGURE_LABEL_SIZE)
 
     # ── Axes formatting ───────────────────────────────────────────────────────
     ax.set_xlim(x_lim)
