@@ -103,7 +103,7 @@ fig_score = choropleth(
     vmin=0,
     vmax=100,
     label_countries=True,
-    highlight_colorbar=COUNTRIES,
+    highlight_colorbar=[],
 )
 
 _values_score = {row["geo"]: float(row["score"]) for _, row in _df.iterrows()}
@@ -141,7 +141,7 @@ fig_days = choropleth(
     vmin=0,
     vmax=max(1.0, float(_df["days_per_1000"].dropna().max())),
     label_countries=True,
-    highlight_colorbar=COUNTRIES,
+    highlight_colorbar=[],
 )
 
 _values_days = {
