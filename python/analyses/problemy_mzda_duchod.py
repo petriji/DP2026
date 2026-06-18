@@ -12,11 +12,8 @@ combined figure:
 
   **Pensions** -- CSSZ (*Česká správa sociálního zabezpečení*) publishes
   annual statistics on old-age pensions structured by monthly-amount
-  bracket.  The script attempts to download the current-year Excel
-  workbook from CSSZ open data; if the download fails a set of
-  representative quantile values derived from the CSSZ *Statistická
-  ročenka* (latest available year) is used as a fall-back so the
-  figure is always produced.
+    bracket.  The script downloads the CSSZ yearbook ZIP and derives
+    quantiles directly from the grouped pension-distribution table.
 
 Distribution fitting
 --------------------
@@ -44,6 +41,7 @@ Run
 from __future__ import annotations
 
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -56,6 +54,7 @@ import pandas as pd
 
 from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch, fetch_ispv
+from stattool.data_quality import warn_non_target_year
 from stattool.style import (
     _add_vertical_ref,
     _fmt_czk,
@@ -80,38 +79,9 @@ _ISPV_END_YEAR = 2025
 _PROBS  = np.array([0.10, 0.25, 0.50, 0.75, 0.90])
 _ZSCORES = np.array([-1.281552, -0.674490, 0.000000, 0.674490, 1.281552])
 
-# Fallback wage quantiles (ISPV 2025/H1, podnikatelská sféra -- celkem, Kč/měsíc)
-# Source: MPSV / TREXIMA ISPV 2025 H1 press release
-# P10/P90 from published D1/D9 = 24 592 / 85 768 Kč; P25/P75 estimated from
-# log-normal fit (σ ≈ 0.487 derived from D1--D9 ratio 3.49).
-_FALLBACK_WAGE_Q: dict[float, float] = {
-    0.10: 24_592,
-    0.25: 30_100,
-    0.50: 42_101,   # ISPV 2025 H1 median
-    0.75: 58_400,
-    0.90: 85_768,
-}
-_FALLBACK_WAGE_YEAR = 2025
-
 # Total private-sector employees covered by ISPV 2025/H1 (approx.)
 # Source: MPSV / ČSÚ -- business-sphere employment, 2025/H1
 N_WAGE = 3_500_000
-
-# Fallback pension quantiles (CSSZ Statistická ročenka 2024 -- starobní důchody,
-# prosinec 2024, přibližné hodnoty percentilů odvozené z distribuce dle pásem výše
-# důchodu).  Průměr = 20 736 Kč, mediánová hodnota ≈ 20 800 Kč (těsně pod 21 000 Kč).
-# Celkový počet příjemců plného starobního důchodu k 31. 12. 2024: 2 367 000.
-# P10 odhadnuto z faktu, že 271 000 osob (11,5 %) pobírá méně než 16 442 Kč.
-# P25/P75/P90 odhadnuty z tvaru log-normálního rozdělení (σ ≈ 0.22).
-# Source: CSSZ Statistická ročenka důchodového pojistění 2024
-_FALLBACK_PENSION_Q: dict[float, float] = {
-    0.10: 15_900,
-    0.25: 18_500,
-    0.50: 20_800,
-    0.75: 24_000,
-    0.90: 27_500,
-}
-_FALLBACK_PENSION_YEAR = 2024
 
 # Total old-age pensioners (plný starobní důchod), k 31. 12. 2024
 # Source: CSSZ Statistická ročenka důchodového pojistění 2024
@@ -155,7 +125,7 @@ STRINGS = {
 # CSSZ publishes the annual statistical yearbook as a ZIP archive containing
 # multiple Excel tables.  URL pattern (discovered 2026-04-14):
 #   https://www.cssz.cz/documents/20143/2946719/Ročenka+{year}.zip/{guid}
-# The table with pension-amount distribution is one of the XLSX files inside.
+# The pension-distribution table is one of the Excel files inside (.xls/.xlsx).
 _CSSZ_URLS: list[tuple[int, str]] = [
     # (year, ZIP URL) -- add newer editions here when available
     (2024, "https://www.cssz.cz/documents/20143/2946719/"
@@ -164,6 +134,12 @@ _CSSZ_URLS: list[tuple[int, str]] = [
            "Ro%C4%8Denka+2023.zip/736e528f-2bf9-9f4f-8bde-8ecad9d6bfe2"),
     (2022, "https://www.cssz.cz/documents/20143/2946719/"
            "Ro%C4%8Denka+2022.zip/ee569157-cf9d-c4ca-068a-1b3ac24d4c65"),
+]
+
+# Current ISPV national workbook (GUID-based URL; old /files pattern is stale).
+_ISPV_NAT_URLS: list[tuple[int, str]] = [
+    (2025, "https://www.ispv.cz/getattachment/b568f503-6978-4af7-9f8a-d5aef8e46619"
+           "/CR_254_MZS-xlsx.aspx?disposition=attachment"),
 ]
 
 
@@ -306,9 +282,49 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
     }
     national_kw = ["celkem", "česká republika", "čr celkem", "total", "cr"]
 
+    # Prefer current GUID-based national workbook.
+    for yr, url in _ISPV_NAT_URLS:
+        try:
+            path = fetch(url, suffix=".xlsx")
+            with open(path, "rb") as fh:
+                if fh.read(2) != b"PK":
+                    print(f"  ISPV {yr} GUID: downloaded file is not XLSX")
+                    continue
+
+            df = pd.read_excel(path, sheet_name="MZS-M0", header=None)
+            found: dict[float, float] = {}
+            row_markers = {
+                0.10: "1. decil",
+                0.25: "1. kvartil",
+                0.50: "medián",
+                0.75: "3. kvartil",
+                0.90: "9. decil",
+            }
+            for prob, marker in row_markers.items():
+                mask = df.apply(
+                    lambda r: r.astype(str).str.lower().str.contains(marker, na=False).any(),
+                    axis=1,
+                )
+                if not mask.any():
+                    continue
+                row = df.loc[mask].iloc[0]
+                nums = pd.to_numeric(row, errors="coerce").dropna()
+                nums = nums[(nums > 5_000) & (nums < 500_000)]
+                if not nums.empty:
+                    found[prob] = float(nums.iloc[-1])
+
+            if len(found) >= 5:
+                print(
+                    f"  ISPV {yr} GUID: national quantiles parsed "
+                    f"({len(found)} percentiles)"
+                )
+                return found, yr
+            print(f"  ISPV {yr} GUID: quantile rows not found")
+        except Exception as exc:
+            print(f"  ISPV {yr} GUID fetch failed: {exc}")
+
+    # Secondary attempt: legacy endpoints.
     for yr in range(_ISPV_END_YEAR, _ISPV_END_YEAR - 5, -1):
-        # For the most recent year try H1 first (H2 may not be published yet);
-        # for prior years prefer the authoritative H2 annual release.
         halves = [1, 2] if yr == _ISPV_END_YEAR else [2, 1]
         for half in halves:
             try:
@@ -317,29 +333,20 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
                 print(f"  ISPV {yr}/H{half} fetch failed: {exc}")
                 continue
 
-            # Try reading first sheet
             for skiprows in range(0, 8):
                 try:
-                    df = pd.read_excel(
-                        path, sheet_name=0, skiprows=skiprows, header=0
-                    )
+                    df = pd.read_excel(path, sheet_name=0, skiprows=skiprows, header=0)
                     df = df.dropna(how="all").reset_index(drop=True)
                     if df.shape[1] < 3 or df.shape[0] < 3:
                         continue
 
                     first_col = df.columns[0]
                     df_str = df[first_col].astype(str).str.lower().str.strip()
-
-                    # Find the national-aggregate row
-                    nat_mask = df_str.apply(
-                        lambda s: any(kw in s for kw in national_kw)
-                    )
+                    nat_mask = df_str.apply(lambda s: any(kw in s for kw in national_kw))
                     if not nat_mask.any():
                         continue
 
                     row = df.loc[nat_mask].iloc[0]
-
-                    # Match percentile columns
                     found: dict[float, float] = {}
                     for col in df.columns[1:]:
                         col_lc = str(col).lower().strip()
@@ -356,7 +363,6 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
                             f"({len(found)} percentiles)"
                         )
                         return found, yr
-
                 except Exception as exc:
                     log.debug("ISPV parse skiprows=%d: %s", skiprows, exc)
 
@@ -377,9 +383,6 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
     import io
     import zipfile
 
-    amount_kw = ["výše", "výši", "důchod", "částka", "pásmo", "skupin"]
-    count_kw  = ["počet", "count", "celkem"]
-
     for year, url in _CSSZ_URLS:
         try:
             path = fetch(url, suffix=".zip")
@@ -387,123 +390,126 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
             print(f"  CSSZ {year} fetch failed: {exc}")
             continue
 
-        # Extract all XLSX files from the yearbook ZIP
+        # Extract pension-distribution workbook from the yearbook ZIP.
         try:
             with zipfile.ZipFile(path) as zf:
-                xlsx_names = [n for n in zf.namelist() if n.lower().endswith(".xlsx")]
-        except zipfile.BadZipFile as exc:
+                candidates = [
+                    n for n in zf.namelist()
+                    if ("07.03" in n or "výše důchodu" in n.lower())
+                    and n.lower().endswith((".xls", ".xlsx"))
+                ]
+                if not candidates:
+                    print(f"  CSSZ {year}: pension workbook not found in ZIP")
+                    continue
+                wb_name = candidates[0]
+                wb_bytes = io.BytesIO(zf.read(wb_name))
+        except (zipfile.BadZipFile, KeyError) as exc:
             print(f"  CSSZ {year} ZIP extraction failed: {exc}")
             continue
 
-        # Build list of (sheet, file_like) pairs to try
-        def _iter_sheets(zf_path: Path, xlsx_list: list[str]):  # noqa: E306
-            for xname in xlsx_list:
-                try:
-                    with zipfile.ZipFile(zf_path) as zf:
-                        buf = io.BytesIO(zf.read(xname))
-                    import openpyxl
-                    wb = openpyxl.load_workbook(buf, read_only=True, data_only=True)
-                    snames = wb.sheetnames
-                    wb.close()
-                except Exception:
-                    snames = list(range(6))
-                for sname in snames:
-                    try:
-                        with zipfile.ZipFile(zf_path) as zf:
-                            b2 = io.BytesIO(zf.read(xname))
-                        yield sname, b2
-                    except Exception:
+        try:
+            xls = pd.ExcelFile(wb_bytes)
+            sheet_name = "S-celkem"
+            if sheet_name not in xls.sheet_names:
+                cands = [s for s in xls.sheet_names if "celkem" in s.lower()]
+                if not cands:
+                    print(f"  CSSZ {year}: 'S-celkem' sheet not found")
+                    continue
+                sheet_name = cands[0]
+
+            wb_bytes.seek(0)
+            df = pd.read_excel(wb_bytes, sheet_name=sheet_name, header=None)
+
+            header_row = None
+            for i in range(min(30, len(df))):
+                cell0 = str(df.iloc[i, 0]).strip().lower()
+                if cell0 == "měsíční výše" or cell0.startswith("měsíční výše"):
+                    header_row = i
+                    break
+            if header_row is None:
+                print(f"  CSSZ {year}: monthly-amount header not found")
+                continue
+
+            header = df.iloc[header_row]
+            count_col = None
+            for j, val in enumerate(header):
+                if "celkem" in str(val).lower():
+                    count_col = j
+                    break
+            if count_col is None:
+                print(f"  CSSZ {year}: count column 'CELKEM' not found")
+                continue
+
+            bins: list[tuple[float, float, float]] = []
+            for i in range(header_row + 1, len(df)):
+                label = str(df.iloc[i, 0]).strip()
+                if not label or label.lower() == "nan":
+                    continue
+                lcl = label.lower()
+                if "neudáno" in lcl:
+                    continue
+                if "úhrn" in lcl or "prům." in lcl:
+                    break
+
+                clean = label.replace("\xa0", " ").strip()
+                if "–" in clean or "-" in clean:
+                    sep = "–" if "–" in clean else "-"
+                    left, right = clean.split(sep, 1)
+                    left_num = re.sub(r"\D", "", left)
+                    right_num = re.sub(r"\D", "", right)
+                    if not left_num or not right_num:
                         continue
-
-        for sheet, sheet_src in _iter_sheets(path, xlsx_names):
-            for skiprows in range(0, 12):
-                try:
-                    sheet_src.seek(0)
-                    df = pd.read_excel(
-                        sheet_src, sheet_name=sheet, skiprows=skiprows, header=0
-                    )
-                    df = df.dropna(how="all").reset_index(drop=True)
-                    if df.shape[1] < 2 or df.shape[0] < 5:
+                    lo = float(int(left_num))
+                    hi = float(int(right_num))
+                    # CSSZ uses shorthand like "1–4 999" for 1 000–4 999.
+                    if lo < 100 and hi >= 1_000:
+                        lo *= 1_000.0
+                else:
+                    nums = re.sub(r"\D", "", clean)
+                    if not nums:
                         continue
+                    lo = float(int(nums))
+                    hi = float(int(nums) + 1_000)
+                if hi <= lo:
+                    continue
 
-                    first_col = df.columns[0]
-                    # Look for a column with pension amount brackets
-                    first_lc = df[first_col].astype(str).str.lower()
-                    if not first_lc.apply(
-                        lambda s: any(kw in s for kw in amount_kw)
-                    ).any():
-                        continue
+                cnt = pd.to_numeric(df.iloc[i, count_col], errors="coerce")
+                if pd.isna(cnt) or cnt <= 0:
+                    continue
+                bins.append((lo, hi, float(cnt)))
 
-                    # Find the count column
-                    count_col = None
-                    for col in df.columns[1:]:
-                        if any(kw in str(col).lower() for kw in count_kw):
-                            count_col = col
-                            break
-                    if count_col is None:
-                        # Take first numeric column
-                        for col in df.columns[1:]:
-                            if pd.to_numeric(
-                                df[col], errors="coerce"
-                            ).notna().sum() >= 5:
-                                count_col = col
-                                break
-                    if count_col is None:
-                        continue
+            if len(bins) < 5:
+                print(f"  CSSZ {year}: insufficient valid bins in {sheet_name}")
+                continue
 
-                    counts = pd.to_numeric(df[count_col], errors="coerce")
-                    total  = counts.sum()
-                    if total < 100:
-                        continue
+            bounds = np.array([[b[0], b[1]] for b in bins], dtype=float)
+            counts = np.array([b[2] for b in bins], dtype=float)
+            cum = np.cumsum(counts)
+            total = float(cum[-1])
+            if total < 100:
+                print(f"  CSSZ {year}: insufficient observations ({total:.0f})")
+                continue
 
-                    # Attempt to extract midpoints from the bracket strings
-                    midpoints: list[float] = []
-                    for s in df[first_col].astype(str):
-                        nums = pd.to_numeric(
-                            pd.Series(
-                                "".join(c if c.isdigit() or c == "." else " "
-                                        for c in s).split()
-                            ),
-                            errors="coerce",
-                        ).dropna().values
-                        nums = nums[(nums > 500) & (nums < 200_000)]
-                        if len(nums) >= 2:
-                            midpoints.append(float(np.mean(nums[:2])))
-                        elif len(nums) == 1:
-                            midpoints.append(float(nums[0]))
-                        else:
-                            midpoints.append(np.nan)
+            q_dict: dict[float, float] = {}
+            for prob in [0.10, 0.25, 0.50, 0.75, 0.90]:
+                target = prob * total
+                idx = int(np.searchsorted(cum, target, side="left"))
+                idx = min(max(idx, 0), len(counts) - 1)
+                lo, hi = bounds[idx]
+                bin_cnt = max(counts[idx], 1e-9)
+                prev = cum[idx - 1] if idx > 0 else 0.0
+                frac = np.clip((target - prev) / bin_cnt, 0.0, 1.0)
+                q_dict[prob] = float(lo + frac * (hi - lo))
 
-                    mp = np.array(midpoints)
-                    valid = np.isfinite(mp) & np.isfinite(counts.values)
-                    if valid.sum() < 5:
-                        continue
+            print(
+                f"  CSSZ {year}: pension quantiles derived from "
+                f"'{wb_name}' / '{sheet_name}'"
+            )
+            return q_dict, year
 
-                    mp_v     = mp[valid]
-                    cnt_v    = counts.values[valid]
-                    order    = np.argsort(mp_v)
-                    mp_s     = mp_v[order]
-                    cnt_s    = cnt_v[order]
-                    cum_pct  = np.cumsum(cnt_s) / cnt_s.sum()
-
-                    q_dict: dict[float, float] = {}
-                    for prob in [0.10, 0.25, 0.50, 0.75, 0.90]:
-                        idx = int(np.searchsorted(cum_pct, prob))
-                        idx = min(idx, len(mp_s) - 1)
-                        q_dict[prob] = float(mp_s[idx])
-
-                    if len(q_dict) >= 3:
-                        print(
-                            f"  CSSZ {year}: pension quantiles derived "
-                            f"from sheet '{sheet}'"
-                        )
-                        return q_dict, year
-
-                except Exception as exc:
-                    log.debug(
-                        "CSSZ parse sheet=%s skiprows=%d: %s",
-                        sheet, skiprows, exc,
-                    )
+        except Exception as exc:
+            log.debug("CSSZ %s parse failed: %s", year, exc)
+            print(f"  CSSZ {year}: parse failed ({type(exc).__name__})")
 
     return None, None
 
@@ -515,16 +521,16 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
 print("Fetching ISPV wage quantile data …")
 wage_q, wage_year = _fetch_ispv_national_quantiles()
 if wage_q is None:
-    print(f"  → Using fallback ISPV {_FALLBACK_WAGE_YEAR} quantiles")
-    wage_q    = _FALLBACK_WAGE_Q
-    wage_year = _FALLBACK_WAGE_YEAR
+    raise RuntimeError(
+        "ISPV wage quantiles could not be fetched from live sources."
+    )
 
 print("Fetching CSSZ pension distribution data …")
 pension_q, pension_year = _fetch_cssz_pension_quantiles()
 if pension_q is None:
-    print(f"  → Using fallback CSSZ {_FALLBACK_PENSION_YEAR} representative quantiles")
-    pension_q    = _FALLBACK_PENSION_Q
-    pension_year = _FALLBACK_PENSION_YEAR
+    raise RuntimeError(
+        "CSSZ pension quantiles could not be fetched from live sources."
+    )
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fit log-normal distributions
@@ -719,10 +725,7 @@ ax.grid(which="minor", axis="both", linestyle=":", linewidth=0.3, alpha=0.3)
 savefig_pgf(fig, "problemy_mzda_duchod", strings=STRINGS)
 save_figure_tex_pgf(
     "problemy_mzda_duchod",
-    caption=(
-        f"Distribuce čistých mezd a~starobních důchodů, \\acs{{geo-CZ}}, "
-        f"{min(wage_year, pension_year)}--{max(wage_year, pension_year)}"
-    ),
+    caption=f"Distribuce čistých mezd ({wage_year}) a~starobních důchodů ({pension_year}), \\acs{{geo-CZ}}",
     cite_keys=["mpsv_ispv", "cssz_rocenka_duchod"],
     label="fig:problemy_mzda_duchod",
     resizebox_width=r"\linewidth",

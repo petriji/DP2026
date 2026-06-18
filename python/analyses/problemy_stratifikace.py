@@ -448,34 +448,31 @@ print("Fetching ISPV data …")
 ispv_path: Path | None = None
 ispv_year: int | None = None
 
-for yr in range(END_YEAR, 2014, -1):
-    try:
-        path_try = fetch_ispv(yr, half=2, sphere="podnikatelska")
-        # Quick sanity: at least parseable as Excel
-        pd.read_excel(path_try, sheet_name=0, nrows=5)
-        ispv_path = path_try
-        ispv_year = yr
-        print(f"  ISPV {yr}/H2 fetched: {path_try.name}")
-        break
-    except Exception as exc:
-        print(f"  ISPV {yr}/H2: skipped ({type(exc).__name__})")
+# Try current GUID-based national workbook first (old /files/ endpoints are stale).
+try:
+    p = fetch(_ISPV_NAT_2025_URL, suffix=".xlsx")
+    with open(p, "rb") as _fh:
+        if _fh.read(2) == b"PK":
+            ispv_path, ispv_year = p, 2025
+            print(f"  ISPV 2025 GUID: {p.name}")
+        else:
+            print("  ISPV 2025 GUID: downloaded file is not XLSX")
+except Exception as exc:
+    print(f"  ISPV 2025 GUID fetch failed: {exc}")
 
-# Fallback: 2025 national MZS workbook via GUID
+# Secondary: legacy half-year endpoints.
 if ispv_path is None:
-    warn_fallback(
-        "Standard ISPV endpoints unavailable, trying 2025 GUID workbook",
-        source="MPSV/TREXIMA ISPV",
-    )
-    try:
-        p = fetch(_ISPV_NAT_2025_URL, suffix=".xlsx")
-        with open(p, "rb") as _fh:
-            if _fh.read(2) == b"PK":
-                ispv_path, ispv_year = p, 2025
-                print(f"  ISPV 2025 GUID fallback: {p.name}")
-            else:
-                print("  ISPV 2025 GUID fallback: file is not a valid XLSX")
-    except Exception as exc:
-        print(f"  ISPV 2025 GUID fallback failed: {exc}")
+    for yr in range(END_YEAR, 2014, -1):
+        try:
+            path_try = fetch_ispv(yr, half=2, sphere="podnikatelska")
+            # Quick sanity: at least parseable as Excel
+            pd.read_excel(path_try, sheet_name=0, nrows=5)
+            ispv_path = path_try
+            ispv_year = yr
+            print(f"  ISPV {yr}/H2 fetched: {path_try.name}")
+            break
+        except Exception as exc:
+            print(f"  ISPV {yr}/H2: skipped ({type(exc).__name__})")
 
 if ispv_year is not None:
     warn_non_target_year(
