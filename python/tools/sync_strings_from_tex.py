@@ -25,13 +25,19 @@ Design rules:
   4. The file is only written if a real change is needed.
 """
 
+import fnmatch
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 FIGURES_TEX_DIR = ROOT / "latex" / "texparts" / "figures"
 ANALYSES_DIR = ROOT / "python" / "analyses"
+REGISTRY_PATH = ROOT / "python" / "analytics_registry.toml"
+
+with REGISTRY_PATH.open("rb") as f:
+    REGISTRY: dict[str, dict[str, object]] = tomllib.load(f)
 
 YEAR_EXPR_PATTERNS = [
     r"\bds\.latest_year\b",
@@ -301,7 +307,19 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
     stem = tex_file.stem
     py_file = ANALYSES_DIR / f"{stem}.py"
     if not py_file.exists():
-        return [f"  SKIP {stem}: no matching Python script"]
+        registry_scripts = {
+            Path(str(entry["script"])).name
+            for entry in REGISTRY.values()
+            if any(fnmatch.fnmatch(stem, pattern) for pattern in entry.get("texparts", []))
+        }
+        if len(registry_scripts) == 1:
+            py_file = ANALYSES_DIR / next(iter(registry_scripts))
+        elif len(registry_scripts) > 1:
+            return [
+                f"  SKIP {stem}: multiple registry scripts match ({', '.join(sorted(registry_scripts))})"
+            ]
+        else:
+            return [f"  SKIP {stem}: no matching Python script"]
 
     tex_text = tex_file.read_text(encoding="utf-8")
     py_text = py_file.read_text(encoding="utf-8")

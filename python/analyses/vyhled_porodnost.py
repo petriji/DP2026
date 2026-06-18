@@ -183,7 +183,7 @@ savefig_pgf(fig, "vyhled_porodnost_vyvoj", out_dir=LATEX_PICS_DIR,
 
 save_figure_tex_pgf(
     "vyhled_porodnost_vyvoj",
-    caption=f"Úhrnná plodnost (\\acs{{TFR}}) ve vybraných zemích \\acs{{EU}}, {ds.years[0]}--{ds.years[-1]}.",
+    caption=f"Vývoj úhrnné plodnosti (\\acs{{TFR}}) v~zemích \\acs{{EU}}, 1990--{ds.latest_year}",
     label="fig:vyhled_porodnost_vyvoj",
     resizebox_width=r"\linewidth",
     cite_keys="eurostat_demo_find",

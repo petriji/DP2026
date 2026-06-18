@@ -346,10 +346,7 @@ fig_a.tight_layout()
 savefig_pgf(fig_a, "problemy_verejny_soukromy", strings=STRINGS_A)
 save_figure_tex_pgf(
     "problemy_verejny_soukromy",
-    caption=(
-        f"Mediánová mzda a~plat podle sekce \\acs{{NACE}}, veřejný vs.\\ soukromý sektor, "
-        f"\\acs{{geo-CZ}}, {ISPV_YEAR}"
-    ),
+    caption=f"Mediánová mzda a~plat podle sekce \\acs{{NACE}}, veřejný vs.\\ soukromý sektor, \\acs{{geo-CZ}}, {ISPV_YEAR}",
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy",
     resizebox_width=r"\linewidth",

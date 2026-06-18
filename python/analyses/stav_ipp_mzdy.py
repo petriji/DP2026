@@ -188,7 +188,7 @@ year_range = f"{START_YEAR}--{LAST_YEAR}"
 savefig_pgf(fig, "stav_ipp_mzdy", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_ipp_mzdy",
-    caption=f"Mzdový nárůst sjednaný v~\\acs{{KS}} a~skutečný, \\acs{{EU}} srovnání, {year_range}.",
+    caption=f"Mzdový nárůst sjednaný v~\\acs{{KS}} a~skutečný, \\acs{{EU}} srovnání, 2007--{year_range}",
     label="fig:stav_ipp_mzdy",
     resizebox_width=r"\linewidth",
     cite_keys=["mpsv_ipp", "eurostat_lci"],

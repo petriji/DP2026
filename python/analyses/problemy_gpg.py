@@ -139,7 +139,7 @@ _values_gpg = (
 _vmax_gpg = max(_values_gpg.values())
 
 STRINGS_GPG_MAP = {
-    "title": f"Nekorigovaný \\acs{{GPG}} v~\\acs{{geo-EU}} ({snap_year})",
+    "title": f"Rozdíl ve mzdách mužů a žen podle percentilu ({snap_year})",
     "colorbar_label": r"nekorigovaný \acs{GPG} [\%]",
 }
 
@@ -160,9 +160,7 @@ apply_geo_labels_pgf(fig_a.axes[0], halo=True, values=_values_gpg, tooltip_fmt="
 savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "problemy_gpg_mapa",
-    caption=(
-        f"Nekorigovaný \\acs{{GPG}} (\\acs{{NACE}} B--S), \\acs{{geo-EU}}27, {snap_year}."
-    ),
+    caption=f"Rozdíl ve mzdách mužů a žen \\((M-F)\\) v~\\si{{\\pps\\per\\hour}} podle percentilu, vybrané země \\acs{{geo-EU}}, {snap_year}",
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
     resizebox_width=r"\linewidth",

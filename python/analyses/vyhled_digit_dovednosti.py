@@ -96,9 +96,7 @@ savefig_pgf(fig, "vyhled_digit_dovednosti_mapa", strings=STRINGS, nudge_labels=N
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "vyhled_digit_dovednosti_mapa",
-    caption=(
-        f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, "
-        f"\\acs{{EU}}, {ds.latest_year}."),
+    caption=f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, \\acs{{EU}}, {ds.latest_year}",
     label="fig:vyhled_digit_dovednosti_mapa",
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
