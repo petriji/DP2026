@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import csv
 import logging
-import urllib.request
 from io import StringIO
 from pathlib import Path
 from typing import Optional
@@ -16,7 +15,7 @@ from typing import Optional
 import pandas as pd
 
 from stattool.dataset import Dataset, _OECD_ISO3_TO_ISO2
-from stattool.fetch import fetch_eurostat, fetch_ipp, fetch_oecd
+from stattool.fetch import fetch, fetch_eurostat, fetch_ipp, fetch_oecd
 
 log = logging.getLogger(__name__)
 
@@ -41,8 +40,8 @@ _ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
 def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
     """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK, SI) + OECD CBC ERB."""
     # ── ICTWSS AdjCov ─────────────────────────────────────────────────────────
-    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
-        raw_csv = resp.read().decode("utf-8-sig")
+    ictwss_path = fetch(_ICTWSS_URL, suffix=".csv")
+    raw_csv = ictwss_path.read_text(encoding="utf-8-sig")
 
     reader = csv.DictReader(StringIO(raw_csv))
     adjcov_records: list[dict] = []
@@ -166,8 +165,8 @@ def load_employer_density(*, start_period: int = 1990) -> Dataset:
     ED = share of employees working in firms that belong to an employer
     organisation (%).  Data are sparse for most EU-27 countries.
     """
-    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
-        raw_csv = resp.read().decode("utf-8-sig")
+    ictwss_path = fetch(_ICTWSS_URL, suffix=".csv")
+    raw_csv = ictwss_path.read_text(encoding="utf-8-sig")
 
     reader = csv.DictReader(StringIO(raw_csv))
     records: list[dict] = []

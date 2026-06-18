@@ -43,6 +43,33 @@ def _cache_path(url: str, suffix: Optional[str] = None) -> Path:
     return DATA_DIR / f"{stem}_{url_hash}{ext}"
 
 
+def _download_with_progress(
+    url: str,
+    dest: Path,
+    *,
+    chunk_size: int = 1 << 20,
+) -> Path:
+    """Stream *url* into *dest* with the standard progress bar style."""
+    response = requests.get(url, stream=True, timeout=_TIMEOUT)
+    response.raise_for_status()
+
+    total = int(response.headers.get("content-length", 0)) or None
+    with dest.open("wb") as fh, tqdm(
+        total=total,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        desc=dest.name,
+        leave=False,
+    ) as bar:
+        for chunk in response.iter_content(chunk_size=chunk_size):
+            fh.write(chunk)
+            bar.update(len(chunk))
+
+    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
+    return dest
+
+
 def fetch(
     url: str,
     *,
@@ -70,24 +97,7 @@ def fetch(
         return dest
 
     log.info("Downloading %s → %s", url, dest)
-    response = requests.get(url, stream=True, timeout=_TIMEOUT)
-    response.raise_for_status()
-
-    total = int(response.headers.get("content-length", 0)) or None
-    with dest.open("wb") as fh, tqdm(
-        total=total,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        desc=dest.name,
-        leave=False,
-    ) as bar:
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            fh.write(chunk)
-            bar.update(len(chunk))
-
-    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
-    return dest
+    return _download_with_progress(url, dest, chunk_size=chunk_size)
 
 
 def fetch_oecd(
@@ -413,22 +423,5 @@ def fetch_ilostat(
 
     url = base + "?" + _urlencode(qp)
     log.info("Downloading ILOSTAT %s → %s", indicator, dest)
-    response = requests.get(url, stream=True, timeout=_TIMEOUT)
-    response.raise_for_status()
-
-    total = int(response.headers.get("content-length", 0)) or None
-    with dest.open("wb") as fh, tqdm(
-        total=total,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        desc=dest.name,
-        leave=False,
-    ) as bar:
-        for chunk in response.iter_content(chunk_size=1 << 20):
-            fh.write(chunk)
-            bar.update(len(chunk))
-
-    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
-    return dest
+    return _download_with_progress(url, dest)
 

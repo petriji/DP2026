@@ -40,7 +40,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
 
-from stattool.fetch import fetch_eurostat, fetch_oecd
+from stattool.data_quality import warn_fallback, warn_years
+from stattool.fetch import fetch, fetch_eurostat, fetch_oecd
 from stattool.dataset import Dataset
 from statout.table import save_table_tex
 
@@ -365,22 +366,22 @@ if ds_lowwage is None:
 # CB coverage --- AdjCov from ICTWSS v2 CSV (all COUNTRIES except DE)
 #               + CBC ERB from OECD API (DE only; AdjCov for DE unavailable after 1990)
 print("Downloading ICTWSS CB coverage data …")
-import csv, urllib.request
+import csv
 from io import StringIO
 _ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
 _adjcov_records: list[dict] = []
 try:
-    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as _resp:
-        _reader = csv.DictReader(StringIO(_resp.read().decode("utf-8-sig")))
-        for _row_ictwss in _reader:
-            _iso3 = _row_ictwss.get("iso3", "").strip().upper()
-            _iso2 = _ICTWSS_ISO3.get(_iso3)
-            if not _iso2 or _iso2 == "DE":
-                continue
-            _val = _row_ictwss.get("AdjCov", "").strip()
-            _yr  = _row_ictwss.get("year", "").strip()
-            if _val and _yr:
-                _adjcov_records.append({"geo": _iso2, "time": int(_yr), "value": float(_val)})
+    _ictwss_path = fetch(_ICTWSS_URL, suffix=".csv")
+    _reader = csv.DictReader(StringIO(_ictwss_path.read_text(encoding="utf-8-sig")))
+    for _row_ictwss in _reader:
+        _iso3 = _row_ictwss.get("iso3", "").strip().upper()
+        _iso2 = _ICTWSS_ISO3.get(_iso3)
+        if not _iso2 or _iso2 == "DE":
+            continue
+        _val = _row_ictwss.get("AdjCov", "").strip()
+        _yr  = _row_ictwss.get("year", "").strip()
+        if _val and _yr:
+            _adjcov_records.append({"geo": _iso2, "time": int(_yr), "value": float(_val)})
 except Exception as _e:
     print(f"  WARNING: ICTWSS AdjCov unavailable ({_e})")
 
