@@ -5,7 +5,15 @@
 \def\strEuOdvetvoveMzdyMapaColorbarLabel{[\si{\pps\per\hour}]}%
 \def\strEuOdvetvoveMzdyMapaCaption{Hodinové náklady práce (\si{\pps\per\hour}) v~odvětvích Průmysl~(C), Obchod~(G), \acs{ICT}~(J) a~Finance~(K), EU27, 2025. Zdroj dat: Eurostat~\cite{eurostat_lc_lci_lev_D1D4MD5_PPS_h}.}%
 %
-\begin{figure}[htbp]
+
+% --- Auto-added y-nudge knobs (override with \renewcommand)
+\providecommand\NudgeEuOdvetvoveMzdyMapaCz{0pt}%
+\providecommand\NudgeEuOdvetvoveMzdyMapaAt{0pt}%
+\providecommand\NudgeEuOdvetvoveMzdyMapaDe{0pt}%
+\providecommand\NudgeEuOdvetvoveMzdyMapaDk{0pt}%
+\providecommand\NudgeEuOdvetvoveMzdyMapaPl{0pt}%
+\providecommand\NudgeEuOdvetvoveMzdyMapaSk{0pt}%
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_odvetvove_mzdy_mapa.pgf}}
   \caption{\strEuOdvetvoveMzdyMapaCaption}

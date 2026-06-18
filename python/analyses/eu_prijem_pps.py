@@ -76,6 +76,7 @@ STRINGS = {
     "title": f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} ({ds.latest_year})",
     "colorbar_label": r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
 }
+NUDGE_LABELS = [(c, c) for c in ["CZ", "DK", "AT", "DE", "PL", "SK"]]
 
 fig = choropleth(
     ds,
@@ -92,7 +93,7 @@ fig = choropleth(
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
 
 # ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_prijem_pps", strings=STRINGS)
+savefig_pgf(fig, "eu_prijem_pps", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -102,6 +103,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

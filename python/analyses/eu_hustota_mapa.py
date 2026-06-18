@@ -48,7 +48,7 @@ _values = (
 _vmin = min(_values.values())
 _vmax = max(_values.values())
 COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 STRINGS = {
     "title": f"Odborová organizovanost ({ds.latest_year})",
     "colorbar_label": r"odborová organizovanost [\% zaměstnanců]",

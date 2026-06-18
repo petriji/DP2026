@@ -891,19 +891,16 @@ def _apply_label_nudges_pgf(
         if "\\pgftext" not in line:
             new_lines.append(line)
             continue
-        # Needle must be the actual text payload of the \pgftext, i.e.
-        # immediately followed by "}}" (closing \selectfont and \color groups).
-        # This avoids false positives where the needle appears inside another
-        # element (e.g. y-axis title containing "EU27 = 100").
+        # Prefer payload-like occurrences to avoid matching unrelated text.
+        # Some labels are wrapped (e.g. \pdftooltip{\contour{white}{CZ}}{...}),
+        # so accept both plain and contour/tooltip forms.
         chosen: tuple[str, str] | None = None
-        # Prefer items with longer/more-specific needles first.
-        for macro, needles, raw_needle in sorted(
-            items,
-            key=lambda kv: max((len(n) for n in kv[1]), default=0),
-            reverse=True,
-        ):
-            if any(_line_has_needle(line, needle) for needle in needles):
-                chosen = (macro, raw_needle)
+        for macro, needle in sorted(items, key=lambda kv: -len(kv[1])):
+            plain_payload = needle + "}}"
+            contour_payload = "{" + needle + "}}{"
+            wrapped_payload = "{" + needle + "}}"
+            if plain_payload in line or contour_payload in line or wrapped_payload in line:
+                chosen = (macro, needle)
                 break
         if chosen is None:
             new_lines.append(line)

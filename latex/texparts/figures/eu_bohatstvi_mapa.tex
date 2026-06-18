@@ -5,7 +5,15 @@
 \def\strEuBohatstviMapaColorbarLabel{podíl top 10\,\% na čistém jmění [\%]}%
 \def\strEuBohatstviMapaCaption{Podíl top 10\,\% domácností na čistém jmění, EU mapa, do 2023. Zdroj dat: \acs{OECD}~\acs{HFCS}~\cite{oecd_hfcs_wealth_top10_PC}.}%
 %
-\begin{figure}[htbp]
+
+% --- Auto-added y-nudge knobs (override with \renewcommand)
+\providecommand\NudgeEuBohatstviMapaCz{0pt}%
+\providecommand\NudgeEuBohatstviMapaDk{0pt}%
+\providecommand\NudgeEuBohatstviMapaAt{0pt}%
+\providecommand\NudgeEuBohatstviMapaDe{0pt}%
+\providecommand\NudgeEuBohatstviMapaPl{0pt}%
+\providecommand\NudgeEuBohatstviMapaSk{0pt}%
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_bohatstvi_mapa.pgf}}
   \caption{\strEuBohatstviMapaCaption}
