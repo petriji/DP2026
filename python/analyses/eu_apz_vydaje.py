@@ -119,7 +119,7 @@ savefig_pgf(fig, "eu_apz_vydaje", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_apz_vydaje",
-    caption=f"Výdaje na \\acacc{{APZ}} (\\% \\acs{{HDP}}), vybrané země \\acs{{EU}}, 2004--2023",
+    caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země \\acs{{EU}}, {ds_all.years[0]}--{ds_all.years[-1]}.",
     label="fig:eu_apz_vydaje",
     resizebox_width=r"\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",

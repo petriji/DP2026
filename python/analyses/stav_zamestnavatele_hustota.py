@@ -92,7 +92,7 @@ save_figure_tex_pgf(
 
 # ── 3. Timeline figure ───────────────────────────────────────────────────────
 STRINGS_TL = {
-    "title": "Hustota zaměstnavatelských organizací",
+    "title": "Zaměstnavatelská organizovanost",
     "ylabel": r"hustota zaměstnavatelských org. [\%]",
 }
 

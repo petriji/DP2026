@@ -136,6 +136,22 @@ def normalize_years(value: str) -> str:
     return result
 
 
+def _normalize_compare(value: str) -> str:
+    """Normalization for safe equivalence checks.
+
+    Besides year masking, collapse cosmetic wrappers around years
+    (e.g. '(2024)' vs '2024') to avoid noisy sync churn.
+    """
+    result = normalize_years(value)
+    result = re.sub(r"\(\s*__Y__\s*\)", "__Y__", result)
+    result = re.sub(r"\s+", " ", result)
+    return result.strip(" .\t\n")
+
+
+def _has_literal_year(value: str) -> bool:
+    return bool(re.search(r"(?<![/_A-Za-z0-9])(20\d{2})(?![/_A-Za-z0-9])", value))
+
+
 def has_year_expr(py_src: str) -> bool:
     """True if the Python source string contains any f-string year expression.
 
@@ -144,6 +160,11 @@ def has_year_expr(py_src: str) -> bool:
     normalize_years to collapse year expressions to __Y__.
     """
     return bool(re.search(r"\{[^{}\\]*(?:[Yy][Ee][Aa][Rr][Ss]?)[^{}\\]*\}", py_src))
+
+
+def has_programmatic_expr(py_src: str) -> bool:
+    """True if source contains a non-escaped f-string expression like {expr}."""
+    return bool(re.search(r"(?<!\{)\{[A-Za-z_][^{}]*\}(?!\})", py_src))
 
 def is_fstring_source(py_src: str) -> bool:
     """True if the Python source looks like an f-string literal.
@@ -182,7 +203,7 @@ def captions_equivalent(py_cap_src: str, tex_bare: str, py_text: str) -> bool:
     # Get actual runtime value from Python source (approximate)
     py_actual = py_source_to_actual(py_cap_src, fstring=is_f)
     # Compare with year normalization
-    return normalize_years(py_actual.strip(". \t\n")) == normalize_years(tex_bare.strip(". \t\n"))
+    return _normalize_compare(py_actual) == _normalize_compare(tex_bare)
 
 
 def build_new_caption_src(tex_bare: str, py_text: str) -> tuple[str, bool]:
@@ -270,7 +291,7 @@ def extract_inline_string(py_text: str, key: str) -> tuple[str | None, str | Non
 def strings_equivalent(py_src: str, tex_val: str, py_text: str, is_fstring: bool) -> bool:
     """Check if STRINGS[key] source and tex value are equivalent."""
     py_actual = py_source_to_actual(py_src, fstring=is_fstring)
-    return normalize_years(py_actual.strip()) == normalize_years(tex_val.strip())
+    return _normalize_compare(py_actual) == _normalize_compare(tex_val)
 
 
 def build_new_strings_src(tex_val: str, py_text: str) -> tuple[str, bool]:
@@ -299,6 +320,177 @@ def build_new_strings_src(tex_val: str, py_text: str) -> tuple[str, bool]:
     return src, is_f
 
 
+def _find_call_bounds(py_text: str, func_name: str) -> list[tuple[int, int]]:
+    """Return [(start, end), ...] spans for function calls with balanced parens."""
+    bounds: list[tuple[int, int]] = []
+    token = f"{func_name}("
+    pos = 0
+    while True:
+        start = py_text.find(token, pos)
+        if start == -1:
+            break
+        i = start + len(token)
+        depth = 1
+        in_str: str | None = None
+        escaped = False
+        while i < len(py_text):
+            ch = py_text[i]
+            if in_str is not None:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == in_str:
+                    in_str = None
+            else:
+                if ch in ('"', "'"):
+                    in_str = ch
+                elif ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        bounds.append((start, i + 1))
+                        break
+            i += 1
+        pos = start + len(token)
+    return bounds
+
+
+def _extract_name_string_assignments(py_text: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Extract simple NAME='literal' and NAME=f'template{...}' assignments."""
+    literals: dict[str, str] = {}
+    templates: dict[str, str] = {}
+    pat = re.compile(
+        r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(f?)([\"\'])(.*?)\3\s*$",
+        re.MULTILINE,
+    )
+    for m in pat.finditer(py_text):
+        name, is_f, _, val = m.groups()
+        if is_f:
+            templates[name] = val
+        else:
+            literals[name] = val
+    return literals, templates
+
+
+def _template_matches_stem(template: str, stem: str) -> bool:
+    """Check if a simple f-string template can match a concrete stem."""
+    # Replace each {expr} with a wildcard.
+    regex = re.escape(template)
+    regex = re.sub(r"\\\{[^{}]+\\\}", r".+", regex)
+    return bool(re.fullmatch(regex, stem))
+
+
+def _resolve_name_matches_stem(name: str, stem: str, literals: dict[str, str], templates: dict[str, str]) -> bool:
+    if name in literals:
+        return literals[name] == stem
+    if name in templates:
+        return _template_matches_stem(templates[name], stem)
+    return False
+
+
+def _call_matches_stem(call_src: str, func_name: str, stem: str, literals: dict[str, str], templates: dict[str, str]) -> bool:
+    """Check if a function call source resolves to the requested stem."""
+    if func_name == "save_figure_tex_pgf":
+        m_pos_lit = re.search(r"save_figure_tex_pgf\(\s*([\"\'])([^\"\']+)\1", call_src)
+        if m_pos_lit and m_pos_lit.group(2) == stem:
+            return True
+
+        m_pos_name = re.search(r"save_figure_tex_pgf\(\s*([A-Za-z_][A-Za-z0-9_]*)", call_src)
+        if m_pos_name and _resolve_name_matches_stem(m_pos_name.group(1), stem, literals, templates):
+            return True
+
+    m_kw_lit = re.search(r"\bstem\s*=\s*([\"\'])([^\"\']+)\1", call_src)
+    if m_kw_lit and m_kw_lit.group(2) == stem:
+        return True
+
+    m_kw_name = re.search(r"\bstem\s*=\s*([A-Za-z_][A-Za-z0-9_]*)", call_src)
+    if m_kw_name and _resolve_name_matches_stem(m_kw_name.group(1), stem, literals, templates):
+        return True
+
+    return False
+
+
+def _find_target_call_for_stem(py_text: str, stem: str) -> tuple[int, int, str] | None:
+    """Find a call block tied to *stem* and return (start, end, call_kind)."""
+    literals, templates = _extract_name_string_assignments(py_text)
+    for func_name in ["save_figure_tex_pgf", "_make_choropleth"]:
+        for start, end in _find_call_bounds(py_text, func_name):
+            call_src = py_text[start:end]
+            if _call_matches_stem(call_src, func_name, stem, literals, templates):
+                return start, end, func_name
+    return None
+
+
+def _extract_kw_string(call_src: str, kw_name: str) -> tuple[str | None, str | None, bool]:
+    """Extract a keyword string argument from a call source.
+
+    Returns (full_match, source_content, is_fstring).
+    """
+    pat = re.compile(
+        r'(' + re.escape(kw_name) + r'\s*=\s*)'
+        r'(\('
+        r'(?:\s*(?:f?)(?:"[^"]*"|\'[^\']*\'))+'
+        r'\s*\)'
+        r'|'
+        r'(?:f?)(?:"[^"]*"|\'[^\']*\')'
+        r')',
+        re.DOTALL,
+    )
+    m = pat.search(call_src)
+    if not m:
+        return None, None, False
+    full = m.group(0)
+    val = m.group(2)
+    is_f = val.startswith("f") or val.startswith("(f")
+    parts = re.findall(r'(?:f?)(["\'])([^\1]*?)\1', val, re.DOTALL)
+    src = "".join(p[1] for p in parts) if parts else None
+    return full, src, is_f
+
+
+def _find_dict_assignment_bounds(py_text: str, var_name: str, before_pos: int) -> tuple[int, int] | None:
+    """Find nearest preceding `var_name = {...}` block and return its bounds."""
+    pat = re.compile(r"\b" + re.escape(var_name) + r"\s*=\s*\{")
+    match = None
+    for m in pat.finditer(py_text):
+        if m.start() < before_pos:
+            match = m
+        else:
+            break
+    if match is None:
+        return None
+
+    open_brace = py_text.find("{", match.start())
+    if open_brace == -1:
+        return None
+
+    i = open_brace + 1
+    depth = 1
+    in_str: str | None = None
+    escaped = False
+    while i < len(py_text):
+        ch = py_text[i]
+        if in_str is not None:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == in_str:
+                in_str = None
+        else:
+            if ch in ('"', "'"):
+                in_str = ch
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return match.start(), i + 1
+        i += 1
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Per-script sync
 # ──────────────────────────────────────────────────────────────────────────────
@@ -319,7 +511,7 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
                 f"  SKIP {stem}: multiple registry scripts match ({', '.join(sorted(registry_scripts))})"
             ]
         else:
-            return [f"  SKIP {stem}: no matching Python script"]
+            return [f"  SKIP {stem}: no matching Python script (likely unregistered output)"]
 
     tex_text = tex_file.read_text(encoding="utf-8")
     py_text = py_file.read_text(encoding="utf-8")
@@ -345,7 +537,15 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
         prefix = m.group(1) if m else first_key
 
     changes: list[str] = []
+    notes: list[str] = []
     new_py_text = py_text
+
+    # Scope all updates to the specific save_figure_tex_pgf("<stem>", ...) call.
+    target_call_bounds = _find_target_call_for_stem(new_py_text, stem)
+    if target_call_bounds is None:
+        return [f"  SKIP {stem}: no save_figure_tex_pgf call for this stem"]
+    call_start, call_end, call_kind = target_call_bounds
+    target_call_src = new_py_text[call_start:call_end]
 
     # ── Caption ──────────────────────────────────────────────────────────────
     caption_key = prefix + "Caption"
@@ -353,7 +553,7 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
         tex_caption_full = defs[caption_key]
         tex_bare = strip_zdroj_dat(tex_caption_full)
 
-        # Find caption= in Python
+        # Find caption= only in the target figure call.
         cap_pat = re.compile(
             r'(caption\s*=\s*)'
             r'(\('
@@ -364,7 +564,7 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
             r')',
             re.DOTALL,
         )
-        m = cap_pat.search(new_py_text)
+        m = cap_pat.search(target_call_src)
         if m:
             old_cap_arg = m.group(0)
             # Extract the string content(s) from the old arg
@@ -374,14 +574,20 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
 
             # Check equivalence
             if not captions_equivalent(old_src, tex_bare, py_text):
-                new_src, is_f = build_new_caption_src(tex_bare, py_text)
-                q = 'f"' if is_f else '"'
-                new_cap_arg = f'caption={q}{new_src}"'
-                new_py_text = new_py_text.replace(old_cap_arg, new_cap_arg, 1)
-                # Show clean diff
-                old_display = py_source_to_actual(old_src, fstring=has_year_expr(old_src))
-                new_display = tex_bare
-                changes.append(f"  caption:\n    was: {old_display!r}\n    now: {new_display!r}")
+                # Do not overwrite programmatic expressions with literal-year text.
+                if has_programmatic_expr(old_src) and _has_literal_year(tex_bare):
+                    notes.append("  caption: skipped (programmatic expression in Python source)")
+                else:
+                    new_src, is_f = build_new_caption_src(tex_bare, py_text)
+                    q = 'f"' if is_f else '"'
+                    new_cap_arg = f'caption={q}{new_src}"'
+                    target_call_src = target_call_src.replace(old_cap_arg, new_cap_arg, 1)
+                    new_py_text = new_py_text[:call_start] + target_call_src + new_py_text[call_end:]
+                    call_end = call_start + len(target_call_src)
+                    # Show clean diff
+                    old_display = py_source_to_actual(old_src, fstring=has_year_expr(old_src))
+                    new_display = tex_bare
+                    changes.append(f"  caption:\n    was: {old_display!r}\n    now: {new_display!r}")
 
     # ── STRINGS inline dict keys ──────────────────────────────────────────────
     key_map = {
@@ -392,39 +598,91 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
         prefix + "Note": "note",
         prefix + "Subtitle": "subtitle",
     }
+    strings_var_m = re.search(r"\bstrings\s*=\s*([A-Za-z_][A-Za-z0-9_]*)", target_call_src)
+    strings_var = strings_var_m.group(1) if strings_var_m else None
+
     for macro_key, strings_key in key_map.items():
         if macro_key not in defs:
             continue
         tex_val = defs[macro_key]
-        full_match, old_src, is_f = extract_inline_string(new_py_text, strings_key)
-        if full_match is None or old_src is None:
-            continue
-        if strings_equivalent(old_src, tex_val, py_text, is_fstring=is_f):
-            continue
-        new_src, new_is_f = build_new_strings_src(tex_val, py_text)
-        q = 'f"' if new_is_f else '"'
-        # Reconstruct the full match with new value
-        key_part_m = re.search(
-            r'(["\']' + re.escape(strings_key) + r'["\']' + r'\s*:\s*)',
-            full_match
-        )
-        if key_part_m:
+        if strings_var:
+            dict_bounds = _find_dict_assignment_bounds(new_py_text, strings_var, call_start)
+            if dict_bounds is None:
+                continue
+            dict_start, dict_end = dict_bounds
+            dict_src = new_py_text[dict_start:dict_end]
+
+            if len(re.findall(r'["\']' + re.escape(strings_key) + r'["\']\s*:', dict_src)) != 1:
+                continue
+
+            full_match, old_src, is_f = extract_inline_string(dict_src, strings_key)
+            if full_match is None or old_src is None:
+                continue
+            if strings_equivalent(old_src, tex_val, py_text, is_fstring=is_f):
+                continue
+            if has_programmatic_expr(old_src) and _has_literal_year(tex_val):
+                notes.append(f"  STRINGS[{strings_key!r}]: skipped (programmatic expression in Python source)")
+                continue
+            new_src, new_is_f = build_new_strings_src(tex_val, py_text)
+            q = 'f"' if new_is_f else '"'
+            key_part_m = re.search(
+                r'(["\']' + re.escape(strings_key) + r'["\']' + r'\s*:\s*)',
+                full_match
+            )
+            if key_part_m:
+                new_full = key_part_m.group(1) + f'{q}{new_src}"'
+                new_dict_src = dict_src.replace(full_match, new_full, 1)
+                new_py_text = new_py_text[:dict_start] + new_dict_src + new_py_text[dict_end:]
+                delta = len(new_dict_src) - len(dict_src)
+                if dict_start < call_start:
+                    call_start += delta
+                    call_end += delta
+                target_call_src = new_py_text[call_start:call_end]
+                if new_full == full_match:
+                    continue
+                old_display = py_source_to_actual(old_src, fstring=is_f)
+                new_display = py_source_to_actual(new_src, fstring=new_is_f)
+                changes.append(f"  STRINGS[{strings_key!r}]:\n    was: {old_display!r}\n    now: {new_display!r}")
+        elif call_kind == "_make_choropleth":
+            helper_kw_map = {
+                "title": "title",
+                "colorbar_label": "cbar_label",
+            }
+            helper_kw = helper_kw_map.get(strings_key)
+            if not helper_kw:
+                continue
+            full_match, old_src, is_f = _extract_kw_string(target_call_src, helper_kw)
+            if full_match is None or old_src is None:
+                continue
+            if strings_equivalent(old_src, tex_val, py_text, is_fstring=is_f):
+                continue
+            if has_programmatic_expr(old_src) and _has_literal_year(tex_val):
+                notes.append(f"  {helper_kw}: skipped (programmatic expression in Python source)")
+                continue
+            new_src, new_is_f = build_new_strings_src(tex_val, py_text)
+            q = 'f"' if new_is_f else '"'
+            key_part_m = re.search(r'(' + re.escape(helper_kw) + r'\s*=\s*)', full_match)
+            if not key_part_m:
+                continue
             new_full = key_part_m.group(1) + f'{q}{new_src}"'
-            new_py_text = new_py_text.replace(full_match, new_full, 1)
-            if new_full == full_match:
-                continue  # no-op: skip reporting
+            target_call_src = target_call_src.replace(full_match, new_full, 1)
+            new_py_text = new_py_text[:call_start] + target_call_src + new_py_text[call_end:]
+            call_end = call_start + len(target_call_src)
             old_display = py_source_to_actual(old_src, fstring=is_f)
             new_display = py_source_to_actual(new_src, fstring=new_is_f)
-            changes.append(f"  STRINGS[{strings_key!r}]:\n    was: {old_display!r}\n    now: {new_display!r}")
+            changes.append(f"  {helper_kw}:\n    was: {old_display!r}\n    now: {new_display!r}")
 
     if not changes:
-        return [f"  OK   {stem}: no changes needed"]
+        result = [f"  OK   {stem}: no changes needed"]
+        result.extend(notes)
+        return result
 
     if not dry_run:
         py_file.write_text(new_py_text, encoding="utf-8")
 
     result = [f"  CHANGED {stem} ({len(changes)} update(s)):"]
     result.extend(changes)
+    result.extend(notes)
     return result
 
 
@@ -433,16 +691,28 @@ def sync_script(tex_file: Path, dry_run: bool = False) -> list[str]:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main():
-    dry_run = "--dry-run" in sys.argv
+    args = sys.argv[1:]
+    apply_mode = "--apply" in args
+    dry_run = not apply_mode
+    targets = [a for a in args if not a.startswith("--")]
+
     mode = "DRY RUN — no files will be written" if dry_run else "LIVE RUN — Python scripts will be updated"
     print(f"{mode}\n")
 
     tex_files = sorted(FIGURES_TEX_DIR.glob("*.tex"))
+    if targets:
+        target_set = set(targets)
+        tex_files = [
+            p for p in tex_files
+            if p.stem in target_set or p.name in target_set or str(p.relative_to(ROOT)) in target_set
+        ]
     print(f"Found {len(tex_files)} figure tex files\n")
 
     all_changed: list[str] = []
     all_ok: list[str] = []
-    all_skip: list[str] = []
+    all_skip_no_script: list[str] = []
+    all_skip_no_stem: list[str] = []
+    all_skip_other: list[str] = []
 
     for tex_file in tex_files:
         lines = sync_script(tex_file, dry_run=dry_run)
@@ -453,14 +723,22 @@ def main():
             for l in lines:
                 print(l)
         elif is_skip:
-            all_skip.append(tex_file.stem)
+            head = lines[0] if lines else ""
+            if "no matching Python script" in head:
+                all_skip_no_script.append(tex_file.stem)
+            elif "no save_figure_tex_pgf call for this stem" in head:
+                all_skip_no_stem.append(tex_file.stem)
+            else:
+                all_skip_other.append(tex_file.stem)
         else:
             all_ok.append(tex_file.stem)
 
     print(f"\n{'='*60}")
     print(f"Changed : {len(all_changed)}")
     print(f"OK (no change needed): {len(all_ok)}")
-    print(f"Skipped (no py script): {len(all_skip)}")
+    print(f"Skipped (no matching script / unregistered): {len(all_skip_no_script)}")
+    print(f"Skipped (no matched stem call): {len(all_skip_no_stem)}")
+    print(f"Skipped (other): {len(all_skip_other)}")
     if all_changed:
         print("Changed files:", all_changed)
 
