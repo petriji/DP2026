@@ -1869,6 +1869,10 @@
   \cs_set_protected:Npn \acro_record_page:n #1 { }
   \ExplSyntaxOff
   \protected\def\CTUacroHyperlink#1#2{\hyperlink{#1}{#2}}%
+  \providecommand{\ctuauxout}{\@auxout}%
+  \newcommand{\CTUregisteracrodest}[1]{%
+    \global\@namedef{CTU@acrodest@#1}{1}%
+  }
   % --------------------------------------------------------------------------
   % Global options
   % make-links=false: links are created manually in the renewed display
@@ -1950,6 +1954,7 @@
     \acronymsmapF{%
       \AcroAddRow{%
         \pdfdest name{\AcronymID} xyz \textbf{\acrowrite{short}}%
+        \iow_now:Nx \ctuauxout { \string \CTUregisteracrodest { \AcronymID } }%
         \acroifT{alt}{/\acrowrite{alt}}%
         &
         \acrowrite{list}%
@@ -2008,17 +2013,9 @@
   \cs_generate_variant:Nn \CTU@acro_link:nnn { enn }
   \cs_new:Npn \CTU@acro_display:nn #1#2
     {
-      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo }
+      \cs_if_exist:cTF { CTU@acrodest@ \AcronymID }
+        { \CTU@acro_link:enn { \AcronymID } {#1}{#2} }
         { \CTU@acro_tooltip:nn {#1}{#2} }
-        {
-          \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { nolist }
-            { \CTU@acro_tooltip:nn {#1}{#2} }
-            {
-              \acro_boolean_property_if:VnTF \AcronymID { used }
-                { \CTU@acro_link:enn { \AcronymID } {#1}{#2} }
-                { \CTU@acro_tooltip:nn {#1}{#2} }
-            }
-        }
     }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
