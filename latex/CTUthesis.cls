@@ -2741,6 +2741,18 @@
 % ==============================================================================
 % \inputpgffigure{name} — include a matplotlib PGF figure
 % ==============================================================================
+% \CTUfitpgf{<content>} scales down only when content exceeds \linewidth.
+% This keeps typography stable across figures with different intrinsic widths.
+\newsavebox{\CTU@pgfbox}
+\newcommand{\CTUfitpgf}[1]{%
+  \sbox{\CTU@pgfbox}{#1}%
+  \ifdim\wd\CTU@pgfbox>\linewidth
+    \resizebox{\linewidth}{!}{\usebox{\CTU@pgfbox}}%
+  \else
+    \makebox[\linewidth][c]{\usebox{\CTU@pgfbox}}%
+  \fi
+}
+
 % Includes the editable figure definition from texparts/figures/<name>.tex.
 % The PGF file is expected at ../python/figures/<name>.pgf (relative to the
 % latex/ directory, matching \graphicspath{{../python/figures/}}).

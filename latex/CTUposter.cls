@@ -622,6 +622,18 @@
 % Convenience — \inputpgffigure mirrors the thesis macro so PGF/matplotlib
 % figures dropped into texparts/figures/<name>.tex render identically.
 % ----------------------------------------------------------------------------
+% \CTUfitpgf{<content>} scales down only when content exceeds \linewidth.
+% For postercompactpgf we keep explicit full-width scaling + font remap.
+\newsavebox{\CTU@pgfbox}
+\newcommand{\CTUfitpgf}[1]{%
+  \sbox{\CTU@pgfbox}{#1}%
+  \ifdim\wd\CTU@pgfbox>\linewidth
+    \resizebox{\linewidth}{!}{\usebox{\CTU@pgfbox}}%
+  \else
+    \makebox[\linewidth][c]{\usebox{\CTU@pgfbox}}%
+  \fi
+}
+
 \newcommand{\inputpgffigure}[1]{%
   \IfFileExists{../python/figures/#1.pgf}{%
     \input{texparts/figures/#1}%
