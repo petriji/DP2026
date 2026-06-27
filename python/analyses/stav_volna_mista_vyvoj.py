@@ -35,6 +35,8 @@ from statout.timeline import timeline
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 HIGHLIGHT = ["CZ", "DE"]
 START_YEAR = 2010
+# JVR size-class policy: keep legacy GE10 as an option, but default to TOTAL.
+JVR_USE_GE10 = False
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 apply_style_pgf()
@@ -84,13 +86,15 @@ if _chosen_unit and _chosen_unit != "AVG_3Y":
     )
 
 if "sizeclas" in raw.columns:
-    for _sz in ["GE10", "TOTAL"]:
+    _size_order = ["GE10", "TOTAL"] if JVR_USE_GE10 else ["TOTAL", "GE10"]
+    for _sz in _size_order:
         _tmp = raw[raw["sizeclas"] == _sz]
         if not _tmp.empty:
             raw = _tmp
             break
 
 _country_overrides: list[str] = []
+_size_overrides: list[str] = []
 if _nace_col and _chosen_nace:
     _base = raw.copy()
     _target_year = int(_base["time"].max()) if not _base.empty else START_YEAR
@@ -98,6 +102,29 @@ if _nace_col and _chosen_nace:
     _missing = [c for c in COUNTRIES if c not in _have]
     _alts = ["B-N", "B-O", "B-S", "TOTAL"]
     _parts = [_base]
+
+    # First fallback: relax size class GE10 -> TOTAL for missing countries.
+    if _missing and "sizeclas" in _raw_all.columns and "sizeclas" in _base.columns:
+        _base_size = _base["sizeclas"].iloc[0] if not _base.empty else None
+        if _base_size == "GE10":
+            for _geo in list(_missing):
+                _cand = _raw_all[_raw_all[_nace_col] == _chosen_nace]
+                if _cand.empty:
+                    continue
+                if _chosen_unit and "unit" in _cand.columns:
+                    _cand = _cand[_cand["unit"] == _chosen_unit]
+                if "sizeclas" in _cand.columns:
+                    _cand = _cand[_cand["sizeclas"] == "TOTAL"]
+                _cand_geo = _cand[(_cand["geo"] == _geo) & (_cand["time"] <= _target_year)]
+                if _cand_geo.empty:
+                    continue
+                _parts.append(_cand[_cand["geo"] == _geo])
+                _size_overrides.append(f"{_geo}:TOTAL")
+
+    _merged = pd.concat(_parts, ignore_index=True)
+    _have_after_size = set(_merged.loc[_merged["time"] <= _target_year, "geo"].unique())
+    _missing = [c for c in COUNTRIES if c not in _have_after_size]
+
     for _geo in _missing:
         if len(_country_overrides) >= 3:
             break
@@ -118,6 +145,12 @@ if _nace_col and _chosen_nace:
             _country_overrides.append(f"{_geo}:{_alt}")
             break
     raw = pd.concat(_parts, ignore_index=True)
+if _size_overrides:
+    warn_fallback(
+        "Vacancy-rate timeline filled missing countries by relaxing size class GE10 -> TOTAL: "
+        + ", ".join(_size_overrides),
+        source="Eurostat jvs_a_r21",
+    )
 if _country_overrides:
     warn_fallback(
         "Vacancy-rate timeline filled missing countries with alternate NACE aggregates: "
@@ -135,6 +168,7 @@ warn_non_target_year(
 print(
     "jvs_a_r21 selection:",
     f"nace={_chosen_nace or 'n/a'}, unit={_chosen_unit or 'n/a'},",
+    "size-overrides=" + (", ".join(_size_overrides) if _size_overrides else "none") + ",",
     "country-overrides=" + (", ".join(_country_overrides) if _country_overrides else "none")
 )
 
@@ -167,20 +201,20 @@ ax = fig.axes[0]
 ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
 
 # 5-year moving average for CZ (used in ternary B1 smoothing)
-cz = _ds_df[_ds_df["geo"] == "CZ"].sort_values("time")[["time", "value"]]
-if not cz.empty:
-    cz_ma = cz.copy()
-    cz_ma["ma5"] = cz_ma["value"].rolling(window=5, min_periods=3).mean()
-    ax.plot(
-        cz_ma["time"],
-        cz_ma["ma5"],
-        linestyle="--",
-        linewidth=1.1,
-        color="#B22222",
-        alpha=0.9,
-        label="CZ (5letý průměr)",
-        zorder=4,
-    )
+# cz = _ds_df[_ds_df["geo"] == "CZ"].sort_values("time")[["time", "value"]]
+# if not cz.empty:
+#     cz_ma = cz.copy()
+#     cz_ma["ma5"] = cz_ma["value"].rolling(window=5, min_periods=3).mean()
+#     ax.plot(
+#         cz_ma["time"],
+#         cz_ma["ma5"],
+#         linestyle="--",
+#         linewidth=1.1,
+#         color="#B22222",
+#         alpha=0.9,
+#         label="CZ (5letý průměr)",
+#         zorder=4,
+#     )
 
 _pivot_fg = (
     ds.df[ds.df["geo"].isin(COUNTRIES)]
