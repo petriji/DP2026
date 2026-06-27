@@ -60,6 +60,7 @@ _values_arope = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
+_vmin_arope = min(_values_arope.values())
 _vmax_arope = max(_values_arope.values())
 
 STRINGS_MAP = {
@@ -73,7 +74,7 @@ fig_a = choropleth(
     title=STRINGS_MAP["title"],
     colorbar_label=STRINGS_MAP["colorbar_label"],
     cmap="RdYlGn_r",
-    vmin=0,
+    vmin=_vmin_arope,
     vmax=_vmax_arope,
     highlight_colorbar=["CZ"],
 )

@@ -243,7 +243,6 @@ try:
     ds_map = Dataset(snap_nat, name="Přeshraniční dojíždění", unit="% zaměstnaných",
                      source_url="Eurostat/lfst_r_lfe2ecomm")
     _values_map = snap_nat.set_index("geo")["value"].to_dict()
-    _vmax = max(_values_map.values())
     STRINGS_MAP = {
         "title": f"Přeshraniční pracovní dojíždění v~\\acs{{geo-EU}} ({latest_nat})",
         "colorbar_label": r"\% zaměstnaných pracujících v~zahraničí",
@@ -253,7 +252,6 @@ try:
         title=STRINGS_MAP["title"],
         colorbar_label=STRINGS_MAP["colorbar_label"],
         cmap="RdYlGn_r",
-        vmin=0, vmax=_vmax,
         highlight_colorbar=["CZ"],
         label_countries=True,
     )
@@ -310,11 +308,10 @@ try:
         title=STRINGS_NUTS2["title"],
         colorbar_label=STRINGS_NUTS2["colorbar_label"],
         cmap="RdYlGn_r",
-        vmin=0,# float(data_series.min()),
-        vmax=10,# float(data_series.max()),
         label_cz=True,
         label_nbr=True,
         label_fmt="{:.1f}",
+        label_nudges={"CZ020": (55_000, -42_000)},
         label_names=label_names,
         label_tooltip_fmt=r"{:.2f}\,\%",
     )

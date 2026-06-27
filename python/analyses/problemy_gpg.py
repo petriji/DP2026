@@ -136,6 +136,7 @@ _values_gpg = (
     ds_gpg.df[ds_gpg.df["time"] <= snap_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
+_vmin_gpg = min(_values_gpg.values())
 _vmax_gpg = max(_values_gpg.values())
 
 STRINGS_GPG_MAP = {
@@ -149,7 +150,7 @@ fig_a = choropleth(
     # Sequential 0..vmax → use project-wide RdYlGn_r (matches other "more = worse"
     # choropleths so the rasterised colourbar dedups via _shared/).
     cmap="RdYlGn_r",
-    vmin=0,
+    vmin=_vmin_gpg,
     vmax=_vmax_gpg,
     colorbar_label=STRINGS_GPG_MAP["colorbar_label"],
     label_countries=True,
