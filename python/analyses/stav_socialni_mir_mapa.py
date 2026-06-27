@@ -1,6 +1,9 @@
 r"""
 Social-peace benchmark choropleths (B4): score map + strike-days map.
 
+Data source: ETUI, ILOSTAT a expertni odhady (Social-peace benchmark, 2025)
+Filter: srovnání kategorií sociálního míru (skóre) a počtu dní stávek na 1 000 zaměstnanců v Evropě
+
 Purpose
 -------
 Provide a transparent visual basis for the expert B4 variable used in the

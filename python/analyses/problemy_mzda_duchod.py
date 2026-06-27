@@ -1,6 +1,9 @@
 r"""
 Smoothed distribution functions of Czech wages and pensions.
 
+Data source: MPSV ISPV (Mzdová sféra), ČSSZ (Statistická ročenka důchodového pojištění)
+Filter: log-normální proložení mzdové distribuce a rozdělení starobních důchodů v ČR (2024--2025)
+
 Two smoothed probability-density curves are fitted and displayed on a single
 combined figure:
 

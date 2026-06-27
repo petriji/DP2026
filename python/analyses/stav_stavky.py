@@ -1,23 +1,8 @@
 r"""
 Strike activity -- % working time lost to strikes, EU grey cloud + selected countries.
 
-Data sources
-------------
-* ILOSTAT ``STR_DAYS_ECO_RT_A`` --- days not worked per 1\,000 workers due to
-  industrial action, annual, by economy.
-  (classif1=ECO_AGGREGATE_TOTAL, sex=SEX_T)
-* Statistics Denmark ``ABST1`` (unit 300 = lost working days, BRANCHE 000 = total)
-  for **Denmark only** --- DK does not report to ILOSTAT.
-  Rate computed as: lost_days / (Eurostat lfsi_emp_a THS_PER * 1000) * 1000
-* Eurostat ``lfsa_ewhun2`` --- average actual weekly hours of work in main job,
-  total employed, 20--64 years.
-  Used to convert the ILO rate into % working time lost:
-
-      A   = H_w × 52.18 / 8       (annual working days per worker;
-                                   52.18 = average weeks in a Gregorian year)
-      P_S = D_S / (1000 × A) × 100
-
-See eq:strike_pct in commentary for full notation.
+Data source: ILOSTAT STR_DAYS_ECO_RT_A; Statistics Denmark ABST1; Eurostat lfsa_ewhun2
+Filter: přepočet dní stávek na procento odpracované doby pro ČR, Dánsko a porovnání s ostatními zeměmi (2000--2025)
 
 Output
 ------

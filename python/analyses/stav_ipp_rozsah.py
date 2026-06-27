@@ -1,6 +1,9 @@
 r"""
 KS content breadth --- IPP-derived timeline (2007--2025).
 
+Data source: MPSV IPP (Informační systém o pracovních podmínkách, 2007--2025)
+Filter: podíl kolektivních smluv s tarify (A1a), s úpravou uvolňování (A19a sloupec 7) a podmínek odborů (A19a sloupec 9)
+
 Three indicators tracked from the MPSV IPP annual workbooks:
 
 1. Formal wage-tariff scale (``mzda_tarify`` A1a) -- share of CAs

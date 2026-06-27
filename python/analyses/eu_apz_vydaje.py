@@ -5,10 +5,10 @@ Key message for the thesis: DK spends ~2 % of GDP on active labour-market
 policy; CZ spends ~0.3 %.  The "flexicurity" triangle only works with
 adequate income-support and re-skilling investment.
 
-Data source: Eurostat, ``lmp_expsumm``
-  LMP summary expenditure by type of action.
-  Dimensions: freq · exptype · unit · geo
-  Filter used: freq=A, programme=LMP_20T70 (active, cat. 2--7), unit=PC_GDP.
+Data source: OECD LMPEXP (via ``load_lmp_active()``)
+    Labour Market Policy expenditure, programme LMP_20T70 (active measures,
+    cat. 2--7), unit PT_B1GQ = % of GDP.
+    (Eurostat ``lmp_expsumm`` was discontinued; OECD covers the same EU countries.)
 
 Output
 ------
