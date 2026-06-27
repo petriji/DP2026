@@ -252,3 +252,43 @@ script   = "analyses/eu_ict_gender.py"
 texparts = ["eu_ict_gender"]
 pics     = ["eu_ict_gender"]
 
+[mne_map]
+script   = "analyses/eu_mne_mapa.py"
+texparts = ["eu_mne_mapa"]
+pics     = ["eu_mne_mapa"]
+
+[bohatstvi_top1_wid]
+script   = "analyses/eu_bohatstvi_top1_wid.py"
+texparts = ["eu_bohatstvi_top1_wid"]
+pics     = ["eu_bohatstvi_top1_wid"]
+
+[practical_ternary_social_dialog]
+script   = "analyses/practical_ternary_social_dialog.py"
+texparts = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+pics     = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+
+[stav_socialni_mir_mapa]
+script   = "analyses/stav_socialni_mir_mapa.py"
+texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+
+[stav_kolektivni_spory_vyvoj]
+script   = "analyses/stav_kolektivni_spory_vyvoj.py"
+texparts = ["stav_kolektivni_spory_vyvoj"]
+pics     = ["stav_kolektivni_spory_vyvoj"]
+
+[stav_korporatni_dan]
+script   = "analyses/stav_korporatni_dan.py"
+texparts = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+pics     = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+
+[stav_volna_mista_vyvoj]
+script   = "analyses/stav_volna_mista_vyvoj.py"
+texparts = ["stav_volna_mista_vyvoj"]
+pics     = ["stav_volna_mista_vyvoj"]
+
+[stav_struktura_prac_sily]
+script   = "analyses/stav_struktura_prac_sily.py"
+texparts = ["stav_struktura_prac_sily"]
+pics     = []
+
