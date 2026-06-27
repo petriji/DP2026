@@ -60,6 +60,11 @@ PGF_RECOMPRESS_COMPANION_IMAGES: bool = False
 FIGURE_WIDTH_CM: float = 15.0
 FIGURE_HEIGHT_CM: float = 9.0
 
+# Standard height for single-axis figures (timeline, bar, scatter).
+# Sized so two such figures + two 2-line captions fit on one A4 page.
+# Derivation: textheight=247mm, 2×caption≈26mm, spacing≈15mm → 206mm/2 ≈ 103mm.
+FIGURE_HEIGHT_STANDARD_CM: float = 10.5
+
 # PGF export target width. Figures are normalized to this width at save time
 # so LaTeX can include them without any resize/fitting step.
 PGF_TARGET_WIDTH_CM: float = FIGURE_WIDTH_CM
@@ -90,6 +95,29 @@ FIGURE_COMPACT_LABEL_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
 # Country labels on Europe choropleth maps — compact but never below 10 pt floor.
 MAP_COUNTRY_LABEL_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
 TABLE_FONT_SIZE_LATEX: str = "small"
+
+# ── Poster mode ──────────────────────────────────────────────────────────────
+# Analogous to \DPPosterFigureLabelSize / \DPPosterWorkBaseSize in poster.tex.
+# Set DP_POSTER_RUN=1 when regenerating figures for the A1 poster so that
+# scripts produce _poster.pgf variants with one-step-smaller labels.  The
+# main thesis figures (*.pgf) are unaffected.
+import os as _os
+IS_POSTER_RUN: bool = _os.environ.get("DP_POSTER_RUN", "0") == "1"
+# Poster-specific sizes — one step smaller than thesis equivalents.
+POSTER_FIGURE_LABEL_SIZE: int = FIGURE_LABEL_SIZE - 1      # 10pt (footnotesize)
+POSTER_FIGURE_COMPACT_LABEL_SIZE: int = FIGURE_COMPACT_LABEL_SIZE - 1  # 9pt
+
+
+def poster_stem(stem: str) -> str:
+    """Return ``{stem}_poster`` when DP_POSTER_RUN=1, otherwise *stem* unchanged.
+
+    Usage in analysis scripts::
+
+        savefig_pgf(fig, poster_stem("my_figure"), strings=STRINGS)
+        if not IS_POSTER_RUN:
+            save_figure_tex_pgf("my_figure", ...)  # thesis-only wrapper
+    """
+    return f"{stem}_poster" if IS_POSTER_RUN else stem
 
 # Colour palette – qualitative, colour-blind safe (based on Wong 2011).
 # Excluded: yellow (#F0E442, #E69F00) – near-invisible on white.

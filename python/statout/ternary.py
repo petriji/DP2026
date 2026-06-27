@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import numpy as np
 
-from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE, FIGURE_TITLE_SIZE
+from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE, FIGURE_TITLE_SIZE, IS_POSTER_RUN
 from stattool.style import GEO_LONG_NAMES
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -131,7 +131,8 @@ def _draw_grid_and_ticks(ax: plt.Axes) -> None:
                     color=_GRID_COLOR, ls=ls, lw=lw, alpha=alpha, zorder=2)
 
     T = 0.036    # tick length (data units), 200% vs original 0.018
-    _FS = FIGURE_LABEL_SIZE
+    # Poster: tick numerals one tier smaller than country labels (ultra remap).
+    _FS = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE
     v_a = np.array([1.0, 0.0])
     v_b = np.array([0.5, -_H])
     v_c = np.array([0.5, _H])
@@ -241,7 +242,8 @@ def _draw_axis_arrows(
     Cv = np.array([1.0, 0.0])
 
     _akw = dict(arrowstyle="->", color="black", lw=1.2, mutation_scale=14)
-    _FS  = FIGURE_LABEL_SIZE  # end-marker font size (harmonized with figure labels)
+    # Poster: 0 % / 100 % end markers one tier smaller than country labels.
+    _FS  = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE  # end-marker font size
 
     # ── A-axis: left edge B→A, vertex_labels[0] increases toward A ───────────
     d_a = Av - Bv                     # direction B→A (unit length since |BA|=1)
@@ -255,8 +257,10 @@ def _draw_axis_arrows(
     ax.text(*(e_a + d_a * end_gap), "100 %",
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_a = (s_a + e_a) / 2.0
+    # Poster: corner / axis-name labels one tier smaller than country labels.
+    _VFS = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE  # vertex/axis label size
     ax.text(*(mid_a + n_a * lbl_gap), vertex_labels[0],
-            ha="center", va="center", fontsize=FIGURE_LABEL_SIZE, weight="bold",
+            ha="center", va="center", fontsize=_VFS, weight="bold",
             rotation=60, zorder=5)
 
     # ── B-axis: bottom edge C→B, vertex_labels[1] increases toward B ─────────
@@ -272,7 +276,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_b = (s_b + e_b) / 2.0
     ax.text(*(mid_b + n_b * lbl_gap), vertex_labels[1],
-            ha="center", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", rotation=0, zorder=5)
+            ha="center", va="top", fontsize=_VFS, weight="bold", rotation=0, zorder=5)
 
     # ── C-axis: right edge A→C, vertex_labels[2] increases toward C ──────────
     d_c = Cv - Av                     # direction A→C
@@ -287,7 +291,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_c = (s_c + e_c) / 2.0
     ax.text(*(mid_c + n_c * lbl_gap), vertex_labels[2],
-            ha="center", va="center", fontsize=FIGURE_LABEL_SIZE, weight="bold",
+            ha="center", va="center", fontsize=_VFS, weight="bold",
             rotation=-60, zorder=5)
 
     if show_corner_labels:
@@ -297,13 +301,13 @@ def _draw_axis_arrows(
         corner_down = 0.133
         corner_up_pts = 10
         ax.text(Av[0], Av[1] + corner_a_up, vertex_labels[0],
-            ha="center", va="bottom", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5)
+            ha="center", va="bottom", fontsize=_VFS, weight="bold", zorder=5)
         ax.annotate(
             vertex_labels[1],
             (Bv[0] - corner_x, Bv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="right", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5,
+            ha="right", va="top", fontsize=_VFS, weight="bold", zorder=5,
             annotation_clip=False,
         )
         ax.annotate(
@@ -311,7 +315,7 @@ def _draw_axis_arrows(
             (Cv[0] + corner_x, Cv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="left", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5,
+            ha="left", va="top", fontsize=_VFS, weight="bold", zorder=5,
             annotation_clip=False,
         )
 
@@ -548,12 +552,21 @@ def ternary_diagram(
     # ── Layout ────────────────────────────────────────────────────────────
     if title:
         # Extra title pad for corners-on so title clears the A corner label that overflows above axes.
-        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE, pad=20 if show_corner_labels else 2)
+        # Poster: smaller pad so the (LaTeX-inflated) title stays inside the
+        # canvas top instead of being shaved.
+        _title_pad = (12 if IS_POSTER_RUN else 20) if show_corner_labels else 2
+        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE - 1 if IS_POSTER_RUN else FIGURE_TITLE_SIZE, pad=_title_pad)
     # Identical limits for both variants → identical data/inch scale → identical visual appearance.
     # Corner labels that fall outside this range render via clip_on=False / annotation_clip=False.
     ax.set_xlim(-0.15, 1.15)
     ax.set_ylim(-0.120, _H + 0.09)
     ax.set_aspect("equal")
     ax.axis("off")
+    # Poster: reserve extra top headroom so the inflated title is not clipped at
+    # the canvas top (matplotlib measures the title smaller than LaTeX renders),
+    # and extra bottom margin so the lower B-axis markers / "Firmy" vertex label
+    # do not overlap the LaTeX caption printed directly below the figure.
+    if IS_POSTER_RUN:
+        fig._subplots_adjust_kwargs = {"top": 0.88, "bottom": 0.08}
 
     return fig

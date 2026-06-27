@@ -29,12 +29,15 @@ from config import (
     FIGURE_DPI,
     FIGURE_FORMAT,
     FIGURE_HEIGHT_CM,
+    FIGURE_COMPACT_LABEL_SIZE,
     FIGURE_LABEL_SIZE,
     FIGURE_TEXT_SIZE,
     FIGURE_TITLE_SIZE,
     FIGURE_WIDTH_CM,
     FIGURES_DIR,
     FONT_SIZE,
+    IS_POSTER_RUN,
+    POSTER_FIGURE_COMPACT_LABEL_SIZE,
     PALETTE,
     PGF_DEDUP_COMPANION_IMAGES,
     PGF_OPTIMIZE_ASSETS,
@@ -494,11 +497,15 @@ def _recenter_on_visual(fig: plt.Figure) -> None:
         renderer = fig.canvas.get_renderer()
         if bb_content is not None:
             fig_h = fig.get_figheight()
-            gap_pt = getattr(fig, '_suptitle_gap_pt', 6)
+            gap_pt = getattr(fig, '_suptitle_gap_pt', 1)
             content_top_frac = bb_content.y1 / fig_h
             st_bb = st.get_window_extent(renderer=renderer).transformed(fig.transFigure.inverted())
             anchor_offset = st.get_position()[1] - st_bb.y0
             new_y = content_top_frac + gap_pt / 72 / fig_h + anchor_offset
+            # Prevent suptitle clipping: cap by the text's real top offset.
+            top_offset = st_bb.y1 - st.get_position()[1]
+            max_y = 1.0 - top_offset - 0.002
+            new_y = min(new_y, max_y)
             st.set_position((st.get_position()[0], new_y))
 
     # ── horizontal centring on the visual crop ─────────────────────────────
@@ -506,10 +513,16 @@ def _recenter_on_visual(fig: plt.Figure) -> None:
     if bb is None:
         return
 
-    # x_center in figure-fraction coordinates
-    # get_tightbbox returns inches, so divide by figure width in inches
-    fig_w = fig.get_figwidth()
-    x_c = (bb.x0 + bb.x1) / 2 / fig_w
+    # Title/legend centring strategy:
+    # - PGF column-fit exports should stay centred on the full canvas (0.5).
+    # - Other exports keep visual recentering on the tight bbox.
+    if getattr(fig, '_center_to_column', False):
+        x_c = 0.5
+    else:
+        # x_center in figure-fraction coordinates
+        # get_tightbbox returns inches, so divide by figure width in inches
+        fig_w = fig.get_figwidth()
+        x_c = (bb.x0 + bb.x1) / 2 / fig_w
 
     if has_suptitle:
         st = fig._suptitle
@@ -527,7 +540,12 @@ def _recenter_on_visual(fig: plt.Figure) -> None:
 # ── Save helper ───────────────────────────────────────────────────────────────
 
 def _safe_tight_layout(fig: plt.Figure, kwargs: dict) -> None:
-    """Apply tight_layout while ignoring the known incompatible-axes warning."""
+    """Apply tight_layout with a fallback for incompatible-axes warnings.
+
+    Some layouts (typically map + colorbar compositions) emit the known
+    incompatibility warning but still benefit from tight_layout spacing.
+    In that case we retry with the warning ignored instead of skipping.
+    """
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "error",
@@ -540,9 +558,17 @@ def _safe_tight_layout(fig: plt.Figure, kwargs: dict) -> None:
         try:
             fig.tight_layout(**kwargs)
         except UserWarning:
-            # Some artists (e.g. colorbar/axes-grid constructs) are not
-            # tight_layout-compatible; keep export flow stable.
-            return
+            # Retry while ignoring this warning so we still reduce padding.
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message=(
+                        r"This figure includes Axes that are not compatible with "
+                        r"tight_layout.*"
+                    ),
+                    category=UserWarning,
+                )
+                fig.tight_layout(**kwargs)
 
 def savefig(
     fig: plt.Figure,
@@ -594,8 +620,15 @@ def _macro_prefix(name: str) -> str:
     TeX control-sequence body (letters only).  Without this, a stem like
     ``eu_apz_vydaje_2004`` would produce ``\NudgeEuApzVydaje2004Cz`` which
     TeX parses as ``\NudgeEuApzVydaje`` followed by stray ``2004Cz`` tokens.
+
+    The ``_poster`` suffix is stripped before conversion so poster variants
+    (``stem_poster``) share the same LaTeX macro names as their thesis
+    counterparts — poster.tex defines ``\strKorelaceScatterTitle`` once,
+    and both ``korelace_scatter.pgf`` and ``korelace_scatter_poster.pgf``
+    reference that same macro.
     """
-    camel = "".join(part.capitalize() for part in name.split("_"))
+    clean = name[:-7] if name.endswith("_poster") else name
+    camel = "".join(part.capitalize() for part in clean.split("_"))
     return camel.translate(_DIGIT_TO_LETTER)
 
 
@@ -674,9 +707,110 @@ def _extract_figure_tex_macro_value(content: str, macro: str) -> str | None:
     import re as _re
 
     macro_name = macro[1:] if macro.startswith("\\") else macro
-    pattern = _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE)
-    match = pattern.search(content)
-    return match.group(1) if match else None
+    patterns = [
+        _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE),
+        _re.compile(rf"^\\providecommand\\{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE),
+    ]
+    for pattern in patterns:
+        match = pattern.search(content)
+        if match:
+            return _strip_acro_markup(match.group(1))
+    return None
+
+
+def _extract_figure_tex_nudge_label_ids(name: str) -> list[str]:
+    r"""Return nudge label ids inferred from wrapper macros for *name*.
+
+    Looks for ``\providecommand\Nudge<Prefix><Suffix>{...}`` in
+    ``latex/texparts/figures/<name>.tex`` and returns captured ``<Suffix>``
+    values in declaration order.
+    """
+    from config import LATEX_FIGURES_TEX_DIR
+
+    wrapper = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
+    if not wrapper.exists():
+        return []
+
+    content = wrapper.read_text(encoding="utf-8")
+    prefix = _macro_prefix(name)
+
+    import re as _re
+
+    pat = _re.compile(
+        rf"\\providecommand\\Nudge{_re.escape(prefix)}([A-Za-z]+)\{{"
+    )
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in pat.finditer(content):
+        suffix = m.group(1)
+        if suffix and suffix not in seen:
+            seen.add(suffix)
+            out.append(suffix)
+    return out
+
+
+def _strip_acro_markup(text: str) -> str:
+    r"""Remove acro command wrappers while keeping their inner text.
+
+    This is only for Python-side roundtrip comparison/propagation; the LaTeX
+    figure wrappers themselves still retain the original commands.
+    """
+    import re as _re
+
+    # Strip common acro forms repeatedly until no wrapper remains.
+    patterns = [
+        _re.compile(r"\\ac[a-zA-Z]*\{([^{}]*)\}"),
+        _re.compile(r"\\acs\{([^{}]*)\}"),
+        _re.compile(r"\\acl\{([^{}]*)\}"),
+        _re.compile(r"\\acf\{([^{}]*)\}"),
+    ]
+    prev = None
+    cur = text
+    while cur != prev:
+        prev = cur
+        for pattern in patterns:
+            cur = pattern.sub(r"\1", cur)
+    return cur
+
+
+def load_angle_nudges_from_figure_tex(
+    name: str,
+    default_angles: dict[str, float],
+    *,
+    scope: str | None = None,
+) -> dict[str, float]:
+    r"""Load per-label angle overrides from ``texparts/figures/<name>.tex``.
+
+    Expected macro format per label id: ``\providecommand\NudgeAngle...{<deg>}``.
+    When *scope* is provided, scoped macros are read first using
+    ``<scope>_<label_id>`` (for example ``A_CZ`` -> ``\NudgeAngle...ACz``),
+    then global ``<label_id>`` values are used as fallback.
+    Invalid or missing values fall back to *default_angles*.
+    """
+    from config import LATEX_FIGURES_TEX_DIR
+
+    out = dict(default_angles)
+    wrapper = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
+    if not wrapper.exists():
+        return out
+
+    content = wrapper.read_text(encoding="utf-8")
+    prefix = _macro_prefix(name)
+    for label_id, default in default_angles.items():
+        raw = None
+        if scope:
+            scoped_macro = _angle_macro_name(prefix, f"{scope}_{label_id}")
+            raw = _extract_figure_tex_macro_value(content, scoped_macro)
+        if raw is None:
+            macro = _angle_macro_name(prefix, label_id)
+            raw = _extract_figure_tex_macro_value(content, macro)
+        if raw is None:
+            continue
+        try:
+            out[label_id] = float(str(raw).strip())
+        except ValueError:
+            out[label_id] = default
+    return out
 
 
 def _apply_label_nudges_pgf(
@@ -703,17 +837,63 @@ def _apply_label_nudges_pgf(
     """
     import re
 
+    def _needle_variants(label_id: str, raw_needle: str) -> list[str]:
+        import re as _re
+
+        variants: list[str] = []
+
+        def _add(s: str) -> None:
+            s2 = s.strip()
+            if s2 and s2 not in variants:
+                variants.append(s2)
+
+        _add(raw_needle)
+
+        # Common scenario: label text has been materialized from \acs{geo-XX}
+        # into plain two-letter code in PGF (e.g. CZ), so include both forms.
+        geo_match = _re.search(r"\\acs\{geo-([A-Za-z]{2})\}", raw_needle)
+        if geo_match:
+            code = geo_match.group(1).upper()
+            _add(code)
+            _add(rf"\acs{{geo-{code}}}")
+
+        # If a caller passed a plain label id (e.g. Cz or CZ), try the most
+        # likely rendered forms conservatively.
+        _add(label_id)
+        if label_id.isalpha() and len(label_id) <= 3:
+            code = label_id.upper()
+            _add(code)
+            if len(code) == 2:
+                _add(rf"\acs{{geo-{code}}}")
+
+        # Fallback: strip simple wrappers from the raw needle.
+        stripped = _strip_acro_markup(raw_needle)
+        _add(stripped)
+
+        return variants
+
+    def _line_has_needle(line: str, needle: str) -> bool:
+        checks = [
+            "{" + needle + "}",
+            "{" + needle + "}}",
+            needle + "}",
+            needle + "}}",
+        ]
+        return any(tok in line for tok in checks)
+
     prefix = _macro_prefix(name)
-    items: list[tuple[str, str]] = []
+    items: list[tuple[str, list[str], str]] = []
     for entry in nudge_labels:
         if isinstance(entry, str):
             # Auto-derive ID by stripping LaTeX/punctuation
             label_id = re.sub(r"[\\{}]", "", entry)
             label_id = re.sub(r"[^A-Za-z0-9]+", "_", label_id).strip("_")
+            raw_needle = entry
         else:
-            label_id, entry = entry
+            label_id, raw_needle = entry
         macro = _nudge_macro_name(prefix, label_id)
-        items.append((macro, entry))
+        needles = _needle_variants(label_id, raw_needle)
+        items.append((macro, needles, raw_needle))
 
     content = pgf_path.read_text(encoding="utf-8")
     macros_used: dict[str, str] = {}
@@ -733,9 +913,14 @@ def _apply_label_nudges_pgf(
         # This avoids false positives where the needle appears inside another
         # element (e.g. y-axis title containing "EU27 = 100").
         chosen: tuple[str, str] | None = None
-        for macro, needle in sorted(items, key=lambda kv: -len(kv[1])):
-            if needle + "}}" in line:
-                chosen = (macro, needle)
+        # Prefer items with longer/more-specific needles first.
+        for macro, needles, raw_needle in sorted(
+            items,
+            key=lambda kv: max((len(n) for n in kv[1]), default=0),
+            reverse=True,
+        ):
+            if any(_line_has_needle(line, needle) for needle in needles):
+                chosen = (macro, raw_needle)
                 break
         if chosen is None:
             new_lines.append(line)
@@ -746,6 +931,12 @@ def _apply_label_nudges_pgf(
             continue
         macro, needle = chosen
         y_val = m.group(2)
+        # Idempotency: if this exact macro is already part of y=..., do not
+        # inject again on subsequent regenerations.
+        if macro in y_val:
+            new_lines.append(line)
+            macros_used[macro] = needle
+            continue
         new_y = f"{{\\dimexpr {y_val}+{macro}\\relax}}"
         new_line = line[: m.start(2)] + new_y + line[m.end(2) :]
         new_lines.append(new_line)
@@ -940,6 +1131,8 @@ def savefig_pgf(
     cur_w, cur_h = fig.get_size_inches()
     if cur_w > 0:
         fig.set_size_inches(width_in, cur_h * (width_in / cur_w), forward=True)
+    # Keep headings centred to the full column-width canvas.
+    fig._center_to_column = True
 
     if tight:
         _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
@@ -963,8 +1156,14 @@ def savefig_pgf(
         n = _replace_pgf_strings(out, name, strings)
         print(f"  ↳ {n} string→macro replacement(s) in PGF")
 
-    if nudge_labels:
-        used = _apply_label_nudges_pgf(out, name, nudge_labels)
+    labels_to_nudge = list(nudge_labels) if nudge_labels else []
+    if not labels_to_nudge:
+        # Fallback for older analyses: if wrapper declares nudge knobs,
+        # infer label ids from macro names and wire them automatically.
+        labels_to_nudge = _extract_figure_tex_nudge_label_ids(name)
+
+    if labels_to_nudge:
+        used = _apply_label_nudges_pgf(out, name, labels_to_nudge)
         print(f"  ↳ {len(used)} label nudge macro(s) wired in PGF")
 
     return out
@@ -1281,9 +1480,14 @@ def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
         label,
         xy=(x_kczk, 1),
         xycoords=("data", "axes fraction"),
-        xytext=(0, 8), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color=color, va="bottom", ha="center",
+        xytext=(0, 0), textcoords="offset points",
+        fontsize=POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FIGURE_COMPACT_LABEL_SIZE,
+        color=color,
+        va="bottom",
+        ha="center",
+        multialignment="center",
     )
+    ann.set_multialignment("center")
     ann.set_clip_on(False)
 
 
@@ -1296,7 +1500,7 @@ def _apply_figure_layout(ax: plt.Axes, *,
     Volejte na konci každé funkce vracející fig, místo _add_linestyle_key.
     """
     fig = ax.get_figure()
-    fig._tight_layout_kwargs = {"pad": 1.5}
+    fig._tight_layout_kwargs = {"pad": 0.3}
     spa: dict = {"right": 0.78}
     if hspace is not None:
         spa["hspace"] = hspace
@@ -1334,7 +1538,7 @@ def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
         Line2D([0], [0], color="#888888", linewidth=1.2, linestyle=svarc_linestyle, alpha=0.85,
                label="16\\,\\%~výdaje~(PAQ)"),
     ]
-    fig._tight_layout_kwargs = {"pad": 1.5}
+    fig._tight_layout_kwargs = {"pad": 0.3}
     spa = {"right": 0.78}
     if hspace is not None:
         spa["hspace"] = hspace
@@ -1343,7 +1547,7 @@ def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
     fig_h = fig.get_figheight()            # inches
     gap_in = (7 + FONT_SIZE) / 72          # ~xlabel height + small gap
     y_frac = gap_in / fig_h                # fraction of figure height
-    fig.legend(handles=key, frameon=False, fontsize=FONT_SIZE - 2,
+    fig.legend(handles=key, frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE,
                loc="upper center", bbox_to_anchor=(0.5, y_frac),
                ncols=5, handlelength=1.2, handletextpad=0.4, columnspacing=0.8)
     # Move the axes title → fig.suptitle so it is centred on the figure
@@ -1371,7 +1575,7 @@ def _bottom_legend(fig: plt.Figure, c_emp: str,
     for _er, lbl, col in osvc_types:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
-    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
+    fig.legend(handles=legend_handles, frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE,
                loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
     if ax is not None:
         _add_linestyle_key(ax)
