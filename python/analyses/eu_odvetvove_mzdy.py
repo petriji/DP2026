@@ -271,10 +271,10 @@ if "EU27_2020" in lc_pps.index:
 
 # ── 6. Combined 2×2 choropleth map ────────────────────────────────────────────
 SECTOR_TITLES = {
-    "C": "Průmysl (C)",
-    "G": "Obchod (G)",
-    "J": "ICT (J)",
-    "K": "Finance (K)",
+    "C": "Průmysl C",
+    "G": "Obchod G",
+    "J": "ICT J",
+    "K": "Finance K",
 }
 
 # Global vmin/vmax across all four sectors for a shared colour scale

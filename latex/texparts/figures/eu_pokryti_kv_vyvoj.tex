@@ -5,7 +5,15 @@
 \def\strEuPokrytiKvVyvojYlabel{pokrytí \acs{KV} [\%]}%
 \def\strEuPokrytiKvVyvojCaption{Vývoj pokrytí kolektivním vyjednáváním, 1993--2024. Šedé linie = ostatní země EU\,27. CZ, DK, AT, PL: míra upraveného pokrytí \textit{AdjCov} (OECD / AIAS ICTWSS); DE a SK: průzkumová míra ERB (Evropský přehled KV, ERB \(\neq\) AdjCov). Chybějící hodnoty = mezery v datech. Zdroj dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
 %
-\begin{figure}[htbp]
+
+% --- Auto-added y-nudge knobs (override with \renewcommand)
+\providecommand\NudgeEuPokrytiKvVyvojCz{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojDk{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojDe{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojAt{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojPl{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojSk{0pt}%
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_pokryti_kv_vyvoj.pgf}}
   \caption{\strEuPokrytiKvVyvojCaption}

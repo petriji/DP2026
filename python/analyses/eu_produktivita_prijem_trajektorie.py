@@ -41,6 +41,7 @@ from statout.timeline import EU27
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
+    GEO_LONG_NAMES,
     apply_style_pgf,
     cm2in,
     load_angle_nudges_from_figure_tex,

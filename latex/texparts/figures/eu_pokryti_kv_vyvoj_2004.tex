@@ -3,7 +3,15 @@
 % To regenerate defaults, delete this file and re-run the script.
 \def\strEuPokrytiKvVyvojZOOFCaption{Vývoj pokrytí kolektivním vyjednáváním (podíl zaměstnanců pokrytých kolektivní smlouvou, \%), 2004--2024. Šedé linie = ostatní země EU\,27. CZ, DK, AT, PL: míra \textit{AdjCov} (OECD / AIAS ICTWSS); DE a SK: průzkumová míra ERB (ERB \(\neq\) AdjCov, viz text). Chybějící hodnoty = mezery v datech. Zdroj dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
 %
-\begin{figure}[htbp]
+
+% --- Auto-added y-nudge knobs (override with \renewcommand)
+\providecommand\NudgeEuPokrytiKvVyvojZOOFCz{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojZOOFDk{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojZOOFDe{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojZOOFAt{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojZOOFPl{0pt}%
+\providecommand\NudgeEuPokrytiKvVyvojZOOFSk{0pt}%
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_pokryti_kv_vyvoj_2004.pgf}}
   \caption{\strEuPokrytiKvVyvojZOOFCaption}
