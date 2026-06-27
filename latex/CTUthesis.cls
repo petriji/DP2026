@@ -2167,10 +2167,12 @@
     #2%
   \else
     % Look up the cached title.  Falls back to plain ref on cache miss (first
-    % ever pass with no aux, or label truly undefined).
+    % ever pass with no aux, or labels such as equations that have no
+    % meaningful nameref title). Keep the hyperlink even when no tooltip text
+    % is available.
     \expandafter\let\expandafter\CTU@tiplookup\csname CTU@tip@#1\endcsname
     \ifx\CTU@tiplookup\relax
-      #2%
+      \hyperref[#1]{#2}%
     \else
       \expandafter\CTU@tooltiplink\expandafter{\CTU@dest}{#2}{\CTU@tiplookup}%
     \fi
