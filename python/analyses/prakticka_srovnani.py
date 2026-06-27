@@ -7,10 +7,10 @@ Indicator set (2025 / latest available):
       ↳  CZ = 100 (normalised)                  -- derived
   2.  Labour cost [PPS/h, total economy]         -- lc_lci_lev ÷ prc_ppp_ind
       ↳  CZ = 100                                -- derived
-  3.  Average weekly hours worked [h/wk]         -- lfsa_ewhun2
+    3.  Actual weekly hours worked [h/wk]          -- lfsa_ewhan2
       ↳  CZ = 100                                -- derived
   4.  Tax wedge [%, 67 % AW, single, 0 child]    -- earn_nt_taxwedge
-  5.  Disposable income [PPS/h]  ← derived       -- row 2 × (1 − row 4 / 100)
+    5.  Net hourly income [PPS/h]                  -- earn_nt_net ÷ (lfsa_ewhan2 × 52.18)
       ↳  CZ = 100                                -- derived
   6.  Low-wage earners [% employees, < 2/3 med.] -- earn_ses_pub1s
   7.  Gini coefficient                           -- ilc_di12
@@ -58,6 +58,9 @@ COUNTRY_LABELS = {
 }
 GEO = "+".join(COUNTRIES)
 YEAR = 2025   # table reference year; falls back to nearest prior available
+WEEKS_PER_YEAR = 52.18
+# JVR size-class policy: keep legacy GE10 as an option, but default to TOTAL.
+JVR_USE_GE10 = False
 
 # ICTWSS ISO3 → ISO2 mapping (EU…27 subset needed here)
 _ICTWSS_ISO3 = {
@@ -147,11 +150,11 @@ ds_gdp = Dataset.from_sdmx_csv(
     source_url="Eurostat/nama_10_pc",
 )
 
-# Average weekly hours worked (all employed, all sectors, 15--64)
+# Actual weekly hours worked (all employed, all sectors, 15--64)
 ds_hrs = Dataset.from_sdmx_csv(
-    fetch_eurostat("lfsa_ewhun2", f"A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}"),
-    name="Weekly hours", unit="h/wk",
-    source_url="Eurostat/lfsa_ewhun2",
+    fetch_eurostat("lfsa_ewhan2", f"A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}"),
+    name="Actual weekly hours", unit="h/wk",
+    source_url="Eurostat/lfsa_ewhan2",
 )
 
 # Price level index (GDP, EU27 = 100) --- used to convert EUR/h → PPS/h
@@ -195,6 +198,13 @@ ds_tax = Dataset.from_sdmx_csv(
     source_url="Eurostat/earn_nt_taxwedge",
 )
 
+# Net annual earnings in PPS (single worker at 100 % AW, no child)
+ds_net = Dataset.from_sdmx_csv(
+    fetch_eurostat("earn_nt_net", f"A.PPS.NET.P1_NCH_AW100.{GEO}"),
+    name="Net annual earnings PPS", unit="PPS/year",
+    source_url="Eurostat/earn_nt_net",
+)
+
 # Gini coefficient (disposable income, equivalised)
 ds_gini = Dataset.from_sdmx_csv(
     fetch_eurostat("ilc_di12", f"A.TOTAL.GINI_HND.{GEO}"),
@@ -214,6 +224,7 @@ ds_emp = Dataset.from_sdmx_csv(
 # If the primary filter is missing for a core country, allow a narrower
 # replacement for at most 3 countries (e.g., B-N), with explicit logging.
 ds_jvr: "Dataset | None" = None
+jvr_note_addendum = ""
 try:
     _jvr_path = fetch_eurostat("jvs_a_r21", force=True)
     _jvr_raw = pd.read_csv(_jvr_path, na_values=["", ":", ": "])
@@ -251,8 +262,9 @@ try:
                 break
 
     _chosen_size = None
+    _size_order = ["GE10", "TOTAL"] if JVR_USE_GE10 else ["TOTAL", "GE10"]
     if "sizeclas" in _jvr_raw.columns:
-        for _sz in ["GE10", "TOTAL"]:
+        for _sz in _size_order:
             _tmp = _jvr_raw[_jvr_raw["sizeclas"] == _sz]
             if not _tmp.empty:
                 _jvr_raw = _tmp
@@ -260,12 +272,30 @@ try:
                 break
 
     _country_overrides: list[str] = []
+    _size_overrides: list[str] = []
     if _nace_col and _chosen_nace:
         _base = _jvr_raw.copy()
         _have = set(_base.loc[_base["time"] <= YEAR, "geo"].unique())
         _missing = [c for c in COUNTRIES if c not in _have]
         _alts = ["B-N", "B-O", "B-S", "TOTAL"]
         _parts = [_base]
+
+        # First fallback: relax size class GE10 -> TOTAL for missing countries.
+        if _missing and _chosen_size == "GE10" and "sizeclas" in _jvr_all.columns:
+            for _geo in list(_missing):
+                _cand = _jvr_all[_jvr_all[_nace_col] == _chosen_nace]
+                if _chosen_unit and "unit" in _cand.columns:
+                    _cand = _cand[_cand["unit"] == _chosen_unit]
+                _cand = _cand[_cand["sizeclas"] == "TOTAL"]
+                _cand_geo = _cand[(_cand["geo"] == _geo) & (_cand["time"] <= YEAR)]
+                if _cand_geo.empty:
+                    continue
+                _parts.append(_cand[_cand["geo"] == _geo])
+                _size_overrides.append(f"{_geo}:TOTAL")
+
+        _merged = pd.concat(_parts, ignore_index=True)
+        _have_after_size = set(_merged.loc[_merged["time"] <= YEAR, "geo"].unique())
+        _missing = [c for c in COUNTRIES if c not in _have_after_size]
         for _geo in _missing:
             if len(_country_overrides) >= 3:
                 break
@@ -289,9 +319,40 @@ try:
 
     print(
         "  jvs_a_r21:",
-        f"nace={_chosen_nace or 'n/a'}, unit={_chosen_unit or 'n/a'},",
+        f"nace={_chosen_nace or 'n/a'}, unit={_chosen_unit or 'n/a'}, size={_chosen_size or 'n/a'},",
         "country-overrides=" + (", ".join(_country_overrides) if _country_overrides else "none"),
     )
+    if _chosen_nace and _chosen_nace != "B-S_X_O":
+        warn_fallback(
+            f"Job vacancy rate used {_chosen_nace} aggregate instead of preferred B-S_X_O",
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
+    if _chosen_unit and _chosen_unit != "AVG_3Y":
+        warn_fallback(
+            f"Job vacancy rate used {_chosen_unit} instead of preferred AVG_3Y",
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
+    if _size_overrides:
+        warn_fallback(
+            "Job vacancy rate filled missing countries by relaxing size class GE10 -> TOTAL: "
+            + ", ".join(_size_overrides),
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
+        jvr_note_addendum = (
+            " JVR fallback: "
+            + ", ".join(_size_overrides)
+            + " (sizeclas TOTAL místo GE10)."
+        )
+    if _country_overrides:
+        warn_fallback(
+            "Job vacancy rate filled missing countries with alternate NACE aggregates: "
+            + ", ".join(_country_overrides),
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
 
     if not _jvr_raw.empty:
         ds_jvr = Dataset(_jvr_raw[["geo", "time", "value"]], name="Job vacancy rate", unit="%", source_url="Eurostat/jvs_a_r21")
@@ -450,6 +511,7 @@ v_gdp,  _yr_gdp  = _latest_by_geo(ds_gdp,  YEAR)
 v_hrs,  _yr_hrs  = _latest_by_geo(ds_hrs,  YEAR)
 v_pli,  _yr_pli  = _latest_by_geo(ds_pli,  YEAR)
 v_tax,  _yr_tax  = _latest_by_geo(ds_tax,  YEAR)
+v_net,  _yr_net  = _latest_by_geo(ds_net, YEAR)
 v_gini, _yr_gini = _latest_by_geo(ds_gini, YEAR)
 v_emp,  _yr_emp  = _latest_by_geo(ds_emp,  YEAR)
 v_dep,  _yr_dep  = _latest_by_geo(ds_dep,  YEAR)
@@ -458,6 +520,25 @@ v_apz,     _yr_apz     = _latest_by_geo(ds_apz,    YEAR) if ds_apz    else ({}, 
 v_lowwage, _yr_lowwage = _latest_by_geo(ds_lowwage, YEAR) if ds_lowwage else ({}, {})
 v_cba,     _yr_cba     = _latest_by_geo(ds_cba,     YEAR) if ds_cba    else ({}, {})
 v_density, _yr_density = _latest_by_geo(ds_density, YEAR) if ds_density else ({}, {})
+
+_warn_year_usage("Eurostat nama_10_pc", "Comparative table GDP per capita row", _yr_gdp)
+_warn_year_usage("Eurostat lfsa_ewhan2", "Comparative table weekly-hours row", _yr_hrs)
+_warn_year_usage("Eurostat prc_ppp_ind", "Comparative table PLI row", _yr_pli)
+_warn_year_usage("Eurostat earn_nt_taxwedge", "Comparative table tax wedge row", _yr_tax)
+_warn_year_usage("Eurostat earn_nt_net", "Comparative table net-hourly income row", _yr_net)
+_warn_year_usage("Eurostat ilc_di12", "Comparative table Gini row", _yr_gini)
+_warn_year_usage("Eurostat lfsi_emp_a", "Comparative table employment row", _yr_emp)
+_warn_year_usage("Eurostat demo_pjanind", "Comparative table dependency row", _yr_dep)
+if ds_jvr:
+    _warn_year_usage("Eurostat jvs_a_r21", "Comparative table vacancy row", _yr_jvr)
+if ds_apz:
+    _warn_year_usage("OECD LMPEXP", "Comparative table active LMP row", _yr_apz)
+if ds_lowwage:
+    _warn_year_usage("Eurostat earn_ses_pub1s", "Comparative table low-wage row", _yr_lowwage)
+if ds_cba:
+    _warn_year_usage("OECD AIAS ICTWSS AdjCov/CBC", "Comparative table coverage row", _yr_cba)
+if ds_density:
+    _warn_year_usage("OECD AIAS ICTWSS TUD", "Comparative table union-density row", _yr_density)
 
 # Labour cost EUR/h → PPS/h  (÷ PLI/100)
 if ds_lc_eur is not None:
@@ -470,11 +551,11 @@ if ds_lc_eur is not None:
 else:
     v_lc_eur, _yr_lc_eur, v_lc_pps = {}, {}, {}
 
-# Derived: disposable income PPS/h = labour_cost_pps × (1 − tax_wedge/100)
+# Net hourly income PPS/h = net annual earnings PPS / actual annual hours
 v_disp = {
-    c: v_lc_pps[c] * (1.0 - v_tax[c] / 100.0)
+    c: v_net[c] / (v_hrs[c] * WEEKS_PER_YEAR)
     for c in COUNTRIES
-    if c in v_lc_pps and c in v_tax
+    if c in v_net and c in v_hrs and v_hrs[c]
 }
 
 # Convert annual GDP per capita → PPS/cap/hour by dividing by hours per year
@@ -494,6 +575,7 @@ _year_map: dict[str, dict[str, int]] = {
     "PLI":               _yr_pli,
     "Náklady práce EUR": _yr_lc_eur,
     "Daňový klín":       _yr_tax,
+    "Čistý roční příjem": _yr_net,
     "Gini":              _yr_gini,
     "Zaměstnanost":      _yr_emp,
     "JVR":               _yr_jvr,
@@ -547,17 +629,17 @@ def _m(label: str, ind_key: str) -> str:
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
-L_GDP      = _m(r"HDP [\si{\pps\per\person\per\hour}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
+L_GDP      = _m(r"HDP/obyv. [\si{\pps\per\person\per\hour}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
-L_HRS      = _m(r"Odpracované hodiny \newline (průměr) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
+L_HRS      = _m(r"Odpracované hodiny \newline (skutečné) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhan2_HR_weekly}", "Odprac. hodiny")
 L_TAX      = _m(r"Daňový klín \newline (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
-L_DISP     = r"\textit{Čistý disponibilní příjem \newline (průměrný)} [\si{\pps\per\hour}]"  # derived, no \cite{}
-L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci \newline (\SI{67}{\percent} mediánu)~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
+L_DISP     = _m(r"Čistý hodinový příjem \newline (AW100)~\cite{eurostat_earn_nt_net_PPS_AW100}~\cite{eurostat_lfsa_ewhan2_HR_weekly}", "Čistý roční příjem")
+L_LOWWAGE  = _m(r"Nízkopříjmoví zam. \newline (\SI{67}{\percent} mediánu)~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost \newline (20--64~let)~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
 L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_r21}", "JVR")
-L_CBA      = _m(r"Pokrytí \acs{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
-L_DENSITY  = _m(r"Odborová organizovanost~\cite{oecd_aias_ictwss_TUD_pct}", "Odborová organizovanost")
+L_CBA      = _m(r"Pokrytí \acs{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}~\cite{OECD_UnionEmployerCoverage_2025}", "Pokrytí KV")
+L_DENSITY  = _m(r"Odborová org.~\cite{oecd_aias_ictwss_TUD_pct}", "Odborová organizovanost")
 L_APZ      = _m(r"Výdaje na \acs{APZ} \newline (poměr k~\acs{HDP})~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 
@@ -618,14 +700,16 @@ save_table_tex(
     note=(
         r"Úplné náklady práce v~\si{\pps\per\hour} přepočteny z~\si{\eur\per\hour} současným \acs{PLI}. "
         r"Daňový klín pro bezdětnou svobodnou osobu. "
-        r"Pokrytí \acs{KS}: \acs{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
+        r"Pokrytí KS (OECD) -- CZ, DK, AT, PL: ICTWSS; DE, SK: ERB."
+        + jvr_note_addendum
         + _deviation_note
     ),
     col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}p{1.35cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
-    long_table=True,
+    position="htbp",
     arraystretch=1.3,
     sans_serif=False,
+    midrule_after=[L_GDP, L_LC, L_HRS, L_TAX, L_DISP, L_GINI, L_JVR, L_DENSITY, L_APZ],
 )
 print("Done.")
