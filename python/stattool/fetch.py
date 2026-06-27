@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import random
+import time
 from pathlib import Path
 from typing import Optional, Union
 from urllib.parse import urlparse
@@ -29,6 +31,9 @@ log = logging.getLogger(__name__)
 
 # Timeout for HTTP requests (connect, read) in seconds
 _TIMEOUT = (10, 120)
+_MAX_DOWNLOAD_ATTEMPTS = 5
+_BACKOFF_BASE_SECONDS = 1.5
+_BACKOFF_MAX_SECONDS = 20.0
 
 
 def _cache_path(url: str, suffix: Optional[str] = None) -> Path:
@@ -50,24 +55,62 @@ def _download_with_progress(
     chunk_size: int = 1 << 20,
 ) -> Path:
     """Stream *url* into *dest* with the standard progress bar style."""
-    response = requests.get(url, stream=True, timeout=_TIMEOUT)
-    response.raise_for_status()
+    tmp_dest = dest.with_suffix(dest.suffix + ".part")
+    last_exc: Exception | None = None
 
-    total = int(response.headers.get("content-length", 0)) or None
-    with dest.open("wb") as fh, tqdm(
-        total=total,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        desc=dest.name,
-        leave=False,
-    ) as bar:
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            fh.write(chunk)
-            bar.update(len(chunk))
+    for attempt in range(1, _MAX_DOWNLOAD_ATTEMPTS + 1):
+        try:
+            response = requests.get(url, stream=True, timeout=_TIMEOUT)
+            response.raise_for_status()
 
-    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
-    return dest
+            total = int(response.headers.get("content-length", 0)) or None
+            with tmp_dest.open("wb") as fh, tqdm(
+                total=total,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=dest.name,
+                leave=False,
+            ) as bar:
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    fh.write(chunk)
+                    bar.update(len(chunk))
+
+            tmp_dest.replace(dest)
+            log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
+            return dest
+
+        except requests.exceptions.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            # Retry transient server/rate-limit failures; fail fast on client errors.
+            if status not in {429, 500, 502, 503, 504}:
+                raise
+            last_exc = exc
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+
+        if tmp_dest.exists():
+            tmp_dest.unlink()
+
+        if attempt >= _MAX_DOWNLOAD_ATTEMPTS:
+            break
+
+        backoff = min(_BACKOFF_BASE_SECONDS * (2 ** (attempt - 1)), _BACKOFF_MAX_SECONDS)
+        # Small jitter helps avoid synchronized retries when remote endpoint is flaky.
+        backoff += random.uniform(0.0, 0.5)
+        log.warning(
+            "Download attempt %d/%d failed for %s (%s). Retrying in %.1fs",
+            attempt,
+            _MAX_DOWNLOAD_ATTEMPTS,
+            url,
+            type(last_exc).__name__ if last_exc is not None else "unknown error",
+            backoff,
+        )
+        time.sleep(backoff)
+
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"Download failed for {url}")
 
 
 def fetch(
