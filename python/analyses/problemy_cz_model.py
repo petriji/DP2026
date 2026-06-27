@@ -23,7 +23,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, FIGURE_HEIGHT_STANDARD_CM, IS_POSTER_RUN, POSTER_FIGURE_COMPACT_LABEL_SIZE, POSTER_FIGURE_LABEL_SIZE, poster_stem
 from stattool.style import (
     cm2in,
     _fmt_czk,
@@ -830,16 +830,17 @@ def plot_tax_wedge_vs_income(
     # Inline popisky křivek -- umístěny na pravém konci každé křivky
     x_end = float(income_max)
     tw_end_emp = float(tax_wedge_employee(x_end))
+    cz_label_fs = POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FIGURE_COMPACT_LABEL_SIZE
     ax.annotate("zaměstnanec", (x_end / 1_000, tw_end_emp),
-                xytext=(4, 0), textcoords="offset points",
-                fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
+                xytext=(4, 4), textcoords="offset points",
+                fontsize=cz_label_fs, color=c_emp, va="center")
 
     for expense_rate, _label, color in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
         osvc_label = f"OSVČ~{int(expense_rate * 100)}\\,%"
         ax.annotate(osvc_label, (x_end / 1_000, tw_end_o),
                     xytext=(4, 0), textcoords="offset points",
-                    fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
+                    fontsize=cz_label_fs, color=color, va="center")
 
     # Paušální pásmo -- popisky na konci každého pásma; barva dle OSVČ typu
     labeled_pidx2: set[int] = set()
@@ -853,19 +854,19 @@ def plot_tax_wedge_vs_income(
             tw_lab = float(total_pay) / x_lab * 100
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab / 1_000, tw_lab),
                         xytext=(4, 0), textcoords="offset points",
-                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
+                        fontsize=cz_label_fs, color=color, va="center")
             labeled_pidx2.add(p_idx)
 
     # Inline popisky šedých křivek -- bez výdajů a Švarc
     tw_no_end = float(tax_wedge_osvc_vydajovy(x_end, 0.0))
     ax.annotate("bez~výdajů", (x_end / 1_000, tw_no_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
+                fontsize=cz_label_fs, color="#888888", va="center")
     tw_sv_end = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
     ax.annotate("16\,\%~výdajů", (x_end / 1_000, tw_sv_end),
                 xytext=(3, 0), textcoords="offset points",
-                fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+                fontsize=cz_label_fs, color="#888888", va="center")
+    _apply_cz_model_layout(ax)
     return fig
 
 
@@ -1458,9 +1459,10 @@ if __name__ == "__main__":
     _add_curve_tooltips(
         fig_twi.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="%",
     )
-    savefig_pgf(fig_twi, "problemy_danovy_klin_cz", strings=STRINGS_KLIN)
-    save_figure_tex_pgf(
-        "problemy_danovy_klin_cz",
+    savefig_pgf(fig_twi, poster_stem("problemy_danovy_klin_cz"), strings=STRINGS_KLIN)
+    if not IS_POSTER_RUN:
+        save_figure_tex_pgf(
+            "problemy_danovy_klin_cz",
         caption=(
             r"Efektivní daňový klín, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
         ),

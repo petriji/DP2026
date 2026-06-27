@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, IS_POSTER_RUN, poster_stem
 from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
 from statout.timeline import timeline, EU27 as _EU27
 from analyses._shared_data import load_lmp_active
@@ -114,11 +114,10 @@ for _child in _ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_apz_vydaje", strings=STRINGS, nudge_labels=NUDGE_LABELS)
-
-# ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
-    "eu_apz_vydaje",
+savefig_pgf(fig, poster_stem("eu_apz_vydaje"), strings=STRINGS, nudge_labels=NUDGE_LABELS)
+if not IS_POSTER_RUN:
+    save_figure_tex_pgf(
+        "eu_apz_vydaje",
     caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země \\acs{{EU}}, {ds_all.years[0]}--{ds_all.years[-1]}.",
     label="fig:eu_apz_vydaje",
     resizebox_width=r"\linewidth",

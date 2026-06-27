@@ -33,7 +33,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, FIGURE_TITLE_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
@@ -191,7 +191,8 @@ STRINGS = {
 }
 ax.set_xlabel(STRINGS["xlabel"])
 ax.set_ylabel(STRINGS["ylabel"])
-ax.set_title(STRINGS["title"])
+fig._suptitle_gap_pt = 5
+fig.suptitle(STRINGS["title"], y=1.0, fontsize=FIGURE_TITLE_SIZE, va="bottom")
 ax.set_xlim(START_YEAR, max(lp_years[-1], 2025))
 
 # Integer major ticks + minor grid
@@ -201,6 +202,7 @@ ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
 ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
+fig._tight_layout_kwargs = {"pad": 0.15}
 
 # ── 7. Save figure ────────────────────────────────────────────────────────────
 savefig_pgf(fig, "eu_konvergence", strings=STRINGS)
