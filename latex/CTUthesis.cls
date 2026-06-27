@@ -865,7 +865,15 @@
 %     \chapter{T} → \secdef\@chapter\@schapter
 %               → \@chapter → \@makechapterhead (patched by titlesec)
 %   Without this, \chapter* (used in \tableofcontents etc.) is also broken.
-\newcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
+% Blank-page guard (oneside mode): after a list or chapter that ends exactly
+%   at the page bottom, the output routine ships that page and resets
+%   \pagetotal=0.  Then \end{flushleft} (inside the acro template) adds only
+%   \parskip glue (~0–6 pt).  A normal \clearpage would ship that glue-only
+%   page as a blank page.  The threshold \baselineskip (~14.5 pt at 12pt)
+%   reliably separates "residual glue on a fresh page" from "real content":
+%   even a single typeset line contributes at least \baselineskip to \pagetotal.
+\newcommand\chapter{\if@openright\cleardoublepage\else
+                    \ifdim\pagetotal>\baselineskip\clearpage\fi\fi
                     \thispagestyle{plain}%
                     \global\@topnum\z@
                     \@afterindentfalse
@@ -1954,7 +1962,7 @@
     \acronymsmapF{%
       \AcroAddRow{%
         \pdfdest name{\AcronymID} xyz \textbf{\acrowrite{short}}%
-        \iow_now:Nx \ctuauxout { \string \CTUregisteracrodest { \AcronymID } }%
+        \immediate\write\ctuauxout{\string\CTUregisteracrodest{\AcronymID}}%
         \acroifT{alt}{/\acrowrite{alt}}%
         &
         \acrowrite{list}%
