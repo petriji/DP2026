@@ -83,13 +83,12 @@ _ISPV_END_YEAR = 2025
 _PROBS  = np.array([0.10, 0.25, 0.50, 0.75, 0.90])
 _ZSCORES = np.array([-1.281552, -0.674490, 0.000000, 0.674490, 1.281552])
 
-# Total private-sector employees covered by ISPV 2025/H1 (approx.)
-# Source: MPSV / ČSÚ -- business-sphere employment, 2025/H1
-N_WAGE = 3_500_000
-
-# Total old-age pensioners (plný starobní důchod), k 31. 12. 2024
-# Source: CSSZ Statistická ročenka důchodového pojistění 2024
-N_PENSION = 2_367_000
+# N_WAGE and N_PENSION are extracted from source files at runtime
+# (ISPV MZS/PLS M0 row "počet zaměstnanců" and CSSZ bracket totals respectively).
+# The fallback values below are used only when parsing fails.
+_N_WAGE_PRIVATE_FALLBACK = 3_500_000  # approx. MZS 2025 -- replace if source changes
+_N_WAGE_PUBLIC_FALLBACK  =   700_000  # approx. PLS 2025 -- replace if source changes
+_N_PENSION_FALLBACK      = 2_367_000  # approx. CSSZ 2024 -- replace if source changes
 
 # X-axis evaluation grid -- net-income scale (Kč/měsíc)
 # Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5--70 tis. to cover both series.
@@ -102,6 +101,7 @@ MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.289/2024 S
 # Minimum pension = zákonná základní výměra + minimum procentní výměra
 # zákon č.155/1995 Sb. §29; 2025 values per NV č.364/2024 Sb.
 MIN_PENSION    =  5_170   # Kč/měsíc  (4 400 + 770 Kč)  zákon č.155/1995 Sb.
+POVERTY_THRESHOLD = 18_600  # Kč/měsíc, hranice příjmové chudoby (ČSÚ, 2025)
 
 # 2025 CZ employee statutory deductions (for gross-to-net conversion)
 # Import from cz_tax_model to keep rates consistent across all analyses
@@ -116,11 +116,12 @@ _SLEVA_POPLATNIK    = 2_570        # Kč/měsíc (sleva na poplatníka = 30 840 
 
 # Colour assignments
 _COLOR_WAGE    = PALETTE[0]   # deep blue
+_COLOR_WAGE_PUBLIC = "#5B8DB8"  # blue (public/salary sphere)
 _COLOR_PENSION = PALETTE[4]   # vermillion
 
 # ── PGF string substitutions ──────────────────────────────────────────────────
 STRINGS = {
-    "title": r"Distribuce čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}",
+    "title": r"Distribuce čistých mezd/platů a starobních důchodů, \acs{geo-CZ}",
     "xlabel": r"čistá mzda / výše důchodu [tis.~Kč/měsíc]",
     "ylabel": r"podíl osob v~intervalu \SI{1}{tis.~Kč} [\si{\percent}]",
 }
@@ -144,6 +145,11 @@ _CSSZ_URLS: list[tuple[int, str]] = [
 _ISPV_NAT_URLS: list[tuple[int, str]] = [
     (2025, "https://www.ispv.cz/getattachment/b568f503-6978-4af7-9f8a-d5aef8e46619"
            "/CR_254_MZS-xlsx.aspx?disposition=attachment"),
+]
+
+_ISPV_NAT_PUBLIC_URLS: list[tuple[int, str]] = [
+    (2025, "https://www.ispv.cz/getattachment/64ad14f0-4b5b-4192-a2e2-3acceedff267"
+           "/CR_254_PLS-xlsx.aspx?disposition=attachment"),
 ]
 
 
@@ -263,13 +269,14 @@ def gross_to_net_wage(gross: float | np.ndarray) -> float | np.ndarray:
 # Data fetching helpers
 # ════════════════════════════════════════════════════════════════════════════
 
-def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[None, None]:
+def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int, int] | tuple[None, None, None]:
     """Try to download ISPV and parse national-aggregate percentile columns.
 
     Returns
     -------
-    (quantile_dict, year) or (None, None) on failure.
+    (quantile_dict, year, n_employees) or (None, None, None) on failure.
     The dict maps probability → wage in Kč/měsíc.
+    n_employees is the total worker count from the MZS-M0 sheet.
     """
     kw_percentile = {
         "p10": 0.10,
@@ -318,11 +325,27 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
                     found[prob] = float(nums.iloc[-1])
 
             if len(found) >= 5:
+                # Also extract employee count ("počet zaměstnanců") from MZS-M0.
+                n_emp = _N_WAGE_PRIVATE_FALLBACK
+                for _, row_e in df.iterrows():
+                    row_str = row_e.astype(str).str.lower()
+                    if row_str.str.contains(r"počet.{0,10}zaměst", regex=True).any():
+                        nums_e = pd.to_numeric(row_e, errors="coerce").dropna()
+                        # Employee counts are in thousands in some sheets, but
+                        # in full integers (> 100 000) in the GUID workbook.
+                        valid_e = nums_e[(nums_e > 100_000) & (nums_e < 10_000_000)]
+                        if not valid_e.empty:
+                            n_emp = int(valid_e.iloc[-1])
+                            break
+                        valid_e_tis = nums_e[(nums_e > 100) & (nums_e < 10_000)]
+                        if not valid_e_tis.empty:
+                            n_emp = int(valid_e_tis.iloc[-1]) * 1_000
+                            break
                 print(
                     f"  ISPV {yr} GUID: national quantiles parsed "
-                    f"({len(found)} percentiles)"
+                    f"({len(found)} percentiles), N={n_emp:,}"
                 )
-                return found, yr
+                return found, yr, n_emp
             print(f"  ISPV {yr} GUID: quantile rows not found")
         except Exception as exc:
             print(f"  ISPV {yr} GUID fetch failed: {exc}")
@@ -366,23 +389,102 @@ def _fetch_ispv_national_quantiles() -> tuple[dict[float, float], int] | tuple[N
                             f"  ISPV {yr}/H{half}: national quantiles parsed "
                             f"({len(found)} percentiles)"
                         )
-                        return found, yr
+                        return found, yr, _N_WAGE_PRIVATE_FALLBACK
                 except Exception as exc:
                     log.debug("ISPV parse skiprows=%d: %s", skiprows, exc)
 
             print(f"  ISPV {yr}/H{half}: no national aggregate row found")
 
-    return None, None
+    return None, None, None
 
 
-def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[None, None]:
+def _fetch_ispv_public_quantiles() -> tuple[dict[float, float], int, int] | tuple[None, None, None]:
+    """Try to download PLS and parse national-aggregate percentile columns.
+
+    Returns
+    -------
+    (quantile_dict, year, n_employees) or (None, None, None) on failure.
+    The dict maps probability → wage in Kč/měsíc.
+    n_employees is the total worker count from the PLS-M0 sheet.
+    """
+    row_markers = {
+        0.10: "1. decil",
+        0.25: "1. kvartil",
+        0.50: "medián",
+        0.75: "3. kvartil",
+        0.90: "9. decil",
+    }
+
+    for yr, url in _ISPV_NAT_PUBLIC_URLS:
+        try:
+            path = fetch(url, suffix=".xlsx")
+            with open(path, "rb") as fh:
+                if fh.read(2) != b"PK":
+                    print(f"  PLS {yr} GUID: downloaded file is not XLSX")
+                    continue
+
+            try:
+                xl = pd.ExcelFile(path, engine="openpyxl")
+                m0_sheets = [s for s in xl.sheet_names if s.endswith("-M0")]
+                if m0_sheets:
+                    sheet = next((s for s in m0_sheets if "PLS" in s.upper()), m0_sheets[0])
+                else:
+                    sheet = next((s for s in xl.sheet_names if "M0" in s.upper()), xl.sheet_names[0])
+            except Exception:
+                sheet = "PLS-M0"
+
+            df = pd.read_excel(path, sheet_name=sheet, header=None)
+            found: dict[float, float] = {}
+            for prob, marker in row_markers.items():
+                mask = df.apply(
+                    lambda r: r.astype(str).str.lower().str.contains(marker, na=False).any(),
+                    axis=1,
+                )
+                if not mask.any():
+                    continue
+                row = df.loc[mask].iloc[0]
+                nums = pd.to_numeric(row, errors="coerce").dropna()
+                nums = nums[(nums > 5_000) & (nums < 500_000)]
+                if not nums.empty:
+                    found[prob] = float(nums.iloc[-1])
+
+            if len(found) >= 5:
+                n_emp = _N_WAGE_PUBLIC_FALLBACK
+                for _, row_e in df.iterrows():
+                    row_str = row_e.astype(str).str.lower()
+                    if row_str.str.contains(r"počet.{0,10}zaměst", regex=True).any():
+                        nums_e = pd.to_numeric(row_e, errors="coerce").dropna()
+                        valid_e = nums_e[(nums_e > 100_000) & (nums_e < 10_000_000)]
+                        if not valid_e.empty:
+                            n_emp = int(valid_e.iloc[-1])
+                            break
+                        valid_e_tis = nums_e[(nums_e > 100) & (nums_e < 10_000)]
+                        if not valid_e_tis.empty:
+                            n_emp = int(valid_e_tis.iloc[-1]) * 1_000
+                            break
+
+                print(
+                    f"  PLS {yr} GUID: national quantiles parsed "
+                    f"({len(found)} percentiles), N={n_emp:,}"
+                )
+                return found, yr, n_emp
+
+            print(f"  PLS {yr} GUID: quantile rows not found")
+        except Exception as exc:
+            print(f"  PLS {yr} GUID fetch failed: {exc}")
+
+    return None, None, None
+
+
+def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int, int] | tuple[None, None, None]:
     """Try to download CSSZ statistical tables and derive pension quantiles.
 
     CSSZ publishes grouped pension-amount data (count per bracket).  This
     function derives approximate percentile values from the cumulative
-    distribution of those counts.
+    distribution of those counts.  The total bracket count is returned as
+    the pensioner headcount (N_PENSION).
 
-    Returns (quantile_dict, year) or (None, None) on failure.
+    Returns (quantile_dict, year, n_pensioners) or (None, None, None) on failure.
     """
     import io
     import zipfile
@@ -505,71 +607,114 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
                 frac = np.clip((target - prev) / bin_cnt, 0.0, 1.0)
                 q_dict[prob] = float(lo + frac * (hi - lo))
 
+            n_pension = int(round(total))
             print(
                 f"  CSSZ {year}: pension quantiles derived from "
-                f"'{wb_name}' / '{sheet_name}'"
+                f"'{wb_name}' / '{sheet_name}', N={n_pension:,}"
             )
-            return q_dict, year
+            return q_dict, year, n_pension
 
         except Exception as exc:
             log.debug("CSSZ %s parse failed: %s", year, exc)
             print(f"  CSSZ {year}: parse failed ({type(exc).__name__})")
 
-    return None, None
+    return None, None, None
 
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fetch data
 # ════════════════════════════════════════════════════════════════════════════
 
-print("Fetching ISPV wage quantile data …")
-wage_q, wage_year = _fetch_ispv_national_quantiles()
-if wage_q is None:
+print("Fetching ISPV wage quantile data (private MZS + public PLS) …")
+wage_q_private, wage_private_year, N_WAGE_PRIVATE = _fetch_ispv_national_quantiles()
+if wage_q_private is None:
     raise RuntimeError(
-        "ISPV wage quantiles could not be fetched from live sources."
+        "ISPV private-sector (MZS) wage quantiles could not be fetched from live sources."
+    )
+wage_q_public, wage_public_year, N_WAGE_PUBLIC = _fetch_ispv_public_quantiles()
+if wage_q_public is None:
+    raise RuntimeError(
+        "ISPV public-sector (PLS) wage quantiles could not be fetched from live sources."
     )
 
+if N_WAGE_PRIVATE is None:
+    from stattool.data_quality import warn_fallback
+    warn_fallback("N_WAGE_PRIVATE", "ISPV MZS-M0 počet zaměstnanců not found", fallback=_N_WAGE_PRIVATE_FALLBACK)
+    N_WAGE_PRIVATE = _N_WAGE_PRIVATE_FALLBACK
+if N_WAGE_PUBLIC is None:
+    from stattool.data_quality import warn_fallback
+    warn_fallback("N_WAGE_PUBLIC", "ISPV PLS-M0 počet zaměstnanců not found", fallback=_N_WAGE_PUBLIC_FALLBACK)
+    N_WAGE_PUBLIC = _N_WAGE_PUBLIC_FALLBACK
+
 print("Fetching CSSZ pension distribution data …")
-pension_q, pension_year = _fetch_cssz_pension_quantiles()
+pension_q, pension_year, N_PENSION = _fetch_cssz_pension_quantiles()
 if pension_q is None:
     raise RuntimeError(
         "CSSZ pension quantiles could not be fetched from live sources."
     )
+if N_PENSION is None:
+    from stattool.data_quality import warn_fallback
+    warn_fallback("N_PENSION", "CSSZ bracket total not found", fallback=_N_PENSION_FALLBACK)
+    N_PENSION = _N_PENSION_FALLBACK
+
+print(f"  Worker headcount (MZS):     N_WAGE_PRIVATE = {N_WAGE_PRIVATE:,}")
+print(f"  Worker headcount (PLS):     N_WAGE_PUBLIC  = {N_WAGE_PUBLIC:,}")
+print(f"  Worker headcount (MZS+PLS): N_WAGE_TOTAL   = {N_WAGE_PRIVATE + N_WAGE_PUBLIC:,}")
+print(f"  Pensioner headcount (CSSZ): N_PENSION = {N_PENSION:,}")
+
+warn_non_target_year(source="MPSV/TREXIMA ISPV MZS", year=wage_private_year, context="Private wage distribution input")
+warn_non_target_year(source="MPSV/TREXIMA ISPV PLS", year=wage_public_year, context="Public wage distribution input")
+warn_non_target_year(source="CSSZ", year=pension_year, context="Pension distribution input")
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fit log-normal distributions
 # ════════════════════════════════════════════════════════════════════════════
 
 # Convert gross ISPV wage quantiles to net take-home wages
-wage_q_net = {p: float(gross_to_net_wage(q)) for p, q in wage_q.items()}
+wage_q_net_private = {p: float(gross_to_net_wage(q)) for p, q in wage_q_private.items()}
+wage_q_net_public = {p: float(gross_to_net_wage(q)) for p, q in wage_q_public.items()}
 
-mu_w, sig_w = fit_lognormal(wage_q_net)
+mu_w, sig_w = fit_lognormal(wage_q_net_private)
+mu_w_public, sig_w_public = fit_lognormal(wage_q_net_public)
 mu_p, sig_p = fit_lognormal(pension_q)
 
-med_wage_gross      = float(wage_q.get(0.50, np.exp(mu_w)))
-med_wage_net        = float(wage_q_net.get(0.50, np.exp(mu_w)))
+med_wage_gross      = float(wage_q_private.get(0.50, np.exp(mu_w)))
+med_wage_net        = float(wage_q_net_private.get(0.50, np.exp(mu_w)))
 med_wage_total_cost = med_wage_gross * (1.0 + EMPLOYER_INS_RATE)
+med_wage_public_net = float(wage_q_net_public.get(0.50, np.exp(mu_w_public)))
 med_pension         = float(pension_q.get(0.50, np.exp(mu_p)))
 
 # Net minimum wage and equivalent total employer labour cost
 min_wage_net        = float(gross_to_net_wage(MIN_WAGE))
 min_wage_total_cost = MIN_WAGE * (1.0 + EMPLOYER_INS_RATE)
 
+# Ensure the sampled x-grid contains the exact minimum-wage cutoff so the
+# truncated wage density shows the vertical edge at the correct x-position.
+x_grid = np.unique(np.concatenate([_X_GRID, np.array([min_wage_net])]))
+
 print(f"\nWage    fit (net): μ={mu_w:.4f}, σ={sig_w:.4f}  "
       f"→ čistý medián≈{med_wage_net:,.0f} Kč  "
       f"(hrubá {med_wage_gross:,.0f} Kč, "
       f"náklady zaměstnavatele {med_wage_total_cost:,.0f} Kč)")
+print(f"Public wage fit:   μ={mu_w_public:.4f}, σ={sig_w_public:.4f}  "
+    f"→ čistý medián≈{med_wage_public_net:,.0f} Kč")
 print(f"Pension fit:       μ={mu_p:.4f}, σ={sig_p:.4f}  "
       f"→ medián≈{med_pension:,.0f} Kč")
 
-pdf_wage    = truncated_lognormal_pdf(_X_GRID, mu_w, sig_w, min_wage_net)
-pdf_pension = truncated_lognormal_pdf(_X_GRID, mu_p, sig_p, MIN_PENSION)
+pdf_wage    = truncated_lognormal_pdf(x_grid, mu_w, sig_w, min_wage_net)
+pdf_wage_public = truncated_lognormal_pdf(x_grid, mu_w_public, sig_w_public, min_wage_net)
+pdf_pension = truncated_lognormal_pdf(x_grid, mu_p, sig_p, MIN_PENSION)
 
-# Convert density [1/Kč] to percent share per 1,000 Kč bin (like EU distributions):
-#   y_display = pdf(x) × 1_000 × 100
-_Y_SCALE = 100_000.0
-freq_wage    = pdf_wage * _Y_SCALE
-freq_pension = pdf_pension * _Y_SCALE
+# Convert density [1/Kč] to headcount per 1,000 Kč bin in thousands:
+#   persons_in_bin = pdf(x) × Δx × N  where Δx = 1 000 Kč
+#   thousands      = pdf(x) × 1_000 × N / 1_000 = pdf(x) × N
+_Y_SCALE_WAGE    = float(N_WAGE_PRIVATE)
+_Y_SCALE_WAGE_PUBLIC = float(N_WAGE_PUBLIC)
+_Y_SCALE_PENSION = float(N_PENSION)
+freq_wage    = pdf_wage    * _Y_SCALE_WAGE               # tis. osob
+freq_wage_public = pdf_wage_public * _Y_SCALE_WAGE_PUBLIC  # tis. osob
+freq_wage_combined = freq_wage + freq_wage_public          # tis. osob
+freq_pension = pdf_pension * _Y_SCALE_PENSION            # tis. osob
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure -- combined frequency plot
@@ -618,37 +763,28 @@ ax.plot(
     color=_COLOR_PENSION, linewidth=1.6, zorder=4,
 )
 
-# ── Tooltips: medians + quantiles ────────────────────────────────────────────
-peak_wage = float(lognormal_pdf(
-    np.array([med_wage_net]), mu_w, sig_w)[0])
-peak_wage *= _Y_SCALE
-_tooltip(
-    ax, med_wage_net / 1_000, peak_wage,
-    f"Čistá mzda {wage_year}: medián {med_wage_net:,.0f} Kč"
-    f" (hrubá {med_wage_gross:,.0f} Kč,"
-    f" nákl. zam. {med_wage_total_cost:,.0f} Kč)",
-)
-for p, q_gross in wage_q.items():
-    q_net = wage_q_net[p]
-    y_q = float(lognormal_pdf(np.array([q_net]), mu_w, sig_w)[0]) * _Y_SCALE
+# ── Tooltips: original quantile data points only (no interpolated anchors) ──
+for p, q_gross in wage_q_private.items():
+    q_net = wage_q_net_private[p]
+    y_q = float(truncated_lognormal_pdf(np.array([q_net]), mu_w, sig_w, min_wage_net)[0]) * _Y_SCALE_WAGE
     _tooltip(
         ax, q_net / 1_000, y_q,
-        f"Čistá mzda {wage_year} P{int(p * 100)}: {q_net:,.0f} Kč"
-        f" (hrubá {q_gross:,.0f} Kč)",
+        f"Čistá mzda {wage_private_year} P{int(p * 100)}: {_fmt_int_space(q_net)} Kč",
     )
 
-peak_pension = float(lognormal_pdf(
-    np.array([med_pension]), mu_p, sig_p)[0])
-peak_pension *= _Y_SCALE
-_tooltip(
-    ax, med_pension / 1_000, peak_pension,
-    f"Starobní důchody {pension_year}: medián {med_pension:,.0f} Kč",
-)
+for p, q_gross in wage_q_public.items():
+    q_net = wage_q_net_public[p]
+    y_q = float(truncated_lognormal_pdf(np.array([q_net]), mu_w_public, sig_w_public, min_wage_net)[0]) * _Y_SCALE_WAGE_PUBLIC
+    _tooltip(
+        ax, q_net / 1_000, y_q,
+        f"Čistý plat {wage_public_year} P{int(p * 100)}: {_fmt_int_space(q_net)} Kč",
+    )
+
 for p, q in pension_q.items():
-    y_q = float(lognormal_pdf(np.array([q]), mu_p, sig_p)[0]) * _Y_SCALE
+    y_q = float(truncated_lognormal_pdf(np.array([q]), mu_p, sig_p, MIN_PENSION)[0]) * _Y_SCALE_PENSION
     _tooltip(
         ax, q / 1_000, y_q,
-        f"Starobní důchody {pension_year} P{int(p * 100)}: {q:,.0f} Kč",
+        f"Starobní důchody {pension_year} P{int(p * 100)}: {_fmt_int_space(q)} Kč",
     )
 
 # ── Vertical reference lines (labels above axis, tax/pension-model style) ────
@@ -666,6 +802,18 @@ _add_vertical_ref(
     ax, MIN_PENSION / 1_000,
     f"min.~důchod\n{_fmt_czk(MIN_PENSION)}",
     color=_COLOR_PENSION, alpha=0.55, linestyle=(0, (1, 3)),
+)
+_add_vertical_ref(
+    ax, POVERTY_THRESHOLD / 1_000,
+    "",
+    color="#aa0000", alpha=0.65, linestyle=(0, (2, 2)),
+)
+ax.annotate(
+    "chudoba",
+    xy=(POVERTY_THRESHOLD / 1_000, 180),
+    xytext=(-3, 0), textcoords="offset points",
+    fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#aa0000",
+    ha="right", va="center", zorder=6,
 )
 _add_vertical_ref(
     ax, med_pension / 1_000,
@@ -702,15 +850,31 @@ _ann_p = ax.annotate(
 )
 _ann_p.set_clip_on(False)
 
+# Keep all x-line labels at footnote size for consistent visual hierarchy.
+for _txt in ax.texts:
+    _content = _txt.get_text()
+    if (
+        _content.startswith("min.~čistá~mzda")
+        or _content.startswith("min.~důchod")
+        or _content.startswith("hranice~chudoby")
+    ):
+        _txt.set_fontsize(FIGURE_COMPACT_LABEL_SIZE)
+
 # ── Inline curve labels (left-aligned, above the line) ───────────────────────
-_pension_label_x = 25_000.0
+_pension_label_x = 27_000.0
 _wage_label_x    = 40_000.0
+_public_label_x  = 31_000.0
+_combined_label_x = 40_000.0
 y_pension_at = float(lognormal_pdf(
     np.array([_pension_label_x]), mu_p, sig_p)[0])
 y_wage_at = float(lognormal_pdf(
     np.array([_wage_label_x]), mu_w, sig_w)[0])
-y_pension_at *= _Y_SCALE
-y_wage_at *= _Y_SCALE
+y_public_at = float(lognormal_pdf(
+    np.array([_public_label_x]), mu_w_public, sig_w_public)[0])
+y_pension_at *= _Y_SCALE_PENSION
+y_wage_at *= _Y_SCALE_WAGE
+y_public_at *= _Y_SCALE_WAGE_PUBLIC
+y_combined_at = y_wage_at + y_public_at
 ax.annotate(
     "starobní důchody",
     xy=(_pension_label_x / 1_000, y_pension_at),
@@ -723,6 +887,20 @@ ax.annotate(
     xy=(_wage_label_x / 1_000, y_wage_at),
     xytext=(2, 4), textcoords="offset points",
     fontsize=FIGURE_LABEL_SIZE, color=_COLOR_WAGE,
+    ha="left", va="bottom", zorder=5,
+)
+ax.annotate(
+    "čistý plat (veřejná sféra)",
+    xy=(_public_label_x / 1_000, y_public_at),
+    xytext=(2, 4), textcoords="offset points",
+    fontsize=FIGURE_LABEL_SIZE, color=_COLOR_WAGE_PUBLIC,
+    ha="left", va="bottom", zorder=5,
+)
+ax.annotate(
+    "mzdy celkem",
+    xy=(_combined_label_x / 1_000, y_combined_at),
+    xytext=(10, 10), textcoords="offset points",
+    fontsize=FIGURE_LABEL_SIZE, color="#666666",
     ha="left", va="bottom", zorder=5,
 )
 
