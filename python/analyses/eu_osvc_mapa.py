@@ -80,7 +80,6 @@ _vmin = min(_values.values())
 _vmax = max(_values.values())
 
 COUNTRIES = ["CZ", "DK", "AT", "DE", "PL", "SK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
     "title": f"Podíl \\acs{{OSVČ}} na zaměstnanosti ({ds.latest_year})",
@@ -102,7 +101,7 @@ fig = choropleth(
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
 # ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -112,7 +111,6 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys="eurostat_lfsa_egaps",
     strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

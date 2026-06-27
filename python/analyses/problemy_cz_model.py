@@ -65,6 +65,41 @@ STRINGS_POMER = {
 
 TOOLTIP_GRID = 60
 
+# Layout tuning for CZ model figures after wrapper-level resize removal.
+# Keep width fixed and reduce heights/whitespace to improve data density.
+CZ_FIG_WIDTH_CM = 15
+CZ_FIG_HEIGHT_STANDARD_CM = FIGURE_HEIGHT_STANDARD_CM
+CZ_FIG_HEIGHT_PENSION_CM = 13
+CZ_FIG_HEIGHT_TWOCOLUMN_CM = 14
+CZ_FIG_HEIGHT_PARAMETRIC_CM = 11
+CZ_MULTI_AXES_HSPACE = 0.12
+
+
+def _apply_cz_model_layout(ax: plt.Axes, *, hspace: float | None = None) -> None:
+    """Apply CZ-model-specific layout with a tighter right margin.
+
+    The global helper keeps extra right-side space for inline labels.
+    CZ model charts need slightly less reserve to avoid unused whitespace.
+    """
+    _apply_figure_layout(ax, hspace=hspace)
+    fig = ax.get_figure()
+    fig._suptitle_gap_pt = 5
+    spa = dict(getattr(fig, "_subplots_adjust_kwargs", {}))
+    # Keep a small reserve for inline labels, but avoid left-shifted axes.
+    # Poster: widen the right reserve so the larger inline curve labels
+    # (zaměstnanec, OSVČ, paušál, bez výdajů, ...) are not clipped at the edge.
+    spa["right"] = 0.80 if IS_POSTER_RUN else 0.86
+    if hspace is not None:
+        spa["hspace"] = hspace
+    fig._subplots_adjust_kwargs = spa
+    # Poster only: re-centre the suptitle over the (left-shifted) plotting area
+    # rather than the full figure width, so the title sits centred above the
+    # axes instead of appearing pushed toward the reserved right-hand margin.
+    if IS_POSTER_RUN and getattr(fig, "_suptitle", None) is not None:
+        _left = spa.get("left", 0.125)
+        fig._suptitle.set_x(0.5 * (_left + spa["right"]))
+        fig._suptitle.set_horizontalalignment("center")
+
 
 def _add_curve_tooltips(
     ax: plt.Axes,
@@ -308,7 +343,7 @@ def plot_pension_comparison(
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     p_emp     = pension_employee(gross_emp, years)
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 13))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_PENSION_CM))
     c_emp = PALETTE[0]
 
     # Zaměstnanec
@@ -437,7 +472,7 @@ def plot_pension_comparison(
             p_val = _pension(monthly_base, years) / 1_000
             x_lab = float(min(income_max, x_e)) / 1_000
             ax.annotate(f"paušál~{p_idx + 1}", (x_lab, p_val),
-                        xytext=(3, 0), textcoords="offset points",
+                        xytext=(3, -4 if p_idx == 0 else 0), textcoords="offset points",
                         fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_cmp.add(p_idx)
 
@@ -447,10 +482,10 @@ def plot_pension_comparison(
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     p_svarc_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
-    ax.annotate("16\,\%~výdajů", (x_end / 1_000, p_svarc_end),
+    ax.annotate("16\\,\\%~výdajů", (x_end / 1_000, p_svarc_end),
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+    _apply_cz_model_layout(ax)
     return fig
 
 
@@ -499,12 +534,12 @@ def plot_pension_solidarity(
     # ── Vytvoření figury se dvěma panely ──────────────────────────────────────
     fig, (ax_top, ax_bot) = plt.subplots(
         2, 1,
-        figsize=cm2in(16, 18),
+        figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_TWOCOLUMN_CM),
         gridspec_kw={"height_ratios": [3, 2]},
         sharex=True,
     )
-    fig.subplots_adjust(hspace=0.08)
-    fig._subplots_adjust_kwargs = {"hspace": 0.08}
+    fig.subplots_adjust(hspace=CZ_MULTI_AXES_HSPACE)
+    fig._subplots_adjust_kwargs = {"hspace": CZ_MULTI_AXES_HSPACE}
 
     c_emp = PALETTE[0]
 
@@ -622,7 +657,7 @@ def plot_pension_solidarity(
         p_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years)) / 1_000
         ax_top.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
                         (x_end / 1_000, p_end_o),
-                        xytext=(3, -4 if expense_rate == 0.80 else 0), textcoords="offset points",
+                        xytext=(3, -6 if expense_rate == 0.80 else 0), textcoords="offset points",
                         fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
     labeled_pidx_sol: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
@@ -634,7 +669,7 @@ def plot_pension_solidarity(
             p_val = _pension(monthly_base, years) / 1_000
             x_lab = float(min(income_max, x_e)) / 1_000
             ax_top.annotate(f"paušál~{p_idx + 1}", (x_lab, p_val),
-                            xytext=(3, 0), textcoords="offset points",
+                            xytext=(3, -2 if p_idx == 0 else 0), textcoords="offset points",
                             fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
             labeled_pidx_sol.add(p_idx)
 
@@ -644,7 +679,7 @@ def plot_pension_solidarity(
                     xytext=(3, 0), textcoords="offset points",
                     fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     p_svarc_top = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
-    ax_top.annotate("16\,\%~výdajů", (x_end / 1_000, p_svarc_top),
+    ax_top.annotate("16\\,\\%~výdajů", (x_end / 1_000, p_svarc_top),
                     xytext=(3, 0), textcoords="offset points",
                     fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
 
@@ -735,40 +770,7 @@ def plot_pension_solidarity(
     ax_bot.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax_bot.set_ylim(0, _RR_CAP)
 
-    # Inline popisky dolního panelu -- pravý konec osy x
-    x_end_rr = float(income_max)
-    gross_end_rr = x_end_rr / (1 + EMPLOYER_INS_RATE)
-    p_end_emp_rr = float(pension_employee(float(gross_end_rr), years))
-    ni_end_emp = float(net_income_employee(float(x_end_rr)))
-    if ni_end_emp > 0:
-        rr_end_emp = p_end_emp_rr / ni_end_emp * 100
-        ax_bot.annotate("zaměstnanec", (x_end_rr / 1_000, rr_end_emp),
-                        xytext=(3, 0), textcoords="offset points",
-                        fontsize=FIGURE_COMPACT_LABEL_SIZE, color=c_emp, va="center")
-    for expense_rate, _label, color in OSVC_TYPES:
-        if expense_rate == 0.40:  # přeskočit OSVČ 40 % -- překryv
-            continue
-        ni_end_o = float(net_income_osvc_vydajovy(float(x_end_rr), expense_rate))
-        if ni_end_o <= 0:
-            continue
-        pen_end_o = float(pension_osvc_vydajovy(float(x_end_rr), expense_rate, years))
-        rr_end_o = pen_end_o / max(ni_end_o, 1.0) * 100
-        if rr_end_o <= _RR_CAP:
-            ax_bot.annotate(f"OSVČ~{int(expense_rate * 100)}\\,%",
-                            (x_end_rr / 1_000, rr_end_o),
-                            xytext=(3, 0), textcoords="offset points",
-                            fontsize=FIGURE_COMPACT_LABEL_SIZE, color=color, va="center")
-
-    # Inline popisky šedých křivek -- bez výdajů a Švarc (dolní panel)
-    p_no_bot = float(pension_osvc_vydajovy(float(x_end_rr), 0.0, years))
-    ni_no_bot = float(net_income_osvc_vydajovy(float(x_end_rr), 0.0))
-    if ni_no_bot > 0:
-        rr_no_bot = p_no_bot / max(ni_no_bot, 1.0) * 100
-        if rr_no_bot <= _RR_CAP:
-            ax_bot.annotate("bez~výdajů", (x_end_rr / 1_000, rr_no_bot),
-                            xytext=(3, 0), textcoords="offset points",
-                            fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax_bot, hspace=0.08)
+    _apply_cz_model_layout(ax_bot, hspace=CZ_MULTI_AXES_HSPACE)
     return fig
 
 
@@ -790,7 +792,7 @@ def plot_tax_wedge_vs_income(
     c_emp = PALETTE[0]
     tw_emp = tax_wedge_employee(x)
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_STANDARD_CM))
 
     ax.plot(x / 1_000, tw_emp, color=c_emp, linewidth=2.0, zorder=3)
 
@@ -863,7 +865,7 @@ def plot_tax_wedge_vs_income(
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=cz_label_fs, color="#888888", va="center")
     tw_sv_end = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
-    ax.annotate("16\,\%~výdajů", (x_end / 1_000, tw_sv_end),
+    ax.annotate("16\\,\\%~výdajů", (x_end / 1_000, tw_sv_end),
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=cz_label_fs, color="#888888", va="center")
     _apply_cz_model_layout(ax)
@@ -888,7 +890,7 @@ def plot_net_income_vs_income(
     c_emp = PALETTE[0]
     ni_emp = net_income_employee(x)
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_STANDARD_CM))
 
     ax.plot(x / 1_000, ni_emp / 1_000, color=c_emp, linewidth=2.0, zorder=3)
 
@@ -968,10 +970,10 @@ def plot_net_income_vs_income(
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     ni_sv_end = float(net_income_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
-    ax.annotate("16\,\%~výdajů", (x_end / 1_000, ni_sv_end),
+    ax.annotate("16\\,\\%~výdajů", (x_end / 1_000, ni_sv_end),
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+    _apply_cz_model_layout(ax)
     return fig
 
 
@@ -991,7 +993,7 @@ def plot_sp_vs_income(
     c_emp = PALETTE[0]
     sp_emp = sp_employee(x) / 1_000
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_STANDARD_CM))
     ax.plot(x / 1_000, sp_emp, color=c_emp, linewidth=2.0, zorder=3)
 
     _plot_osvc_lines(
@@ -1059,10 +1061,10 @@ def plot_sp_vs_income(
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
     sp_sv_end = float(sp_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
-    ax.annotate("16\,\%~výdajů", (x_end / 1_000, sp_sv_end),
+    ax.annotate("16\\,\\%~výdajů", (x_end / 1_000, sp_sv_end),
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+    _apply_cz_model_layout(ax)
     return fig
 
 
@@ -1083,7 +1085,7 @@ def plot_pension_sp_ratio_vs_income(
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     breakeven_years_emp = INSURANCE_YEARS / (pension_employee(gross_emp, years) / sp_employee(x))
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_STANDARD_CM))
     ax.plot(x / 1_000, breakeven_years_emp, color=c_emp, linewidth=2.0, zorder=3)
 
     for expense_rate, _label, color in OSVC_TYPES:
@@ -1139,6 +1141,7 @@ def plot_pension_sp_ratio_vs_income(
         xy=(income_max * 0.98 / 1_000, 24.7),
         xytext=(-3, 4), textcoords="offset points",
         fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", va="bottom", ha="right",
+        multialignment="center",
     )
 
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
@@ -1210,10 +1213,10 @@ def plot_pension_sp_ratio_vs_income(
     pen_sv_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years))
     sp_sv_end  = float(sp_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE))
     by_sv_end  = INSURANCE_YEARS / (pen_sv_end / max(sp_sv_end, 1.0))
-    ax.annotate("16\,\%~výdajů", (x_end / 1_000, by_sv_end),
+    ax.annotate("16\\,\\%~výdajů", (x_end / 1_000, by_sv_end),
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+    _apply_cz_model_layout(ax)
     return fig
 
 
@@ -1236,7 +1239,7 @@ def plot_tax_wedge_comparison(
     tw_emp    = tax_wedge_employee(x)
     rr_emp    = pension_employee(gross_emp, years) / net_income_employee(x) * 100
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 12))
+    fig, ax = plt.subplots(figsize=cm2in(CZ_FIG_WIDTH_CM, CZ_FIG_HEIGHT_PARAMETRIC_CM))
     c_emp = PALETTE[0]
 
     ax.plot(tw_emp, rr_emp,
@@ -1389,10 +1392,10 @@ def plot_tax_wedge_comparison(
     if ni_sv_cmp > 0:
         rr_sv_cmp = float(pension_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE, years)) / max(ni_sv_cmp, 1.0) * 100
         if rr_sv_cmp <= _RR_CAP:
-            ax.annotate("16\,\%~výdajů", (tw_sv_cmp, rr_sv_cmp),
+            ax.annotate("16\\,\\%~výdajů", (tw_sv_cmp, rr_sv_cmp),
                         xytext=(4, 0), textcoords="offset points",
                         fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#888888", va="center")
-    _apply_figure_layout(ax)
+    _apply_cz_model_layout(ax)
     return fig
 
 

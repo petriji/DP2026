@@ -218,6 +218,8 @@ if p_mzs is None and p_pls is None:
 # Parse data
 # ════════════════════════════════════════════════════════════════════════════
 df_mzs = df_pls = None
+overall_mzs: dict = {}
+overall_pls: dict = {}
 
 if p_mzs is not None:
     try:
@@ -309,10 +311,19 @@ for i, row in df_plot.iterrows():
             )
 
 ax_a.set_yticks(y)
-ax_a.set_yticklabels(
-    [f"{row['code']}  {row['label']}" for _, row in df_plot.iterrows()],
-    fontsize=FIGURE_LABEL_SIZE,
-)
+ax_a.set_yticklabels([])
+for _i, _row in df_plot.iterrows():
+    ax_a.text(
+        0.005, y[_i],
+        f"{_row['code']} - {_row['label']}",
+        transform=ax_a.get_yaxis_transform(),
+        fontsize=FIGURE_LABEL_SIZE,
+        ha="left", va="center",
+        zorder=15,
+        clip_on=False,
+        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6, "pad": 1.2},
+    )
+ax_a.tick_params(axis="y", pad=6)
 ax_a.tick_params(axis="x", labelsize=FIGURE_LABEL_SIZE)
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}")
@@ -332,13 +343,13 @@ ax_a.set_title(
 patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (~3\u00a0010\u00a0tis.\u00a0osob)")
 patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (~684\u00a0tis.\u00a0osob)")
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
-            fontsize=FIGURE_LABEL_SIZE, loc="lower right", markerfirst=False)
+            fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="lower right", markerfirst=False)
 ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
 ax_a.tick_params(axis="y", which="minor", left=False)
 ax_a.set_axisbelow(True)
 
-fig_a.tight_layout()
+fig_a.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
 savefig_pgf(fig_a, "problemy_verejny_soukromy", strings=STRINGS_A)
 save_figure_tex_pgf(
     "problemy_verejny_soukromy",
