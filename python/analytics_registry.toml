@@ -261,3 +261,9 @@ pics     = ["eu_ict_gender"]
 script   = "analyses/eu_mne_mapa.py"
 texparts = ["eu_mne_mapa"]
 pics     = ["eu_mne_mapa"]
+
+[bohatstvi_top1_wid]
+script   = "analyses/eu_bohatstvi_top1_wid.py"
+texparts = ["eu_bohatstvi_top1_wid"]
+pics     = ["eu_bohatstvi_top1_wid"]
+
