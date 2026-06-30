@@ -1,10 +1,8 @@
 r"""
 Casovy vyvoj poctu kolektivnich sporu v CR (2013--2025).
 
-Data source
------------
-* CMKOS: Zprava o prubehu kolektivniho vyjednavani na vyssim stupni
-  a na podnikove urovni v roce 2025 (sekce 7: kolektivni spory).
+Data source: ČMKOS (Zpráva o průběhu kolektivního vyjednávání v ČR, počty sporů před zprostředkovatelem a rozhodcem, 2013--2025)
+Filter: roční vývoj celkového počtu kolektivních sporů v ČR
 
 Output
 ------

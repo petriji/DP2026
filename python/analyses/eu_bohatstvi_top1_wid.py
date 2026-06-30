@@ -8,10 +8,8 @@ WID variable: ``shwealj992`` (share · hweal · equal-split · adults 992)
 Percentile:   ``p99p100`` (top 1 %)
 Values:        fractions in [0, 1] → multiplied by 100 to give percent.
 
-Data source
------------
-World Inequality Database, wid.world/bulk_download/
-Per-country bulk CSV: ``https://wid.world/bulk_download/WID_data_{CC}.csv``
+Data source: World Inequality Database (WID) bulk CSV: https://wid.world/bulk_download/
+Filter: variable == shwealj992, percentile == p99p100 (top 1 % share of net household wealth)
 
 Output
 ------

@@ -3,6 +3,9 @@ r"""Czech pension & tax figures -- all matplotlib visualisation code.
 All calculation is delegated to problemy_cz_duchod and cz_tax_model.
 This file only contains plot functions and the __main__ entry point.
 
+Data source: Model podle legislativy ČR (zákon č. 586/1992 Sb. o daních z příjmů, zákon č. 155/1995 Sb. o důchodovém pojištění, nařízení vlády č. 365/2025 Sb.)
+Filter: Srovnání daňového klínu a náhradových poměrů důchodů zaměstnance a OSVČ (standardní režim, výdajový paušál, paušální daň pro rok 2026)
+
 Run
 ---
     python analyses/problemy_cz_model.py

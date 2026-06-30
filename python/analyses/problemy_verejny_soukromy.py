@@ -27,11 +27,8 @@ Figure B -- ``rscp_public_private_distribution``
     Dual box-and-whisker (P10/P25/P50/P75/P90) for the total MZS vs total PLS
     side-by-side, highlighting the overall wage distribution shape inequality.
 
-Data sources
-------------
-MZS (2025): ISPV national workbook, mzdová sféra ČR, rok 2025
-PLS (2025): ISPV national workbook, platová sféra ČR, rok 2025
-Source: TREXIMA / MPSV, published 25. 3. 2026, https://www.ispv.cz
+Data source: MPSV ISPV / TREXIMA (Mzdová sféra MZS, Platová sféra PLS, rok 2025)
+Filter: mediánová mzda podle odvětví CZ-NACE a celkové srovnání distribucí (podnikatelská vs. nepodnikatelská sféra ČR)
 
 Output
 ------

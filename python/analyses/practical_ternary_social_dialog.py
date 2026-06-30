@@ -10,9 +10,10 @@ Hover tooltips show A/B/C shares in PDF viewers that support pdfcomment
 annotations (Adobe Acrobat, Foxit).
 
 Data rows: (Employees %, Employers %, State %) — integers that sum to 100.
-Source: estimates from social-dialog literature; see thesis commentary.
-EU27 cloud values are placeholders — to be replaced with model-derived
-coordinates once the analysis is extended.
+Coordinates are computed by ``_ternary_calc.calculate_eu27_axis_scores()`` from
+Eurostat/OECD datasets.  Three weighted composite axes (A = Employees, B = Employers,
+C = State) are normalised min-max over EU27 and then closed to a ternary simplex.
+Filter: Highlights AT, CZ, DE, DK, PL, SK; EU27 background cloud.
 
 Output
 ------
