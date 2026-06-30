@@ -2,7 +2,7 @@ r"""Czech tax-wedge model – calculation functions and parametric wedge figure.
 
 Tax wedge definition
 --------------------
-Daňový klín = podíl daní a odvodů na celkových nákladech pláce (zaměstnancův
+Daňový klín = podíl daní a odvodů na celkových nákladech práce (zaměstnancův
 total labor cost) resp. na příjmech OSVČ.
 
   • Zaměstnanec: daňový klín = (celk. nákl. − čistá mzda) / celk. nákl.
