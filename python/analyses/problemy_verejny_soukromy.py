@@ -338,14 +338,8 @@ savefig_pgf(fig_a, "problemy_verejny_soukromy")
 save_figure_tex_pgf(
     "problemy_verejny_soukromy",
     caption=(
-        f"Mediánová mzda a~plat podle sekce NACE, ČR, {ISPV_YEAR} "
-        r"(ISPV/RSCP, TREXIMA/MPSV). "
-        "Chybové úsečky znázorňují mezikvartilový rozsah P25--P75. "
-        "Celkový mediánový plat veřejného sektoru (\\SI{48064}{\\czk}) převyšuje "
-        "mediánovou mzdu soukromého sektoru (\\SI{43241}{\\czk}) o~11\\,\\,\\%, "
-        "avšak tato prémie je odvětvově heterogenní: veřejný sektor zaostává "
-        "v~ICT (J) a~veřejné správě (O), ale převyšuje soukromý v~zdravotnictví (Q) "
-        "a~dopravě (H)."
+        f"Mediánová mzda a~plat podle sekce \\acs{{NACE}}, veřejný vs.\\ soukromý sektor, "
+        f"\\acs{{geo-CZ}}, {ISPV_YEAR}"
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy",
@@ -473,14 +467,7 @@ savefig_pgf(fig_b, "problemy_verejny_soukromy_dist")
 save_figure_tex_pgf(
     "problemy_verejny_soukromy_dist",
     caption=(
-        f"Mzdové rozdělení: soukromý vs. veřejný sektor, ČR, {ISPV_YEAR} "
-        r"(ISPV/RSCP, TREXIMA/MPSV). "
-        "Veřejný sektor vykazuje výrazně vyšší hodnoty na všech percentilech díky "
-        "vyšší průměrné kvalifikaci (vzdělání, zdravotnictví) a~platovým tarifním "
-        "tabulkám. Nicméně větší mezikvartilový rozsah v~soukromém sektoru "
-        "od~P25~=~\\SI{32538}{\\czk} do~P75~=~\\SI{58801}{\\czk} odráží vyšší "
-        "mzdovou dispersi, což komplikuje jednotné nastavení kolektivněsmlouvního "
-        "mzdového dna."
+        f"Mzdové rozdělení: soukromý vs.\\ veřejný sektor, \\acs{{geo-CZ}}, {ISPV_YEAR}"
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy_dist",

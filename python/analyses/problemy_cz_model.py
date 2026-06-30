@@ -1272,16 +1272,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_duchod_prijem",
         caption=(
-            r"Výše starobního důchodu v~závislosti na příjmu, parametry 2026. "
-            r"Osa x odpovídá celkovým výdajům plátce: pro zaměstnance zahrnuje "
-            r"hrubou mzdu i odvody zaměstnavatele (33,8\,\%); pro OSVČ se standardními "
-            r"odvody je to zisk (příjmy\,$-$\,výdaje); pro OSVČ v~paušálním daňovém "
-            r"režimu jde o~měsíční příjmy (revenue), přičemž výše důchodu je v~každém "
-            r"pásmu pevná. "
-            r"Parametry roku~2026, předpokládaná pojistná doba 40~let. "
-            r"Výpočet dle zákona č.\,155/1995~Sb.\ (zákon o~důchodovém pojištění), "
-            r"zákona č.\,270/2023~Sb.\ (důchodová reforma) "
-            r"a nařízení vlády č.\,365/2025~Sb."
+            r"Výše starobního důchodu v~závislosti na příjmu, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_prijem",
@@ -1295,10 +1286,8 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_duchod_solidarita",
         caption=(
-            r"Náhradový poměr a~výše důchodu v~závislosti na příjmu, parametry 2026. "
-            r"Parametry roku~2026, pojistná doba 40~let. "
-            r"Výpočet dle zákona č.\,155/1995~Sb., zákona č.\,270/2023~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."),
+            r"Náhradový poměr a~výše důchodu v~závislosti na příjmu, \acs{geo-CZ}, parametry roku~2026"
+        ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_duchod_solidarita",
         resizebox_width=r"0.95\linewidth",
@@ -1311,22 +1300,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_duchod_klin",
         caption=(
-            r"Náhradový poměr a~efektivní daňový klín, OSVČ a~zaměstnanec. "
-            r"Osa x: daňový klín = (SP + ZP + DPFO) / příjmy; zahrnuje daň "
-            r"z~příjmů a pojistné (zaměstnanec: i část zaměstnavatele). "
-            r"Pro výdajový paušál SP a ZP nejsou odečitatelné od základu DPFO "
-            r"(ZDP § 7 odst. 7). Sleva na poplatníka 2\,570\,Kč/měs.\ "
-            r"uplatněna pro zaměstnance a OSVČ se standardními/výdajovými odvody; "
-            r"pro paušální daň je již zahrnuta v pevné platbě. "
-            r"Osa y: náhradový poměr = důchod\,/\,čistý příjem. "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) "
-            r"zobrazeny přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Body označené kroužkem odpovídají minimální mzdě a mediánu zaměstnaneckých mezd "
-            r"(ISPV 2026; medián zisku OSVČ není statisticky k~dispozici). "
-            r"Parametry roku~2026, pojistná doba 40~let. "
-            r"Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb., "
-            r"č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
+            r"Náhradový poměr a~efektivní daňový klín, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
@@ -1341,17 +1315,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_danovy_klin_cz",
         caption=(
-            r"Efektivní daňový klín, zaměstnanec vs.\ OSVČ, parametry 2026. "
-            r"Daňový klín = (SP + ZP + DPFO) / příjmy; pro zaměstnance zahrnuje "
-            r"odvody zaměstnavatele i zaměstnance a DPFO (po slevě na poplatníka). "
-            r"Pro OSVČ s výdajovým paušálem SP a ZP nejsou odečitatelné od základu "
-            r"DPFO (ZDP § 7 odst. 7); sleva na poplatníka 2\,570\,Kč/měs.\ uplatněna. "
-            r"Pro paušální daň: daňový klín = celková pevná platba\,/\,příjmy. "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
-            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Parametry roku~2026. "
-            r"Výpočet dle zákonů č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
+            r"Efektivní daňový klín, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_danovy_klin_cz",
@@ -1365,18 +1329,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_cisty_prijem_cz",
         caption=(
-            r"Čistý příjem, zaměstnanec vs.\ OSVČ, parametry 2026. "
-            r"Zaměstnanec: čistý příjem = hrubá mzda\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO. "
-            r"OSVČ s výdajovým paušálem: čistý příjem = základ daně (ZD)\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO, "
-            r"kde ZD\,=\,příjmy\,$\times$\,(1\,$-$\,sazba paušálu); paušální výdaje nejsou "
-            r"součástí čistého příjmu (jsou uvažovány jako skutečné obchodní náklady). "
-            r"OSVČ paušální daň: čistý příjem = příjmy\,$-$\,celková pevná platba "
-            r"(skutečné výdaje nejsou modelovány). "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
-            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Parametry roku~2026. "
-            r"Výpočet dle zákonů č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
+            r"Čistý příjem, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_zdp_1992", "zakon_sp_1992", "zakon_zp_1992", "nv_365_2025"],
         label="fig:problemy_cisty_prijem_cz",
@@ -1390,16 +1343,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_sp_odvody_cz",
         caption=(
-            r"Měsíční odvody na SP, zaměstnanec vs.\ OSVČ, parametry 2026. "
-            r"Zaměstnanec: celkové SP = SP zaměstnance (7,1\,\%) + SP zaměstnavatele "
-            r"(24,8\,\%) = 31,9\,\% z hrubé mzdy. "
-            r"OSVČ s výdajovým paušálem: SP = 29,2\,\% × max(55\,\% × ZD, min.\,základ). "
-            r"Paušální daň: SP = 29,2\,\% × pevný vyměřovací základ pásma. "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
-            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Parametry roku~2026. "
-            r"Výpočet dle zákonů č.\,589/1992~Sb., č.\,270/2023~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
+            r"Měsíční odvody na \acs{SP}, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_sp_1992", "zakon_duchreforma_2023", "nv_365_2025"],
         label="fig:problemy_sp_odvody_cz",
@@ -1413,16 +1357,7 @@ if __name__ == "__main__":
     save_figure_tex_pgf(
         "problemy_duchod_sp_pomer",
         caption=(
-            r"Poměr měsíčního důchodu k~odvodům na SP, parametry 2026. "
-            r"Hodnota 2,0 znamená, že za každou Kč měsíčně odváděnou na SP "
-            r"je vyplácen důchod 2\,Kč/měsíc (při pojistné době 40~let). "
-            r"Zaměstnanec: celkové SP = SP zaměstnance + SP zaměstnavatele. "
-            r"OSVČ: SP = 29,2\,\% × vyměřovací základ (standardní nebo pevný pro paušál). "
-            r"Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny "
-            r"přerušovaně (standardní odvody) a tečkovaně (paušální daň). "
-            r"Parametry roku~2026, pojistná doba 40~let. "
-            r"Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb., "
-            r"č.\,589/1992~Sb. a nařízení vlády č.\,365/2025~Sb."
+            r"Poměr měsíčního důchodu k~odvodům na \acs{SP}, \acs{geo-CZ}, parametry roku~2026"
         ),
         cite_keys=["zakon_zpds_1995", "zakon_duchreforma_2023",
                    "zakon_sp_1992", "nv_365_2025"],

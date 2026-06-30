@@ -89,7 +89,7 @@ savefig_pgf(fig, "eu_pokryti_kv_mapa", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_pokryti_kv_mapa",
     caption=(
-        f"Pokrytí KV, EU mapa, {ds.latest_year}."),
+        f"Pokrytí \\acs{{KV}}, EU mapa, {ds.latest_year}."),
     label="fig:eu_pokryti_kv_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",

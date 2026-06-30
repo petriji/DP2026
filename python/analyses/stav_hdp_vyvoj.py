@@ -133,7 +133,7 @@ savefig_pgf(fig, "stav_hdp_vyvoj", nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "stav_hdp_vyvoj",
     caption=(
-        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), vybrané země EU, "
+        f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{EU}}27\\,=\\,100), vybrané země EU, "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_hdp_vyvoj",

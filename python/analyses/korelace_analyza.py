@@ -280,13 +280,12 @@ fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
 savefig_pgf(fig_all, "korelace_scatter")
 save_figure_tex_pgf(
     "korelace_scatter",
-    caption="Korelace pokrytí KV a veličin trhu práce, EU27.",
+    caption=r"Korelace pokrytí \acs{KV} a~veličin trhu práce, \acs{EU}, 2024.",
     label="fig:korelace_scatter",
-    resizebox_width=r"0.98\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
                "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
-    footnote=_EXCL_NOTE,
     strings={},
 )
 print("  saved scatter_combined")

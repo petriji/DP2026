@@ -104,7 +104,7 @@ savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_osvc_mapa",
-    caption=f"Podíl OSVČ na celkové zaměstnanosti, EU mapa, {ds.latest_year}.",
+    caption=f"Podíl \\acs{{OSVČ}} na celkové zaměstnanosti, EU mapa, {ds.latest_year}.",
     label="fig:eu_osvc_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_keys="eurostat_lfsa_egaps",

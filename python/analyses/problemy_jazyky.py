@@ -193,7 +193,7 @@ try:
         cbar_label=r"\% populace 25--64",
         stem="problemy_jazyky_celkem",
         caption=(
-            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, \\acs{{geo-EU}}27, "
             f"{latest_l21}"
         ),
         label="fig:problemy_jazyky_celkem",
@@ -260,7 +260,7 @@ try:
         cbar_label=r"\% věkové skupiny 25--64",
         stem="problemy_jazyky_vek",
         caption=(
-            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky podle věkové skupiny, \\acs{{geo-EU}}27, "
             f"{latest_l22}"
         ),
         label="fig:problemy_jazyky_vek",
@@ -333,7 +333,7 @@ try:
         stem="problemy_jazyky_isced",
         caption=(
             f"Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) "
-            f"znajících alespoň 2~cizí jazyky, EU27, {latest_l23}"
+            f"znajících alespoň 2~cizí jazyky, \\acs{{geo-EU}}27, {latest_l23}"
         ),
         label="fig:problemy_jazyky_isced",
         year=latest_l23,

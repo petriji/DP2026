@@ -632,33 +632,12 @@ savefig_pgf(fig, "problemy_mzda_duchod")
 save_figure_tex_pgf(
     "problemy_mzda_duchod",
     caption=(
-        f"Distribuce čistých mezd a~starobních důchodů, ČR, {wage_year}/{pension_year}. "
-        f"Čisté mzdy (ISPV~{wage_year}; N\\,=\\,{N_WAGE // 1_000:,}\\,tis.\\ zaměstnanců) "
-        f"a~starobní důchody (CSSZ~{pension_year}; "
-        f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
-        "Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\\,\\%), "
-        "ZP (4{{,}}5\\,\\%) a daně z příjmů fyzických osob "
-        "(DPFO\\,=\\,15\\,\\%\\,$\\times$\\,hrubá\\,$-$\\,\\SI{2570}{\\czk\\per\\month} "
-        "do \\SI{1676052}{\\czk\\per\\rok}; 23\\,\\% nad tuto hranici, §\\,16 ZDP 2025); "
-        "celkové mzdové náklady zaměstnavatele "
-        "odpovídají násobku 1{{,}}338 hrubé mzdy "
-        f"(medián: \\SI{{{med_wage_total_cost:,.0f}}}{{\\czk}}). "
-        "Starobní důchody jsou vypláceny jako čistá částka. "
-        "Obě distribuce jsou modelovány jako \\emph{{zleva zkrácené}} "
-        "log-normální rozdělení: mzdová distribuce je zkrácena na "
-        f"minimální čistou mzdu (\\SI{{{min_wage_net:,.0f}}}{{\\czk}}, hrubá \\SI{{{MIN_WAGE:,}}}{{\\czk}}), "
-        f"penzijní distribuce na minimální důchod (\\SI{{{MIN_PENSION:,}}}{{\\czk}}; "
-        "zákon č.\\,155/1995\\,Sb.\\ §\\,29, NV č.\\,364/2024\\,Sb.). "
-        "Parametry log-normálního rozdělení jsou fitovány metodou "
-        "nejmenších čtverců na percentilové profily (P10\\,--\\,P90). "
-        "Osa y udává počet osob v intervalu šíře \\SI{1}{tis.\\,\\czk}. "
-        "Přerušované svislé čáry označují mediány; "
-        "tečkované čáry zákonná minima."
+        f"Distribuce čistých mezd a~starobních důchodů, \\acs{{geo-CZ}}, "
+        f"{min(wage_year, pension_year)}--{max(wage_year, pension_year)}"
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_mzda_duchod",
     resizebox_width=r"0.95\linewidth",
-    cite_key="mpsv_ispv",
     strings={},
 )
 

@@ -96,7 +96,7 @@ save_figure_tex_pgf(
     "vyhled_vzdelani_vyvoj",
     caption=(
         f"Podíl obyvatel s~terciárním vzděláním (ISCED 5--8, věk 25--64 let), "
-        f"vybrané země EU, {ds.years[0]}--{ds.years[-1]}."
+        f"vybrané země \\acs{{EU}}, {ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:vyhled_vzdelani_vyvoj",
     resizebox_width=r"0.95\linewidth",

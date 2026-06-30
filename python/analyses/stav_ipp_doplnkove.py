@@ -217,7 +217,7 @@ if years_bc:
     yr0, yr1 = years_bc[0], years_bc[-1]
     save_figure_tex_pgf(
         "stav_ipp_kumulativ",
-        caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), \\acs{{geo-CZ}}, {yr0}\u2013{yr1}.",
+        caption=f"Kumulativní mzdový nárůst normovaný na~\\acs{{HICP}} (\\acs{{HICP}}\\,=\\,100), \\acs{{geo-CZ}}, {yr0}--{yr1}.",
         label="fig:stav_ipp_kumulativ",
         resizebox_width=r"\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci", "eurostat_hicp"],
@@ -279,7 +279,7 @@ if years_c:
     yr0, yr1 = years_c[0], years_c[-1]
     save_figure_tex_pgf(
         "stav_ipp_mezera",
-        caption=f"Rozdíl LCI a~sjednaného nárůstu v~\\acs{{KS}}, \\acs{{geo-CZ}}, {yr0}\u2013{yr1}.",
+        caption=f"Rozdíl skutečného (\\acs{{LCI}}) a~sjednaného mzdového nárůstu v~\\acs{{KS}}, \\acs{{geo-CZ}}, {yr0}--{yr1}.",
         label="fig:stav_ipp_mezera",
         resizebox_width=r"\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci"],

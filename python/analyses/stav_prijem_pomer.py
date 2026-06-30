@@ -148,7 +148,7 @@ savefig_pgf(fig, "stav_prijem_pomer")
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
 save_figure_tex_pgf(
     "stav_prijem_pomer",
-    caption=f"Poměr čistého příjmu k~HDP na obyvatele (EU27\\,=\\,100), {START_YEAR}--{last_year}.",
+    caption=f"Poměr čistého příjmu k~\\acs{{HDP}} na obyvatele (\\acs{{EU}}27\\,=\\,100), vybrané země EU, {START_YEAR}--{last_year}.",
     label="fig:stav_prijem_pomer",
     resizebox_width=r"\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
