@@ -49,7 +49,7 @@
     \draw[flowDual]
       (W.north |- 0,2.4) -- (W.north)
       node[at start, above=10pt, font=\sffamily\DPWorkBaseSize]
-      {Sociální dialog (legislativa, \acs{KSVS}, \acs{KS}, odbory)};
+      {Sociální dialog (legislativa, kolektivní vyjednávání)};
 
     % --- Výstupy (vpravo, sloupec sedmi větví) ---
     \def\xT{3.0}             % x-pozice svislého trunku
@@ -69,14 +69,14 @@
     \draw[trunkV] (\xT,\yA) -- (\xT,\yG);
 
     % Větve: terminální větve mají šipku; spotřeba pokračuje dál do DPH (bez šipky)
-    \draw[branchDashed] (\xT,\yA) -- (\xR,\yA) node[lblA] {zdanění práce};
-    \draw[branchDashed] (\xT,\yB) -- (\xR,\yB) node[lblA] {odvody na~\acs{SP} a~\acs{ZdrP}};
+    \draw[branchDashed] (\xT,\yA) -- (\xR,\yA) node[lblA] {daň z~příjmu};
+    \draw[branchDashed] (\xT,\yB) -- (\xR,\yB) node[lblA] {odvody na~\acs{SZ} a~\acs{ZdrP}};
     \draw[branchPlain]  (\xT,\yC) -- (\xR,\yC) node[lblA] {spotřeba};
     \draw[branchDashed] (\xR,\yC) -- (\xRD,\yC) node[lblA] {\acs{DPH}};
-    \draw[branch]       (\xT,\yD) -- (\xR,\yD) node[lblA] {úspory};
-    \draw[branch]       (\xT,\yE) -- (\xR,\yE) node[lblA] {investice};
-    \draw[branch]       (\xT,\yF) -- (\xR,\yF) node[lblA] {reprodukce a~péče o~rodinu};
-    \draw[branch]       (\xT,\yG) -- (\xR,\yG) node[lblA] {vývoz};
+    \draw[branch]       (\xT,\yD) -- (\xR,\yD) node[lblA] {vývoz};
+    \draw[branch]       (\xT,\yE) -- (\xR,\yE) node[lblA] {investice (vzdělávání)};
+    \draw[branch]       (\xT,\yF) -- (\xR,\yF) node[lblA] {reprodukce};
+    \draw[branch]       (\xT,\yG) -- (\xR,\yG) node[lblA] {zvyšování blahobytu};
   \end{tikzpicture}}
   \caption{\strPracovnikSystemCaption}
   \label{fig:pracovnik_system}
