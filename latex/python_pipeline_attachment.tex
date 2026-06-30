@@ -273,4 +273,13 @@ Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
 se řeší v \LaTeX{}u a ručně upravený generovaný texpart se nefixuje na místě,
 ale vrací se do příslušného skriptu nebo do editovatelného obalu \textit{(wrapper)} PGF.
 
+\section*{Tabulka datové kvality (auto)}
+Následující přehled je generovaný při běhu \texttt{stats\_analytics.py}.
+
+\IfFileExists{../review/data_quality_pipeline_table.tex}{%
+  \input{../review/data_quality_pipeline_table.tex}
+}{%
+  \textit{Tabulka zatím není vygenerována. Spusťte: \texttt{bash run.sh stats\_analytics.py}}.
+}
+
 \end{document}
