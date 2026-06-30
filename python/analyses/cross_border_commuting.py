@@ -24,7 +24,8 @@ B  ``cross_border_commuting_map``
 
 C  ``cross_border_commuting_nuts2``
     CZ NUTS2 choropleth: % of employed working abroad by region of residence,
-    with AT / DE / SK / PL NUTS2 as grey geographic context.
+    with AT / DE / SK / PL NUTS2 coloured by same indicator for comparison.
+    Values are explicitly normalised: commuters_THOUS / employed_THOUS * 100.
 
 Output
 ------
@@ -53,13 +54,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import box as _shapely_box
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from statout.timeline import timeline
+from statout.map_cz import choropleth_cz
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -72,10 +73,7 @@ _GISCO_NUTS_URL = (
     "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
     "NUTS_RG_20M_2021_3035.geojson"
 )
-# EPSG:3035 bounding box around CZ and immediate neighbours
-_CZ_XLIM = (4_150_000, 5_150_000)
-_CZ_YLIM = (2_600_000, 3_350_000)
-# Wider box for EU overview map
+# EPSG:3035 bounding box — EU overview map
 _EU_XLIM = (2_500_000, 7_100_000)
 _EU_YLIM = (1_400_000, 5_500_000)
 
@@ -127,7 +125,7 @@ def _first_val(df: pd.DataFrame, col_list: list[str], keywords: list[str]) -> st
             return str(matches[0])
     return None
 
-unit_val     = _first_val(df, unit_candidates,    ["PC_ACT", "PC_EMP", "PC"])
+unit_val     = _first_val(df, unit_candidates,    ["THS_PER", "THOUS", "THS", "PC_ACT", "PC_EMP", "PC"])
 wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD"])
 sex_val      = _first_val(df, sex_candidates,      ["T", "TOTAL"])
 age_val      = _first_val(df, age_candidates,      ["TOTAL", "Y_GE15", "Y15-74"])
@@ -157,6 +155,47 @@ filt = filt[["geo", "time", "value"]].dropna()
 
 ds = Dataset(filt, name="Přeshraniční dojíždění", unit="% zaměstnaných",
              source_url="Eurostat/lfst_r_lfe2ecomm")
+
+# ── 3b. Download employed-persons denominator (lfst_r_lfe2emprtn) ────────────
+# Used to normalise absolute commuter counts (THOUS) to % of regional workforce.
+print("Downloading lfst_r_lfe2emprtn (denominator: employed persons) …")
+_emp_data: "pd.DataFrame | None" = None
+try:
+    _emp_path = fetch_eurostat("lfst_r_lfe2emprtn", start_period=START_YEAR)
+    _emp_raw = pd.read_csv(_emp_path, comment="#")
+    _emp_raw.columns = [c.strip().upper() for c in _emp_raw.columns]
+    _emp_geo  = next((c for c in _emp_raw.columns if c in ("GEO", "REF_AREA")), None)
+    _emp_val  = next((c for c in _emp_raw.columns if c in ("OBS_VALUE", "VALUE")), None)
+    _emp_time = next((c for c in _emp_raw.columns if c in ("TIME_PERIOD", "TIME")), None)
+    _emp_unit_col = next((c for c in _emp_raw.columns if "UNIT" in c), None)
+    _emp_sex_col  = next((c for c in _emp_raw.columns if "SEX"  in c), None)
+    _emp_age_col  = next((c for c in _emp_raw.columns if "AGE"  in c), None)
+    _emp_unit_val = _first_val(_emp_raw, [_emp_unit_col] if _emp_unit_col else [],
+                               ["THS_PER", "THOUS", "THS"])
+    _emp_sex_val  = _first_val(_emp_raw, [_emp_sex_col]  if _emp_sex_col  else [],
+                               ["T", "TOTAL"])
+    _emp_age_val  = _first_val(_emp_raw, [_emp_age_col]  if _emp_age_col  else [],
+                               ["TOTAL", "Y_GE15", "Y15-74"])
+    _emp_mask = pd.Series([True] * len(_emp_raw), index=_emp_raw.index)
+    if _emp_unit_val and _emp_unit_col:
+        _emp_mask &= _emp_raw[_emp_unit_col].astype(str).str.upper() == _emp_unit_val.upper()
+    if _emp_sex_val and _emp_sex_col:
+        _emp_mask &= _emp_raw[_emp_sex_col].astype(str).str.upper() == _emp_sex_val.upper()
+    if _emp_age_val and _emp_age_col:
+        _emp_mask &= _emp_raw[_emp_age_col].astype(str).str.upper() == _emp_age_val.upper()
+    _emp_filt = _emp_raw[_emp_mask].copy()
+    _emp_filt[_emp_val] = pd.to_numeric(_emp_filt[_emp_val], errors="coerce")
+    _emp_filt = _emp_filt.rename(
+        columns={_emp_geo: "geo", _emp_time: "time", _emp_val: "emp_value"}
+    )
+    _emp_filt["time"] = _emp_filt["time"].astype(str).str[:4].astype(int)
+    _emp_data = _emp_filt[["geo", "time", "emp_value"]].dropna()
+    print(f"  lfst_r_lfe2emprtn rows: {len(_emp_data)}  "
+          f"unit={_emp_unit_val}, sex={_emp_sex_val}, age={_emp_age_val}")
+except Exception as _exc:
+    print(f"  WARNING: denominator download failed ({_exc}); "
+          "will use raw values if already in % form")
+    _emp_data = None
 
 # ── Figure A — Timeline (national-level rows only, 2-char geo codes) ─────────
 print("\nFigure A: timeline …")
@@ -244,72 +283,54 @@ except Exception as exc:
 # ── Figure C — CZ NUTS2 choropleth ───────────────────────────────────────────
 print("\nFigure C: CZ NUTS2 choropleth …")
 try:
-    nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")
-    nuts_all = gpd.read_file(nuts_path)
-    nuts2_all = nuts_all[nuts_all["LEVL_CODE"] == 2].copy()
-    nuts2_all["CNTR_CODE"] = nuts2_all["NUTS_ID"].str[:2]
-
     nuts2_data = filt[filt["geo"].str.len() == 4].copy()
     latest_nuts2 = nuts2_data["time"].max()
     snap_nuts2 = nuts2_data[nuts2_data["time"] == latest_nuts2].copy()
 
-    merged_cz = nuts2_all.merge(
-        snap_nuts2[["geo", "value"]], left_on="NUTS_ID", right_on="geo", how="left",
+    # Normalise to % of regional workforce when commuter counts are absolute
+    # (unit THS_PER / THOUS).  If unit is already PC_ACT/PC_EMP use as-is.
+    _is_absolute = unit_val is not None and any(
+        k in unit_val.upper() for k in ["THS", "THOUS"]
     )
-
-    fig_c, ax_c = plt.subplots(figsize=cm2in(15, 11))
-
-    # Grey neighbours
-    nbrs = merged_cz[merged_cz["CNTR_CODE"].isin(["AT", "DE", "PL", "SK"])]
-    nbrs.plot(ax=ax_c, color="#DDDDDD", edgecolor="white", linewidth=0.4)
-
-    # CZ regions
-    cz_nuts2 = merged_cz[merged_cz["CNTR_CODE"] == "CZ"].copy()
-    bbox_cz = _shapely_box(_CZ_XLIM[0], _CZ_YLIM[0], _CZ_XLIM[1], _CZ_YLIM[1])
-    cz_nuts2["geometry"] = cz_nuts2["geometry"].intersection(bbox_cz)
-
-    cz_vals = cz_nuts2["value"].dropna()
-    vmin_c = cz_vals.min() if not cz_vals.empty else 0
-    vmax_c = cz_vals.max() if not cz_vals.empty else 5
-    cmap_c = plt.colormaps["YlOrRd"]
-    norm_c = mcolors.Normalize(vmin=vmin_c, vmax=vmax_c)
-
-    for _, row in cz_nuts2.iterrows():
-        if row.geometry is None or row.geometry.is_empty:
-            continue
-        val = row["value"]
-        color = cmap_c(norm_c(val)) if pd.notna(val) else "#CCCCCC"
-        gpd.GeoSeries([row.geometry]).plot(
-            ax=ax_c, color=color, edgecolor="white", linewidth=0.5,
-        )
-        centroid = row.geometry.centroid
-        if pd.notna(val):
-            ax_c.text(
-                centroid.x, centroid.y,
-                f"{row['NUTS_ID']}\n{val:.1f}\u00a0%",
-                ha="center", va="center",
-                fontsize=FONT_SIZE - 2, color="black",
+    if _is_absolute and _emp_data is not None:
+        # Prefer exact year; fall back to latest available per region.
+        _emp_snap = _emp_data[
+            (_emp_data["geo"].str.len() == 4) & (_emp_data["time"] == latest_nuts2)
+        ][["geo", "emp_value"]]
+        if _emp_snap.empty:
+            _emp_snap = (
+                _emp_data[_emp_data["geo"].str.len() == 4]
+                .sort_values("time")
+                .groupby("geo")
+                .last()
+                .reset_index()[["geo", "emp_value"]]
             )
+        snap_nuts2 = snap_nuts2.merge(_emp_snap, on="geo", how="left")
+        snap_nuts2["value"] = snap_nuts2["value"] / snap_nuts2["emp_value"] * 100
+        _normed = snap_nuts2["value"].notna().sum()
+        print(f"  Normalised {_normed}/{len(snap_nuts2)} regions to % of employed.")
+    elif _is_absolute:
+        print("  WARNING: absolute unit detected but denominator unavailable — "
+              "values not normalised; map may have non-comparable scale.")
 
-    sm_c = mcm.ScalarMappable(cmap=cmap_c, norm=norm_c)
-    sm_c.set_array([])
-    cbar_c = fig_c.colorbar(sm_c, ax=ax_c, fraction=0.03, pad=0.02)
-    cbar_c.set_label("% zaměstnaných pracujících v zahraničí", fontsize=FONT_SIZE)
-    cbar_c.ax.tick_params(labelsize=FONT_SIZE - 1)
-    ax_c.set_xlim(_CZ_XLIM)
-    ax_c.set_ylim(_CZ_YLIM)
-    ax_c.axis("off")
-    ax_c.set_title(
-        f"ČR NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
-        "% zaměstnaných pracujících v\u00a0zahraničí",
-        fontsize=FONT_SIZE,
+    data_series = snap_nuts2.set_index("geo")["value"].dropna()
+    fig_c = choropleth_cz(
+        data_series,
+        nuts_level_cz=2,
+        title=(
+            f"ČR NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
+            "% regionální pracovní síly pracující v\u00a0zahraničí"
+        ),
+        colorbar_label="% regionální pracovní síly pracující v zahraničí",
+        cmap="YlOrRd",
     )
-    fig_c.tight_layout()
-
     savefig(fig_c, "cross_border_commuting_nuts2", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "cross_border_commuting_nuts2",
-        caption=f"Přeshraniční dojíždění, regiony NUTS2, ČR, {latest_nuts2}.",
+        caption=(
+            f"Přeshraniční dojíždění, regiony NUTS2, ČR a\u00a0sousední země, {latest_nuts2}. "
+            r"Hodnoty: podíl regionální pracovní síly pracující v\,zahraničí (\%)."
+        ),
         label="fig:cross_border_commuting_nuts2",
         width=r"0.85\linewidth",
         cite_keys="eurostat_lfst_r_lfe2ecomm",

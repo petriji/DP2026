@@ -20,39 +20,15 @@ Usage
 from __future__ import annotations
 
 from typing import Optional, Union
-import textwrap
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpe
-import numpy as np
 import pandas as pd
-from shapely.geometry import box as shapely_box
 
-from config import (
-    CMAP_SEQUENTIAL,
-    CMAP_DIVERGING,
-    CHOROPLETH_BLEND_WITH_WHITE,
-    CHOROPLETH_WHITE_BLEND_PCT,
-    FIGURE_LABEL_SIZE,
-    FIGURE_TEXT_SIZE,
-    FIGURE_TITLE_SIZE,
-    MAP_COUNTRY_LABEL_SIZE,
-    PGF_TARGET_WIDTH_CM,
-)
+from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, FONT_SIZE
 from stattool.fetch import fetch
 from stattool.style import cm2in
-from statout.map_europe import CHOROPLETH_COLORBAR_HEIGHT_IN
-
-# Default per-NUTS_ID nudges (EPSG:3035 metres).  Applied when *label_nudges*
-# is not overridden by the caller.  Fixes label collisions where the
-# geometric centroid of one region falls inside or on top of another:
-#   - CZ010 (Prague) sits entirely inside CZ020 (Středočeský kraj); their
-#     centroids are ~7 km apart and the default labels overlap.
-_DEFAULT_CZ_LABEL_NUDGES: dict[str, tuple[float, float]] = {
-    "CZ010": (-10_000, 7_000),    # Prague — nudge NW, out of Středočeský
-    "CZ020": (30_000, -20_000),   # Středočeský — stronger SE shift to clear Prague label
-}
 
 # ── GISCO NUTS 2021 GeoJSON (20M resolution, already in EPSG:3035) ────────────
 _GISCO_NUTS_URL = (
@@ -63,45 +39,12 @@ _GISCO_NUTS_URL = (
 # Neighbours always shown at NUTS2
 _NEIGHBOURS = ["DE", "AT", "PL", "SK"]
 
-# Default bounding box — tighter CZ-centred crop in EPSG:3035 metres.
-# Western edge is additionally cropped by ~5% of current width for denser framing.
-_CZ_XLIM_DEFAULT = (4_401_500, 5_000_000)
-_CZ_YLIM_DEFAULT = (2_755_000, 3_195_000)
-
-# Compute the natural figure height for CZ choropleth so the geographic map
-# fills the column width correctly after PGF normalisation to PGF_TARGET_WIDTH_CM.
-# Formula: axes_width_frac ≈ 0.826 (from column-fit with side_margin=0.03,
-# cb_anchor=1.045, cb_width=0.08, 4pt gap); data_aspect = x_range / y_range.
-_CZ_DATA_ASPECT = (
-    (_CZ_XLIM_DEFAULT[1] - _CZ_XLIM_DEFAULT[0])
-    / (_CZ_YLIM_DEFAULT[1] - _CZ_YLIM_DEFAULT[0])
-)  # ≈ 1.360
-_CZ_AXES_WIDTH_FRAC = 0.826  # column-fit fraction at 15 cm target width
-_CZ_TOP_FRAC = 0.88           # layout_kwargs["top"] when a title is present
-_CZ_BOT_FRAC = 0.01           # layout_kwargs["bottom"]
-_CZ_DEFAULT_HEIGHT_CM = (
-    (PGF_TARGET_WIDTH_CM * _CZ_AXES_WIDTH_FRAC / _CZ_DATA_ASPECT)
-    / (_CZ_TOP_FRAC - _CZ_BOT_FRAC)
-)  # ≈ 10.2 cm
+# Default bounding box — tighter CZ-centred crop in EPSG:3035 metres (~1.5x zoom vs old)
+_CZ_XLIM_DEFAULT = (4_300_000, 5_000_000)
+_CZ_YLIM_DEFAULT = (2_700_000, 3_250_000)
 
 # Module-level cache
 _NUTS_ALL: "gpd.GeoDataFrame | None" = None
-
-
-def _blend_cmap_with_white(cmap_name: str, n_colors: int = 256) -> mpl.colors.Colormap:
-    """Return cmap optionally blended toward white for print-friendlier output."""
-    base = plt.get_cmap(cmap_name)
-    n = max(2, int(n_colors))
-    rgba = base(np.linspace(0.0, 1.0, n))
-
-    if CHOROPLETH_BLEND_WITH_WHITE:
-        blend = float(CHOROPLETH_WHITE_BLEND_PCT) / 100.0
-        blend = min(1.0, max(0.0, blend))
-        rgba[:, :3] = rgba[:, :3] * (1.0 - blend) + blend
-
-    return mpl.colors.LinearSegmentedColormap.from_list(
-        f"{base.name}_wb{int(round(CHOROPLETH_WHITE_BLEND_PCT))}", rgba, N=n
-    )
 
 
 def _get_nuts_all() -> gpd.GeoDataFrame:
@@ -132,10 +75,6 @@ def choropleth_cz(
     label_cz: bool = True,
     label_nbr: bool = False,
     label_fmt: str = "{:.1f}",
-    label_fontsize: Optional[float] = None,
-    label_nudges: Optional[dict] = None,
-    label_names: Optional[dict] = None,
-    label_tooltip_fmt: Optional[str] = None,
     colorbar_label: Optional[str] = None,
     border_color: str = "black",
     border_linewidth: float = 0.8,
@@ -165,8 +104,7 @@ def choropleth_cz(
     missing_color:
         Fill colour for regions with no data.
     figsize:
-        Figure size in inches.  Defaults to ``cm2in(15, 9)`` (matches
-        ``statout.map_europe.choropleth`` so colourbar rasters dedup).
+        Figure size in inches.  Defaults to ``cm2in(15, 10)``.
     ax:
         Existing Axes to draw into.  A new figure is created when None.
     label_cz:
@@ -175,21 +113,6 @@ def choropleth_cz(
         Annotate neighbour regions with their value (default False).
     label_fmt:
         Python format string applied to each value, e.g. ``"{:.1f}"``.
-    label_fontsize:
-        Label font size in points.  Defaults to ``FONT_SIZE - 1``.
-    label_nudges:
-        Per-NUTS_ID ``(dx, dy)`` offsets (EPSG:3035 metres) added to the
-        centroid before placing the label.  Useful to separate overlapping
-        centroids (Prague vs. Středočeský).  Merged over sensible defaults
-        for CZ010/CZ020; pass an explicit empty dict to disable.
-    label_names:
-        Mapping NUTS_ID → long region name, used for PGF tooltips.  When set
-        together with *label_tooltip_fmt* and the PGF backend is active, the
-        visible value is wrapped in ``\pdftooltip{value}{name: formatted-value}``
-        so hover-capable PDF viewers show the full region name.
-    label_tooltip_fmt:
-        Format string for the tooltip's numeric value; defaults to *label_fmt*.
-        Only used when the PGF backend is active.
     colorbar_label:
         Colourbar axis label.
     border_color:
@@ -226,18 +149,8 @@ def choropleth_cz(
     cz_gdf["value"] = cz_gdf["NUTS_ID"].map(data)
     nbr_gdf["value"] = nbr_gdf["NUTS_ID"].map(data)
 
-    x_lim = xlim or _CZ_XLIM_DEFAULT
-    y_lim = ylim or _CZ_YLIM_DEFAULT
-
-    # Default scale should reflect actually visible regions in the viewport.
-    viewport = shapely_box(x_lim[0], y_lim[0], x_lim[1], y_lim[1])
-    cz_visible = cz_gdf[cz_gdf.geometry.intersects(viewport)]
-    nbr_visible = nbr_gdf[nbr_gdf.geometry.intersects(viewport)]
-
     # ── Unified colour scale across all displayed regions ─────────────────────
-    all_values = pd.concat([cz_visible["value"], nbr_visible["value"]]).dropna()
-    if all_values.empty:
-        all_values = pd.concat([cz_gdf["value"], nbr_gdf["value"]]).dropna()
+    all_values = pd.concat([cz_gdf["value"], nbr_gdf["value"]]).dropna()
     vmin_ = vmin if vmin is not None else (
         float(all_values.min()) if not all_values.empty else 0.0
     )
@@ -251,23 +164,17 @@ def choropleth_cz(
         vmin_, vmax_ = mid - half, mid + half
 
     chosen_cmap = cmap or (CMAP_DIVERGING if diverging else CMAP_SEQUENTIAL)
-    chosen_cmap = _blend_cmap_with_white(chosen_cmap, 256)
     norm = mpl.colors.Normalize(vmin=vmin_, vmax=vmax_)
-    cmap_obj = chosen_cmap
+    cmap_obj = plt.get_cmap(chosen_cmap)
 
     # ── Create figure ─────────────────────────────────────────────────────────
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize or cm2in(PGF_TARGET_WIDTH_CM, _CZ_DEFAULT_HEIGHT_CM))
+        fig, ax = plt.subplots(figsize=figsize or cm2in(15, 10))
     else:
         fig = ax.figure  # type: ignore[assignment]
 
-    _is_pgf = mpl.get_backend() == "pgf"
-    _font = float(label_fontsize) if label_fontsize is not None else MAP_COUNTRY_LABEL_SIZE
-    _nudges: dict = dict(_DEFAULT_CZ_LABEL_NUDGES)
-    if label_nudges is not None:
-        _nudges.update(label_nudges)
-    _names: dict = label_names or {}
-    _tip_fmt = label_tooltip_fmt or label_fmt
+    x_lim = xlim or _CZ_XLIM_DEFAULT
+    y_lim = ylim or _CZ_YLIM_DEFAULT
 
     def _plot_layer(gdf: gpd.GeoDataFrame, do_label: bool) -> None:
         for _, row in gdf.iterrows():
@@ -281,31 +188,12 @@ def choropleth_cz(
                 edgecolor=region_edgecolor, linewidth=region_linewidth,
             )
             if do_label and pd.notna(val):
-                nuts_id = row.get("NUTS_ID", "")
                 cx, cy = geom.centroid.x, geom.centroid.y
-                dx, dy = _nudges.get(nuts_id, (0.0, 0.0))
-                cx, cy = cx + dx, cy + dy
-                if not (x_lim[0] <= cx <= x_lim[1] and y_lim[0] <= cy <= y_lim[1]):
-                    continue
-                disp = label_fmt.format(val)
-                if _is_pgf:
-                    # Contour halo (white outline) for readability, without
-                    # path_effects — which PGF renders as outlined glyph paths
-                    # and therefore strips the text content entirely.
-                    text = rf"\contour{{white}}{{{disp}}}"
-                    if _names.get(nuts_id):
-                        tip = f"{_names[nuts_id]}: {_tip_fmt.format(val)}"
-                        text = rf"\pdftooltip{{{text}}}{{{tip}}}"
+                if x_lim[0] <= cx <= x_lim[1] and y_lim[0] <= cy <= y_lim[1]:
                     ax.text(
-                        cx, cy, text,
+                        cx, cy, label_fmt.format(val),
                         ha="center", va="center",
-                        fontsize=_font, color="black",
-                    )
-                else:
-                    ax.text(
-                        cx, cy, disp,
-                        ha="center", va="center",
-                        fontsize=_font, color="black",
+                        fontsize=FONT_SIZE - 1, color="black",
                         path_effects=[
                             mpe.withStroke(linewidth=1.5, foreground="white")
                         ],
@@ -332,61 +220,22 @@ def choropleth_cz(
     # ── Colourbar ─────────────────────────────────────────────────────────────
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
-    # Fixed-size colourbar in inches (independent of axes aspect) so the
-    # rasterised strip pixel dimensions are identical to map_europe output
-    # and dedups to python/figures/_shared/ via content hash.
-    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-    cb_width_ax = 0.08
-    gap_4pt_ax = (4.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
-    cb_anchor_ax = 1.045 + gap_4pt_ax
-    cax = inset_axes(
-        ax, width=cb_width_ax, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
-        loc="center left",
-        bbox_to_anchor=(cb_anchor_ax, 0.5),
-        bbox_transform=ax.transAxes,
-        borderpad=0,
-    )
-    cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
+    cb = fig.colorbar(sm, ax=ax, shrink=0.7, pad=0.02)
     if colorbar_label:
-        cb.set_label(colorbar_label, fontsize=FIGURE_LABEL_SIZE)
-    cb.ax.tick_params(labelsize=FIGURE_LABEL_SIZE)
+        cb.set_label(colorbar_label, fontsize=FONT_SIZE)
+    cb.ax.tick_params(labelsize=FONT_SIZE - 1)
 
     # ── Axes formatting ───────────────────────────────────────────────────────
     ax.set_xlim(x_lim)
     ax.set_ylim(y_lim)
     ax.set_axis_off()
 
-    # Reserve explicit right margin for colorbar ticks/label so they do not
-    # protrude past the figure bbox when included at exact \linewidth width.
-    # Fit (map + colorbar) into full column width with symmetric side margins.
-    side_margin = 0.03
-    block_factor = cb_anchor_ax + cb_width_ax
-    axes_width = (1.0 - 2.0 * side_margin) / block_factor
-    axes_left = side_margin
-    axes_right = axes_left + axes_width
-    layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": 0.01}
-
     if title:
-        # Aligned with statout.map_europe.choropleth so axes/colourbar layout
-        # matches and the rasterised colourbar dedups via _shared/.
-        layout_kwargs["top"] = 0.88
-        fig.subplots_adjust(**layout_kwargs)
-        fig._subplots_adjust_kwargs = layout_kwargs
-        fig._tight_layout_kwargs = {"pad": 0.15}
-        fig._suptitle_gap_pt = 4
-        wrapped_title = (
-            textwrap.fill(title, width=56)
-            if ("\n" not in title and len(title) > 44)
-            else title
-        )
+        fig.subplots_adjust(top=0.88)
         fig.suptitle(
-            wrapped_title,
-            fontsize=FIGURE_TITLE_SIZE,
-            y=0.92, ha="center",
+            title,
+            fontsize=plt.rcParams.get("axes.titlesize", 9),
+            y=0.97, ha="center",
         )
-    else:
-        fig.subplots_adjust(**layout_kwargs)
-        fig._subplots_adjust_kwargs = layout_kwargs
-        fig._tight_layout_kwargs = {"pad": 0.15}
 
     return fig
