@@ -230,7 +230,7 @@ v \texttt{latexmkrc}.
 \begin{pipelinecode}[Ruční build]
 cd latex
 RUN_PYTHON_ANALYTICS=1 latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build main.tex
-latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build python_pipeline_attachment.tex
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=build python_pipeline_attachment.tex
 \end{pipelinecode}
 
 Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
