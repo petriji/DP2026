@@ -1,11 +1,9 @@
 r"""
 Collective bargaining coverage choropleth map of Europe.
 
-Data source: OECD AIAS ICTWSS (dataset ``CBC``)
-  Measure ERB: share of salaried employees covered by collective bargaining
-  agreements (%).
-  Note: not all EU27 countries are OECD members; Bulgaria, Croatia, Cyprus,
-  Malta and Romania are absent from this dataset.
+Data source: ICTWSS AdjCov (adjusted coverage) for most EU-27 countries;
+  OECD CBC ERB for DE, SK, SI (low AdjCov data density).
+  Note: Bulgaria, Croatia, Cyprus, Malta, Romania absent from both sources.
 
 Output
 ------
@@ -23,8 +21,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
     savefig_pgf,
@@ -32,26 +28,15 @@ from stattool.style import (
     apply_geo_labels_pgf,
 )
 from statout.map_europe import choropleth
+from analyses._shared_data import load_cb_coverage
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-# CBC: Collective Bargaining Coverage, single measure ERB (% of salaried).
-# Download full dataset --- no geo filter needed; from_oecd_csv handles column
-# detection for both old (LOCATION/Value) and new (REF_AREA/OBS_VALUE) formats.
-path = fetch_oecd("CBC", start_period=2010)
-
-# ── 2. Parse ──────────────────────────────────────────────────────────────────
-ds = Dataset.from_oecd_csv(
-    path,
-    name="Pokrytí kolektivním vyjednáváním",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / CBC",
-)
-
-# Drop the OECD aggregate row (not an individual country)
-ds.df = ds.df[ds.df["geo"] != "OECD"].copy()
+# ── 1. Load ───────────────────────────────────────────────────────────────────
+# AdjCov (ICTWSS) for most EU-27; CBC ERB (OECD) for DE, SK, SI where AdjCov
+# data density is too low for a reliable series.
+ds = load_cb_coverage(start_period=2010)
 
 print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
