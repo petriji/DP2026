@@ -286,6 +286,28 @@ def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
     ann.set_clip_on(False)
 
 
+def _apply_figure_layout(ax: plt.Axes, *,
+                         hspace: float | None = None) -> None:
+    """Nastav layout figury: right=0.78 (místo pro inline popisky) + pad=1.5.
+
+    Přesune také titulek os (ax.set_title) do fig.suptitle, aby byl zarovnán
+    na střed celé figury, nikoli zúžené oblasti os.
+    Volejte na konci každé funkce vracející fig, místo _add_linestyle_key.
+    """
+    fig = ax.get_figure()
+    fig._tight_layout_kwargs = {"pad": 1.5}
+    spa: dict = {"right": 0.78}
+    if hspace is not None:
+        spa["hspace"] = hspace
+    fig._subplots_adjust_kwargs = spa
+    # Re-centre the axes title on the full figure width.
+    ax_top = fig.axes[0]
+    title_text = ax_top.get_title()
+    if title_text:
+        ax_top.set_title("")
+        fig.suptitle(title_text, y=1.0, fontsize=FONT_SIZE, va="bottom")
+
+
 def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
                        title_pad: float = 33,
                        svarc_linestyle: tuple = (0, (6, 1))) -> None:

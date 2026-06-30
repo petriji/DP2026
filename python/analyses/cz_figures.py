@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import (
     apply_style, cm2in, save_figure_tex, savefig,
-    _fmt_czk, _add_vertical_ref, _add_linestyle_key, _bottom_legend,
+    _fmt_czk, _add_vertical_ref, _apply_figure_layout,
 )
 
 # ── Pension-model calc helpers ────────────────────────────────────────────────
@@ -311,7 +310,16 @@ def plot_pension_comparison(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_cmp.add(p_idx)
 
-    _add_linestyle_key(ax)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    p_no_exp_end = float(pension_osvc_vydajovy(float(x_end), 0.0, years)) / 1_000
+    ax.annotate("bez výdajů", (x_end / 1_000, p_no_exp_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    p_svarc_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
+    ax.annotate("16 % výdajů", (x_end / 1_000, p_svarc_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
@@ -487,6 +495,16 @@ def plot_pension_solidarity(
                             fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_sol.add(p_idx)
 
+    # Inline popisky šedých křivek – bez výdajů a Švarc (horní panel)
+    p_no_exp_top = float(pension_osvc_vydajovy(float(x_end), 0.0, years)) / 1_000
+    ax_top.annotate("bez výdajů", (x_end / 1_000, p_no_exp_top),
+                    xytext=(3, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    p_svarc_top = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years)) / 1_000
+    ax_top.annotate("16 % výdajů", (x_end / 1_000, p_svarc_top),
+                    xytext=(3, 0), textcoords="offset points",
+                    fontsize=FONT_SIZE - 2, color="#888888", va="center")
+
     # ══════════════════════════════════════════════════════════════════════════
     # DOLNÍ PANEL – náhradový poměr [%] = důchod / čistý příjem × 100
     # ══════════════════════════════════════════════════════════════════════════
@@ -617,7 +635,24 @@ def plot_pension_solidarity(
                                 fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_bot.add(p_idx)
 
-    _add_linestyle_key(ax_bot, hspace=0.08)
+    # Inline popisky šedých křivek – bez výdajů a Švarc (dolní panel)
+    p_no_bot = float(pension_osvc_vydajovy(float(x_end_rr), 0.0, years))
+    ni_no_bot = float(net_income_osvc_vydajovy(float(x_end_rr), 0.0))
+    if ni_no_bot > 0:
+        rr_no_bot = p_no_bot / max(ni_no_bot, 1.0) * 100
+        if rr_no_bot <= _RR_CAP:
+            ax_bot.annotate("bez výdajů", (x_end_rr / 1_000, rr_no_bot),
+                            xytext=(3, 0), textcoords="offset points",
+                            fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    p_sv_bot = float(pension_osvc_vydajovy(float(x_end_rr), SVARC_EXPENSE_RATE, years))
+    ni_sv_bot = float(net_income_osvc_vydajovy(float(x_end_rr), SVARC_EXPENSE_RATE))
+    if ni_sv_bot > 0:
+        rr_sv_bot = p_sv_bot / max(ni_sv_bot, 1.0) * 100
+        if rr_sv_bot <= _RR_CAP:
+            ax_bot.annotate("16 % výdajů", (x_end_rr / 1_000, rr_sv_bot),
+                            xytext=(3, 0), textcoords="offset points",
+                            fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax_bot, hspace=0.08)
     return fig
 
 
@@ -704,7 +739,16 @@ def plot_tax_wedge_vs_income(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx2.add(p_idx)
 
-    _add_linestyle_key(ax)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    tw_no_end = float(tax_wedge_osvc_vydajovy(x_end, 0.0))
+    ax.annotate("bez výdajů", (x_end / 1_000, tw_no_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    tw_sv_end = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
+    ax.annotate("16 % výdajů", (x_end / 1_000, tw_sv_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
@@ -799,7 +843,16 @@ def plot_net_income_vs_income(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_ni.add(p_idx)
 
-    _add_linestyle_key(ax)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    ni_no_end = float(net_income_osvc_vydajovy(x_end, 0.0)) / 1_000
+    ax.annotate("bez výdajů", (x_end / 1_000, ni_no_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    ni_sv_end = float(net_income_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
+    ax.annotate("16 % výdajů", (x_end / 1_000, ni_sv_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
@@ -880,7 +933,16 @@ def plot_sp_vs_income(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_sp.add(p_idx)
 
-    _add_linestyle_key(ax)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    sp_no_end = float(sp_osvc_vydajovy(x_end, 0.0)) / 1_000
+    ax.annotate("bez výdajů", (x_end / 1_000, sp_no_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    sp_sv_end = float(sp_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE)) / 1_000
+    ax.annotate("16 % výdajů", (x_end / 1_000, sp_sv_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
@@ -1017,7 +1079,20 @@ def plot_pension_sp_ratio_vs_income(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx_rs.add(p_idx)
 
-    _add_linestyle_key(ax)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    pen_no_end = float(pension_osvc_vydajovy(float(x_end), 0.0, years))
+    sp_no_end  = float(sp_osvc_vydajovy(float(x_end), 0.0))
+    by_no_end  = INSURANCE_YEARS / (pen_no_end / max(sp_no_end, 1.0))
+    ax.annotate("bez výdajů", (x_end / 1_000, by_no_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    pen_sv_end = float(pension_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE, years))
+    sp_sv_end  = float(sp_osvc_vydajovy(float(x_end), SVARC_EXPENSE_RATE))
+    by_sv_end  = INSURANCE_YEARS / (pen_sv_end / max(sp_sv_end, 1.0))
+    ax.annotate("16 % výdajů", (x_end / 1_000, by_sv_end),
+                xytext=(3, 0), textcoords="offset points",
+                fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
@@ -1178,7 +1253,24 @@ def plot_tax_wedge_comparison(
                         fontsize=FONT_SIZE - 2, color=color, va="center")
             labeled_pidx.add(p_idx)
 
-    _add_linestyle_key(ax, title_pad=6)
+    # Inline popisky šedých křivek – bez výdajů a Švarc
+    tw_no_cmp = float(tax_wedge_osvc_vydajovy(x_end, 0.0))
+    ni_no_cmp = float(net_income_osvc_vydajovy(x_end, 0.0))
+    if ni_no_cmp > 0:
+        rr_no_cmp = float(pension_osvc_vydajovy(x_end, 0.0, years)) / max(ni_no_cmp, 1.0) * 100
+        if rr_no_cmp <= _RR_CAP:
+            ax.annotate("bez výdajů", (tw_no_cmp, rr_no_cmp),
+                        xytext=(4, 0), textcoords="offset points",
+                        fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    tw_sv_cmp = float(tax_wedge_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
+    ni_sv_cmp = float(net_income_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE))
+    if ni_sv_cmp > 0:
+        rr_sv_cmp = float(pension_osvc_vydajovy(x_end, SVARC_EXPENSE_RATE, years)) / max(ni_sv_cmp, 1.0) * 100
+        if rr_sv_cmp <= _RR_CAP:
+            ax.annotate("16 % výdajů", (tw_sv_cmp, rr_sv_cmp),
+                        xytext=(4, 0), textcoords="offset points",
+                        fontsize=FONT_SIZE - 2, color="#888888", va="center")
+    _apply_figure_layout(ax)
     return fig
 
 
