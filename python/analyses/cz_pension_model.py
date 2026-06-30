@@ -192,6 +192,12 @@ MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830
 MEDIAN_EMP_WAGE: int = 40_709   # CZK/měsíc hrubé mzdy (ISPV 2024)
 MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 54 469 Kč
 
+# ── Medián mzdy ICT specialistů (CZ-ISCO 25) ─────────────────────────────────
+# Zdroj: ISPV, mzdová sféra (podnikatelská sféra), H1 2025.
+# Skupina CZ-ISCO 25 – Specialisté v oblasti informačních a komunikačních technologií.
+IT_MEDIAN_WAGE: int = 80_000        # CZK/měsíc hrubé mzdy (ISPV H1 2025, CZ-ISCO 25)
+IT_MEDIAN_TOTAL_COST: int = int(IT_MEDIAN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 107 040 Kč
+
 # ── Hranice chudoby ───────────────────────────────────────────────────────────
 # Zdroj: ČSÚ, rok 2025. Definice: 60 % mediánu čistého příjmu domácnosti.
 POVERTY_THRESHOLD: int = 18_600  # CZK/měsíc (2025)
@@ -511,6 +517,9 @@ def plot_pension_comparison(
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
     if EMP_RH1_X <= income_max:
         _add_vertical_ref(ax, EMP_RH1_X / 1_000,
                           f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
@@ -653,6 +662,9 @@ def plot_pension_solidarity(
     _add_vertical_ref(ax_top, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
                       color="#888888")
+    _add_vertical_ref(ax_top, IT_MEDIAN_TOTAL_COST / 1_000,
+                      f"Medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      color="#1a7abf")
     if EMP_RH1_X <= income_max:
         _add_vertical_ref(ax_top, EMP_RH1_X / 1_000,
                           f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
@@ -720,6 +732,9 @@ def plot_pension_solidarity(
     _add_vertical_ref(ax_bot, MEDIAN_EMP_TOTAL_COST / 1_000,
                       "Medián\u00a0(zam.)",
                       color="#888888")
+    _add_vertical_ref(ax_bot, IT_MEDIAN_TOTAL_COST / 1_000,
+                      "Medián\u00a0ICT\u00a0(ISCO\u00a025)",
+                      color="#1a7abf")
     if EMP_RH1_X <= income_max:
         _add_vertical_ref(ax_bot, EMP_RH1_X / 1_000,
                           "1.\u00a0RH\u00a0(zam.)",
