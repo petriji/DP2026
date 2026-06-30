@@ -23,7 +23,7 @@
     grayAux/.style     ={->, dashed, line width=0.9pt, draw=gray!70, >=Stealth},
     plainLine/.style   ={line width=1.0pt, draw=black!85},
     lbl/.style         ={font=\sffamily\DPKVLoopBaseSize, fill=white,
-                          inner sep=1.5pt},
+                          inner sep=1.5pt}, %
   ]
     % --- forward path (left to right) ---
     \node[sum] (sum) at (0,0) {};
@@ -34,7 +34,7 @@
     \node[] (output) at (14.3,0) {};
 
     % --- reference input enters the summing junction from above ---
-    \node[align=center, text width=3.4cm] (goal) at (0,1.1)
+    \node[align=center] (goal) at (0,1.1)
       {Cíl};
     \draw[mainArrow] (goal) -- (sum.north);
     \node at (-0.6,0.55) {$+$};
@@ -42,13 +42,13 @@
 
     \draw[mainArrow] (sum) -- (legislature);
     \draw[mainArrow] (legislature) -- (system); %node[lbl, above, text width=1.5cm] {podnikatelské\\prostředí} (system);
-    \draw[mainArrow] (system) -- node[lbl, above] {Produkt} (sesum);
+    \draw[mainArrow] (system) -- node[lbl, above, yshift=2pt] {Produkt} (sesum);
     \path (system.south |- effects.west) coordinate (welfare_elbow); % \draw[mainArrow] (system.south) |- node[lbl, below right] {Blahobyt} (effects.west); syntax not passing in pgfutil of main, extra path needed
       \node[lbl, below right] at ($(welfare_elbow)+(0.05,-0.05)$) {Blahobyt};
     \draw[mainArrow] (system.south) -- (welfare_elbow) -- (effects.west); %node[lbl, above, text width=1.5cm] {společenské\\prostředí} (effects);
     \path (effects.east -| sesum.south) coordinate (sesum_elbow);
     \draw[mainArrow] (effects.east) -- (sesum_elbow) -- (sesum.south);
-    \draw[mainArrow] (sesum) -- node[lbl, above] {Výstup} (output);
+    \draw[mainArrow] (sesum) -- node[lbl, above, yshift=2pt] {Výstup} (output);
 
     % --- external disturbance enters the plant from above ---
     \node (dist) at ($(system.north)+(0,1.6)$) {};
