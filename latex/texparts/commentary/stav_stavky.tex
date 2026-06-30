@@ -3,11 +3,11 @@
 Pracovní konflikty --- stávky a~výluky --- odrážejí ochotu stran kolektivního
 vyjednávání sáhnout ke~krajním prostředkům.
 Obr.~\ref{fig:stav_stavky} zachycuje podíl ztracené pracovní doby
-vlivem pracovních konfliktů, odvozený z~dat \ac{ILO}
+vlivem pracovních konfliktů, odvozený z~dat \ac{MOP}
 (\texttt{STR\_DAYS\_ECO\_RT\_A}) s~doplněním národní statistiky Dánska
-(Statistics Denmark, ABST1), neboť DK svá data \ac{ILO} systematicky
+(Statistics Denmark, ABST1), neboť Dánsko svá data \ac{MOP} systematicky
 nereportuje.
-Zobrazeno je pouze devět zemí \acgen{EU} s~dostatečně kontinuálním pokrytím:
+Zobrazeno je pouze devět zemí \ac{EU} s~dostatečně kontinuálním pokrytím:
 Německo, Dánsko, Španělsko, Finsko, Francie, Maďarsko, Lotyšsko, Polsko a~Švédsko.
 
 Indikátorem na svislé ose je podíl ztracené pracovní doby: počet osobo-dní
@@ -20,28 +20,14 @@ přepočtem na 52,18~týdne v~roce a~osmihodinový pracovní den:
     = \acs{var-H}_{\acs{idx-w}} \cdot \frac{52{,}18}{8}.
 \end{equation}
 Hodnota 52,18~týdne odpovídá průměrné délce gregoriánského roku
-($365{,}2425/7 \approx 52{,}18$); osmihodinový den je standard \acs{ILO}.
-Tento přepočet umožňuje srovnatelně vyjádřit stávkovou aktivitu napříč zeměmi
-i~v~čase, nezávisle na národních rozdílech v~délce pracovního týdne.
-
-Indikátorem na svislé ose je podíl ztracené pracovní doby: počet osobo-dní
-ztracených stávkou, dělený odhadem ročního pracovního fondu na zaměstnance.
-Roční pracovní fond~$\acs{var-A}_{\acs{idx-z}}$ se počítá ze skutečné týdenní
-pracovní doby~$\acs{var-H}_{\acs{idx-w}}$ (Eurostat lfsa\_ewhan2)
-přepočtem na 52,18~týdne v~roce a~osmihodinový pracovní den:
-\begin{equation}\label{eq:annual_workdays}
-  \acs{var-A}_{\acs{idx-z}}
-    = \acs{var-H}_{\acs{idx-w}} \cdot \frac{52{,}18}{8}.
-\end{equation}
-Hodnota 52,18~týdne odpovídá průměrné délce gregoriánského roku
-($365{,}2425/7 \approx 52{,}18$); osmihodinový den je standard \acs{ILO}.
+($365{,}2425/7 \approx 52{,}18$); osmihodinový den je standard \acs{MOP}.
 Tento přepočet umožňuje srovnatelně vyjádřit stávkovou aktivitu napříč zeměmi
 i~v~čase, nezávisle na národních rozdílech v~délce pracovního týdne.
 
 \input{texparts/python/stav_stavky}
 
-Česká republika a~Slovensko v~datové sadě \ac{ILO} figurují jako prakticky
-nulové, což však nereflektuje skutečnou konfliktní aktivitu, nýbrž
+Česká republika a~Slovensko v~datové sadě \ac{MOP} figurují jako prakticky
+nulové, což však neodráží skutečnou konfliktní aktivitu, nýbrž
 administrativní podreportování.
 Samotný fakt, že v~datech chybí například stávka učitelů z~listopadu 2023,
 dokládá, že \emph{absence záznamu} v~mezinárodní databázi nelze ztotožňovat
@@ -53,12 +39,12 @@ a~zároveň patří mezi země s~nejvyšším pokrytím \ac{KS}
 Tato kombinace vyvracuje zjednodušenou tezi, že sociální mír je podmínkou
 efektivního \ac{KV}.
 
-Právní rámec stávky v~ČR je jedním z~nejrestriktivnějších v~\acloc{EU}.
+Právní rámec stávky v~ČR je jedním z~nejrestriktivnějších v~\ac{EU}.
 Zákon č.~2/1991~Sb.\ o~kolektivním vyjednávání~\cite{zakon_kv_1991}
 definuje stávku jako \emph{krajní prostředek} (§~16) podmíněný neúspěšnou
 mediací a~hlasováním nadpoloviční většiny zaměstnanců (§~17); řada sektorů
 veřejných služeb je z~práva na~stávku vůbec vyloučena (§~20).
-Výsledkem je, že česká stávková neaktivita nereflektuje mzdovou spokojenost
+Výsledkem je, že česká stávková neaktivita neodráží mzdovou spokojenost
 ani kvalitu sociálního dialogu, ale institucionální bariéry.
 
 Posílení práva na~kolektivní akci --- včetně snížení procesních bariér stávky

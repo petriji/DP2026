@@ -1,36 +1,36 @@
 Tabulka \ref{tab:korelace_tabulka} shrnuje výsledky korelační analýzy provedené na párovém panelu zemí OECD/\ac{EU} za dostupná roky od roku 2004.
-Zdrojem dat pro pokrytí kolektivního vyjednávání je databáze OECD/AIAS ICTWSS (upravená míra \textit{AdjCov} pro většinu zemí EU27; pro DE a~SK průzkumová míra ERB, viz popis dat); pro hustotu odborů tatáž databáze (TUD); výstupní proměnné pocházejí z~Eurostatu (lfsa\_ewhun2, nama\_10\_pc, ilc\_di12, earn\_nt\_net).
-Z~analýzy je vyřazeno Irsko: jeho \ac{HDP}/ob.~v~\acs{PPS} $\approx 237$ (\acs{EU}27\,=\,100) je zkresleno přesunem zisků nadnárodních korporací se sídlem v~Irsku (transfer pricing, relokace duševního vlastnictví) --- nereprezentuje skutečnou životní úroveň ani podmínky trhu práce.
-Estonsko (EE) a~Lotyšsko (LV) chybí kvůli neúplným hodnotám pokrytí \acs{KV} v~ICTWSS~\textit{AdjCov}; pro Lucembursko (LU) jsou data pokrytí dostupná pouze před rokem 2004.
+Zdrojem dat pro pokrytí kolektivními smlouvami je databáze OECD/AIAS ICTWSS (upravená míra \textit{AdjCov} pro většinu zemí \acs{geo-EU27}; pro Německo a~Slovensko průzkumová míra ERB, viz popis dat); pro odborovou organizovanost tatáž databáze (TUD); výstupní proměnné pocházejí z~Eurostatu (lfsa\_ewhun2, nama\_10\_pc, ilc\_di12, earn\_nt\_net).
+Z~analýzy je vyřazeno Irsko: jeho \ac{HDP}/ob.~v~\acs{PPS} $\approx 237$ (\acs{geo-EU27}\,=\,100) je zkresleno přesunem zisků nadnárodních korporací se sídlem v~Irsku (transfer pricing, relokace duševního vlastnictví) --- nereprezentuje skutečnou životní úroveň ani podmínky trhu práce.
+Estonsko a~Lotyšsko chybí kvůli neúplným hodnotám pokrytí \acs{KS} v~ICTWSS~\textit{AdjCov}; pro Lucembursko jsou data pokrytí dostupná pouze před rokem 2004.
 Každý řádek reportuje: počet párových pozorování $\acs{var-n}$ (geo$\times$rok po párování datových sad), Pearsonovo $\acs{var-r}$ na celém panelu (míra lineární asociace), Spearmanovo $\acs{var-rho}$ jako robustní neparametrická alternativa rezistentní vůči odlehlým hodnotám, a~$\acs{var-r}_{2024}$ = Pearsonovo $\acs{var-r}$ pro průřezová data z~roku 2024.
 Síla korelací je hodnocena dle Evansovy (1996) škály: $|\acs{var-r}| < 0{,}20$ velmi slabá; $0{,}20$--$0{,}39$ slabá; $0{,}40$--$0{,}59$ střední; $0{,}60$--$0{,}79$ silná; $\geq 0{,}80$ velmi silná.
 
 Výsledky jsou interpretovány po jednotlivých párech:
 
 \begin{itemize}
-  \item \textbf{Pokrytí \ac{KV} vs.~pracovní doba} ($\acs{var-r} = -0{,}483$; $\acs{var-rho} = -0{,}525$):
+  \item \textbf{Pokrytí \acs{KS} vs.~pracovní doba} ($\acs{var-r} = -0{,}483$; $\acs{var-rho} = -0{,}525$):
     panelová Pearsonova korelace svděčí o~\emph{střední záporné} asociaci --- vyšší pokrytí \ac{KS} je systematicky spojeno s~kratší průměrnou pracovní dobou.
     Spearmanovo $\acs{var-rho}$ je v~absolutní hodnotě vyšší než Pearsonovo $\acs{var-r}$, což indikuje robustní, přibližně monotónní vztah bez dominantních outlierů posouvájících Pearsonův koeficient.
     Průřezová korelace $\acs{var-r}_{2024} = -0{,}324$ (\emph{slabá--střední záporná}) je oproti panelové hodnotě slabematch --- v~aktuálním průřezu roku 2024 se tedy vztah projevuje méně výrazně, pravděpodobně vlivem strukturní konvergence pracovní doby v~rámci EU.
 
-  \item \textbf{Pokrytí \ac{KV} vs.~\ac{HDP}/ob.~(\ac{PPS})} ($\acs{var-r} = 0{,}566$; $\acs{var-rho} = 0{,}472$):
+  \item \textbf{Pokrytí \acs{KS} vs.~\ac{HDP}/ob.~(\ac{PPS})} ($\acs{var-r} = 0{,}566$; $\acs{var-rho} = 0{,}472$):
     \emph{střední až silná kladná} asociace na celém panelu; Pearsonovo $\acs{var-r}$ je o~0,094 vyšší než Spearmanovo $\acs{var-rho}$, což naznačuje, že panelový výsledek je citělný na několik hodnotnějších pozorovaní (nejpravděpodobněji severskemi zeměmi s~extrémně vysokým pokrytím i~\ac{HDP}).
     Vyřazení Irska posillo panelový signál (Irsko kombinovalo nízké pokrytí s~extrémním \ac{HDP}, což dříve tlumilo kladnou korelaci); průřezová hodnota $\acs{var-r}_{2024} = 0{,}448$ (\emph{střední kladná}) v~roce 2024 zůstává statisticky středně silná.
 
-  \item \textbf{Pokrytí \ac{KV} vs.~Gini} ($\acs{var-r} = -0{,}303$; $\acs{var-rho} = -0{,}238$):
+  \item \textbf{Pokrytí \acs{KS} vs.~Gini} ($\acs{var-r} = -0{,}303$; $\acs{var-rho} = -0{,}238$):
     panelová korelace je \emph{slabá záporná}; divergence mezi Pearsonem a~Spearmanem se zúžila na 0,065 (dříve 0,159 při zahrnutí Irska), což potvrzuje, že Irsko bylo strukturálním outliernm narušujícím tuto korelaci.
-    Průřezová hodnota $\acs{var-r}_{2024} = +0{,}481$ je kladná, což na první pohled odporuje teorii mzdové komprese; vysvětlení je institucionální: v~průřezu roku 2024 mají státy s~erga omnes pokrytím (FR, IT, BE, AT, ES --- všechny $\geq 90\,\%$) vyšší disponibilní Gini než řada středoevropských zemí s~nízkým pokrytím, a~to proto, že jejich Gini disponibilního příjmu je taženo nahoru vysokými kapitálovými příjmy a~odměnami ve finančním sektoru, nikoliv absencí mzdové komprese.
+    Průřezová hodnota $\acs{var-r}_{2024} = +0{,}481$ je kladná, což na první pohled odporuje teorii mzdové komprese; vysvětlení je institucionální: v~průřezu roku 2024 mají státy s~erga omnes pokrytím (Francie, Itálie, Belgie, Rakousko a~Španělsko --- všechny $\geq 90\,\%$) vyšší disponibilní Gini než řada středoevropských zemí s~nízkým pokrytím, a~to proto, že jejich Gini disponibilního příjmu je taženo nahoru vysokými kapitálovými příjmy a~odměnami ve finančním sektoru, nikoliv absencí mzdové komprese.
     Panelový koeficient ($-0{,}303$) sledující \emph{změny} v~čase v~rámci zemí je proto informačně hodnotnější: dokumentuje, že kdykoli pokrytí \ac{KS} v~dané zemi kleslo, Gini se tendovalo zvýšit.
     Příčinný mechanismus KV~$\to$~Gini tedy operuje zejména přes mzdovou distribuci (primární příjmy), nikoliv přes disponibilní příjmy ovlivněné redistribucí.
 
-  \item \textbf{Pokrytí \ac{KV} vs.~příjdem/\ac{HDP}} ($\acs{var-r} = 0{,}210$; $\acs{var-rho} = 0{,}177$):
+  \item \textbf{Pokrytí \acs{KS} vs.~příjmem/\ac{HDP}} ($\acs{var-r} = 0{,}210$; $\acs{var-rho} = 0{,}177$):
     \emph{slabá kladná} asociace, přibližně konzistentní v~obou metodách (rozdíl 0,033).
     Relativně nízká hodnota je z~velké části artefaktem konstrukce ukazatele: \ac{HDP}/ob.~je sám o~sobě pozitivně korelovan s~\ac{KV} pokrytím ($\acs{var-r} = 0{,}566$), takže ve jmenovateli podílu čistý~příjem/\ac{HDP} oba členové rostou společně s~pokrytím a~efekt se vzájemně tlumí.
     Tento výsledek tedy nesvědčí o~tom, že \ac{KV} instituce nezvedají mzdy, ale o~tom, že tento konkrétní relativní ukazatel není citlivým testem dané hypotézy --- absolutní příjmová míra (předchozí pár) zůstává spolehlivějším indikátorem.
 
-  \item \textbf{Hustota odborů vs.~Gini} ($\acs{var-r} = -0{,}458$; $\acs{var-rho} = -0{,}462$):
+  \item \textbf{Odborová organizovanost vs.~Gini} ($\acs{var-r} = -0{,}458$; $\acs{var-rho} = -0{,}462$):
     tento pár je statisticky nejrobustjším v~celé tabulce: Pearsonovo $\acs{var-r}$ a~Spearmanovo $\acs{var-rho}$ jsou prakticky totožné (rozdíl 0,004), což svědčí o~přibližně lineárním vztahu bez systematického vlivu odlehjících hodnot.
-    Průřezová korelace $\acs{var-r}_{2024} = -0{,}627$ dosáží \emph{silné záporné} asociace (Evans: $0{,}60$--$0{,}79$), výrazně posilující celkový závěr: v~roce 2024 je hustota odborů nejsilnjším institucionálním prediktorem nízkého Gini ze všech testovaných párů.
+    Průřezová korelace $\acs{var-r}_{2024} = -0{,}627$ dosáží \emph{silné záporné} asociace (Evans: $0{,}60$--$0{,}79$), výrazně posilující celkový závěr: v~roce 2024 je odborová organizovanost nejsilnějším institucionálním prediktorem nízkého Gini ze všech testovaných párů.
     Shoda panelových koeficientů a~jejich posesílení v~průřezu rovněž zpětně potvrzuje, že kladná průřezová hodnota u~páru \ac{KV}~vs.~Gini je specifická pro pokrytí (kde strukturní outlieré jako Francie deformují průřezový vztah), nikoliv obecná vlastnost vztahu institucí \ac{KV} k~nerovnosti.
 \end{itemize}
 
