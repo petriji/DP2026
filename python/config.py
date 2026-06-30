@@ -127,3 +127,10 @@ GEO_NOT_IN_EUROSTAT: frozenset[str] = frozenset([
 CMAP_DIVERGING = "RdYlBu_r"
 # Sequential colourmap for single-variable maps
 CMAP_SEQUENTIAL = "RdYlGn_r"
+
+# Choropleth print mode: optionally blend all map colormaps toward white.
+# This is applied centrally in statout.map_europe / statout.map_cz and affects
+# both default and explicitly-set cmap values used by analysis scripts.
+CHOROPLETH_BLEND_WITH_WHITE: bool = False
+# White blend in percent (0 = no change, 100 = fully white).
+CHOROPLETH_WHITE_BLEND_PCT: float = 30.0

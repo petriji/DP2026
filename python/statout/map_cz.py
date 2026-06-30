@@ -24,9 +24,14 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpe
+import numpy as np
 import pandas as pd
 
 from config import (
+    CMAP_SEQUENTIAL,
+    CMAP_DIVERGING,
+    CHOROPLETH_BLEND_WITH_WHITE,
+    CHOROPLETH_WHITE_BLEND_PCT,
     FIGURE_TEXT_SIZE,
     FIGURE_TITLE_SIZE,
     MAP_COUNTRY_LABEL_SIZE,
@@ -60,6 +65,22 @@ _CZ_YLIM_DEFAULT = (2_755_000, 3_195_000)
 
 # Module-level cache
 _NUTS_ALL: "gpd.GeoDataFrame | None" = None
+
+
+def _blend_cmap_with_white(cmap_name: str, n_colors: int = 256) -> mpl.colors.Colormap:
+    """Return cmap optionally blended toward white for print-friendlier output."""
+    base = plt.get_cmap(cmap_name)
+    n = max(2, int(n_colors))
+    rgba = base(np.linspace(0.0, 1.0, n))
+
+    if CHOROPLETH_BLEND_WITH_WHITE:
+        blend = float(CHOROPLETH_WHITE_BLEND_PCT) / 100.0
+        blend = min(1.0, max(0.0, blend))
+        rgba[:, :3] = rgba[:, :3] * (1.0 - blend) + blend
+
+    return mpl.colors.LinearSegmentedColormap.from_list(
+        f"{base.name}_wb{int(round(CHOROPLETH_WHITE_BLEND_PCT))}", rgba, N=n
+    )
 
 
 def _get_nuts_all() -> gpd.GeoDataFrame:
@@ -199,8 +220,9 @@ def choropleth_cz(
         vmin_, vmax_ = mid - half, mid + half
 
     chosen_cmap = cmap or (CMAP_DIVERGING if diverging else CMAP_SEQUENTIAL)
+    chosen_cmap = _blend_cmap_with_white(chosen_cmap, 256)
     norm = mpl.colors.Normalize(vmin=vmin_, vmax=vmax_)
-    cmap_obj = plt.get_cmap(chosen_cmap)
+    cmap_obj = chosen_cmap
 
     # ── Create figure ─────────────────────────────────────────────────────────
     if ax is None:
