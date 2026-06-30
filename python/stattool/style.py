@@ -76,9 +76,12 @@ def apply_style() -> None:
             "lines.markersize": 4,
             # --- Grid ---
             "axes.grid": True,
-            "grid.linewidth": 0.4,
-            "grid.alpha": 0.5,
+            "axes.grid.which": "major",
+            "grid.linewidth": 0.5,
+            "grid.alpha": 0.45,
             "grid.color": "#CCCCCC",
+            "xtick.minor.visible": True,
+            "ytick.minor.visible": True,
             # --- Spines ---
             "axes.spines.top": False,
             "axes.spines.right": False,
@@ -300,6 +303,10 @@ def _apply_figure_layout(ax: plt.Axes, *,
     if hspace is not None:
         spa["hspace"] = hspace
     fig._subplots_adjust_kwargs = spa
+    # Per-axes grid: major more visible than minor.
+    for _ax in fig.axes:
+        _ax.grid(True, which="major", alpha=0.45, linewidth=0.5, color="#CCCCCC")
+        _ax.grid(True, which="minor", alpha=0.18, linewidth=0.3, color="#CCCCCC")
     # Re-centre the axes title on the full figure width.
     ax_top = fig.axes[0]
     title_text = ax_top.get_title()
