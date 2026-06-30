@@ -101,16 +101,16 @@
 \gdef\@CTUgitsha{}
 % \normostrana is the public command used by latexmkrc's tmp file.
 \providecommand\normostrana[1]{\gdef\@normostrana{#1}}
-% Load tmp files only at \AtBeginDocument.  The author/email temp files contain
-% internal macros such as \@author, so read them under \makeatletter; otherwise
-% TeX tokenizes \@author as \@ + "author" and the poster keeps the placeholder.
+% Load tmp files only at \AtBeginDocument: the latexmkrc-generated stats and
+% textcheck files contain their own \makeatletter…\makeatother pair, which
+% would permanently change @'s catcode if read during class loading (where @
+% is a letter).  At \AtBeginDocument @ is "other" anyway, so the embedded
+% \makeatletter/other works as intended and is locally scoped.
 \AtBeginDocument{%
-  \makeatletter
   \InputIfFileExists{build/main-gitauthor.tmp}{}{}%
   \InputIfFileExists{build/main-gitemail.tmp}{}{}%
   \InputIfFileExists{build/main-normostrana.tmp}{}{}%
   \InputIfFileExists{build/main-stats.tmp}{}{}%
-  \makeatother
 }
 
 % Switch main language at \begin{document} when english option is given.
@@ -130,8 +130,7 @@
 \RequirePackage{float}
 \RequirePackage{caption}
 \RequirePackage{subcaption}
-\DeclareCaptionFont{CTUPpostercaption}{\sffamily\fontsize{14.5}{16.8}\selectfont}
-\captionsetup{font=CTUPpostercaption,labelfont=bf,skip=3pt}
+\captionsetup{font=small,labelfont=bf,skip=4pt}
 
 \RequirePackage{amsmath,amsfonts,amssymb}
 \RequirePackage{siunitx}
@@ -155,12 +154,7 @@
 \definecolor{CTUgrey}{RGB}{84,88,90}
 \definecolor{CTUlight}{RGB}{235,238,243}
 
-% Keep map labels readable on colored backgrounds (same as thesis class).
-\RequirePackage[pdftex]{contour}
-\contourlength{0.6pt}
-
 \RequirePackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
@@ -185,13 +179,6 @@
   bookmarks     = false,
   pdfpagelayout = SinglePage,
 ]{hyperref}
-
-% Tooltip annotations used by generated PGF assets.
-\RequirePackage{pdfcomment}
-
-% Compatibility macro referenced by generated PGF strings from thesis pipeline.
-% On posters we keep the tooltip but do not create a goto destination link.
-\newcommand{\CTUtooltiplink}[3]{\pdftooltip{#2}{#3}}
 
 \RequirePackage[
   backend     = biber,
@@ -240,7 +227,7 @@
       urlseen = {visited on},%
     }%
   }%
-  \ifCTUP@english\CTUP@bs@english\else\CTUP@bs@czech\fi
+  \ifx\CTUP@biblang\CTUP@biblang@en\CTUP@bs@english\else\CTUP@bs@czech\fi
 }
 \def\CTUP@biblang@en{english}
 
@@ -251,22 +238,6 @@
 %   bibenvname        — keep biblatex's default `bibliography` list env
 % Keeps the in-text \cite{} appearance untouched (already uses brackets).
 \DeclareFieldFormat{labelnumberwidth}{\mkbibbrackets{#1}}
-\setlength{\biblabelsep}{1em}
-
-% Global bibliography output policy (keeps .bib content intact):
-%   - do not print the note field,
-%   - shorten long personal-author lists to "et al.",
-%   - keep full author lists for online/misc/report items
-%     (typically institutions or contract parties).
-\ExecuteBibliographyOptions{maxbibnames=2,minbibnames=1}
-\AtEveryBibitem{%
-  \clearfield{note}%
-  \ifentrytype{online}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
-  \ifentrytype{misc}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
-  \ifentrytype{report}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
-}
-\DefineBibliographyStrings{czech}{andothers = {et\addabbrvspace al\adddot}}
-\DefineBibliographyStrings{english}{andothers = {et\addabbrvspace al\adddot}}
 
 % ----------------------------------------------------------------------------
 % Acro — loaded so that thesis text reused on the poster (with \ac{}, \acs{},
@@ -289,7 +260,7 @@
 % ----------------------------------------------------------------------------
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.45\baselineskip}
+\setlength{\parskip}{0.6\baselineskip}
 \renewcommand{\baselinestretch}{1.05}
 
 % Section headings — large, sans-serif, blue
@@ -297,7 +268,7 @@
 \titleformat{\section}
   {\sffamily\bfseries\color{CTUblue}\fontsize{30}{36}\selectfont}
   {}{0pt}{#1}
-\titlespacing*{\section}{0pt}{0.9\baselineskip}{0.3\baselineskip}
+\titlespacing*{\section}{0pt}{1.2\baselineskip}{0.4\baselineskip}
 
 \titleformat{\subsection}
   {\sffamily\bfseries\color{CTUgrey}\fontsize{22}{26}\selectfont}
@@ -422,7 +393,7 @@
 % Inside: standard text, \section{...}, figures via \captionof{figure}{...}
 %   (use [H] floats sparingly — multicol does not support standard floats).
 \newenvironment{posterbody}
-  {\begin{multicols*}{2}\fontsize{15.5}{18.2}\selectfont}
+  {\begin{multicols*}{2}}
   {\end{multicols*}}
 
 % ----------------------------------------------------------------------------
@@ -444,14 +415,14 @@
       colbacktitle= CTUblue,
       fonttitle   = \large\bfseries,
     ]
-    \sffamily #2%
-  \end{tcolorbox}\par%
+    \itshape #2%
+  \end{tcolorbox}\par\vspace{4mm}%
   \endgroup
 }
 \RequirePackage[most]{tcolorbox}
 
-\newcommand{\abstractCS}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractCS}{#1}\vspace{0.5\baselineskip}}
-\newcommand{\abstractEN}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractEN}{#1}\vspace{0.5\baselineskip}}
+\newcommand{\abstractCS}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractCS}{#1}}
+\newcommand{\abstractEN}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractEN}{#1}}
 
 % ----------------------------------------------------------------------------
 % English summary at the end of the body
@@ -541,37 +512,22 @@
 %   The optional argument is forwarded to \printbibliography so callers can
 %   pass `keyword=poster`, `nottype=online`, etc.
 % ----------------------------------------------------------------------------
-\newsavebox{\CTUP@bibbox}
-\newlength{\CTUP@posterbibmaxheight}
-\setlength{\CTUP@posterbibmaxheight}{55mm}
-\newcommand{\posterbibliographymaxheight}[1]{%
-  \setlength{\CTUP@posterbibmaxheight}{#1}%
-}
-\newcommand{\CTUP@posterbibcontent}[1]{%
-  {\sffamily\bfseries\color{CTUblue}\fontsize{24}{28}\selectfont
+\newcommand{\posterbibliography}[1][]{%
+  \par\vspace{4mm}%
+  \begingroup
+  % Heading — same look as \section but no \section{} so no TOC entry attempt.
+  {\sffamily\bfseries\color{CTUblue}\fontsize{30}{36}\selectfont
     \CTUP@lbl@references\par}%
-  \vspace{1mm}%
-  \renewcommand*{\bibfont}{\scriptsize}%
-  \setlength{\bibitemsep}{0.15\baselineskip}%
-  \setlength{\bibhang}{1.2em}%
+  \vspace{2mm}%
+  % Tighter list metrics for a poster column.
+  \renewcommand*{\bibfont}{\small}%
+  \setlength{\bibitemsep}{0.4\baselineskip}%
+  \setlength{\bibhang}{1.6em}%
+  % Force the bibliography strings („Dostupné z“ / „Available from“, etc.)
+  % to the chosen biblio language regardless of per-entry langid by switching
+  % babel main language for the duration of \printbibliography.
   \selectlanguage{\CTUP@biblang}%
   \printbibliography[heading=none,#1]%
-}
-\newcommand{\posterbibliography}[1][]{%
-  \par\vspace{2mm}%
-  \begingroup
-  \sbox{\CTUP@bibbox}{%
-    \begin{minipage}{\linewidth}%
-      \CTUP@posterbibcontent{#1}%
-    \end{minipage}%
-  }%
-  \dimen0=\dimexpr\ht\CTUP@bibbox+\dp\CTUP@bibbox\relax
-  \ifdim\dimen0>\CTUP@posterbibmaxheight
-    \resizebox{!}{\CTUP@posterbibmaxheight}{\usebox{\CTUP@bibbox}}%
-  \else
-    \usebox{\CTUP@bibbox}%
-  \fi
-  \par
   \endgroup
 }
 
