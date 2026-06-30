@@ -53,14 +53,47 @@ script   = "analyses/union_gini_scatter.py"
 texparts = ["union_gini_scatter"]
 pics     = ["union_gini_scatter"]
 
-[cz_pension]
-script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_income", "cz_pension_solidarity"]
-pics     = ["cz_pension_income", "cz_pension_solidarity"]
+[ipp_wage_growth]
+script   = "analyses/ipp_wage_growth.py"
+texparts = ["ipp_wage_growth"]
+pics     = ["ipp_wage_growth"]
 
-[cz_tax_model]
-script   = "analyses/cz_tax_model.py"
-texparts = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_sp_vs_income", "cz_pension_sp_ratio"]
-pics     = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_sp_vs_income", "cz_pension_sp_ratio"]
+[ipp_supplementary]
+script   = "analyses/ipp_supplementary.py"
+texparts = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+pics     = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+
+[rscp_sector_wages]
+script   = "analyses/rscp_sector_wages.py"
+texparts = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
+pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
+
+[rscp_stratification]
+script   = "analyses/rscp_stratification.py"
+texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+
+[old_age_dependency]
+script   = "analyses/old_age_dependency_map.py"
+texparts = ["old_age_dependency_map"]
+pics     = ["old_age_dependency_map"]
+
+[employment_rate]
+script   = "analyses/employment_rate_timeline.py"
+texparts = ["employment_rate_timeline"]
+pics     = ["employment_rate_timeline"]
+
+[income_pps]
+script   = "analyses/income_pps_map.py"
+texparts = ["income_pps_map"]
+pics     = ["income_pps_map"]
+
+[gini_income]
+script   = "analyses/gini_income_timeline.py"
+texparts = ["gini_income_timeline"]
+pics     = ["gini_income_timeline"]
+
+[wage_pension_distribution]
+script   = "analyses/wage_pension_distribution.py"
+texparts = ["wage_pension_distribution"]
+pics     = ["wage_pension_distribution"]
