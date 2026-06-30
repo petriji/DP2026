@@ -1,0 +1,589 @@
+[
+  {
+    "stem": "eu_apz_vydaje_2004",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2004,
+      2023
+    ],
+    "wrapper_years": [
+      2004,
+      2023
+    ],
+    "message": "caption years [2004, 2023] do not include target year 2025"
+  },
+  {
+    "stem": "eu_bohatstvi_top1_wid",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "eu_cenova_hladina",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "eu_danovy_klin",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_gini_prijem",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2003,
+      2025
+    ],
+    "wrapper_years": [
+      2003,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_hustota_mapa",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "eu_ict_gender",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_mne_mapa",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "eu_odvetvove_mzdy_bar",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_odvetvove_mzdy_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_osvc_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_pokryti_kv_mapa",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "eu_prijem_distribuce",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "eu_produktivita_prijem_trajektorie",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2008,
+      2025
+    ],
+    "wrapper_years": [
+      2008,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "korelace_model_cz",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [],
+    "wrapper_years": [],
+    "message": "caption found but no year token detected"
+  },
+  {
+    "stem": "korelace_scatter",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "korelace_tabulka",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2004,
+      2024
+    ],
+    "wrapper_years": [],
+    "message": "caption years [2004, 2024] do not include target year 2025"
+  },
+  {
+    "stem": "practical_ternary_social_dialog",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2025,
+      2026
+    ],
+    "wrapper_years": [
+      2025,
+      2026
+    ],
+    "message": "wrapper string macros ['PracticalTernarySocialDialogCaption'] do not include target year 2025"
+  },
+  {
+    "stem": "practical_ternary_strength_map",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [],
+    "wrapper_years": [],
+    "message": "caption found but no year token detected"
+  },
+  {
+    "stem": "prakticka_srovnani",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [],
+    "message": ""
+  },
+  {
+    "stem": "problemy_danovy_klin_cz",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2026
+    ],
+    "wrapper_years": [
+      2026
+    ],
+    "message": "caption years [2026] do not include target year 2025"
+  },
+  {
+    "stem": "problemy_dojezdeni_nuts2",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "problemy_dojezdeni_vyvoj",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2005,
+      2025
+    ],
+    "wrapper_years": [
+      2005,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "problemy_duchod_solidarita",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2026
+    ],
+    "wrapper_years": [
+      2026
+    ],
+    "message": "caption years [2026] do not include target year 2025"
+  },
+  {
+    "stem": "problemy_gpg_sektor",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2010,
+      2024
+    ],
+    "wrapper_years": [
+      2010,
+      2024
+    ],
+    "message": "caption years [2010, 2024] do not include target year 2025"
+  },
+  {
+    "stem": "problemy_gpg_stratifikace",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2022
+    ],
+    "wrapper_years": [
+      2022
+    ],
+    "message": "caption years [2022] do not include target year 2025"
+  },
+  {
+    "stem": "problemy_jazyky_isced",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2022
+    ],
+    "wrapper_years": [
+      2022
+    ],
+    "message": "caption years [2022] do not include target year 2025"
+  },
+  {
+    "stem": "problemy_mzda_duchod",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2024,
+      2025
+    ],
+    "wrapper_years": [
+      2024,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "problemy_regiony_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "problemy_verejny_soukromy",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_arope_dual",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2017,
+      2025
+    ],
+    "wrapper_years": [
+      2017,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_hdp_vyvoj",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2004,
+      2025
+    ],
+    "wrapper_years": [
+      2004,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_hustota_vyvoj_2004",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2004,
+      2024
+    ],
+    "wrapper_years": [
+      2004,
+      2024
+    ],
+    "message": "caption years [2004, 2024] do not include target year 2025"
+  },
+  {
+    "stem": "stav_ipp_mzdy",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2007,
+      2025
+    ],
+    "wrapper_years": [
+      2007,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_ipp_rozsah",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2007,
+      2025
+    ],
+    "wrapper_years": [
+      2007,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_kolektivni_spory_vyvoj",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2013,
+      2025
+    ],
+    "wrapper_years": [
+      2013,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_korporatni_dan_mapa",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2023
+    ],
+    "wrapper_years": [
+      2023
+    ],
+    "message": "caption years [2023] do not include target year 2025"
+  },
+  {
+    "stem": "stav_socialni_mir_skore_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_stavky",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2000,
+      2025
+    ],
+    "wrapper_years": [
+      2000,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_struktura_prac_sily",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [],
+    "message": ""
+  },
+  {
+    "stem": "stav_volna_mista_vyvoj",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2010,
+      2025
+    ],
+    "wrapper_years": [
+      2010,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "stav_zamestnanost",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2009,
+      2025
+    ],
+    "wrapper_years": [
+      2009,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "vyhled_digit_dovednosti_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "vyhled_porodnost_mapa",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      2024
+    ],
+    "wrapper_years": [
+      2024
+    ],
+    "message": "caption years [2024] do not include target year 2025"
+  },
+  {
+    "stem": "vyhled_porodnost_vyvoj",
+    "status": "warning",
+    "target_year": 2025,
+    "years": [
+      1990,
+      2024
+    ],
+    "wrapper_years": [
+      1990,
+      2024
+    ],
+    "message": "caption years [1990, 2024] do not include target year 2025"
+  },
+  {
+    "stem": "vyhled_vzdelani_vyvoj",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2004,
+      2025
+    ],
+    "wrapper_years": [
+      2004,
+      2025
+    ],
+    "message": ""
+  },
+  {
+    "stem": "vyhled_zavislost_mapa",
+    "status": "ok",
+    "target_year": 2025,
+    "years": [
+      2025
+    ],
+    "wrapper_years": [
+      2025
+    ],
+    "message": ""
+  }
+]

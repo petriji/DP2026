@@ -1,0 +1,196 @@
+% ==============================================================================
+% sec:datova_analyza --- metodika zpracování dat
+% ==============================================================================
+
+Datová část práce je vystavěna jako reprodukovatelný řetězec -- zdrojová data se
+stahují a~zpracovávají programaticky ve skriptech v~jazyce Python,
+a~výstupy se zapisují do~grafů a~tabulek vkládaných do~\LaTeX{}u. Doprovodný text
+slouží k~vysvětlení, jak byl ukazatel sestaven, jaký má rozsah a~jaký význam má
+pro argument práce. Pokud není uvedeno jinak, mapové a~časové grafy zachycují
+nejnovější společný rok dostupný ve zdrojových datech a~chybějící hodnoty nejsou
+nahrazovány výpočtem nebo odhadem. Bližší dokumentace programatického zpracování je dostupná v~příloze~1.\par
+
+\paragraph{Harmonizovaná evropská srovnání}\label{par:data_zdroje} vycházejí primárně z~Eurostatu a~z~databází
+\acs{OECD}, zejména \acs{ICTWSS} pro odborovou organizovanost a~pokrytí
+\aclins{KS} a~\acs{LMP} pro výdaje na~\aclacc{APZ}. Národní mzdové analýzy pro
+\ac{ČR} využívají \acs{ISPV}, zatímco vyjednané mzdové a~pracovněprávní
+parametry kolektivních smluv vycházejí z~\acs{IPP}.\par
+
+\paragraph{Chybějící hodnoty}\label{par:missing} se zobrazují jako
+\texttt{--}, v~mapách jako šedá území. Důvodem může být pozdní aktualizace,
+nízká dostupnost dat nebo skutečnost, že zdroj nepokrývá všechny země
+stejně. Zvláštní pozornost vyžadují databáze \acgen{OECD}, které jsou vymezeny
+členstvím v~\acloc{OECD}, nikoli členstvím v~\acloc{EU}. Proto se v~datech
+\acs{ICTWSS} a~\acs{LMP} objevují i~země mimo \aclacc{EU}, zatímco některé
+členské státy \aclgen{EU} mají neúplné datové řady. Eurostatové datové sady
+naopak zpravidla pokrývají všech 27 členských států \aclgen{EU}.\par
+U~zemí s~datovou mezerou mohla být použita starší data, i~tato odchylka se uvádí 
+u~těch výstupů, které jsou dotčeny.\par
+
+\paragraph{Přepočet kupní síly}\label{par:pps_metodika} je pro mezistátní srovnání příjmů, nákladů práce a~produktivity nutný, protože 
+nominální hodnota nezohledňuje rozdíly v~cenové hladině mezi zeměmi. Eurostat k~tomu publikuje 
+\acf{PPP} a~odvozený agregát \acf{PPS}. Převod nominální hodnoty vyjádřené
+v~národní měně na~hodnotu podle kupní srovnatelnosti (\acs{PPS}) probíhá dělením
+příslušnou paritou kupní síly \(\acs{PPP}_{\acs{idx-i}}\):
+\begin{equation}
+  \acs{var-x}^{\acs{PPS}}_{\acs{idx-i}} = \frac{\acs{var-x}_{\acs{idx-i}}}{\acs{PPP}_{\acs{idx-i}}}.
+  \label{eq:pps_konverze}
+\end{equation}
+Pakliže jsou hodnoty vyjádřeny v~eurech, používá se konzistentní převod přes
+index srovnatelné cenové hladiny \(\acs{PLI}_{\acs{idx-i}}\) (Price Level Index) z~datasetu \texttt{prc\_ppp\_ind}:
+\begin{equation}
+  \acs{var-x}^{\acs{PPS}}_{\acs{idx-i}} = \frac{\acs{var-x}^{\acs{EUR}}_{\acs{idx-i}}}{\acs{PLI}_{\acs{idx-i}}/100},
+  \label{eq:lci_eur_pps}
+\end{equation}
+kde \(\acs{var-x}^{\acs{EUR}}_{\acs{idx-i}}\) představuje nominální hodnotu v~eurech. Pro analýzy nákladů práce
+z~datasetu \texttt{lc\_lci\_lev} se uplatňuje tento převod za použití cenové hladiny \(\acs{PLI}\) odpovídající \acloc{HDP} (\texttt{PLI\_EU27\_2020.GDP}).
+Pokud poslední rok nákladových dat ještě nemá publikovaný index cenové hladiny, využívá se nejbližší dostupný předchozí rok. Tento postup
+je jednotně použit napříč celou prací tam, kde se porovnávají paritně očištěné mzdové nebo nákladové ukazatele mezi zeměmi.\par
+
+\paragraph{Odvozené hodinové ukazatele}\label{par:hodinove_ukazatele} vstupují do~korelační a~komparativní části jako hodinový čistý příjem v~\aclloc{PPS},
+protože roční čistý příjem samotný nepostihuje rozdíly v~délce skutečné pracovní
+doby. Roční čistý příjem standardizované osoby \acs{idx-AW100} se dělí
+odhadovaným ročním pracovním fondem, který vzniká násobením skutečné týdenní
+odpracované doby průměrným počtem týdnů v~roce:
+\begin{equation}
+  \acs{var-w}^{\acs{PPS}}_{\acs{idx-n},\acs{idx-h},\acs{idx-AW100}}
+    = \frac{\acs{var-y}^{\acs{PPS}}_{\acs{idx-n},\acs{idx-AW100},\acs{idx-a}}}
+           {\acs{var-H}_{\acs{idx-w}} \cdot 52{,}18}.
+  \label{eq:pps_hourly}
+\end{equation}
+\par
+
+\paragraph{Indexové řady a~srovnávací osa}\label{par:normalizace} jsou používány tam, kde je podstatnější relativní pozice a~trend konvergence než
+absolutní nominální úroveň. U~\aclgen{HDP} na obyvatele, produktivity práce,
+cenové hladiny a~některých příjmových ukazatelů je referenční hodnotou průměr
+\aclgen{EU} nastavený na~100. Stabilní srovnávací šestici tvoří \ac{ČR}, Rakousko, Německo, Dánsko,
+Polsko a~Slovensko; mapy a~korelační analýzy pracují podle dostupnosti dat se
+širším evropským panelem. U~kompozitních modelů (včetně ternární analýzy)
+jsou dílčí proměnné převáděny metodou min-max na společnou škálu \SIrange{0}{100}{}:
+\begin{equation}
+  \acs{var-z}^{\ast}_{\acs{idx-i},\acs{idx-k}}
+    = \frac{\acs{var-x}_{\acs{idx-i},\acs{idx-k}} - \min\limits_{\acs{idx-k}\in\acs{geo-EU27}} \acs{var-x}_{\acs{idx-i},\acs{idx-k}}}
+           {\max\limits_{\acs{idx-k}\in\acs{geo-EU27}} \acs{var-x}_{\acs{idx-i},\acs{idx-k}} - \min\limits_{\acs{idx-k}\in\acs{geo-EU27}} \acs{var-x}_{\acs{idx-i},\acs{idx-k}}}
+      \cdot 100,
+  \label{eq:minmax_general}
+\end{equation}
+kde \(\acs{var-x}_{\acs{idx-i},\acs{idx-k}}\) je hodnota indikátoru \(\acs{idx-i}\) pro zemi \(\acs{idx-k}\) a~jmenovatel
+vyjadřuje rozpětí napříč panelovou skupinou \(\acs{geo-EU27}\). U~indikátorů,
+u~nichž vyšší hodnota znamená zhoršení výsledku, se používá inverzní transformace:
+\begin{equation}
+  \tilde{\acs{var-z}}^{\ast}_{\acs{idx-i},\acs{idx-k}} = 100 - \acs{var-z}^{\ast}_{\acs{idx-i},\acs{idx-k}}.
+  \label{eq:minmax_inverse_general}
+\end{equation}
+Po normalizaci jsou jednotlivé složky rozhraní mezi sebou číselně porovnatelné a~lze je agregovat
+váženým průměrem do výsledných kompozitních os.\par
+
+\paragraph{Daňový klín standardizovaného zaměstnance}\label{par:tax_distribution} je vyjádřen jako podíl daně a~povinných
+odvodů na celkových nákladech práce:
+\begin{equation}
+  \acs{var-tau}
+    = \frac{\acs{var-c}_{\acs{SP},\acs{idx-z}}
+            + \acs{var-c}_{\acs{SP},\acs{idx-Z}}
+            + \acs{var-c}_{\acs{DPFO}}}
+           {\acs{var-w}_{\acs{idx-b}} + \acs{var-c}_{\acs{SP},\acs{idx-Z}}}.
+  \label{eq:tax_wedge}
+\end{equation}
+U~modelů \acs{OSVČ} je stejná logika odvodového zatížení aplikována na příjmový nebo ziskový základ
+podle zvoleného režimu. Při výdajovém paušálu se základ daně odvozuje z~příjmu
+po odečtení paušálních výdajů, zatímco u~paušální daně je platba v~daném pásmu
+pevná.\par
+
+\paragraph{Modelové výpočty pro \acacc{ČR}}\label{par:cz_model} vycházejí u~čistého příjmu, sociálního a~zdravotního pojištění, daňového klínu
+a~starobního důchodu z~legislativního rámce \acgen{ČR} platného pro
+rok~2026: ze zákona o~daních z~příjmů, zákoníku práce, zákona o~důchodovém
+pojištění, důchodové reformy, zákonů o~sociálním a~zdravotním pojištění
+a~prováděcího nařízení vlády.
+Výsledky odpovídají základnímu pracovníkovi bez slev na \acloc{DPFO} mimo základní slevu na
+poplatníka. U~zaměstnance je osobní vyměřovací základ odvozen z~hrubé mzdy,
+zatímco vodorovná osa modelů pracuje s~celkovým nákladem zaměstnavatele. U~\acs{OSVČ}
+jsou rozlišeny standardní režim a~paušální daň, protože obě konstrukce odlišně
+převádějí stejný příjmový prostor do~odvodů, čistého příjmu a~budoucího starobního
+důchodu.\par
+
+Důchodové modely předpokládají pojistnou dobu 40~let a~počítají základní
+i~procentní výměru podle redukčních hranic platných pro rok~2026.\par
+Čisté příjmy
+jsou hodnotami před exekučními a~insolvenčními srážkami. Tento limit je pro
+interpretaci nízkopříjmových skupin podstatný, neboť stejná srážka
+představuje u~nižšího příjmu vyšší podíl disponibilního příjmu.~\cite{PAQ_ChudobaCEEU_2025}\par
+
+\paragraph{Příjmová nerovnost}\label{par:gini_y_sec} je v~evropských srovnáních zachycena Giniho koeficientem
+ekvivalizovaného disponibilního příjmu domácností:
+\begin{equation}
+  \acs{var-g}_{\acs{idx-y}}
+    = \frac{2\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+              \acs{idx-i}\;\acs{var-y}_{\acs{idx-i}}}
+           {\acs{var-N}\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+              \acs{var-y}_{\acs{idx-i}}}
+    - \frac{\acs{var-N}+1}{\acs{var-N}},
+  \label{eq:gini_y}
+\end{equation}
+kde se předpokládá uspořádání příjmů jednotlivců neklesajícím způsobem \(\acs{var-y}_1 \le \acs{var-y}_2 \le \dots \le \acs{var-y}_{\acs{var-N}}\). Grafy pracující s~decilovými hranicemi příjmů nebo mezd používají log-normální
+interpolaci nad publikovanými kvantilovými body. Jde o~vyhlazení rozdělení pro vizualizaci,
+nikoli o~dodatečný statistický odhad individuálních dat.\par
+
+\paragraph{Metodika ternárního modelu}\label{par:ternary_metodika} je v~práci jednotná napříč všemi výstupy, které pracují s~rovnováhou
+priorit zaměstnanců, zaměstnavatelů a~vlády. Pro každého aktéra je nejprve
+sestaven vážený kompozitní index z~normalizovaných dílčích indikátorů:
+\begin{equation}
+  \acs{var-S}_{\acs{idx-actor},\acs{idx-k}} = \sum_{\acs{idx-i}=1}^{\acs{var-m_ind}_{\acs{idx-actor}}} \acs{var-omega}_{\acs{idx-actor},\acs{idx-i}}\, \acs{var-z}^{\ast}_{\acs{idx-actor},\acs{idx-i},\acs{idx-k}},
+  \qquad
+  \sum_{\acs{idx-i}=1}^{\acs{var-m_ind}_{\acs{idx-actor}}} \acs{var-omega}_{\acs{idx-actor},\acs{idx-i}} = 1,
+  \label{eq:ternary_axis_score}
+\end{equation}
+kde \(\acs{var-S}_{\acs{idx-actor},\acs{idx-k}}\) je skóre aktéra \(\acs{idx-actor}\) v~zemi \(\acs{idx-k}\), \(\acs{var-z}^{\ast}_{\acs{idx-actor},\acs{idx-i},\acs{idx-k}}\) je min-max
+normalizovaná hodnota dílčí proměnné a~\(\acs{var-omega}_{\acs{idx-actor},\acs{idx-i}}\) její váha. Následně se
+provádí normalizace na~součet \SI{100}{\percent}:
+\begin{equation}
+  \acs{var-P_share}_{\acs{idx-actor},\acs{idx-k}} = \frac{\acs{var-S}_{\acs{idx-actor},\acs{idx-k}}}{\sum_{\acs{idx-actor}\in\{\mathrm{zam.},\mathrm{firmy},\mathrm{vlada}\}} \acs{var-S}_{\acs{idx-actor},\acs{idx-k}}}\cdot 100,
+  \label{eq:ternary_closure}
+\end{equation}
+takže výsledné podíly \(\acs{var-P_share}_{\acs{idx-actor},\acs{idx-k}}\) jsou mezi zeměmi přímo srovnatelné.\par
+
+Pro nesektorový ukazatel míry volných pracovních míst je použit sektorový filtr (bez zemědělství a~veřejné správy), při nedostupnosti nahrazován v~pořadí 
+\texttt{B-S\_X\_O} \(\rightarrow\) \texttt{TOTAL} \(\rightarrow\)
+\texttt{B-S} \(\rightarrow\) \texttt{B-O}. Primárním zdrojem je
+\texttt{jvs\_a\_r21} s~preferencí tříletého průměru (\texttt{AVG\_3Y}).
+Odchylka je uvedena v~textu přímo u~příslušného obrázku nebo tabulky.\par
+
+Proměnná sociálního smíru je konstruována jako semikvantitativní expertní
+skóre dlouhodobé provozní spolehlivosti trhu práce z~pohledu zaměstnavatelů.
+Ztracených dnů práce kvůli průmyslovým sporům (na~\SI{1000}{\person}) ze statistik \acs{MOP}
+slouží jako kvantitativní vstup, ale výsledné přiřazení probíhá s~ohledem na nízkou spolehlivost dat v~pěti fixních úrovních.\par
+
+\paragraph{Korelační aparát}\label{par:korelace_math} používá jako vysvětlující proměnnou pokrytí \acpins{KS}. Výstupními
+proměnnými jsou skutečná týdenní odpracovaná doba, genderový rozdíl v~odměňování v~\%,
+čistý hodinový příjem a~hodinová produktivita práce v~\aclloc{PPS}. Doplňkový
+pár tvoří odborová organizovanost a~Giniho koeficient disponibilního příjmu.
+Síla vztahu je měřena Pearsonovým korelačním koeficientem
+\begin{equation}
+  \acs{var-r}_{\acs{idx-x},\acs{idx-y}}
+  = \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+            (\acs{var-x}_{\acs{idx-i}} - \bar{\acs{var-x}})
+            (\acs{var-y}_{\acs{idx-i}} - \bar{\acs{var-y}})}
+         {\displaystyle\sqrt{
+            \sum_{\acs{idx-i}=1}^{\acs{var-n}}(\acs{var-x}_{\acs{idx-i}}-\bar{\acs{var-x}})^2
+            \sum_{\acs{idx-i}=1}^{\acs{var-n}}(\acs{var-y}_{\acs{idx-i}}-\bar{\acs{var-y}})^2}},
+  \label{eq:pearson_r}
+\end{equation}
+a~Spearmanovým pořadovým koeficientem
+\begin{equation}
+  \acs{var-rho} = \acs{var-r}_{\acs{idx-x},\acs{idx-y}}\!\left(\operatorname{R}(\acs{var-x}),\operatorname{R}(\acs{var-y})\right).
+  \label{eq:spearman_rho}
+\end{equation}
+Pro modelový odhad změny při hypotetickém růstu pokrytí \aclins{KS} je použita
+prostá lineární regrese
+\begin{equation}
+  \hat{\acs{var-y}}_{\acs{idx-i}} = \hat{\acs{var-alpha}} + \hat{\acs{var-beta}}\,\acs{var-x}_{\acs{idx-i}},
+  \qquad
+  \Delta\hat{\acs{var-y}} = \hat{\acs{var-beta}}\,\Delta \acs{var-x}.
+  \label{eq:ols}
+\end{equation}
+Koeficienty se interpretují popisně. Panel zahrnuje opakovaná pozorování týchž
+zemí v~čase, a~nejde tedy o~náhodný výběr nezávislých jednotek; korelace
+není používána jako důkaz kauzality, nýbrž jako indikace síly asociace,
+kterou je třeba zasadit do~výkladu pravidel a~mechanismů trhu práce.\par

@@ -26,7 +26,7 @@
   partopsep=0pt]
 
   % --- Editor a správa projektu ---
-  \item \textbf{Visual Studio Code} -- editor zdrojového kódu a správa projektu
+  \item \textbf{Visual Studio Code} -- editor zdrojového kódu a~správa projektu
   \swsubitems{%
     \item \textbf{LaTeX Workshop} -- podpora LaTeX v~editoru
     \item \textbf{Remote~-- WSL} -- vzdálená práce v~prostředí WSL
@@ -38,37 +38,42 @@
   \swsubitems{%
     \item \textbf{pdflatex} -- kompilátor PDF
     \item \textbf{latexmk} -- automatizace překladu
-    \item \textbf{biber} -- backend pro zpracování bibliografie
+    \item \textbf{biber} -- zpracování bibliografie
     \item \textbf{babel} \textit{(czech, english)} -- jazyková podpora
     \item \textbf{biblatex} \textit{(styl: iso-numeric, backend: biber)} -- citace dle ISO~690
     \item \textbf{TikZ} \textit{(knihovna: external)} -- vektorová grafika a diagramy
-    \item \textbf{pgfplots} -- grafy
+    \item \textbf{blox} -- bloková schémata (nadstavba TikZ)
+    \item \textbf{standalone} -- kompilace dílčích TikZ souborů
+    \item \textbf{pgfplots} -- sazba grafů
     \item \textbf{siunitx} -- sazba fyzikálních jednotek
+    \item \textbf{amsmath}, \textbf{amsfonts}, \textbf{amssymb} -- matematická sazba
+    \item \textbf{xltabular} -- tabulky přes více stran
+    \item \textbf{booktabs} -- linky tabulek
+    \item \textbf{caption}, \textbf{subcaption} -- formátování popisků obrázků
+    \item \textbf{enumitem}, \textbf{multicol}, \textbf{multirow} -- rozšíření prostředí výčtů a tabulek
     \item \textbf{acro} -- správa zkratek
     \item \textbf{hyperref} -- hypertextové odkazy v~PDF
-    \item \textbf{csquotes} -- typograficky správné uvozovky
     \item \textbf{geometry} -- nastavení stránkových okrajů
     \item \textbf{titlesec} \textit{(pagestyles)} -- formátování nadpisů a záhlaví
     \item \textbf{tocloft} -- formátování obsahu
-    \item \textbf{xltabular} -- tabulky přes více stran
-    \item \textbf{booktabs} -- profesionální linky tabulek
-    \item \textbf{caption}, \textbf{subcaption} -- formátování popisků obrázků
     \item \textbf{pdfpages} -- vkládání stránek PDF
-    \item \textbf{microtype} -- mikrotypografické optimalizace
     \item \textbf{ocg-p} -- volitelné vrstvy v~PDF
-    \item \textbf{amsmath}, \textbf{amsfonts}, \textbf{amssymb} -- matematická sazba
+    \item \textbf{microtype} -- typografické optimalizace
+    \item \textbf{csquotes} -- typograficky správné uvozovky
     \item \textbf{lmodern} -- Latin Modern fonty
     \item \textbf{xcolor} -- definice barev
-    \item \textbf{blox} -- bloková schémata (nadstavba TikZ)
-    \item \textbf{standalone} -- kompilace dílčích TikZ souborů
-    \item \textbf{enumitem}, \textbf{multicol}, \textbf{multirow} -- rozšíření prostředí výčtů a tabulek
   }
 
-  % --- Správa bibliografie ---
+  % --- Správa bibliografie a recenzního řízení ---
   \vspace{\medskipamount}%
   \item \textbf{Zotero} -- správa bibliografických záznamů
   \swsubitems{%
     \item \textbf{Better BibTeX for Zotero} -- automatická synchronizace a generování klíčů citací
+  }
+  \vspace{\medskipamount}%
+  \item \textbf{Asistent pro zapracování posudků} -- zpracování zpětné vazby
+  \swsubitems{%
+    \item \textbf{PyMuPDF} -- knihovna pro extrakci a analýzu komentářů i~zvýrazněného textu z~anotovaných PDF do přehledu v~Markdownu
   }
 
   % --- Operační prostředí ---
@@ -77,6 +82,17 @@
 
   \item \textbf{Git} -- správa verzí
 
-  % Python -- doplnit po dokončení sub-projektu python/
+  % --- Python datová analýza ---
+  \vspace{\medskipamount}%
+  \item \textbf{Python~3} -- datová analýza a generování obrázků
+  \swsubitems{%
+    \item \textbf{pandas} -- zpracování tabulkových dat
+    \item \textbf{geopandas}, \textbf{geodatasets} -- choroplethové mapy (shapefiles Natural Earth)
+    \item \textbf{matplotlib}, -- vizualizace a mapy
+    \item \textbf{scipy} -- statistická rozdělení (wage\_pension\_distribution)
+    \item \textbf{requests} -- stahování dat přes HTTP (Eurostat SDMX~API)
+    \item \textbf{tqdm} -- indikátor průběhu
+    \item \textbf{openpyxl}, \textbf{xlrd} -- čtení souborů .xlsx / .xls (IPP)
+  }
 
 \end{itemize}

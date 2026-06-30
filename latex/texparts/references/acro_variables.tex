@@ -1,13 +1,41 @@
 % ==============================================================================
-% Variable And Index Definitions (acro tag = vel)
+% Variable And Index Definitions
 % ==============================================================================
-% The variables list uses the same acro template as the abbreviations list.
+% Two acro tags are used:
+%   tag = vel  → variables       (printed by \printacronyms[include=vel])
+%   tag = idx  → indices         (printed by \printacronyms[include=idx])
+%
 % Used-only behaviour works only when acro sees the symbol as used:
-%   - in text: use \acs{var-...} or \ac{var-...}
+%   - in text: use \acs{var-...}, \acs{idx-...}, or \ac{var-...}
 %   - in math written manually: keep the raw symbol and add \acuse{var-...}
-%     nearby so the entry appears in the printed variables list.
+%     (or \acuse{idx-...}) nearby so the entry appears in the printed list.
+%
+% Index display behaviour (see CTUthesis.cls short template):
+%   - For idx-* entries the `index` property carries the bare in-text token
+%     (e.g. z, M, PPS); \acs{idx-z} renders that token, allowing expressions
+%     like  \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}.
+%   - The `short` field carries the placeholder form (\square_z, \square^{PPS})
+%     and is shown in the bold left column of the indices list.
 % ==============================================================================
 
+% ---------------------------------------------------------------------------
+%  Custom SI units for economic quantities
+%  Defined here so they are available to all \SI{}{} calls in this thesis.
+% ---------------------------------------------------------------------------
+\DeclareSIUnit\czk{\text{Kč}}
+\DeclareSIUnit\eur{\text{\texteuro}}
+\DeclareSIUnit\pps{\text{PPS}}
+\DeclareSIUnit\week{\text{týd.}}
+\DeclareSIUnit\month{\text{měs.}}
+\DeclareSIUnit\rok{\text{rok}}
+\DeclareSIUnit\person{\text{os.}}
+\DeclareSIUnit\pp{\text{p.\,b.}}
+% Use slash notation for compound units: \SI{12.5}{\pps\per\hour} → PPS/h
+\sisetup{per-mode=symbol}
+
+% ---------------------------------------------------------------------------
+%  \DeclareVariable macro  (tag = vel — printed in the variables list)
+% ---------------------------------------------------------------------------
 \newcommand\DeclareVariable[3]{%
 	\DeclareAcronym{#1}{%
 		short = {#2},
@@ -17,51 +45,236 @@
 		tag = vel
 	}}
 
-\DeclareVariable{var-one}{\ensuremath{\one}}{jednotkový skok [NDF]}
-\DeclareVariable{var-a}{\ensuremath{A}}{objemová hustota tepelného toku [\SI{}{\watt\per\cubic\meter}]; amplituda, magnituda [NDF]}
-\DeclareVariable{var-c}{\ensuremath{c}}{měrná tepelná kapacita [\SI{}{\joule\per\kilogram\per\kelvin}]}
-\DeclareVariable{var-e-big}{\ensuremath{E}}{energie [\SI{}{\joule}]}
-\DeclareVariable{var-e}{\ensuremath{e}}{proměnná rozdílu řízení [NDF]}
-\DeclareVariable{var-esd}{\ensuremath{ESD}}{energetická spektrální hustota [\SI{}{\joule}]}
-\DeclareVariable{var-f}{\ensuremath{f}}{frekvence [\SI{}{\hertz}], hustota tepelného toku [\SI{}{\watt\per\meter\squared}], obecný signál [NDF]}
-\DeclareVariable{var-fit}{\ensuremath{fit}}{statistické kritérium kvality simulace [\%]}
-\DeclareVariable{var-g}{\ensuremath{g}}{impulsní odezva [NDF], obecný signál [NDF]}
-\DeclareVariable{var-h}{\ensuremath{h}}{přechodová odezva [NDF]}
-\DeclareVariable{var-k-big}{\ensuremath{K}}{tepelná vodivost [\SI{}{\watt\per\meter}]}
-\DeclareVariable{var-k}{\ensuremath{k}}{index harmonické frekvence, řád čitatele přenosu, koeficient bezpečnosti [1]}
-\DeclareVariable{var-l}{\ensuremath{l}}{řád přenosu [1]}
-\DeclareVariable{var-m}{\ensuremath{m}}{proměnná na výstupu řídící jednotky [NDF], diskrétní čas posunutého signálu [1]}
-\DeclareVariable{var-n-big}{\ensuremath{N}}{počet harmonických frekvencí [1]}
-\DeclareVariable{var-n}{\ensuremath{n}}{počet [1], diskrétní čas [1]}
-\DeclareVariable{var-ot}{\ensuremath{ot}}{otáčky [\SI{}{\per\minute}]}
-\DeclareVariable{var-p}{\ensuremath{p}}{vzorkovací posloupnost [NDF]}
-\DeclareVariable{var-r}{\ensuremath{r}}{zpětnovazební proměnná [NDF]}
-\DeclareVariable{var-s-big}{\ensuremath{S}}{statické zesílení [NDF]}
-\DeclareVariable{var-s}{\ensuremath{s}}{komplexní proměnná [\SI{}{\per\second}]}
-\DeclareVariable{var-t-big}{\ensuremath{T}}{teplota, teplotní pole [\SI{}{\kelvin}], perioda [\SI{}{\second}]}
-\DeclareVariable{var-t}{\ensuremath{t}}{čas [\SI{}{\second}]}
-\DeclareVariable{var-u}{\ensuremath{u}}{poměrná deformace [1]}
-\DeclareVariable{var-w}{\ensuremath{w}}{referenční proměnná [NDF]}
-\DeclareVariable{var-x}{\ensuremath{x}}{řízená proměnná [NDF]}
-\DeclareVariable{var-y}{\ensuremath{y}}{ovládaná proměnná, výstup ze systému [NDF]}
-\DeclareVariable{var-z-big}{\ensuremath{Z}}{poloha v ose Z souřadnicového systému stroje [\SI{}{\meter}]}
-\DeclareVariable{var-z}{\ensuremath{z}}{rušící proměnná [NDF], komplexní proměnná [1]}
-\DeclareVariable{var-alpha}{\ensuremath{\alpha}}{součinitel teplotní roztažnosti [\SI{}{\per\kelvin}]}
-\DeclareVariable{var-delta-big}{\ensuremath{\Delta}}{teplotní deformace [\SI{}{\meter}]}
-\DeclareVariable{var-delta}{\ensuremath{\delta}}{residuum [NDF]}
-\DeclareVariable{var-epsilon}{\ensuremath{\varepsilon}}{bílý šum [NDF]}
-\DeclareVariable{var-kappa}{\ensuremath{\kappa}}{měrná teplotní vodivost [\SI{}{\meter\squared\per\second}]}
-\DeclareVariable{var-nu}{\ensuremath{\nu}}{normalizovaná frekvence [1]}
-\DeclareVariable{var-rho}{\ensuremath{\rho}}{hustota [\SI{}{\kilogram\per\cubic\meter}]}
-\DeclareVariable{var-sigma}{\ensuremath{\sigma}}{tlumení [\SI{}{\per\second}]}
-\DeclareVariable{var-tau}{\ensuremath{\tau}}{časové posunutí [1], [\SI{}{\second}]}
-\DeclareVariable{var-phi}{\ensuremath{\varphi}}{fáze [1]}
-\DeclareVariable{var-omega}{\ensuremath{\omega, \Omega}}{úhlová rychlost [\SI{}{\per\second}]}
-\DeclareVariable{var-square-zero}{\ensuremath{\square_0}}{počáteční}
-\DeclareVariable{var-square-in}{\ensuremath{\square_{IN}}}{vstupní}
-\DeclareVariable{var-square-m-big}{\ensuremath{\square_M}}{modelu}
-\DeclareVariable{var-square-m}{\ensuremath{\square_m}}{maximální}
-\DeclareVariable{var-square-s}{\ensuremath{\square_S}}{vzorkovací}
-\DeclareVariable{var-square-tcp}{\ensuremath{\square_{TCP}}}{na špičce nástroje}
-\DeclareVariable{var-square-z}{\ensuremath{\square_Z}}{v ose Z}
-\DeclareVariable{var-square-sum}{\ensuremath{\square_\Sigma}}{souhrnný}
+% ---------------------------------------------------------------------------
+%  \DeclareIndex macro  (tag = idx — printed in the indices list)
+%
+%  #1 = key (e.g. idx-z)
+%  #2 = short / list display, with placeholder \square (e.g. \ensuremath{\square_z})
+%        — appears in the bold left column of the indices list.
+%  #3 = index display, the bare token used in math (e.g. \ensuremath{z})
+%        — what \acs{idx-z} renders inline. Allows building expressions like
+%          \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}.
+%        The class' short template detects the `index` property (see
+%        CTUthesis.cls) and prints it instead of the square form.
+%  #4 = long description (right column of the indices list).
+% ---------------------------------------------------------------------------
+\newcommand\DeclareIndex[4]{%
+	\DeclareAcronym{#1}{%
+		short = {#2},
+		index = {#3},
+		long  = {#4},
+		first-style = short,
+		single-style = short,
+		tag = idx
+	}}
+
+% ---------------------------------------------------------------------------
+%  Subscript / superscript indices
+%  (\square = libovolná veličina; key = idx-...)
+%  In math:  \acs{var-N}_{\acs{idx-z},\acs{idx-M}}  →  N_{z,M}
+%  In the indices list:  \square_z   zaměstnanec
+% ---------------------------------------------------------------------------
+\DeclareIndex{idx-b}{\ensuremath{\square_b}}{\ensuremath{b}}{brutto}
+\DeclareIndex{idx-n}{\ensuremath{\square_n}}{\ensuremath{n}}{netto}
+\DeclareIndex{idx-m}{\ensuremath{\square_m}}{\ensuremath{m}}{měsíční hodnota}
+\DeclareIndex{idx-h}{\ensuremath{\square_h}}{\ensuremath{h}}{hodinová hodnota}
+\DeclareIndex{idx-w}{\ensuremath{\square_w}}{\ensuremath{w}}{týdenní hodnota}
+\DeclareIndex{idx-a}{\ensuremath{\square_a}}{\ensuremath{a}}{roční hodnota}
+\DeclareIndex{idx-pc}{\ensuremath{\square_{pc}}}{\ensuremath{pc}}{per capita (děleno \(N\))}
+\DeclareIndex{idx-eq}{\ensuremath{\square_{eq}}}{\ensuremath{eq}}{ekvivalizovaná hodnota}
+% idx-PPS removed — use \acs{PPS} acronym form instead (in math superscripts)
+% idx-EUR removed — use \acs{EUR} acronym form instead (in math superscripts)
+\DeclareIndex{idx-AW100}{\ensuremath{\square_{AW100}}}{\ensuremath{AW100}}{při \SI{100}{\percent} průměrné mzdy, svobodný stav, bezdětný}
+\DeclareIndex{idx-M}{\ensuremath{\square_M}}{\ensuremath{M}}{gender: muži}
+\DeclareIndex{idx-F}{\ensuremath{\square_F}}{\ensuremath{F}}{gender: ženy}
+\DeclareIndex{idx-z}{\ensuremath{\square_z}}{\ensuremath{z}}{zaměstnanec}
+\DeclareIndex{idx-Z}{\ensuremath{\square_Z}}{\ensuremath{Z}}{zaměstnavatel}
+% idx-SP removed — use \acs{SP} acronym form instead (in math subscripts)
+% idx-ZP removed — use \ac{ZP} acronym instead (unused in math context)
+\DeclareIndex{idx-NP}{\ensuremath{\square_{NP}}}{\ensuremath{NP}}{náhradový poměr}
+% idx-SD removed — use \ac{SD} acronym instead (not used in math context)
+% idx-KS removed — use \ac{KS} acronym instead (not used in math context)
+% idx-APZ removed — use \ac{APZ} acronym instead (not used in math context)
+\DeclareIndex{idx-U}{\ensuremath{\square_U}}{\ensuremath{U}}{odbory}
+\DeclareIndex{idx-i}{\ensuremath{\square_i}}{\ensuremath{i}}{pořadové číslo pozorování}
+\DeclareIndex{idx-x}{\ensuremath{\square_x}}{\ensuremath{x}}{označení vstupní proměnné}
+\DeclareIndex{idx-y}{\ensuremath{\square_y}}{\ensuremath{y}}{označení výstupní proměnné; též čistý disponibilní příjem}
+\DeclareIndex{idx-min}{\ensuremath{\square_{\min}}}{\ensuremath{\min}}{minimální}
+\DeclareIndex{idx-max}{\ensuremath{\square_{\max}}}{\ensuremath{\max}}{maximální}
+\DeclareIndex{idx-0}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční / referenční stav}
+\DeclareIndex{idx-k}{\ensuremath{\square_k}}{\ensuremath{k}}{země}
+\DeclareIndex{idx-actor}{\ensuremath{\square_a}}{\ensuremath{a}}{aktér tripartity}
+
+% ---------------------------------------------------------------------------
+%  Accent helpers — plain math macros (no acro bookkeeping)
+%
+%  Accents (\hat, \bar, \tilde) are standard math notation and do not need
+%  separate entries in the indices list. Inside math mode just write
+%  \hat{\beta} / \bar{x} / \tilde{w} directly — the variable letter alone
+%  carries the acro semantics, the accent is universal notation.
+%
+%  The \acidx* wrappers below are kept only for backward compatibility
+%  with any commentary that already calls them; they expand to the plain
+%  math accent and do nothing else.
+% ---------------------------------------------------------------------------
+\newcommand\acidxtilde[1]{\ensuremath{\tilde{#1}}}
+\newcommand\acidxbar[1]{\ensuremath{\bar{#1}}}
+\newcommand\acidxhat[1]{\ensuremath{\hat{#1}}}
+
+% ---------------------------------------------------------------------------
+%  Base variables
+%
+%  Convention: each variable is a single symbol.  Compound symbols are
+%  built at the call site by combining a base variable with one or more
+%  indices, e.g. \acs{var-r}_{\acs{idx-KS}} → r_{KS}.  Every list entry
+%  carries the unit in square brackets at the end of the long form.
+% ---------------------------------------------------------------------------
+
+% --- Mzda, příjem, majetek -------------------------------------------------
+\DeclareVariable{var-w}{\ensuremath{w}}{%
+  mzda (\textit{wage}) [\SI{}{\czk\per\month}]}
+
+\DeclareVariable{var-y}{\ensuremath{y}}{%
+  čistý disponibilní příjem [\SI{}{\czk\per\month}]}
+
+\DeclareVariable{var-Y}{\ensuremath{Y}}{%
+  hrubý domácí produkt \acs{HDP} [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-M}{\ensuremath{M}}{%
+  majetek (\textit{wealth})}
+
+% --- Práce, čas, hodiny ----------------------------------------------------
+\DeclareVariable{var-H}{\ensuremath{H}}{%
+  odpracovaná doba v~kalendářním období [\SI{}{\hour}]}
+
+\DeclareVariable{var-T}{\ensuremath{T}}{%
+  délka časového úseku (období) [\SI{}{\month}]}
+
+\DeclareVariable{var-A}{\ensuremath{A}}{%
+  odpracovaná doba v~kalendářním období [\SI{}{\day}]}
+
+% --- Odvody, daně ----------------------------------------------------------
+\DeclareVariable{var-c}{\ensuremath{c}}{%
+  odvody (\textit{contribution}) [\SI{}{\czk\per\month}]}
+
+\DeclareVariable{var-tau}{\ensuremath{\tau}}{%
+  daňový klín (\textit{tax wedge})\CTUacrolistbreak podíl odvodů a~\acs{DPFO} na
+  celkových osobních nákladech zaměstnavatele
+  [\SI{}{\percent}]}
+
+% --- Počty, populace, podskupiny -------------------------------------------
+\DeclareVariable{var-n}{\ensuremath{n}}{%
+  počet prvků skupiny [1]}
+
+\DeclareVariable{var-N}{\ensuremath{N}}{%
+  celkový počet (obyvatel, pozorování, zaměstnanců) [1]}
+
+\DeclareVariable{var-L}{\ensuremath{L}}{%
+  národní pracovní síla (ekonomicky aktivní obyvatelstvo)
+  [\SI{}{\person}]}
+
+% --- Kvantily, distribuce --------------------------------------------------
+\DeclareVariable{var-D3}{\ensuremath{D_3}}{%
+  horní hranice třetího decilu (\SI{60}{\percent} mediánu -- hranice chudoby) [\SI{}{\czk\per\month}]}
+
+% --- Poměry, koeficienty ---------------------------------------------------
+\DeclareVariable{var-r}{\ensuremath{r}}{%
+  Pearsonův koeficient korelace [1]}
+
+\DeclareVariable{var-rho}{\ensuremath{\varrho}}{%
+  hustota podskupiny v~populaci [\SI{}{\percent}]\CTUacrolistbreak též Spearmanův koeficient pořadové korelace [1]}
+
+\DeclareVariable{var-R}{\ensuremath{R}}{%
+  bezrozměrný poměr}
+
+\DeclareVariable{var-g}{\ensuremath{g}}{%
+  Giniho koeficient nerovnosti [1]}
+
+\DeclareVariable{var-G}{\ensuremath{G}}{%
+  vládní výdaje
+  [\SI{}{\czk\per\rok}]}
+
+% --- Statistický aparát (regrese, korelace) --------------------------------
+\DeclareVariable{var-x}{\ensuremath{x}}{%
+  vstupní proměnná regrese (vysvětlující, nezávislá)}
+
+\DeclareVariable{var-alpha}{\ensuremath{\alpha}}{%
+  regresní konstanta}
+
+\DeclareVariable{var-beta}{\ensuremath{\beta}}{%
+  regresní koeficient}
+
+\DeclareVariable{var-Rdet}{\ensuremath{R^{2}}}{%
+  koeficient determinace; podíl rozptylu vysvětlený regresním modelem}
+
+% --- Makroekonomické a strukturální veličiny (pojmy & datová analýza) ------
+\DeclareVariable{var-C}{\ensuremath{C}}{%
+  výdaje na~konečnou spotřebu [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-I}{\ensuremath{I}}{%
+  hrubá tvorba fixního kapitálu (investice) [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-NX}{\ensuremath{\mathit{NX}}}{%
+  saldo výkonové bilance (čistý vývoz) [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-W}{\ensuremath{W}}{%
+  tok blahobytných efektů (\textit{welfare}) [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-s}{\ensuremath{s}}{%
+  státní dotace a~subvence (\textit{subsidies}) [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-T_tax}{\ensuremath{T}}{%
+  celkové vládní příjmy ze~zdanění a~odvodů [\SI{}{\czk\per\rok}]}
+
+\DeclareVariable{var-pi}{\ensuremath{\pi}}{%
+  hrubý provozní přebytek a~smíšený důchod (zisky) [\SI{}{\czk\per\rok}]}
+
+% var-PLI removed — use \ac{PLI} acronym instead
+
+% var-PPP removed — use \ac{PPP} acronym instead
+
+\DeclareVariable{var-S}{\ensuremath{S}}{%
+  vážené kompozitní skóre aktéra [1]}
+
+\DeclareVariable{var-omega}{\ensuremath{\omega}}{%
+  váha dílčího indikátoru v~kompozitním indexu}
+
+\DeclareVariable{var-z}{\ensuremath{z}}{%
+  short = {\ensuremath{z}},
+  long = {normalizovaná (standardizovaná) hodnota indikátoru},
+  tag = nolist
+}
+
+\DeclareVariable{var-m_ind}{\ensuremath{m}}{%
+  celkový počet dílčích indikátorů aktéra [1]}
+
+\DeclareVariable{var-P_share}{\ensuremath{P}}{%
+  ternární podíl (síla) aktéra [\SI{}{\percent}]}
+
+% --- Sektorové a národní toky a sub-bilance (předdefinované složené proměnné) ---
+\DeclareAcronym{var-T_work}{%
+  short = {\ensuremath{T_w}},
+  long = {vládní příjmy ze~zdanění a~odvodů z~práce [\SI{}{\czk\per\month}]},
+  first-style = short,
+  single-style = short,
+  tag = nolist
+}
+
+% var-T_pi removed — use \acs{var-T}_{\acs{var-pi}} composite notation instead
+
+\DeclareAcronym{var-T_Q}{%
+  short = {\ensuremath{T_Q}},
+  long = {vládní příjmy ze~zdanění produkce a~dovozu [\SI{}{\czk\per\month}]},
+  first-style = short,
+  single-style = short,
+  tag = nolist
+}
+
+\DeclareVariable{var-NX_I}{\ensuremath{\mathit{NX}_I}}{%
+  zahraniční bilance čistých prvotních důchodů [\SI{}{\czk\per\month}]}
+
+\DeclareVariable{var-NX_L}{\ensuremath{\mathit{NX}_L}}{%
+  saldo potenciálu práce (kvalifikovanost, demografie, migrace) [\SI{}{\czk\per\month}]}
+
+\DeclareVariable{var-NX_S}{\ensuremath{\mathit{NX}_S}}{%
+  saldo bilance udržitelnosti [\SI{}{\czk\per\month}]}

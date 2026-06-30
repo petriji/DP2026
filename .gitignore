@@ -31,6 +31,10 @@
 !/sources/PETRICEK*
 !/sources/Petricek*
 !/sources/scrape/
+!/sources/nocite/
+!/sources/transcripts/
+/sources/nocite/*.pdf
+
 
 -- User-made LaTeX templates --
 /templates
@@ -53,10 +57,8 @@ python/**/*.pyc
 python/**/*.pyo
 
 -- Python-generated outputs (reproducible from scripts) --
-pics/python/
 latex/texparts/python/
 
--- 
 -- Temporary files --
 *.tmp
 
@@ -68,3 +70,13 @@ latex/texparts/python/
 
 -- Google docs (incompatible) --
 *.gdoc
+
+-- review --
+/review/*.pdf
+/review/.cache/
+!/review/
+!/review/*.md
+
+Petricek_DP2026_*.pdf
+latex/socialnidialog.bib.bak*
+latex/bakbuild/*

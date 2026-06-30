@@ -1,0 +1,34 @@
+Ternární model v~této části nepracuje s~abstraktními, koncepčně prázdnými osami, nýbrž se zaměřuje na vyhodnocení reálného napětí a~konfliktu priorit mezi třemi klíčovými aktéry sociálního dialogu: zaměstnanci, zaměstnavateli a~vládou. Každá z~těchto tří zájmových skupin je v~analytickém modelu popsána komplexním váženým indexem složeným z~dílčích statistických proměnných; výsledná poloha země v~ternárním prostoru odráží relativní poměr a~rovnováhu sil mezi těmito třemi zájmovými vektory.\par
+
+\paragraph{Proměnné pro motivaci zaměstnanců}
+Tato dimenze zachycuje reálnou vyjednávací úspěšnost a~podmínky zaměstnanců skrze tři klíčové faktory s~rozdílnou analytickou váhou:
+\begin{itemize}[noitemsep]
+  \item \textbf{Medián disponibilního příjmu domácností (\SI{60}{\percent}):} medián ekvivalizovaného disponibilního příjmu domácností v~\acs{PPS} (zdroj Eurostat \texttt{ilc\_di01}, decil D5; viz obr.~\ref{fig:eu_prijem_distribuce}). Vyjadřuje, že kupní síla domácnosti představuje pro zaměstnance primární cíl mzdového vyjednávání.
+  \item \textbf{Skutečná týdenní odpracovaná doba (\SI{30}{\percent}):} do modelu je započtena inverzně (zdroj Eurostat \texttt{lfsa\_ewhan2}; viz tab.~\ref{tab:flexicurity}). Odráží fakt, že stejný příjem vykoupený delším časem v~práci představuje slabší vyjednaný výsledek.
+  \item \textbf{Gender pay gap (\SI{10}{\percent}):} započten inverzně (zdroj Eurostat \texttt{earn\_gr\_gpgr2}; viz obr.~\ref{fig:problemy_gpg_sektor}). Slouží jako indikátor vnitřní spravedlnosti a~kvality odměňování.
+\end{itemize}
+
+\paragraph{Proměnné pro motivaci zaměstnavatelů}
+Tento index odráží nákladové podmínky, daňové zatížení kapitálu a~provozní stabilitu z~hlediska firem:
+\begin{itemize}[noitemsep]
+  \item \textbf{Míra volných pracovních míst (\SI{40}{\percent}):} započtena inverzně (zdroj Eurostat \texttt{jvs\_a\_r21}; viz obr.~\ref{fig:stav_volna_mista_vyvoj}). Vyjadřuje napjatost trhu práce; vyšší podíl neobsazených míst zvyšuje náborové náklady a~představuje tlak na zaměstnavatele. Bez dostatku pracovní síly nemohou zaměstnavatelé efektivně konkurovat a~zvyšovat produktivitu.
+  \item \textbf{Kombinovaná statutární sazba \aclgen{DPPO} (\SI{30}{\percent}):} započtena inverzně (zdroj \acs{OECD} \texttt{CTS\_CIT}; viz obr.~\ref{fig:stav_korporatni_dan_mapa}). Reprezentuje daňové zatížení výnosů.
+  \item \textbf{Úplné hodinové náklady práce v~\acs{PPS} (\SI{20}{\percent}):} započteny inverzně (zdroj Eurostat \texttt{lc\_lci\_lev} a~\texttt{prc\_ppp\_ind}; viz tab.~\ref{tab:flexicurity}). Reprezentují cenovou mzdovou konkurenceschopnost práce.
+  \item \textbf{Index sociálního míru odvozený ze stávkové aktivity (\SI{10}{\percent}):} hodnocený podle stávkových dnů (viz~část~\ref{par:spory}, obr.~\ref{fig:stav_kolektivni_spory_vyvoj}). Představuje korekci provozního rizika a~hrozby přerušení výroby.
+\end{itemize}
+
+\paragraph{Proměnné pro motivaci vlády}
+Tato dimenze zachycuje makroekonomickou stabilitu, fiskální kapacitu a~sociální výkonnost z~hlediska veřejné moci:
+\begin{itemize}[noitemsep]
+  \item \textbf{Kumulativní reálná změna \acs{HDP} 2020--2024 (\SI{40}{\percent}):} (zdroj Eurostat \texttt{nama\_10\_gdp}; viz obr.~\ref{fig:stav_hdp_vyvoj}). Odráží hospodářskou odolnost a~růstový potenciál země po krizových šocích, a~tedy politickou stabilitu.
+  \item \textbf{\Acs{HDP} na obyvatele v~\acs{PPS} (\SI{30}{\percent}):} normováno vůči \acs{geo-EU27}=100 (zdroj Eurostat \texttt{nama\_10\_pc}; viz obr.~\ref{fig:stav_hdp_vyvoj}), což vyjadřuje celkovou ekonomický výkon a~odráží výši daňových příjmů.
+  \item \textbf{Míra zaměstnanosti ve věku 20–64 let (\SI{20}{\percent}):} (zdroj Eurostat \texttt{lfsi\_emp\_a}; viz obr.~\ref{fig:stav_zamestnanost}). Klíčová proměnná pro stabilitu veřejných rozpočtů a~financování sociálních systémů.
+  \item \textbf{Giniho koeficient disponibilního příjmu (\SI{10}{\percent}):} započten inverzně (zdroj Eurostat \texttt{ilc\_di12}; viz obr.~\ref{fig:eu_gini_prijem}). Vysoká příjmová nerovnost snižuje sociální kohezi a~může ohrozit politickou stabilitu.\par
+\end{itemize}
+
+Výsledná vizualizace ternárního rozložení zemí a~příslušných silových polí (obr.~\ref{fig:practical_ternary_social_dialog} a~obr.~\ref{fig:practical_ternary_strength_map}) ilustruje zásadní institucionální odlišnost \acgen{ČR} od ostatních referenčních evropských modelů. V~diagramu se jasně formují tři odlišné shluky. Prvním je sociálně-demokratický model Dánska, který se spolu s~dalšími skandinávskými zeměmi se silným sociálním dialogem nachází nejblíže k~rovnováze. Vykazují vyváženou a~stabilní mzdově-koordinační strukturu balancující mezi produktivitou a~ochranou práce, jakkoli v~některých parametrech mírně inklinují k~pohledu konkurence a~zájmům zaměstnavatelů. Druhý shluk tvoří Německo a~Rakousko, kde mají zaměstnanci silnější pozici, což je dáno vysokým reálným disponibilním příjmem domácností při velmi nízké skutečné týdenní odpracované době a~silné státní podpoře zaměstnanců.\par
+
+Třetím případem jsou postkomunistické země (Česko, Slovensko, Polsko), které vykazují společné strukturální zatížení, avšak s~odlišnými mzdově-koordinačními drahami. Zatímco Polsko je vzhledem k~většímu domácímu trhu a~odlišným odvětvovým tlakům taženo mírně odlišným směrem, Slovensko se vyznačuje polohou silně ovlivněnou extrémně nízkou příjmovou nerovností dle Giniho indexu, avšak za cenu nízkých reálných příjmů. Samotná \ac{ČR} je pak ze všech šesti zemí navzdory špatnému výsledku při stabilizaci ekonomiky v~obdobích krize nejvýrazněji vychýlena k~vládní ose makroekonomické stability, kumulativního růstu \acgen{HDP} a~extrémně vysoké zaměstnanosti. Tento výsledek potvrzuje dominantní tezi práce: český sociální dialog funguje především jako formální a~institucionálně zakotvená schránka k~zajištění sociálního smíru a~vysoké participace, avšak za cenu nízkých mzdových nákladů práce a~dlouhé pracovní doby. Tento stav vyhovuje zájmům státu v~krátkodobé stabilizaci rozpočtů a~subdodavatelskému modelu nadnárodních korporací na úkor reálných příjmů tuzemských zaměstnanců. Jak ukazuje obr.~\ref{fig:practical_ternary_strength_map}, český systém sociálního dialogu vede v~průměru k~velmi nízkému uspokojení potřeb tripartitních aktérů.\par
+
+\input{texparts/python/practical_ternary_social_dialog}
+\input{texparts/python/practical_ternary_strength_map}

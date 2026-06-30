@@ -10,6 +10,9 @@ Silent {
     1   ## Command terminated with space
         ## False positives: \tikzexternalize, \phantomsection, \acro*
         ## macros, and \let chains at end of line.
+    13  ## Intersentence spacing (`\@`) should perhaps be used
+        ## Modern typography/style preference only; this project intentionally
+        ## does not enforce explicit sentence-spacing control after abbreviations.
     8   ## Wrong dash length
         ## Czech typography: -- (n-dash) is correct for separating items
         ## and list entries; chktex incorrectly expects --- (em-dash).
@@ -22,4 +25,12 @@ Silent {
     24  ## Delete space to maintain correct pagereferences
         ## \label appears on its own line after \printbibliography,
         ## \input, and \listoffigures -- this is intentional and correct.
+    25  ## You might wish to put this between a pair of `{}`
+        ## False positive for \begin{equation}\label{...}.
+    31  ## This text may be ignored
+        ## False positive on grouped TikZ wrappers ending with `}}`.
+    36  ## Put a space after/in front of parenthesis
+        ## False positives in enumitem options and Czech list syntax.
+    46  ## Use \( ... \) instead of $ ... $
+        ## Style preference only; project keeps `$...$` in inline math.
 }

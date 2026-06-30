@@ -3,9 +3,6 @@
  Diplomová práce — Jiří Petříček, ČVUT MÚVS, 2026
 ================================================================================
 
-NOTE: Python data-analysis dependencies are not yet finalized.
-      This file will be updated once the python/ sub-project is complete.
-
 
 --------------------------------------------------------------------------------
  DOCUMENT AUTHORING
@@ -173,14 +170,48 @@ Git
  VERSION CONTROL HOSTING
 --------------------------------------------------------------------------------
 
-(to be added)
+GitHub
+  https://github.com/petriji/DP
+  Branch: py_stats
 
 
 --------------------------------------------------------------------------------
- PYTHON DATA ANALYSIS  [TO BE COMPLETED]
+ PYTHON DATA ANALYSIS
 --------------------------------------------------------------------------------
 
-Python dependencies and credits will be added here once the python/
-sub-project is finalized.
+Python 3 (3.10+)
+  https://www.python.org
+  License: PSF-2.0
+
+  pandas (>=2.0)                  — tabular data processing
+    https://pandas.pydata.org
+
+  geopandas (>=0.14)              — geospatial data and choropleth maps
+    https://geopandas.org
+
+  geodatasets                     — Natural Earth shapefiles (replaces geopandas.datasets)
+    https://geodatasets.readthedocs.io
+
+  matplotlib (>=3.8)              — visualisation
+    https://matplotlib.org
+
+  matplotlib-scalebar             — scale bar on choropleth maps
+    https://github.com/ppinard/matplotlib-scalebar
+
+  scipy                           — statistical distributions
+    https://scipy.org
+
+  requests                        — HTTP downloads (Eurostat SDMX API)
+    https://requests.readthedocs.io
+
+  tqdm                            — progress bars
+    https://tqdm.github.io
+
+  openpyxl                        — .xlsx support for pd.read_excel (IPP data)
+    https://openpyxl.readthedocs.io
+
+  xlrd (>=2.0.1)                  — .xls support for pd.read_excel (IPP 2007–2018)
+    https://xlrd.readthedocs.io
 
 ================================================================================
+
