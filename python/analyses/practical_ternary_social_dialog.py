@@ -39,7 +39,14 @@ from config import COUNTRY_COLORS, FIGURES_DIR
 from statout.map_europe import choropleth
 from stattool.dataset import Dataset
 from statout.ternary import ternary_diagram
-from stattool.style import apply_geo_labels_pgf, apply_style_pgf, savefig, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_geo_labels_pgf,
+    apply_style_pgf,
+    load_angle_nudges_from_figure_tex,
+    savefig,
+    savefig_pgf,
+    save_figure_tex_pgf,
+)
 
 # ── Toggle ───────────────────────────────────────────────────────────────────
 SHOW_EU27_CLOUD: bool = True   # set False to hide grey EU27 background dots
@@ -114,6 +121,7 @@ _LABEL_ANGLE_NUDGES: dict[str, float] = {
     "PL": 8.0,
     "AT": 160.0,
 }
+_LABEL_Y_NUDGES = [(geo, geo) for geo in _FEATURED_GEOS]
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
@@ -153,6 +161,15 @@ def main() -> None:
     )
     bg_alpha = 0.20 if SHOW_COLOR_BACKGROUND else 0.0
 
+    strings_main = {
+        "title": _TITLE,
+        "vertex_a": r"Zam\v{e}stnanci",
+        "vertex_b": "Firmy",
+        "vertex_c": r"Vl\'ada",
+        "caption": "Praktická tripartitní rovnováha v~\\acs{EU} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát).",
+    }
+    angle_nudges = load_angle_nudges_from_figure_tex(PLOT_STEM, _LABEL_ANGLE_NUDGES)
+
     # Primary thesis output: corners-on PGF for LaTeX.
     fig_pgf = ternary_diagram(
         data=COUNTRY_SHARES,
@@ -160,13 +177,19 @@ def main() -> None:
         vertex_labels=_VERTEX_LABELS,
         title=_TITLE,
         show_corner_labels=True,
-        label_angle_nudges=_LABEL_ANGLE_NUDGES,
+        label_angle_nudges=angle_nudges,
         figsize=(6.4, 6.0),
         bg_alpha=bg_alpha,
         background_data=cloud,
         show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
     )
-    pgf_path = savefig_pgf(fig_pgf, PLOT_STEM, out_dir=FIGURES_DIR)
+    pgf_path = savefig_pgf(
+        fig_pgf,
+        PLOT_STEM,
+        out_dir=FIGURES_DIR,
+        strings=strings_main,
+        nudge_labels=_LABEL_Y_NUDGES,
+    )
 
     # Companion PDF for visual inspection.
     fig_pdf = ternary_diagram(
@@ -190,7 +213,7 @@ def main() -> None:
     
     save_figure_tex_pgf(
         PLOT_STEM,
-        caption="Praktická tripartitní rovnováha v~\\acs{EU} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát).",
+        caption=strings_main["caption"],
         cite_keys=[
             "eurostat_jvs_a_r21",
             "oecd_cts_cit",
@@ -198,6 +221,9 @@ def main() -> None:
         ],
         label="fig:practical_ternary_social_dialog",
         resizebox_width=r"\linewidth",
+        strings=strings_main,
+        nudge_labels=_LABEL_Y_NUDGES,
+        angle_labels=_LABEL_ANGLE_NUDGES,
     )
     print("Output files:")
     print(f"  - {pgf_path}")
@@ -269,7 +295,7 @@ def main() -> None:
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption="Průměr modelových os (A+B+C)/3 (souhrnné skóre sociálních partnerů), \\acs{EU}.",
+        caption=f"Praktická tripartitní rovnováha v~\\acs{{EU}} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát)",
         cite_keys=[
             "eurostat_jvs_a_r21",
             "oecd_cts_cit",

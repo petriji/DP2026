@@ -13,6 +13,7 @@ Usage
 
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 import matplotlib as mpl
@@ -44,6 +45,8 @@ def scatter_xy(
     cmap: str = "tab10",
     alpha: float = 0.8,
     year_tolerance: int = 2,
+    label_angle_nudges: Optional[dict[str, float]] = None,
+    label_radius_pts: float = 5.39,
 ) -> plt.Figure:
     """Scatter plot of *ds_x* vs *ds_y* for a single year.
 
@@ -75,6 +78,11 @@ def scatter_xy(
         For highlighted countries missing data at *year*, fall back to the most
         recent available year within this many years (default 2). Prints a
         notice when a fallback is used.
+    label_angle_nudges:
+        Optional per-country label anchor angle in degrees (0 = right, 90 = up).
+        Applies only to highlighted labels.
+    label_radius_pts:
+        Label anchor radius in points for highlighted labels.
     color_col:
         Column in ds_x for categorical group colouring (applied to
         non-highlighted points only).
@@ -158,15 +166,25 @@ def scatter_xy(
                 linewidth=0.5,
             )
             if label_points:
+                angle = (label_angle_nudges or {}).get(row["geo"], math.degrees(math.atan2(2.0, 5.0)))
+                _cos = math.cos(math.radians(angle))
+                _sin = math.sin(math.radians(angle))
+                if abs(_cos) >= abs(_sin):
+                    _ha = "left" if _cos >= 0 else "right"
+                    _va = "center"
+                else:
+                    _ha = "center"
+                    _va = "bottom" if _sin >= 0 else "top"
                 ax.annotate(
                     row["geo"],
                     xy=(row["x"], row["y"]),
-                    xytext=(5, 2),
+                    xytext=(label_radius_pts * _cos, label_radius_pts * _sin),
                     textcoords="offset points",
                     fontsize=FONT_SIZE - 1,
                     color=color,
                     fontweight="bold",
-                    va="center",
+                    ha=_ha,
+                    va=_va,
                 )
 
     # ── Minor grid ────────────────────────────────────────────────────────────

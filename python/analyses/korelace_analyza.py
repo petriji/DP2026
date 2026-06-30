@@ -54,7 +54,14 @@ from config import (
 from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
+from stattool.style import (
+    add_pgf_tooltips_scatter,
+    apply_style_pgf,
+    cm2in,
+    load_angle_nudges_from_figure_tex,
+    save_figure_tex_pgf,
+    savefig_pgf,
+)
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_cb_coverage, load_union_density
@@ -62,6 +69,8 @@ from analyses._shared_data import load_cb_coverage, load_union_density
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK", "IT", "SE"]
+LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
+PANEL_KEYS = ["A", "B", "C", "D"]
 START_YEAR = 2004
 
 # Extend COUNTRY_COLORS at runtime for IT/SE (config.py not modified on disk)
@@ -238,12 +247,17 @@ STRINGS = {
         r"s\,vybranými ukazateli trhu práce (2024)"
     ),
 }
+_scatter_angle_nudges_by_panel = {
+    panel: load_angle_nudges_from_figure_tex("korelace_scatter", LABEL_ANGLE_NUDGES, scope=panel)
+    for panel in PANEL_KEYS
+}
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
     STRINGS["title"],
     fontsize=FIGURE_COMPACT_TEXT_SIZE,
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
+    panel_key = PANEL_KEYS[idx]
     row_bottom = idx >= 2
     scatter_xy(
         spec["ds_x"],
@@ -258,6 +272,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         ax=ax,
         countries=EU27_LIST,
         year_tolerance=9,
+        label_angle_nudges=_scatter_angle_nudges_by_panel[panel_key],
     )
     # ── PGF tooltips & geo labels (───────────────────────────────────────────
     add_pgf_tooltips_scatter(
@@ -301,6 +316,8 @@ save_figure_tex_pgf(
                "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
     strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
+    angle_labels_scoped={panel: LABEL_ANGLE_NUDGES for panel in PANEL_KEYS},
 )
 print("  saved scatter_combined")
 

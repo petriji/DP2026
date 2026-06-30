@@ -13,6 +13,7 @@ Typical usage
 from __future__ import annotations
 
 import hashlib
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
@@ -651,14 +652,62 @@ def _nudge_macro_name(prefix: str, label_id: str) -> str:
     return macro
 
 
+def _angle_macro_name(prefix: str, label_id: str) -> str:
+    r"""Build a LaTeX macro name like ``\NudgeAngleStavHdpVyvojCZ``."""
+    parts = [p for p in label_id.replace("-", "_").split("_") if p]
+    suffix = "".join(p.capitalize() for p in parts)
+    suffix = "".join(c for c in suffix if c.isalpha())
+    macro = rf"\NudgeAngle{prefix}{suffix}"
+    import re as _re
+    assert _re.fullmatch(r"\\[A-Za-z]+", macro), (
+        f"Invalid TeX cs name: {macro!r} (prefix={prefix!r}, label_id={label_id!r})"
+    )
+    return macro
+
+
 def _extract_figure_tex_macro_value(content: str, macro: str) -> str | None:
     r"""Return the value of a ``\def\str...{...}%`` macro from a figure wrapper."""
     import re as _re
 
     macro_name = macro[1:] if macro.startswith("\\") else macro
-    pattern = _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE)
-    match = pattern.search(content)
-    return match.group(1) if match else None
+def load_angle_nudges_from_figure_tex(
+    name: str,
+    default_angles: dict[str, float],
+    *,
+    scope: str | None = None,
+) -> dict[str, float]:
+    r"""Load per-label angle overrides from ``texparts/figures/<name>.tex``.
+
+    Expected macro format per label id: ``\providecommand\NudgeAngle...{<deg>}``.
+    When *scope* is provided, scoped macros are read first using
+    ``<scope>_<label_id>`` (for example ``A_CZ`` -> ``\NudgeAngle...ACz``),
+    then global ``<label_id>`` values are used as fallback.
+    Invalid or missing values fall back to *default_angles*.
+    """
+    from config import LATEX_FIGURES_TEX_DIR
+
+    out = dict(default_angles)
+    wrapper = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
+    if not wrapper.exists():
+        return out
+
+    content = wrapper.read_text(encoding="utf-8")
+    prefix = _macro_prefix(name)
+    for label_id, default in default_angles.items():
+        raw = None
+        if scope:
+            scoped_macro = _angle_macro_name(prefix, f"{scope}_{label_id}")
+            raw = _extract_figure_tex_macro_value(content, scoped_macro)
+        if raw is None:
+            macro = _angle_macro_name(prefix, label_id)
+            raw = _extract_figure_tex_macro_value(content, macro)
+        if raw is None:
+            continue
+        try:
+            out[label_id] = float(str(raw).strip())
+        except ValueError:
+            out[label_id] = default
+    return out
 
 
 def _apply_label_nudges_pgf(
@@ -1086,6 +1135,8 @@ def save_figure_tex_pgf(
     resizebox_width: str = r"\linewidth",
     strings: Optional[dict[str, str]] = None,
     nudge_labels: Optional[list] = None,
+    angle_labels: Optional[dict[str, float]] = None,
+    angle_labels_scoped: Optional[dict[str, dict[str, float]]] = None,
 ) -> Path:
     r"""Write a LaTeX ``figure`` environment that ``\input``s a PGF file.
 
@@ -1126,7 +1177,7 @@ def save_figure_tex_pgf(
         footnote_line = ""
 
     # ── Editable figure tex file (written once, never overwritten) ────────
-    if strings is not None or nudge_labels:
+    if strings is not None or nudge_labels or angle_labels or angle_labels_scoped:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
         caption_macro = _macro_name(prefix, "caption")
@@ -1143,6 +1194,16 @@ def save_figure_tex_pgf(
                 else:
                     label_id, _ = entry
                 nudge_macros.append(_nudge_macro_name(prefix, label_id))
+        angle_macros: list[tuple[str, float]] = []
+        if angle_labels:
+            for label_id, default_angle in angle_labels.items():
+                angle_macros.append((_angle_macro_name(prefix, label_id), float(default_angle)))
+        if angle_labels_scoped:
+            for scope_key, scoped_map in angle_labels_scoped.items():
+                for label_id, default_angle in scoped_map.items():
+                    angle_macros.append(
+                        (_angle_macro_name(prefix, f"{scope_key}_{label_id}"), float(default_angle))
+                    )
         if not strings_file.exists():
             lines = [
                 f"% Editable figure definition for {name}",
@@ -1159,6 +1220,11 @@ def save_figure_tex_pgf(
                 lines.append("% Example: \\renewcommand" + nudge_macros[0] + "{-3pt}  % shift label up by 3pt")
                 for m in nudge_macros:
                     lines.append(f"\\providecommand{m}{{0pt}}%")
+            if angle_macros:
+                lines.append("% --- Per-label angle nudge knobs in degrees (override with \\renewcommand)")
+                lines.append("% Example: \\renewcommand" + angle_macros[0][0] + "{45}  % rotate label anchor around point")
+                for m, default in angle_macros:
+                    lines.append(f"\\providecommand{m}{{{default:g}}}%")
             lines.append(f"\\def{caption_macro}{{{caption_str}}}%")
             lines.append(f"%")
             lines.append(f"\\begin{{figure}}[H]")
@@ -1185,21 +1251,26 @@ def save_figure_tex_pgf(
                 expected_macros[_macro_name(prefix, key)] = str(value)
             for macro, expected in expected_macros.items():
                 actual = _extract_figure_tex_macro_value(existing, macro)
-                expected_esc = re.sub(r"(?<!\\)%", r"\\%", expected)
+                expected_esc = _strip_acro_markup(re.sub(r"(?<!\\)%", r"\\%", expected))
                 if actual is None:
                     stale_macros.append(f"{macro}=missing")
                     continue
                 if actual != expected_esc:
                     stale_macros.append(macro)
             missing_nudges: list[str] = []
+            missing_angles: list[tuple[str, float]] = []
             if nudge_macros:
                 missing_nudges = [m for m in nudge_macros if m not in existing]
+            if angle_macros:
+                missing_angles = [(m, d) for m, d in angle_macros if m not in existing]
+            if missing_nudges or missing_angles:
+                add_blocks = [""]
                 if missing_nudges:
-                    add_blocks = [
-                        "",
-                        "% --- Auto-added nudge knobs (override with \\renewcommand)",
-                        *(f"\\providecommand{m}{{0pt}}%" for m in missing_nudges),
-                    ]
+                    add_blocks.append("% --- Auto-added y-nudge knobs (override with \\renewcommand)")
+                    add_blocks.extend(f"\\providecommand{m}{{0pt}}%" for m in missing_nudges)
+                if missing_angles:
+                    add_blocks.append("% --- Auto-added angle nudge knobs in degrees (override with \\renewcommand)")
+                    add_blocks.extend(f"\\providecommand{m}{{{d:g}}}%" for m, d in missing_angles)
                 # Insert before the \begin{figure} line so defaults are in
                 # scope when \input{...pgf} expands.
                 marker = "\\begin{figure}"
@@ -1210,7 +1281,8 @@ def save_figure_tex_pgf(
                 else:
                     existing = existing + "\n".join(add_blocks) + "\n"
                 strings_file.write_text(existing, encoding="utf-8")
-                print(f"  Added {len(missing_nudges)} nudge default(s) to: {strings_file}")
+                added_count = len(missing_nudges) + len(missing_angles)
+                print(f"  Added {added_count} nudge default(s) to: {strings_file}")
             if stale_macros:
                 preview = ", ".join(stale_macros[:4])
                 extra = "" if len(stale_macros) <= 4 else f" (+{len(stale_macros) - 4} more)"
