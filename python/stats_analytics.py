@@ -85,7 +85,8 @@ _CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{')
 _DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{')
 _DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{')
 _YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
-_AUX_FIG_LABEL_RE = re.compile(r'\\newlabel\{fig:([^}]+)\}\{\{([^}]+)\}')
+_LABEL_RE = re.compile(r'\\label\{([^}]+)\}')
+_AUX_LABEL_RE = re.compile(r'\\newlabel\{([^}]+)\}\{\{([^}]+)\}')
 
 
 def _latex_escape(text: str) -> str:
@@ -102,6 +103,11 @@ def _latex_escape(text: str) -> str:
         .replace("~", r"\textasciitilde{}")
         .replace("^", r"\textasciicircum{}")
     )
+
+
+def _latex_escape_breakable_periods(text: str) -> str:
+    """Escape text for LaTeX and allow line breaks after periods."""
+    return _latex_escape(text).replace(".", ".\\allowbreak{}")
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
     """Recursively collect Python-generated figure stems from *tex_file*.
@@ -344,17 +350,52 @@ def _stem_to_script(referenced: set[str]) -> dict[str, str]:
     return mapping
 
 
-def _stem_to_figure_number_from_main_aux() -> dict[str, str]:
-    """Read figure numbering from latex/build/main.aux as stem -> figure number."""
-    aux_path = LATEX_DIR / "build" / "main.aux"
-    if not aux_path.exists():
-        return {}
+def _label_to_number_from_main_aux() -> dict[str, str]:
+    """Read label numbering from main aux files as label -> rendered number."""
+    aux_candidates = [
+        LATEX_DIR / "build" / "main.aux",
+        LATEX_DIR / "build" / "main_for_tools.aux",
+        LATEX_DIR / "main.aux",
+    ]
 
-    text = aux_path.read_text(encoding="utf-8", errors="replace")
     mapping: dict[str, str] = {}
-    for stem, fig_no in _AUX_FIG_LABEL_RE.findall(text):
-        mapping[stem] = fig_no
+    for aux_path in aux_candidates:
+        if not aux_path.exists():
+            continue
+        text = aux_path.read_text(encoding="utf-8", errors="replace")
+        for label, number in _AUX_LABEL_RE.findall(text):
+            mapping[label] = number
+        # Prefer the first existing aux candidate.
+        if mapping:
+            break
+
     return mapping
+
+
+def _collect_labels_for_stem(stem: str) -> list[str]:
+    """Collect labels defined in generated wrapper files for one stem."""
+    labels: list[str] = []
+    candidates = [
+        TEX_DIR / f"{stem}.tex",
+        FIG_TEX_DIR / f"{stem}.tex",
+    ]
+
+    for path in candidates:
+        if not path.exists():
+            continue
+        body = path.read_text(encoding="utf-8", errors="replace")
+        labels.extend(_LABEL_RE.findall(body))
+
+    # Keep stable order while deduplicating.
+    seen: set[str] = set()
+    out: list[str] = []
+    for lbl in labels:
+        lbl = lbl.strip()
+        if not lbl or lbl in seen:
+            continue
+        seen.add(lbl)
+        out.append(lbl)
+    return out
 
 
 def _node_as_text(node: ast.AST, source: str) -> str:
@@ -505,7 +546,7 @@ def _write_pipeline_quality_table(
     """Create a TeX table for pipeline attachment with dataset/filter metadata."""
     audit_by_stem = {row["stem"]: row for row in audit_rows}
     stem_script = _stem_to_script(referenced)
-    stem_to_fig_no = _stem_to_figure_number_from_main_aux()
+    label_to_no = _label_to_number_from_main_aux()
 
     script_meta_cache: dict[str, dict[str, list[str]]] = {}
     rows: list[dict[str, str]] = []
@@ -518,8 +559,20 @@ def _write_pipeline_quality_table(
 
         audit_row = audit_by_stem.get(stem, {})
         years = audit_row.get("years", [])
-        fig_no = stem_to_fig_no.get(stem)
-        figure_ref = f"Obr. {fig_no}" if fig_no else "Obr. ?"
+        labels = _collect_labels_for_stem(stem)
+        figure_ref = "?"
+        for lbl in labels:
+            if lbl in label_to_no:
+                figure_ref = label_to_no[lbl]
+                break
+        if figure_ref == "?":
+            # Keep a usable textual reference even when aux numbering is unavailable.
+            if labels:
+                figure_ref = labels[0]
+            else:
+                stem_label = f"fig:{stem}"
+                if stem_label in label_to_no:
+                    figure_ref = label_to_no[stem_label]
         script_display = script.replace("analyses/", "")
 
         # Merge dataset + filter info into one column.
@@ -594,7 +647,6 @@ def _write_pipeline_quality_table(
         "\\setlength{\\tabcolsep}{3pt}",
         "\\renewcommand{\\arraystretch}{1.12}",
         "\\begin{longtable}{" + col_spec + "}",
-        "\\caption{Metadata datov\\'{e} kvality -- v\\v{s}echny obr\\'{a}zky z main.tex (c\\'{i}lov\\'{y} rok " + str(target_year) + ").}\\\\",
         "\\hline",
         hdr + " \\\\",
         "\\hline",
@@ -610,8 +662,8 @@ def _write_pipeline_quality_table(
             " & ".join(
                 [
                     _latex_escape(row["stem"]),
-                    _latex_escape(row["script"]),
-                    _latex_escape(row["datasets"]),
+                    _latex_escape(row["script"]).replace(r"\_", r"\_\allowbreak{}"),
+                    _latex_escape_breakable_periods(row["datasets"]),
                     _latex_escape(row["remarks"]),
                 ]
             )

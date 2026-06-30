@@ -21,6 +21,7 @@
 
 \usepackage[most]{tcolorbox}
 \tcbuselibrary{breakable,listings,skins}
+\usepackage{longtable}
 
 % Reuse the paper/colour logic already used by the poster class: white paper,
 % CTU blue for structure, neutral grey for secondary text, light grey-blue fills.
@@ -107,10 +108,11 @@ v \texttt{latex/texparts/python/}.
   \node[pipebox,right=of sources] (fetch) {\texttt{stattool.fetch}\\download + cache};
   \node[storebox,right=of fetch] (data) {\texttt{python/data/}\\raw cache};
   \node[pipebox,right=of data] (analysis) {\texttt{analyses/*.py}\\clean + compute};
-  \node[pipebox,right=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
-  \node[storebox,right=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
-  \node[pipebox,right=of outputs] (quality) {\texttt{stats\_analytics.py}\\data-quality audit};
-  \node[storebox,right=of quality] (reports) {\texttt{review/data\_quality\_report.*}};
+  
+  \node[pipebox,below=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
+  \node[storebox,left=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
+  \node[pipebox,left=of outputs] (quality) {\texttt{stats\_analytics.py}\\data-quality audit};
+  \node[storebox,left=of quality] (reports) {\texttt{review/data\_quality\_report.*}};
   \node[pipebox,below=of quality] (latex) {\texttt{main.tex}\\commentary};
 
   \draw[flow] (sources) -- (fetch);
