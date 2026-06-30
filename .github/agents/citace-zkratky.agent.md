@@ -56,6 +56,11 @@ Rules:
 - Insert alphabetically by ID within the file
 - After adding, confirm the ID to the caller
 
+Wrapper discipline:
+- Do NOT add new compatibility wrapper macros as a first-line fix for prose issues.
+- Prefer adding/fixing missing `\DeclareAcronym` or `\AcroPropertiesSet` entries and keep prose on canonical acro commands.
+- If backward-compatibility wrappers are explicitly requested, keep them as thin aliases only and document the canonical command they map to.
+
 ### 3a. Add a new variable or index entry
 Edit `latex/texparts/references/acro_variables.tex`:
 

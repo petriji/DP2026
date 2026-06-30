@@ -74,6 +74,12 @@ Before formatting, consult these files when context is needed:
 **NEVER** write out the expanded form manually. Always use `\ac{ID}` etc.
 Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `ML`).
 
+**Wrapper discipline (MANDATORY):**
+- In prose, prefer canonical commands (`\ac`, `\acs`, `\acl`, `\acgen`, `\acdat`, `\acacc`, `\acloc`, `\acins`, `\acgenf`, ...).
+- Do NOT introduce new compatibility wrappers in text or class files (e.g. ad-hoc `\aclong`, `\aclshort`, `\aclen`) unless explicitly requested by the user for backward compatibility.
+- If legacy wrappers already exist in prose, replace them with canonical commands during formatting edits.
+- Capitalized force-first genitive form in prose should be `\Acfgen{KEY}`; do not invent alternative naming.
+
 **Czech declension**: When an acronym appears in an oblique case, use the appropriate
 declension command (`\acgen{}`, `\acdat{}`, etc.) instead of writing the declined long form by hand.
 Declension forms are set per-acronym via `\AcroPropertiesSet{ID}{long-genitive-form=..., ...}`.
