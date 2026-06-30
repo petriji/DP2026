@@ -1,0 +1,63 @@
+% Hand-drawn TikZ figure — hierarchie odborové reprezentace v ČR.
+% ČMKOS (zastřešující konfederace) → OS (odborové svazy) → ZO (základní organizace).
+% Edit freely — není generován Pythonem.
+\def\strOOHierarchieCaption{Třístupňová hierarchie odborové reprezentace v~\aclloc{ČR}: zastřešující \acs{ČMKOS}, odvětvové \acsp{OS} a~podnikové či lokální \acsp{ZO}}%
+%
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.95\linewidth}{!}{%
+  \begin{tikzpicture}[
+    font=\sffamily\fontsize{10}{11.5}\selectfont,
+    every node/.style={align=center, inner sep=3pt,
+      font=\sffamily\fontsize{10}{11.5}\selectfont,
+      execute at begin node=\linespread{0.9}\selectfont},
+    topBox/.style    ={draw=black!85, fill=black!22, rounded corners=3pt,
+                       text width=4.4cm, minimum height=1.0cm, line width=0.9pt},
+    midBox/.style    ={draw=black!85, fill=black!12, rounded corners=3pt,
+                       text width=2.6cm, minimum height=0.9cm, line width=0.8pt},
+    botBox/.style    ={draw=black!85, fill=white, rounded corners=2pt,
+                       text width=1.9cm, minimum height=0.7cm, line width=0.7pt},
+    link/.style      ={->, line width=0.9pt, draw=black!85, >=Stealth},
+    linkDashed/.style={->, dashed, line width=0.8pt, draw=black!75, >=Stealth},
+  ]
+    % --- Vrcholová úroveň: ČMKOS ---
+    \node[topBox] (CMKOS) at (0,3.0)
+      {\textbf{\acs{ČMKOS}}\\zastřešující konfederace};
+
+    % --- Střední úroveň: OS (odvětvové svazy) ---
+    \node[midBox] (OS1) at (-4.5,1.0) {\acs{OS} odvětví A};
+    \node[midBox] (OS2) at ( 0.0,1.0) {\acs{OS} odvětví B};
+    \node[midBox] (OS3) at ( 4.5,1.0) {\acs{OS} odvětví C};
+    \node at (6.7,1.0) {\ldots};
+
+    % --- Spojení ČMKOS → OS ---
+    \draw[link] (CMKOS.south) -- (OS1.north);
+    \draw[link] (CMKOS.south) -- (OS2.north);
+    \draw[link] (CMKOS.south) -- (OS3.north);
+
+    % --- Základní úroveň: ZO (podnikové / lokální organizace) ---
+    \node[botBox] (ZO11) at (-5.6,-1.0) {\acs{ZO} podnik~1};
+    \node[botBox] (ZO12) at (-3.4,-1.0) {\acs{ZO} podnik~2};
+    \node[botBox] (ZO21) at (-1.1,-1.0) {\acs{ZO} podnik~3};
+    \node[botBox] (ZO22) at ( 1.1,-1.0) {\acs{ZO} podnik~4};
+    \node[botBox] (ZO31) at ( 3.4,-1.0) {\acs{ZO} podnik~5};
+    \node[botBox] (ZO32) at ( 5.6,-1.0) {\acs{ZO} podnik~6};
+
+    % --- Spojení OS → ZO ---
+    \draw[link] (OS1.south) -- (ZO11.north);
+    \draw[link] (OS1.south) -- (ZO12.north);
+    \draw[link] (OS2.south) -- (ZO21.north);
+    \draw[link] (OS2.south) -- (ZO22.north);
+    \draw[link] (OS3.south) -- (ZO31.north);
+    \draw[link] (OS3.south) -- (ZO32.north);
+
+    % --- Anotace u zaměstnavatele: pluralita §24 ZP ---
+    \node[draw=black!60, dashed, rounded corners=2pt,
+          text width=4.0cm, inner sep=4pt, font=\sffamily\fontsize{9}{10.5}\selectfont]
+         (Note) at (8.4,-1.0)
+         {Jeden zaměstnavatel může hostit více \acsp{ZO} z~různých \acsp{OS} (\mbox{§~24} \acs{ZákP})};
+    \draw[linkDashed] (Note.west) -- (ZO32.east);
+  \end{tikzpicture}}
+  \caption{\strOOHierarchieCaption}
+  \label{fig:oo_hierarchie}
+\end{figure}
