@@ -29,7 +29,6 @@ from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
-    add_pgf_tooltips_scatter,
     apply_style_pgf,
     load_angle_nudges_from_figure_tex,
     save_figure_tex_pgf,
@@ -97,13 +96,6 @@ fig = scatter_xy(
     label_angle_nudges=load_angle_nudges_from_figure_tex("korelace_hustota_gini", LABEL_ANGLE_NUDGES),
 )
 
-# ── PGF tooltips & geo labels ───────────────────────────────────────────
-add_pgf_tooltips_scatter(
-    fig.axes[0], fig._scatter_merged,
-    fmt_x="{:.1f}", fmt_y="{:.1f}",
-    label_x="odborová organizovanost [%]",
-    label_y="Giniho koeficient",
-)
 for _child in fig.axes[0].get_children():
     if hasattr(_child, "get_text"):
         _txt = _child.get_text().strip()

@@ -55,7 +55,6 @@ from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
-    add_pgf_tooltips_scatter,
     apply_style_pgf,
     cm2in,
     load_angle_nudges_from_figure_tex,
@@ -273,13 +272,6 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         countries=EU27_LIST,
         year_tolerance=9,
         label_angle_nudges=_scatter_angle_nudges_by_panel[panel_key],
-    )
-    # ── PGF tooltips & geo labels (───────────────────────────────────────────
-    add_pgf_tooltips_scatter(
-        ax, fig_all._scatter_merged,
-        fmt_x="{:.1f}", fmt_y="{:.1f}",
-        label_x=spec["xlabel"].replace("\n", " "),
-        label_y=spec["ylabel"].replace("\n", " "),
     )
     for _schild in ax.get_children():
         if hasattr(_schild, "get_text"):

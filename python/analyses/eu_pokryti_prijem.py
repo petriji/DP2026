@@ -33,7 +33,6 @@ from stattool.style import (
     load_angle_nudges_from_figure_tex,
     savefig_pgf,
     save_figure_tex_pgf,
-    add_pgf_tooltips_scatter,
 )
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
@@ -94,17 +93,6 @@ fig = scatter_xy(
     countries=sorted(EU27),
     year_tolerance=3,
     label_angle_nudges=load_angle_nudges_from_figure_tex("eu_pokryti_prijem", LABEL_ANGLE_NUDGES),
-)
-
-# Hover tooltips on every data point (PGF/Acrobat).
-ax = fig.axes[0]
-add_pgf_tooltips_scatter(
-    ax,
-    fig._scatter_merged,  # type: ignore[attr-defined]
-    fmt_x="{:.1f}",
-    fmt_y="{:.1f}",
-    label_x="pokrytí KV [%]",
-    label_y="HDP/ob. [PPS]",
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────

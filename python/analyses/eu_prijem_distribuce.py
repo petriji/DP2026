@@ -147,6 +147,15 @@ x_thousands = X_GRID / 1_000.0  # display x in thousand PPS
 # Convert density [1/PPS] to % of population per BIN_WIDTH-wide bin
 y_scale = BIN_WIDTH * 100.0
 
+
+def _tooltip(ax, x, y, text):
+    ax.text(
+        x, y,
+        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
+        fontsize=FIGURE_LABEL_SIZE,
+        ha="center", va="center", clip_on=True, zorder=10,
+    )
+
 # Background: other EU27 countries as thin grey lines (no fill, no markers)
 for country in BG_COUNTRIES:
     if country not in fits:
@@ -157,16 +166,13 @@ for country in BG_COUNTRIES:
         x_thousands, pdf,
         color="#999999", linewidth=0.5, alpha=0.45, zorder=1,
     )
-
-
-def _tooltip(ax, x, y, text):
-    ax.text(
-        x, y,
-        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
-        fontsize=FIGURE_LABEL_SIZE,
-        ha="center", va="center", clip_on=True, zorder=10,
-    )
-
+    if country in decile_values:
+        for d, p, q in zip(DECILES, PROBS, decile_values[country]):
+            y_q = lognormal_pdf(np.array([q]), mu, sigma)[0] * y_scale
+            _tooltip(
+                ax, q / 1_000.0, y_q,
+                f"{country} {latest[country]} {d} (p={p:.1f}): {q:,.0f} PPS",
+            )
 
 handles = []
 for country in COUNTRIES:

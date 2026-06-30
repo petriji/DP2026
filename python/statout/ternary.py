@@ -37,6 +37,7 @@ Usage
 from __future__ import annotations
 
 import math
+import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -321,23 +322,38 @@ def _add_ternary_tooltips(
     ax: plt.Axes,
     data: dict[str, tuple[float, float, float]],
     vertex_labels: tuple[str, str, str],
+    tooltip_labels: tuple[str, str, str] | None = None,
 ) -> None:
     r"""Invisible \pdftooltip anchors at each data point (PGF backend only).
 
     Tooltip text format: "Country: A_label A% / B_label B% / C_label C%".
     No-op when the active backend is not ``pgf``.
     """
+
+    def _to_plain_tooltip_text(label: str) -> str:
+        # Tooltip body is PDF-comment text; strip LaTeX macros to plain words.
+        text = label
+        text = text.replace(r"\space", " ").replace("~", " ")
+        text = re.sub(r"\\['`\^\"~=\.uvHcdbkr]\{?([A-Za-z])\}?", r"\1", text)
+        text = re.sub(r"\\[A-Za-z]+\{([^{}]*)\}", r"\1", text)
+        text = re.sub(r"\\[A-Za-z]+", "", text)
+        text = text.replace("{", "").replace("}", "")
+        return " ".join(text.split())
+
     if mpl.get_backend() != "pgf":
         return
-    a_lbl, b_lbl, c_lbl = vertex_labels
+    a_lbl, b_lbl, c_lbl = tooltip_labels or vertex_labels
+    a_tip = _to_plain_tooltip_text(a_lbl)
+    b_tip = _to_plain_tooltip_text(b_lbl)
+    c_tip = _to_plain_tooltip_text(c_lbl)
     for country, (a, b, c) in data.items():
         px, py = barycentric_to_cartesian(a, b, c)
         country_label = GEO_LONG_NAMES.get(country, country)
         tip = (
             f"{country_label}: "
-            f"{a_lbl}\\space{int(round(a))}\\%\\space/\\space"
-            f"{b_lbl}\\space{int(round(b))}\\%\\space/\\space"
-            f"{c_lbl}\\space{int(round(c))}\\%"
+            f"{a_tip} {int(round(a))} % / "
+            f"{b_tip} {int(round(b))} % / "
+            f"{c_tip} {int(round(c))} %"
         )
         ax.text(
             px, py,
@@ -406,6 +422,7 @@ def ternary_diagram(
     data: dict[str, tuple[float, float, float]],
     colors: dict[str, str],
     vertex_labels: tuple[str, str, str] = ("A", "B", "C"),
+    tooltip_labels: tuple[str, str, str] | None = None,
     title: str = "",
     bg_alpha: float = 0.20,
     figsize: tuple[float, float] = (6.4, 5.4),
@@ -430,6 +447,9 @@ def ternary_diagram(
         Axis names for vertices A (top), B (bottom-left), C (bottom-right).
         May contain LaTeX markup (e.g. ``r"\\acs{KEY}"``).  Native UTF-8
         characters (e.g. Czech diacritics) are supported with modern pdflatex.
+    tooltip_labels:
+        Optional plain-text labels for tooltip text. If omitted,
+        ``vertex_labels`` are reused and converted to plain text.
     title:
         Figure title.  May contain LaTeX markup.
     bg_alpha:
@@ -519,8 +539,8 @@ def ternary_diagram(
     # ── PGF hover tooltips ────────────────────────────────────────────────
     if enable_tooltips:
         if background_data:
-            _add_ternary_tooltips(ax, background_data, vertex_labels)
-        _add_ternary_tooltips(ax, data, vertex_labels)
+            _add_ternary_tooltips(ax, background_data, vertex_labels, tooltip_labels)
+        _add_ternary_tooltips(ax, data, vertex_labels, tooltip_labels)
 
     # ── Axis arrows + optional corner labels ──────────────────────────────
     _draw_axis_arrows(ax, vertex_labels, show_corner_labels=show_corner_labels)

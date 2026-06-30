@@ -132,19 +132,6 @@ fig, ax = plt.subplots(figsize=cm2in(16, 10))
 
 # Density [1/(PPS/h)] → % of employees per BIN_WIDTH-wide bin
 y_scale = BIN_WIDTH * 100.0
-
-# Background: other EU27 countries as thin grey lines (no fill, no markers)
-for country in BG_COUNTRIES:
-    if country not in fits:
-        continue
-    mu, sigma = fits[country]
-    pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
-    ax.plot(
-        X_GRID, pdf,
-        color="#999999", linewidth=0.5, alpha=0.45, zorder=1,
-    )
-
-
 DP_LABELS = ["D1 (p=0,1)", "medián (p=0,5)", "D9 (p=0,9)"]
 
 
@@ -156,6 +143,23 @@ def _tooltip(ax, x, y, text):
         ha="center", va="center", clip_on=True, zorder=10,
     )
 
+# Background: other EU27 countries as thin grey lines (no fill, no markers)
+for country in BG_COUNTRIES:
+    if country not in fits:
+        continue
+    mu, sigma = fits[country]
+    pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
+    ax.plot(
+        X_GRID, pdf,
+        color="#999999", linewidth=0.5, alpha=0.45, zorder=1,
+    )
+    if country in indic_values:
+        for label, q in zip(DP_LABELS, indic_values[country]):
+            y_q = lognormal_pdf(np.array([q]), mu, sigma)[0] * y_scale
+            _tooltip(
+                ax, q, y_q,
+                f"{country} {latest[country]} {label}: {q:.2f} PPS/h",
+            )
 
 handles = []
 for country in COUNTRIES:
