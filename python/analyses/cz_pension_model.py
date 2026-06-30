@@ -13,9 +13,12 @@ work, the x-axis represents the *total cost to the payer* (employer or client):
   • OSVČ – standardní odvody:
       x = zisk (příjmy − výdaje)      OVZ = max(55 % × zisk, OSVC_MIN_MONTHLY_BASE)
 
-  • OSVČ – paušální daň pásma 1–3:
+  • OSVČ – paušální daň:
       x = měsíční příjmy (revenue); assessment base fixed per pásmo.
-      Income ceilings (83 333 / 125 000 / 166 667 Kč/měs.) are revenue-based.
+      Dostupná pásma dle typu OSVČ (§ 2a zákona č. 586/1992 Sb.):
+        40 % výd. paušál: pásmo 1 (≤ 83 333 Kč/měs.), 2 (≤ 125 000), 3 (≤ 166 667)
+        60 % výd. paušál: pásmo 1 (≤ 125 000 Kč/měs.), 2 (≤ 166 667)
+        80 % výd. paušál: pásmo 1 only (≤ 166 667 Kč/měs.)
 
 This normalisation makes the švarc-systém comparison meaningful: a client that
 budgets 100 000 Kč/month either pays an employer for an employee 100 000 Kč total (gross
@@ -66,6 +69,8 @@ from matplotlib.lines import Line2D
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import apply_style, cm2in, save_figure_tex, savefig
+
+apply_style()
 
 # ── 2026 statutory parameters ─────────────────────────────────────────────────
 # Sources: zákon č. 155/1995 Sb. ve znění pozdějších předpisů (ZPDS),
@@ -749,8 +754,6 @@ def plot_pension_solidarity(
     return fig
 
 if __name__ == "__main__":
-    apply_style()
-
     # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
     fig_cmp = plot_pension_comparison()
     savefig(fig_cmp, "cz_pension_income", out_dir=LATEX_PICS_DIR)
