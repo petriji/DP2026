@@ -4,13 +4,5 @@ Přetrvávající mzdová disper­ze v~ČR (obr.~\ref{fig:problemy_sektor_percen
 Posílení kolektivního vyjednávání na odvětvové úrovni, které by komprimovalo mzdové rozdělení zdola, by tedy zároveň snižovalo redistribuční nároky na důchodový systém a~zvyšovalo jeho dlouhodobou udržitelnost.
 
 Náhradový poměr je definován jako podíl měsíčního starobního důchodu na čistém měsíčním příjmu zaměstnance; výše důchodu je odvozena z~osobního vyměřovacího základu podle redukčních hranic pro rok~2026. Modelový výpočet vychází z~platných sazeb a~předpokládané pojistné doby 40~let podle zákona o~důchodovém pojištění~\cite{zakon_zpds_1995} ve~znění důchodové reformy~\cite{zakon_duchreforma_2023} a~nařízení vlády o~minimální mzdě pro rok~2026~\cite{nv_365_2025}.\par
-Formálně je čistý náhradový poměr~$\acs{var-R}_{\acs{idx-NP}}$ definován jako:
-\begin{equation}\label{eq:replacement_rate}
-  \acs{var-R}_{\acs{idx-NP}}
-    = \frac{\acs{var-y}_{\acs{idx-SD},\acs{idx-m},\acs{idx-n}}}
-           {\acs{var-w}_{\acs{idx-n},\acs{idx-m}}},
-\end{equation}
-kde čitatel~$\acs{var-y}_{\acs{idx-SD},\acs{idx-m},\acs{idx-n}}$ je měsíční čistý starobní důchod (po zdanění a~odvodech) a~jmenovatel~$\acs{var-w}_{\acs{idx-n},\acs{idx-m}}$ je čistá měsíční mzda zaměstnance bezprostředně před odchodem do důchodu.
-Hodnota se v~grafu zobrazuje jako funkce hrubého měsíčního příjmu, čímž odhaluje degresivní charakter náhrady --- vyšší příjem znamená nižší relativní krytí.
 
 \input{texparts/python/problemy_duchod_solidarita}
