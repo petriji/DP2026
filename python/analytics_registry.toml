@@ -53,7 +53,7 @@ script   = "analyses/union_gini_scatter.py"
 texparts = ["union_gini_scatter"]
 pics     = ["union_gini_scatter"]
 
-[cz_pension]
-script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_solidarity"]
-pics     = ["cz_pension_solidarity"]
+[ipp_wage_growth]
+script   = "analyses/ipp_wage_growth.py"
+texparts = ["ipp_wage_growth"]
+pics     = ["ipp_wage_growth"]

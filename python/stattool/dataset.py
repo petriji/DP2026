@@ -339,6 +339,150 @@ class Dataset:
         df = df.dropna(subset=["value"])
         return cls(df, name=name, unit=unit, source_url=source_url)
 
+    @classmethod
+    def from_ipp_excel(
+        cls,
+        path,
+        *,
+        sheet_name: int | str = 0,
+        skiprows: int = 3,
+        year_col: str | None = None,
+        value_col: str | None = None,
+        year: int | None = None,
+        name: str = "value",
+        unit: str = "%",
+        source_url: str = "",
+    ) -> "Dataset":
+        """Parse an IPP (Informace o pracovních podmínkách) Excel workbook.
+
+        IPP workbooks are published annually by the Czech Ministry of Labour
+        and Social Affairs (MPSV) at ``https://www.kolektivnismlouvy.cz``.
+        Each workbook covers a single survey year and contains multiple sheets
+        (záložky) for different aspects of collective agreements.
+
+        The method returns a tidy long-format :class:`Dataset` with columns
+        ``geo`` (fixed to ``"CZ"``), ``time`` (survey year), and ``value``
+        (the extracted numeric metric).
+
+        Parameters
+        ----------
+        path:
+            Local path to the ``.xlsx`` file (returned by
+            :func:`~stattool.fetch.fetch_ipp`).
+        sheet_name:
+            Sheet name or 0-based index to read.  Defaults to the first sheet.
+        skiprows:
+            Number of header rows to skip before the column labels.  Czech
+            government workbooks typically have 2–4 title rows at the top.
+        year_col:
+            Name of the column containing the survey year (or a label/row
+            that should be parsed as the year).  When ``None``, the method
+            tries to auto-detect a column whose values look like 4-digit years.
+        value_col:
+            Name (or substring match) of the column containing the primary
+            numeric metric.  When ``None``, the first numeric column that is
+            not the year column is used.
+        year:
+            Override the survey year when the workbook does not contain an
+            explicit year column (single-year files).  If provided, a ``time``
+            column with this constant value is created.
+        name:
+            Human-readable variable name for :attr:`Dataset.name`.
+        unit:
+            Unit string (e.g. ``"%"`` or ``"CZK"``).
+        source_url:
+            Original URL of the workbook.
+
+        Returns
+        -------
+        Dataset
+            Tidy long-format Dataset with columns ``geo``, ``time``, ``value``.
+
+        Examples
+        --------
+        >>> from stattool.fetch import fetch_ipp
+        >>> from stattool.dataset import Dataset
+        >>> path = fetch_ipp(2024, "odmenovani")
+        >>> ds = Dataset.from_ipp_excel(
+        ...     path,
+        ...     sheet_name=0,
+        ...     skiprows=3,
+        ...     year=2024,
+        ...     value_col="Sjednaný nárůst",
+        ...     name="Sjednaný nárůst základní mzdy",
+        ...     unit="%",
+        ...     source_url="MPSV IPP 2024",
+        ... )
+        """
+        df_raw = pd.read_excel(
+            path,
+            sheet_name=sheet_name,
+            skiprows=skiprows,
+            header=0,
+        )
+        # Drop fully-empty rows and columns
+        df_raw = df_raw.dropna(how="all").reset_index(drop=True)
+        df_raw = df_raw.loc[:, df_raw.notna().any(axis=0)]
+
+        # ── Determine year column ─────────────────────────────────────────────
+        if year is not None:
+            # Single-year file: inject a constant year column
+            df_raw["time"] = year
+            time_col_used = "time"
+        elif year_col is not None:
+            # Exact column name provided
+            if year_col not in df_raw.columns:
+                raise ValueError(
+                    f"year_col '{year_col}' not found. "
+                    f"Available columns: {list(df_raw.columns)}"
+                )
+            df_raw = df_raw.rename(columns={year_col: "time"})
+            time_col_used = "time"
+        else:
+            # Auto-detect: find first column whose values are 4-digit years
+            time_col_used = _detect_year_column(df_raw)
+            if time_col_used is None:
+                raise ValueError(
+                    "Cannot auto-detect a year column in the IPP workbook. "
+                    "Pass year_col= or year= explicitly."
+                )
+            df_raw = df_raw.rename(columns={time_col_used: "time"})
+            time_col_used = "time"
+
+        # ── Determine value column ────────────────────────────────────────────
+        if value_col is not None:
+            # Exact name or substring match
+            matched = [c for c in df_raw.columns if value_col in str(c)]
+            if not matched:
+                raise ValueError(
+                    f"value_col substring '{value_col}' not found. "
+                    f"Available columns: {list(df_raw.columns)}"
+                )
+            val_col = matched[0]
+        else:
+            # Auto-detect: first numeric column that is not the time column
+            numeric_cols = [
+                c for c in df_raw.columns
+                if c != time_col_used
+                and pd.api.types.is_numeric_dtype(df_raw[c])
+            ]
+            if not numeric_cols:
+                raise ValueError(
+                    "No numeric column found in the IPP workbook. "
+                    "Pass value_col= explicitly."
+                )
+            val_col = numeric_cols[0]
+
+        df = pd.DataFrame({
+            "geo": "CZ",
+            "time": pd.to_numeric(df_raw[time_col_used], errors="coerce"),
+            "value": pd.to_numeric(df_raw[val_col], errors="coerce"),
+        })
+        df = df.dropna(subset=["time", "value"]).copy()
+        df["time"] = df["time"].astype(int)
+
+        return cls(df, name=name, unit=unit, source_url=source_url)
+
 
 def _is_year_col(col: str) -> bool:
     try:
@@ -346,6 +490,25 @@ def _is_year_col(col: str) -> bool:
         return 1900 <= y <= 2100
     except ValueError:
         return False
+
+
+def _detect_year_column(df: pd.DataFrame) -> Optional[str]:
+    """Return the name of the first column whose non-null values are 4-digit years.
+
+    Used by :meth:`Dataset.from_ipp_excel` to auto-detect the year column in
+    Czech government Excel workbooks where the column header may vary by year.
+    """
+    for col in df.columns:
+        sample = df[col].dropna().head(10)
+        if sample.empty:
+            continue
+        try:
+            years = pd.to_numeric(sample, errors="coerce").dropna()
+            if len(years) > 0 and years.between(1900, 2100).all():
+                return col
+        except Exception:
+            continue
+    return None
 
 
 # ── OECD ISO 3166-1 alpha-3 → alpha-2 mapping ────────────────────────────────
