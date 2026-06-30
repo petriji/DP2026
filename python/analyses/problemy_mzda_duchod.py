@@ -4,13 +4,13 @@ Smoothed distribution functions of Czech wages and pensions.
 Two smoothed probability-density curves are fitted and displayed on a single
 combined figure:
 
-  **Wages** – ISPV / RSCP semi-annual Excel workbooks published by
+  **Wages** -- ISPV / RSCP semi-annual Excel workbooks published by
   MPSV / TREXIMA (``https://www.ispv.cz``).  The national-aggregate
   percentile profile (P10, P25, P50, P75, P90) extracted from the first
   sheet is used to fit a two-parameter log-normal distribution via
   least-squares regression on the log-quantile / probit scale.
 
-  **Pensions** – CSSZ (*Česká správa sociálního zabezpečení*) publishes
+  **Pensions** -- CSSZ (*Česká správa sociálního zabezpečení*) publishes
   annual statistics on old-age pensions structured by monthly-amount
   bracket.  The script attempts to download the current-year Excel
   workbook from CSSZ open data; if the download fails a set of
@@ -26,7 +26,7 @@ satisfies::
     log(Q_p) = μ + σ · Φ⁻¹(p)
 
 where Φ⁻¹ is the standard-normal quantile function (probit).  Given five
-quantile constraints (P10 – P90) this reduces to an ordinary least-squares
+quantile constraints (P10 -- P90) this reduces to an ordinary least-squares
 problem in (μ, σ), solved with :func:`numpy.linalg.lstsq`.  The
 probability-density function is then evaluated on a dense grid and plotted
 as a smooth curve.
@@ -69,14 +69,14 @@ apply_style_pgf()
 _ISPV_END_YEAR = 2025
 
 # Standard-normal quantile values for P10, P25, P50, P75, P90
-# (Φ⁻¹ at the five standard percentile levels – exact to 6 d.p.)
+# (Φ⁻¹ at the five standard percentile levels -- exact to 6 d.p.)
 _PROBS  = np.array([0.10, 0.25, 0.50, 0.75, 0.90])
 _ZSCORES = np.array([-1.281552, -0.674490, 0.000000, 0.674490, 1.281552])
 
-# Fallback wage quantiles (ISPV 2025/H1, podnikatelská sféra – celkem, Kč/měsíc)
+# Fallback wage quantiles (ISPV 2025/H1, podnikatelská sféra -- celkem, Kč/měsíc)
 # Source: MPSV / TREXIMA ISPV 2025 H1 press release
 # P10/P90 from published D1/D9 = 24 592 / 85 768 Kč; P25/P75 estimated from
-# log-normal fit (σ ≈ 0.487 derived from D1–D9 ratio 3.49).
+# log-normal fit (σ ≈ 0.487 derived from D1--D9 ratio 3.49).
 _FALLBACK_WAGE_Q: dict[float, float] = {
     0.10: 24_592,
     0.25: 30_100,
@@ -87,10 +87,10 @@ _FALLBACK_WAGE_Q: dict[float, float] = {
 _FALLBACK_WAGE_YEAR = 2025
 
 # Total private-sector employees covered by ISPV 2025/H1 (approx.)
-# Source: MPSV / ČSÚ – business-sphere employment, 2025/H1
+# Source: MPSV / ČSÚ -- business-sphere employment, 2025/H1
 N_WAGE = 3_500_000
 
-# Fallback pension quantiles (CSSZ Statistická ročenka 2024 – starobní důchody,
+# Fallback pension quantiles (CSSZ Statistická ročenka 2024 -- starobní důchody,
 # prosinec 2024, přibližné hodnoty percentilů odvozené z distribuce dle pásem výše
 # důchodu).  Průměr = 20 736 Kč, mediánová hodnota ≈ 20 800 Kč (těsně pod 21 000 Kč).
 # Celkový počet příjemců plného starobního důchodu k 31. 12. 2024: 2 367 000.
@@ -110,8 +110,8 @@ _FALLBACK_PENSION_YEAR = 2024
 # Source: CSSZ Statistická ročenka důchodového pojistění 2024
 N_PENSION = 2_367_000
 
-# X-axis evaluation grid – net-income scale (Kč/měsíc)
-# Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5–90 tis. to cover both series.
+# X-axis evaluation grid -- net-income scale (Kč/měsíc)
+# Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5--90 tis. to cover both series.
 _X_MIN   =  0
 _X_MAX   = 90_000
 _X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
@@ -127,8 +127,8 @@ MIN_PENSION    =  5_170   # Kč/měsíc  (4 400 + 770 Kč)  zákon č.155/1995 S
 from cz_tax_model import EMPLOYEE_SOCIAL_RATE as _SP_EMPLOYEE_RATE  # 7,1 % (důch. 6,5 % + nemoc. 0,6 %)
 from cz_tax_model import EMPLOYER_INS_RATE  # 33,8 % SP + ZP zaměstnavatele
 _ZP_EMPLOYEE_RATE   = 0.045        # zdravotní pojistění zaměstnanec
-_DPFO_RATE_LOW      = 0.15         # sazba DPFO – 1. pásmo (do 1 676 052 Kč/rok)
-_DPFO_RATE_HIGH     = 0.23         # sazba DPFO – 2. pásmo (nad 1 676 052 Kč/rok)
+_DPFO_RATE_LOW      = 0.15         # sazba DPFO -- 1. pásmo (do 1 676 052 Kč/rok)
+_DPFO_RATE_HIGH     = 0.23         # sazba DPFO -- 2. pásmo (nad 1 676 052 Kč/rok)
 _DPFO_THRESHOLD_YR  = 1_676_052    # Kč/rok (§ 16 ZDP, platné pro rok 2025)
 _DPFO_THRESHOLD_MO  = _DPFO_THRESHOLD_YR / 12  # ≈ 139 671 Kč/měsíc
 _SLEVA_POPLATNIK    = 2_570        # Kč/měsíc (sleva na poplatníka = 30 840 Kč/rok)
@@ -143,7 +143,7 @@ _COLOR_PENSION = PALETTE[4]   # vermillion
 #   https://www.cssz.cz/documents/20143/2946719/Ročenka+{year}.zip/{guid}
 # The table with pension-amount distribution is one of the XLSX files inside.
 _CSSZ_URLS: list[tuple[int, str]] = [
-    # (year, ZIP URL) – add newer editions here when available
+    # (year, ZIP URL) -- add newer editions here when available
     (2024, "https://www.cssz.cz/documents/20143/2946719/"
            "Ro%C4%8Denka+2024.zip/616fb679-ad56-768a-6276-eddb0b99273a"),
     (2023, "https://www.cssz.cz/documents/20143/2946719/"
@@ -551,7 +551,7 @@ freq_wage    = N_WAGE    * pdf_wage     # tis. osob  per  tis. Kč bracket
 freq_pension = N_PENSION * pdf_pension  # tis. osob  per  tis. Kč bracket
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure – combined frequency plot
+# Figure -- combined frequency plot
 # ════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=cm2in(16, 10))
 
@@ -618,7 +618,7 @@ ax.yaxis.set_major_formatter(
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
 ax.set_title(
-    "Rozložení čisté mzdy zaměstnanců a starobních důchodů – ČR",
+    "Rozložení čisté mzdy zaměstnanců a starobních důchodů -- ČR",
     fontsize=FONT_SIZE,
 )
 ax.legend(

@@ -9,7 +9,7 @@ economy-wide IPP collective-agreement analysis.
 
 Three argumentation figures are produced:
 
-Figure A – ``rscp_sector_wages_cz``
+Figure A -- ``rscp_sector_wages_cz``
     Horizontal bar chart: CZ sector median monthly wages relative to the
     economy-wide median (index 100 = economy median).  Sectors above 100
     are high-wage; below 100 are low-wage.
@@ -22,9 +22,9 @@ Figure A – ``rscp_sector_wages_cz``
     where collective agreements face the greatest wage-floor pressure
     (low-wage sectors) vs. where they are least binding (high-wage sectors).
 
-Figure B – ``rscp_sector_lci_growth``
+Figure B -- ``rscp_sector_lci_growth``
     Multi-line time series: CZ Labour Cost Index annual growth (%) by
-    NACE sector, 2016–2025.
+    NACE sector, 2016--2025.
 
     Data: Eurostat ``lc_lci_r2_a`` with available NACE breakdowns for CZ.
 
@@ -34,7 +34,7 @@ Figure B – ``rscp_sector_lci_growth``
     levels; below-average sectors depend more on collective agreements
     as a wage floor.
 
-Figure C – ``rscp_sector_dispersion``
+Figure C -- ``rscp_sector_dispersion``
     Grouped bar or dot plot: inter-country comparison of wage variation
     across sectors (coefficient of variation of sector median wages) for
     the 6 comparison countries.
@@ -98,11 +98,11 @@ END_YEAR   = 2024   # SES and ISPV lag by one year vs IPP
 # NACE sections in lc_lci_r2_a that Eurostat publishes for most countries.
 # Keys = Eurostat NACE filter code; values = short Czech sector label.
 LCI_NACE_CODES: dict[str, str] = {
-    "B-E":  "Průmysl (B–E)",
+    "B-E":  "Průmysl (B--E)",
     "C":     "Zpracovatelský průmysl (C)",
     "F":     "Stavebnictví (F)",
-    "G-J":   "Obchod, doprava, IT (G–J)",
-    "K-N":   "Finance, poradenství (K–N)",
+    "G-J":   "Obchod, doprava, IT (G--J)",
+    "K-N":   "Finance, poradenství (K--N)",
 }
 
 # SES NACE codes available in earn_ses_pub2s (for inter-country comparison)
@@ -126,7 +126,7 @@ _ISPV_NAT_2025_URL = (
     "/CR_254_MZS-xlsx.aspx?disposition=attachment"
 )
 # MZS-M6 (NACE section breakdown) is embedded in the MZS-M5_6 sheet.
-# Rows 25–43 (0-based) in that sheet contain sections A–S; col 0=code, col 3=median.
+# Rows 25--43 (0-based) in that sheet contain sections A--S; col 0=code, col 3=median.
 _MZS_M6_START_ROW = 25
 _MZS_M6_MEDIAN_COL = 3
 
@@ -139,7 +139,7 @@ def _read_ispv_nace_from_guid(url: str) -> pd.Series | None:
     """Download ISPV national workbook via GUID URL and extract NACE median wages.
 
     Reads MZS-M6 (NACE section breakdown) embedded in the ``MZS-M5_6`` sheet.
-    Returns pd.Series indexed by short NACE label (e.g. "C – Zpracovatelský průmysl").
+    Returns pd.Series indexed by short NACE label (e.g. "C -- Zpracovatelský průmysl").
     """
     from stattool.fetch import fetch as _fetch
     try:
@@ -173,7 +173,7 @@ def _read_ispv_nace_from_guid(url: str) -> pd.Series | None:
         if pd.isna(median) or not (10_000 < median < 500_000):
             continue
         short = label_raw[:40] if label_raw and label_raw != "nan" else code
-        records[f"{code} – {short}"] = median
+        records[f"{code} -- {short}"] = median
     if not records:
         return None
     return pd.Series(records, name="median_wage")
@@ -275,7 +275,7 @@ else:
             print(f"  ISPV {yr}H2: skipped ({type(exc).__name__}: {exc})")
 
 if ispv_wages is None:
-    print("  ISPV unavailable – sector bar chart will be skipped or use Eurostat fallback.")
+    print("  ISPV unavailable -- sector bar chart will be skipped or use Eurostat fallback.")
 
 # ════════════════════════════════════════════════════════════════════════════
 # 2. Fetch Eurostat LCI by NACE for CZ
@@ -313,7 +313,7 @@ except Exception as exc:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A – ISPV sector wage bar chart (CZ)
+# Figure A -- ISPV sector wage bar chart (CZ)
 # ════════════════════════════════════════════════════════════════════════════
 if ispv_wages is not None:
     # Normalise to economy-wide median = 100
@@ -348,10 +348,10 @@ if ispv_wages is not None:
         strings={},
     )
 else:
-    print("Figure A (ISPV sector bars) skipped – ISPV data unavailable.")
+    print("Figure A (ISPV sector bars) skipped -- ISPV data unavailable.")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B – Eurostat LCI growth by NACE sector (CZ)
+# Figure B -- Eurostat LCI growth by NACE sector (CZ)
 # ════════════════════════════════════════════════════════════════════════════
 if lci_by_nace:
     fig_b, ax_b = plt.subplots(figsize=cm2in(16, 9))
@@ -360,7 +360,7 @@ if lci_by_nace:
     if "CZ" in lci_total:
         ax_b.plot(
             lci_total["CZ"].index, lci_total["CZ"].values,
-            label="Celkem – podnikat. sféra (B–N)",
+            label="Celkem -- podnikat. sféra (B--N)",
             color="black", linewidth=2.5, linestyle="-",
         )
 
@@ -402,10 +402,10 @@ if lci_by_nace:
         strings={},
     )
 else:
-    print("Figure B (LCI by sector) skipped – no Eurostat NACE data available.")
+    print("Figure B (LCI by sector) skipped -- no Eurostat NACE data available.")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C – Inter-sector wage dispersion across 6 countries
+# Figure C -- Inter-sector wage dispersion across 6 countries
 # (LCI coefficient of variation across NACE sectors, one bar per country)
 # ════════════════════════════════════════════════════════════════════════════
 print("Computing inter-sector wage dispersion (coefficient of variation) …")
@@ -475,6 +475,6 @@ if cv_by_country:
         strings={},
     )
 else:
-    print("Figure C (sector dispersion) skipped – insufficient cross-country NACE data.")
+    print("Figure C (sector dispersion) skipped -- insufficient cross-country NACE data.")
 
 print("Done.")

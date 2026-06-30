@@ -1,4 +1,4 @@
-r"""Czech tax-wedge model – calculation functions and parametric wedge figure.
+r"""Czech tax-wedge model -- calculation functions and parametric wedge figure.
 
 Tax wedge definition
 --------------------
@@ -9,19 +9,19 @@ total labor cost) resp. na příjmech OSVČ.
     Zahrnuje: odvody zaměstnavatele (SP 24,8 % + ZP 9 %) + odvody zaměstnance
     (SP 7,1 % + ZP 4,5 %) + DPFO (15 % / 23 %) − sleva na poplatníka 2 570 Kč/měs.
 
-  • OSVČ – standardní odvody (skutečné výdaje):
+  • OSVČ -- standardní odvody (skutečné výdaje):
     Daňový klín = (SP + ZP + DPFO) / zisk.
     Základ DPFO = zisk − SP − ZP (§ 24/2/e ZDP, SP a ZP jsou odečitatelné
     u skutečných výdajů).
     Sleva na poplatníka 2 570 Kč/měs. uplatněna.
 
-  • OSVČ – výdajový paušál (paušální výdaje):
+  • OSVČ -- výdajový paušál (paušální výdaje):
     Daňový klín = (SP + ZP + DPFO) / příjmy.
-    ZD DPFO = příjmy × (1 − sazba paušálu) – SP a ZP NEJSOU odečitatelné
-    (ZDP § 7 odst. 7 – paušál vylučuje § 24/2/e).
+    ZD DPFO = příjmy × (1 − sazba paušálu) -- SP a ZP NEJSOU odečitatelné
+    (ZDP § 7 odst. 7 -- paušál vylučuje § 24/2/e).
     Sleva na poplatníka 2 570 Kč/měs. uplatněna.
 
-  • OSVČ – paušální daň pásma 1–3:
+  • OSVČ -- paušální daň pásma 1--3:
     Celková platba je pevná (PAUSALNI_DAN_TOTAL). Sleva na poplatníka je již
     zahrnuta ve výši daňové složky (DPFO v pásmu 1 = 100 Kč = de facto po slevě).
     Daňový klín = celková_platba / příjmy (bez nutnosti separátně počítat DPFO).
@@ -31,10 +31,10 @@ ZP VZ: 50 % ze základu daně (zákon č. 592/1992 Sb.).
 
 Figure
 ------
-  plot_tax_wedge_comparison() – parametric single panel:
+  plot_tax_wedge_comparison() -- parametric single panel:
       X-axis: daňový klín [%]
       Y-axis: náhradový poměr [%] = důchod / čistý příjem
-      Parameter: income (celkové náklady / příjmy), range ~39–300 tis. Kč/měsíc.
+      Parameter: income (celkové náklady / příjmy), range ~39--300 tis. Kč/měsíc.
       Output: pics/python/cz_pension_wedge.pdf
 
 Run
@@ -150,8 +150,8 @@ def tax_wedge_osvc(profit: np.ndarray | float) -> np.ndarray | float:
 
     Pro skutečné výdaje: SP a ZP jsou odečitatelné od základu daně DPFO
     (§ 24 odst. 2 písm. e) ZDP).
-    SP VZ = max(55 % × zisk, min. základ) – zákon č. 270/2023 Sb. (od 2024).
-    ZP VZ = max(50 % × zisk, min. základ) – zákon č. 592/1992 Sb.
+    SP VZ = max(55 % × zisk, min. základ) -- zákon č. 270/2023 Sb. (od 2024).
+    ZP VZ = max(50 % × zisk, min. základ) -- zákon č. 592/1992 Sb.
     Sleva na poplatníka (2 570 Kč/měs.) odečtena od DPFO.
     """
     x = np.asarray(profit, dtype=float)
@@ -176,11 +176,11 @@ def tax_wedge_osvc_vydajovy(revenue: np.ndarray | float,
     Daňový klín = (SP + ZP + DPFO) / příjmy × 100.
 
     Výdajový paušál nahrazuje skutečné výdaje, takže SP a ZP NEJSOU
-    odečitatelné od základu daně DPFO (ZDP § 7 odst. 7 – uplatnění paušálu
+    odečitatelné od základu daně DPFO (ZDP § 7 odst. 7 -- uplatnění paušálu
     vylučuje současné uplatnění § 24/2/e). Základ DPFO = příjmy × (1 − sazba).
 
-    SP VZ = max(55 % × ZD, min. základ) – zákon č. 270/2023 Sb. (od 2024).
-    ZP VZ = max(50 % × ZD, min. základ) – zákon č. 592/1992 Sb.
+    SP VZ = max(55 % × ZD, min. základ) -- zákon č. 270/2023 Sb. (od 2024).
+    ZP VZ = max(50 % × ZD, min. základ) -- zákon č. 592/1992 Sb.
     Sleva na poplatníka (2 570 Kč/měs.) odečtena od DPFO.
     """
     x = np.asarray(revenue, dtype=float)
@@ -235,22 +235,22 @@ def tax_breakdown(
     Returns
     -------
     dict s klíči:
-        income          – vstupní příjem / náklady [Kč/měs.]
-        zd              – základ daně DPFO [Kč/měs.]
-        employer_sp     – SP zaměstnavatele (jen employee) [Kč/měs.]
-        employer_zp     – ZP zaměstnavatele (jen employee) [Kč/měs.]
-        sp_vz           – SP vyměřovací základ [Kč/měs.]
-        sp              – sociální pojistné [Kč/měs.]
-        zp_vz           – ZP vyměřovací základ [Kč/měs.]
-        zp              – zdravotní pojistné [Kč/měs.]
-        dpfo_base       – základ DPFO po případném odpočtu SP/ZP [Kč/měs.]
-        dpfo_gross      – DPFO před slevou na poplatníka [Kč/měs.]
-        sleva_poplatnik – uplatněná sleva na poplatníka [Kč/měs.]
-        dpfo_net        – DPFO po slevě [Kč/měs.]
-        total_charges   – celkové odvody + daň [Kč/měs.]
-        net_income      – čistý příjem (od ZD po odečtení SP+ZP+DPFO) [Kč/měs.]
-        tax_wedge_pct   – daňový klín [%]
-        note            – poznámka k výpočtu
+        income          -- vstupní příjem / náklady [Kč/měs.]
+        zd              -- základ daně DPFO [Kč/měs.]
+        employer_sp     -- SP zaměstnavatele (jen employee) [Kč/měs.]
+        employer_zp     -- ZP zaměstnavatele (jen employee) [Kč/měs.]
+        sp_vz           -- SP vyměřovací základ [Kč/měs.]
+        sp              -- sociální pojistné [Kč/měs.]
+        zp_vz           -- ZP vyměřovací základ [Kč/měs.]
+        zp              -- zdravotní pojistné [Kč/měs.]
+        dpfo_base       -- základ DPFO po případném odpočtu SP/ZP [Kč/měs.]
+        dpfo_gross      -- DPFO před slevou na poplatníka [Kč/měs.]
+        sleva_poplatnik -- uplatněná sleva na poplatníka [Kč/měs.]
+        dpfo_net        -- DPFO po slevě [Kč/měs.]
+        total_charges   -- celkové odvody + daň [Kč/měs.]
+        net_income      -- čistý příjem (od ZD po odečtení SP+ZP+DPFO) [Kč/měs.]
+        tax_wedge_pct   -- daňový klín [%]
+        note            -- poznámka k výpočtu
     """
     r: dict[str, float] = {
         "income":           income,
@@ -324,7 +324,7 @@ def tax_breakdown(
         r["net_income"]      = zd - sp - zp - r["dpfo_net"]
         r["tax_wedge_pct"]   = r["total_charges"] / income * 100
         dph_note = (
-            f" DPH 21 % ({dph:,.0f} Kč/měs.) zahrnuto – OSVČ plátce DPH."
+            f" DPH 21 % ({dph:,.0f} Kč/měs.) zahrnuto -- OSVČ plátce DPH."
             if dph > 0 else ""
         )
         r["note"] = (

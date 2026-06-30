@@ -1,5 +1,5 @@
 r"""
-Labour Market Policy (LMP) expenditure as % of GDP – CZ, AT, DE, DK, PL, SK.
+Labour Market Policy (LMP) expenditure as % of GDP -- CZ, AT, DE, DK, PL, SK.
 
 Key message for the thesis: DK spends ~2 % of GDP on active labour-market
 policy; CZ spends ~0.3 %.  The "flexicurity" triangle only works with
@@ -8,7 +8,7 @@ adequate income-support and re-skilling investment.
 Data source: Eurostat, ``lmp_expsumm``
   LMP summary expenditure by type of action.
   Dimensions: freq · exptype · unit · geo
-  Filter used: freq=A, programme=LMP_20T70 (active, cat. 2–7), unit=PC_GDP.
+  Filter used: freq=A, programme=LMP_20T70 (active, cat. 2--7), unit=PC_GDP.
 
 Output
 ------
@@ -42,7 +42,7 @@ apply_style_pgf()
 # ── 1. Load data ──────────────────────────────────────────────────────────────
 ds_all = load_lmp_active(start_period=START_YEAR)
 
-print(f"All countries: {len(ds_all.countries)}  |  Years: {ds_all.years[0]}–{ds_all.years[-1]}")
+print(f"All countries: {len(ds_all.countries)}  |  Years: {ds_all.years[0]}--{ds_all.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
@@ -61,7 +61,7 @@ fig.axes[0].set_ylim(0, 7.5)
 
 # COVID-19 annotation: 2020 spike was caused by emergency short-time work
 # schemes (Kurzarbeit/furlough), extended unemployment benefits, and wage
-# subsidies. DK 'Lønkompensation' covered 75% of wages — hence the highest spike.
+# subsidies. DK 'Lønkompensation' covered 75% of wages --- hence the highest spike.
 _ax = fig.axes[0]
 _ax.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
 _ax.text(2020.2, 6.8, "COVID-19", fontsize=FONT_SIZE - 1,
@@ -102,7 +102,7 @@ save_figure_tex_pgf(
     strings={},
 )
 
-# ── 6. Second variant: 2004–latest (cropped x-axis) ──────────────────────────
+# ── 6. Second variant: 2004--latest (cropped x-axis) ──────────────────────────
 YEAR_2004 = 2004
 
 fig2 = timeline(

@@ -1,5 +1,5 @@
 r"""
-Employer organisation density – map + timeline.
+Employer organisation density -- map + timeline.
 
 Data source: OECD / AIAS ICTWSS v2 (variable ``ED``)
   ED = share of employees working in firms that are members
@@ -42,7 +42,7 @@ apply_style_pgf()
 # ── 1. Load data ──────────────────────────────────────────────────────────────
 ds = load_employer_density(start_period=START_YEAR)
 
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 2. Choropleth map ────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ save_figure_tex_pgf(
         f"Vývoj hustoty zaměstnavatelských organizací, vybrané země EU, "
         f"{START_YEAR}--{ds.years[-1]}."),
     label="fig:stav_zamestnavatele_hustota_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings={},
 )

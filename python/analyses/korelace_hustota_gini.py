@@ -1,5 +1,5 @@
 r"""
-Union density × Gini coefficient scatter – EU27 countries.
+Union density × Gini coefficient scatter -- EU27 countries.
 
 Shows the inverse correlation between trade union density and income
 inequality (Gini on disposable income), underpinning the thesis argument

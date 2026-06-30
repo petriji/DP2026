@@ -1,16 +1,16 @@
 r"""
 Gender wage stratification: EU pay-gap choropleth and percentile profiles.
 
-Figure A – ``gender_pay_gap_map``
+Figure A -- ``gender_pay_gap_map``
     EU NUTS0 choropleth of the unadjusted gender pay gap in 2023 (latest),
-    NACE B–S, in % of male hourly earnings.  Coloured by GPG value
+    NACE B--S, in % of male hourly earnings.  Coloured by GPG value
     (continuous RdBu_r scale); CZ labelled; EU27 average line annotated.
 
     Data: Eurostat ``earn_gr_gpgr2``
       Dimensions: freq · nace_r2 · unit · geo · time
       Filter: nace_r2=B-S (broadest economy-wide aggregate), unit=PC
 
-Figure B – ``gender_wage_stratification``
+Figure B -- ``gender_wage_stratification``
     Grouped percentile profile chart for 6 countries (CZ AT DE DK PL SK).
     For each country, shows the earnings distribution (P10/P25/P50/P75/P90)
     for males (blue) and females (red) as segments on a single axis.
@@ -25,7 +25,7 @@ Argumentation
 -------------
 Together these two figures show: (a) CZ has a persistently high gender pay
 gap compared to DK or BE; (b) the gap is not only in absolute levels but
-in the entire distribution — the female P75 in CZ is below the male P50,
+in the entire distribution --- the female P75 in CZ is below the male P50,
 indicating structural segmentation that collective bargaining with wage
 transparency could address.
 
@@ -59,7 +59,7 @@ COUNTRY_LABELS = {"CZ": "CZ", "AT": "AT", "DE": "DE", "DK": "DK", "PL": "PL", "S
 apply_style_pgf()
 
 # ==============================================================================
-# Figure A – Gender Pay Gap choropleth (earn_gr_gpgr2)
+# Figure A -- Gender Pay Gap choropleth (earn_gr_gpgr2)
 # ==============================================================================
 print("Downloading earn_gr_gpgr2 …")
 gpg_path = fetch_eurostat("earn_gr_gpgr2", start_period=2018)
@@ -124,7 +124,7 @@ ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
 
 fig_a = choropleth(
     ds_gpg, year=snap_year,
-    title=f"Nekorigovaný GPG v\u00a0EU ({snap_year})\nNACE B–S, v\u00a0% hodinové mzdy mužů",
+    title=f"Nekorigovaný GPG v\u00a0EU ({snap_year})\nNACE B--S, v\u00a0% hodinové mzdy mužů",
     cmap="RdBu_r",
     vmin=0,
     vmax=25,
@@ -148,7 +148,7 @@ save_figure_tex_pgf(
 )
 
 # ==============================================================================
-# Figure B – Earnings distribution by sex (earn_ses_hourly)
+# Figure B -- Earnings distribution by sex (earn_ses_hourly)
 # Indicators: D1 (P10 / 1st decile), median, D9 (P90 / 9th decile)
 # ==============================================================================
 print("Downloading earn_ses_hourly …")
@@ -200,7 +200,7 @@ if _has_pli:
     ses_raw[s_val] = ses_raw[s_val] / ses_raw["_pli"]
     print("  EUR → PPS conversion applied")
 else:
-    print("  WARNING: PLI unavailable — keeping EUR values")
+    print("  WARNING: PLI unavailable --- keeping EUR values")
 ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
 
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)

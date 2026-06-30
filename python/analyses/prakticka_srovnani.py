@@ -1,25 +1,25 @@
 r"""
-Comparative labour-market flexicurity table — CZ, DK, DE, AT, PL, SK.
+Comparative labour-market flexicurity table --- CZ, DK, DE, AT, PL, SK.
 
 Indicator set (2025 / latest available):
 
-  1.  GDP per capita [EUR PPS/yr]                – nama_10_pc
-      ↳  CZ = 100 (normalised)                  – derived
-  2.  Labour cost [PPS/h, total economy]         – lc_lci_lev ÷ prc_ppp_ind
-      ↳  CZ = 100                                – derived
-  3.  Average weekly hours worked [h/wk]         – lfsa_ewhun2
-      ↳  CZ = 100                                – derived
-  4.  Tax wedge [%, 67 % AW, single, 0 child]    – earn_nt_taxwedge
-  5.  Disposable income [PPS/h]  ← derived       – row 2 × (1 − row 4 / 100)
-      ↳  CZ = 100                                – derived
-  6.  Low-wage earners [% employees, < 2/3 med.] – earn_ses_pub1s
-  7.  Gini coefficient                           – ilc_di12
-  8.  Employment rate 20–64 [%]                  – lfsi_emp_a
-  9.  Job vacancy rate [%, B–S excl. O]          – jvs_a_nace2  (→ -- on 404)
-  10. CB coverage [%]                            – OECD ICTWSS AdjCov / CBC ERB, 2022–2024
-  11. Trade union density [%]                    – OECD ICTWSS TUD, 2022–2024
-  12. Active LMP spending [% GDP]                – OECD LMPEXP (→ -- on error)
-  13. Old-age dependency ratio (65+) [%]         – demo_pjanind OLDDEP1
+  1.  GDP per capita [EUR PPS/yr]                -- nama_10_pc
+      ↳  CZ = 100 (normalised)                  -- derived
+  2.  Labour cost [PPS/h, total economy]         -- lc_lci_lev ÷ prc_ppp_ind
+      ↳  CZ = 100                                -- derived
+  3.  Average weekly hours worked [h/wk]         -- lfsa_ewhun2
+      ↳  CZ = 100                                -- derived
+  4.  Tax wedge [%, 67 % AW, single, 0 child]    -- earn_nt_taxwedge
+  5.  Disposable income [PPS/h]  ← derived       -- row 2 × (1 − row 4 / 100)
+      ↳  CZ = 100                                -- derived
+  6.  Low-wage earners [% employees, < 2/3 med.] -- earn_ses_pub1s
+  7.  Gini coefficient                           -- ilc_di12
+  8.  Employment rate 20--64 [%]                  -- lfsi_emp_a
+  9.  Job vacancy rate [%, B--S excl. O]          -- jvs_a_nace2  (→ -- on 404)
+  10. CB coverage [%]                            -- OECD ICTWSS AdjCov / CBC ERB, 2022--2024
+  11. Trade union density [%]                    -- OECD ICTWSS TUD, 2022--2024
+  12. Active LMP spending [% GDP]                -- OECD LMPEXP (→ -- on error)
+  13. Old-age dependency ratio (65+) [%]         -- demo_pjanind OLDDEP1
 
 Row labels embed \cite{} for non-italic rows; caption contains year only.
 Sub-rows (↳) and the derived row 5 are wrapped in \textit{} via italic_rows.
@@ -118,7 +118,7 @@ def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, floa
     r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (\SI{idx}{\percent})``.
 
     When the whole row is italic (derived indicator), the caller wraps via italic_rows
-    in table.py — \textit{} around the cell content preserves the \newline.
+    in table.py --- \textit{} around the cell content preserves the \newline.
     """
     def _cell(c: str) -> str:
         v = values.get(c)
@@ -149,14 +149,14 @@ ds_gdp = Dataset.from_sdmx_csv(
     source_url="Eurostat/nama_10_pc",
 )
 
-# Average weekly hours worked (all employed, all sectors, 15–64)
+# Average weekly hours worked (all employed, all sectors, 15--64)
 ds_hrs = Dataset.from_sdmx_csv(
     fetch_eurostat("lfsa_ewhun2", f"A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}"),
     name="Weekly hours", unit="h/wk",
     source_url="Eurostat/lfsa_ewhun2",
 )
 
-# Price level index (GDP, EU27 = 100) — used to convert EUR/h → PPS/h
+# Price level index (GDP, EU27 = 100) --- used to convert EUR/h → PPS/h
 ds_pli = Dataset.from_sdmx_csv(
     fetch_eurostat("prc_ppp_ind", f"A.PLI_EU27_2020.GDP.{GEO}",
                    start_period=YEAR - 3),
@@ -187,9 +187,9 @@ for _nace in ("B-S_X_O", "B-S"):
     except Exception as _e:
         print(f"  lc_lci_lev/{_nace}: {_e}")
 if ds_lc_eur is None:
-    print("  WARNING: labour cost unavailable — rows 3 and 5 will show --")
+    print("  WARNING: labour cost unavailable --- rows 3 and 5 will show --")
 
-# Tax wedge (67 % AW, single, 0 children) — earn_nt_taxwedge is defined
+# Tax wedge (67 % AW, single, 0 children) --- earn_nt_taxwedge is defined
 # only for this single scenario (see Eurostat ESMS metadata, section c)
 ds_tax = Dataset.from_sdmx_csv(
     fetch_eurostat("earn_nt_taxwedge", f"A.{GEO}"),
@@ -204,36 +204,45 @@ ds_gini = Dataset.from_sdmx_csv(
     source_url="Eurostat/ilc_di12",
 )
 
-# Employment rate 20–64
+# Employment rate 20--64
 ds_emp = Dataset.from_sdmx_csv(
     fetch_eurostat("lfsi_emp_a", f"A.EMP_LFS.T.Y20-64.PC_POP.{GEO}"),
-    name="Employment rate 20–64", unit="%",
+    name="Employment rate 20--64", unit="%",
     source_url="Eurostat/lfsi_emp_a",
 )
 
-# Job vacancy rate (B–S excl. O) — try several filter variants; graceful fallback to --
+# Job vacancy rate (B--S excl. O) --- try several filter variants; graceful fallback to --
 # jvs_a_nace2 dimensions: freq · nace_r2 · sizeclas · indic_em · geo
-# Note: startPeriod causes 400 on this dataset — omit it.
+# Note: startPeriod causes 400 on this dataset --- omit it.
 ds_jvr: "Dataset | None" = None
 for _jvr_filter in (
-    f"A.B-S_X_O.GE10.JVR.{GEO}",      # 5-dim (standard structure)
-    f"A.TOTAL.GE10.JVR.{GEO}",         # nace_r2=TOTAL fallback
-    f"A.B-S_X_O..JVR.{GEO}",           # all sizeclas
+    f"A.B-S_X_O.GE10.JVR.{GEO}",      # freq.nace.size.indic.geo
+    f"A.B-S_X_O.JVR.GE10.{GEO}",      # freq.nace.indic.size.geo
+    f"A.B-S_X_O.TOTAL.JVR.{GEO}",     # all firms
+    f"A.B-S_X_O.JVR.TOTAL.{GEO}",     # all firms + alt order
+    f"A.TOTAL.GE10.JVR.{GEO}",        # nace_r2=TOTAL fallback
 ):
     try:
-        ds_jvr = Dataset.from_sdmx_csv(
+        _candidate_jvr = Dataset.from_sdmx_csv(
             fetch_eurostat("jvs_a_nace2", _jvr_filter),
             name="Job vacancy rate", unit="%",
             source_url="Eurostat/jvs_a_nace2",
         )
+        _check = _candidate_jvr.df[
+            _candidate_jvr.df[_candidate_jvr.geo_col].isin(COUNTRIES)
+        ].dropna(subset=[_candidate_jvr.value_col])
+        if _check.empty:
+            print(f"  jvs_a_nace2/{_jvr_filter}: empty after parsing")
+            continue
+        ds_jvr = _candidate_jvr
         print(f"  jvs_a_nace2: using filter={_jvr_filter}")
         break
     except Exception as _e:
         print(f"  jvs_a_nace2/{_jvr_filter}: {_e}")
 if ds_jvr is None:
-    print("  WARNING: job vacancy rate unavailable — row 8 will show --")
+    print("  WARNING: job vacancy rate unavailable --- row 9 will show --")
 
-# Old-age dependency ratio (65+ per working-age 15–64)
+# Old-age dependency ratio (65+ per working-age 15--64)
 ds_dep = Dataset.from_sdmx_csv(
     fetch_eurostat("demo_pjanind", f"A.OLDDEP1.{GEO}"),
     name="Old-age dep.", unit="%",
@@ -241,7 +250,7 @@ ds_dep = Dataset.from_sdmx_csv(
     filters={"indic_de": "OLDDEP1"},
 )
 
-# Active LMP expenditure (% GDP) — OECD LMPEXP
+# Active LMP expenditure (% GDP) --- OECD LMPEXP
 # (Eurostat lmp_expsumm was discontinued; OECD provides same coverage)
 print("Downloading OECD APZ data …")
 ds_apz: "Dataset | None" = None
@@ -264,22 +273,34 @@ try:
     ds_apz = Dataset(_apz_raw, name="APZ výdaje", unit="% HDP",
                      source_url="OECD/LMPEXP")
 except Exception as _e:
-    print(f"  WARNING: APZ data unavailable ({_e}) — row 11 will show --")
+    print(f"  WARNING: APZ data unavailable ({_e}) --- row 11 will show --")
 
 # Low-wage earners (% of all employees, < 2/3 national median gross hourly earnings)
 # earn_ses_pub1s dimensions: freq · sex · geo  (SES survey: latest round 2022)
 ds_lowwage: "Dataset | None" = None
-try:
-    ds_lowwage = Dataset.from_sdmx_csv(
-        fetch_eurostat("earn_ses_pub1s", f"A.T.{GEO}"),
-        name="Nízkopříjmoví zaměstnanci", unit="%",
-        source_url="Eurostat/earn_ses_pub1s",
-        filters={"sex": "T"},
-    )
-except Exception as _e:
-    print(f"  WARNING: earn_ses_pub1s unavailable ({_e}) — low-wage row will show --")
+for _sex_key, _sex_val in (("T", "T"), ("M+F", "M+F"), ("TOTAL", "TOTAL")):
+    try:
+        _candidate_lowwage = Dataset.from_sdmx_csv(
+            fetch_eurostat("earn_ses_pub1s", f"A.{_sex_val}.{GEO}"),
+            name="Nízkopříjmoví zaměstnanci", unit="%",
+            source_url="Eurostat/earn_ses_pub1s",
+            filters={"sex": _sex_key},
+        )
+        _check = _candidate_lowwage.df[
+            _candidate_lowwage.df[_candidate_lowwage.geo_col].isin(COUNTRIES)
+        ].dropna(subset=[_candidate_lowwage.value_col])
+        if _check.empty:
+            print(f"  earn_ses_pub1s/{_sex_val}: empty after parsing")
+            continue
+        ds_lowwage = _candidate_lowwage
+        print(f"  earn_ses_pub1s: using sex={_sex_key}")
+        break
+    except Exception as _e:
+        print(f"  earn_ses_pub1s/{_sex_val}: {_e}")
+if ds_lowwage is None:
+    print("  WARNING: earn_ses_pub1s unavailable --- low-wage row will show --")
 
-# CB coverage — AdjCov from ICTWSS v2 CSV (all COUNTRIES except DE)
+# CB coverage --- AdjCov from ICTWSS v2 CSV (all COUNTRIES except DE)
 #               + CBC ERB from OECD API (DE only; AdjCov for DE unavailable after 1990)
 print("Downloading ICTWSS CB coverage data …")
 import csv, urllib.request
@@ -307,9 +328,9 @@ if _adjcov_records:
     ds_cba_adjcov = Dataset(_df_adj, name="Pokrytí KV (AdjCov)", unit="%",
                             source_url="OECD AIAS ICTWSS / AdjCov")
     print(f"  AdjCov: {_df_adj['geo'].nunique()} countries, "
-          f"years {_df_adj['time'].min()}–{_df_adj['time'].max()}")
+          f"years {_df_adj['time'].min()}--{_df_adj['time'].max()}")
 
-# CBC ERB (OECD API) — DE only
+# CBC ERB (OECD API) --- DE only
 ds_cba_erb: "Dataset | None" = None
 try:
     from stattool.dataset import _OECD_ISO3_TO_ISO2 as _O3
@@ -328,9 +349,9 @@ try:
     if not _df_cbc.empty:
         ds_cba_erb = Dataset(_df_cbc, name="Pokrytí KV ERB (DE)", unit="%",
                              source_url="OECD CBC / ERB")
-        print(f"  CBC ERB/DE: years {_df_cbc['time'].min()}–{_df_cbc['time'].max()}")
+        print(f"  CBC ERB/DE: years {_df_cbc['time'].min()}--{_df_cbc['time'].max()}")
 except Exception as _e:
-    print(f"  WARNING: OECD CBC ERB unavailable ({_e}) — DE CBA will show --")
+    print(f"  WARNING: OECD CBC ERB unavailable ({_e}) --- DE CBA will show --")
 
 # Merge AdjCov + ERB into one Dataset for CB coverage
 _cba_parts = [ds.df for ds in (ds_cba_adjcov, ds_cba_erb) if ds is not None]
@@ -342,7 +363,7 @@ else:
     ds_cba = None
     print("  WARNING: CB coverage data entirely unavailable")
 
-# Trade union density — OECD TUD
+# Trade union density --- OECD TUD
 print("Downloading OECD TUD (union density) data …")
 ds_density: "Dataset | None" = None
 try:
@@ -354,9 +375,9 @@ try:
         filters={"INDICATOR": "TUD"},
     )
     ds_density.df = ds_density.df[ds_density.df["geo"] != "OECD"].copy()
-    print(f"  TUD: years {ds_density.years[0]}–{ds_density.years[-1]}")
+    print(f"  TUD: years {ds_density.years[0]}--{ds_density.years[-1]}")
 except Exception as _e:
-    print(f"  WARNING: TUD unavailable ({_e}) — union density row will show --")
+    print(f"  WARNING: TUD unavailable ({_e}) --- union density row will show --")
 
 print("Downloads complete.")
 
@@ -426,7 +447,7 @@ _deviations: list[tuple[str, str, int]] = [
 _caption_year = str(YEAR)
 
 if _deviations:
-    print(f"\nNOTE: no {YEAR} data for the following — using nearest prior year:")
+    print(f"\nNOTE: no {YEAR} data for the following --- using nearest prior year:")
     for _ind, _geo, _yr in sorted(_deviations):
         print(f"  {_ind:<25}  {_geo}  →  {_yr}")
 
@@ -461,16 +482,16 @@ def _m(label: str, ind_key: str) -> str:
 
 L_GDP      = _m(r"HDP [\si{\pps\per\person\per\rok}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
-L_HRS      = _m(r"Odpracované hodiny [\si{\hour\per\week}, průměr]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
-L_TAX      = _m(r"Daňový klín (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
-L_DISP     = r"Disponibilní příjem [\si{\pps\per\hour}, průměrný]"  # italic — derived, no \cite{}
-L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
+L_HRS      = _m(r"Odpracované hodiny \newline (průměr) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
+L_TAX      = _m(r"Daňový klín \newline (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
+L_DISP     = r"Čistý disponibilní příjem \newline (průměrný) [\si{\pps\per\hour}]"  # italic --- derived, no \cite{}
+L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci \newline (\SI{67}{\percent} mediánu)~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
-L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
-L_JVR      = _m(r"Volná prac. místa~\cite{eurostat_jvs_a_nace2}", "JVR")
-L_CBA      = _m(r"Pokrytí \ac{KS}\,\%~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
-L_DENSITY  = _m(r"Hustota odborů\,\%~\cite{oecd_aias_ictwss_TUD_pct}", "Hustota odborů")
-L_APZ      = _m(r"Výdaje na \ac{APZ}\,[\%\,\ac{HDP}]~\cite{oecd_lmpexp}", "APZ výdaje")
+L_EMP      = _m(r"Zaměstnanost \newline (20--64~let)~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
+L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_nace2}", "JVR")
+L_CBA      = _m(r"Pokrytí \ac{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
+L_DENSITY  = _m(r"Hustota odborů~\cite{oecd_aias_ictwss_TUD_pct}", "Hustota odborů")
+L_APZ      = _m(r"Výdaje na \acs{APZ} \newline (poměr k~\acs{HDP})~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 
 # ── 4. Build table DataFrame ──────────────────────────────────────────────────
@@ -479,17 +500,17 @@ rows = [
     # ── GDP (absolute + CZ=100 index) ────────────────────────────────────────
     _row_merged(L_GDP, v_gdp, v_gdp_idx, fmt="{:.0f}", unit=r"\eur"),
     # ── Labour cost (absolute + CZ=100 index) ────────────────────────────────
-    _row_merged(L_LC, v_lc_pps, v_lc_idx, fmt="{:.1f}"),
+    _row_merged(L_LC, v_lc_pps, v_lc_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Working hours (absolute + CZ=100 index) ──────────────────────────────
     _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", unit=r"\hour"),
     # ── Tax group ─────────────────────────────────────────────────────────────
     _row(L_TAX,      v_tax,      fmt="{:.1f}",  unit=r"\percent"),
     # ── Derived disposable income (italic, no \cite{}) + CZ=100 index ────────
-    _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}"),
+    _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Low-wage earners ──────────────────────────────────────────────────────
     _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  unit=r"\percent"),
     # ── Inequality ────────────────────────────────────────────────────────────
-    _row(L_GINI,     v_gini,     fmt="{:.1f}"),
+    _row(L_GINI,     v_gini,     fmt="{:.1f}", unit=r"\percent"),
     # ── Employment ────────────────────────────────────────────────────────────
     _row(L_EMP,      v_emp,      fmt="{:.1f}",  unit=r"\percent"),
     _row(L_JVR,      v_jvr,      fmt="{:.1f}",  unit=r"\percent"),
@@ -509,7 +530,7 @@ df_table = df_table[[COUNTRY_LABELS[c] for c in COUNTRIES]]
 
 # ── 5. Structural parameters ──────────────────────────────────────────────────
 
-italic_rows = [L_DISP]  # derived row — whole row italic
+italic_rows = [L_DISP]  # derived row --- whole row italic
 
 # ── 6. Write LaTeX table ──────────────────────────────────────────────────────
 
@@ -532,16 +553,12 @@ save_table_tex(
     ),
     label="tab:flexicurity",
     note=(
-        r"V~závorkách normovaná hodnota (ČR\,=\,\SI{100}{\percent}). "
-        r"Náklady práce v \si{\pps\per\hour}\,=\,\si{\eur\per\hour}\,$\div$\,(\ac{PLI}/100). "
-        r"Disponibilní příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
-        r"Daňový klín pro bezdětnou svobodnou osobu (single, 0~dětí). "
-        r"Pokrytí \ac{KS}: OECD / AIAS ICTWSS \textit{AdjCov} (CZ, DK, AT, PL), "
-        r"DE a SK: ERB (\textit{AdjCov} $\neq$ ERB). "
-        r"Hustota odborů: ICTWSS \textit{TUD}."
+        r"Úplné náklady práce v~\si{\pps\per\hour} přepočteny z~\si{\eur\per\hour} současným \acs{PLI}. "
+        r"Daňový klín pro bezdětnou svobodnou osobu. "
+        r"Pokrytí \ac{KS}: \ac{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format="@{}p{4cm}CCCCCC@{}",
+    col_format="@{}p{4.5cm}CCCCCC@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
     italic_rows=italic_rows,

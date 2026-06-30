@@ -4,26 +4,26 @@ CZ public vs private sector wage comparison using ISPV 2025 data.
 ISPV publishes two parallel wage surveys:
 
 * **Mzdová sféra** (MZS, *podnikatelská sféra*): private / business sector
-  employees paid a *mzda* (wage) – ~3 million workers.
+  employees paid a *mzda* (wage) -- ~3 million workers.
 * **Platová sféra** (PLS, *nepodnikatelská sféra*): public / non-business sector
-  employees paid a *plat* (salary) – ~700 thousand workers.
+  employees paid a *plat* (salary) -- ~700 thousand workers.
 
 The 2025 annual workbooks use a new URL scheme (GUID-based) rather than the
 older ``/files/ISPV_25H2.xlsx`` pattern.  This script fetches them directly.
 
-Figure A – ``rscp_public_private_sector``
+Figure A -- ``rscp_public_private_sector``
     Grouped horizontal bar chart: median monthly wage by CZ-NACE section for
     both spheres (2025).  Where a sphere has no employees in a sector (too few
-    to publish or structurally absent), no bar is drawn.  IQR (P25–P75) shown
+    to publish or structurally absent), no bar is drawn.  IQR (P25--P75) shown
     as error markers.
 
-    Argumentation: The public–private wage gap is NOT uniform across sectors.
+    Argumentation: The public--private wage gap is NOT uniform across sectors.
     Public sector workers earn more in health (Q) and less in ICT (J) and
-    public administration (O) vs their private-sector counterparts —
+    public administration (O) vs their private-sector counterparts ---
     illustrating why blanket collective-agreement extension is more complex
     than a single economy-wide comparison suggests.
 
-Figure B – ``rscp_public_private_distribution``
+Figure B -- ``rscp_public_private_distribution``
     Dual box-and-whisker (P10/P25/P50/P75/P90) for the total MZS vs total PLS
     side-by-side, highlighting the overall wage distribution shape inequality.
 
@@ -67,7 +67,7 @@ apply_style_pgf()
 # ── Constants ────────────────────────────────────────────────────────────────
 ISPV_YEAR = 2025
 
-# 2025 national ISPV files — GUID-based URLs (old /files/ scheme returns 2149-byte error page)
+# 2025 national ISPV files --- GUID-based URLs (old /files/ scheme returns 2149-byte error page)
 _URL_MZS = (
     "https://www.ispv.cz/getattachment/b568f503-6978-4af7-9f8a-d5aef8e46619/"
     "CR_254_MZS-xlsx.aspx?disposition=attachment"
@@ -77,8 +77,8 @@ _URL_PLS = (
     "CR_254_PLS-xlsx.aspx?disposition=attachment"
 )
 
-_MZS_COLOR = "#E07B39"   # orange – private/wage sphere
-_PLS_COLOR = "#5B8DB8"   # blue   – public/salary sphere
+_MZS_COLOR = "#E07B39"   # orange -- private/wage sphere
+_PLS_COLOR = "#5B8DB8"   # blue   -- public/salary sphere
 
 # NACE section short labels (Czech)
 _NACE_LABEL: dict[str, str] = {
@@ -213,7 +213,7 @@ except Exception as exc:
     print(f"  PLS download failed: {exc}")
 
 if p_mzs is None and p_pls is None:
-    print("Both workbooks unavailable – skipping figures.")
+    print("Both workbooks unavailable -- skipping figures.")
     sys.exit(0)
 
 
@@ -248,7 +248,7 @@ if p_pls is not None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A – Sector comparison (grouped horizontal bars)
+# Figure A -- Sector comparison (grouped horizontal bars)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding Figure A: sector wage comparison …")
 
@@ -319,10 +319,10 @@ ax_a.set_yticklabels(
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
-ax_a.set_xlabel("hrubá měsíční mzda/plat – medián [tis.\u00a0Kč]", fontsize=FONT_SIZE)
+ax_a.set_xlabel("hrubá měsíční mzda/plat -- medián [tis.\u00a0Kč]", fontsize=FONT_SIZE)
 ax_a.set_title(
     f"ČR: mediánová mzda/plat podle odvětví CZ-NACE ({ISPV_YEAR})\n"
-    "Chybové úsečky = mezikvartilový rozsah P25–P75",
+    "Chybové úsečky = mezikvartilový rozsah P25--P75",
     fontsize=FONT_SIZE,
 )
 
@@ -340,7 +340,7 @@ save_figure_tex_pgf(
     caption=(
         f"Mediánová mzda a~plat podle sekce NACE, ČR, {ISPV_YEAR} "
         r"(ISPV/RSCP, TREXIMA/MPSV). "
-        "Chybové úsečky znázorňují mezikvartilový rozsah P25–P75. "
+        "Chybové úsečky znázorňují mezikvartilový rozsah P25--P75. "
         "Celkový mediánový plat veřejného sektoru (\\SI{48064}{\\czk}) převyšuje "
         "mediánovou mzdu soukromého sektoru (\\SI{43241}{\\czk}) o~11\\,\\,\\%, "
         "avšak tato prémie je odvětvově heterogenní: veřejný sektor zaostává "
@@ -357,7 +357,7 @@ print("  Figure A done.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B – Overall distribution comparison (P10/P25/P50/P75/P90)
+# Figure B -- Overall distribution comparison (P10/P25/P50/P75/P90)
 # ════════════════════════════════════════════════════════════════════════════
 print("Building Figure B: overall distribution comparison …")
 
@@ -461,7 +461,7 @@ ax_b.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.\u00a0Kč")
 )
 ax_b.set_title(
-    f"ČR: rozložení mezd a platů – soukromý vs. veřejný sektor ({ISPV_YEAR})",
+    f"ČR: rozložení mezd a platů -- soukromý vs. veřejný sektor ({ISPV_YEAR})",
     fontsize=FONT_SIZE,
 )
 ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="upper left")

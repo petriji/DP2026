@@ -2,7 +2,7 @@ r"""
 Czech citizen emigration timeline (migr_emi1ctz).
 
 Shows the number of Czech citizens emigrating annually, disaggregated by
-broad age group (youth 15–34 vs. mid-career 35–49) to illustrate the
+broad age group (youth 15--34 vs. mid-career 35--49) to illustrate the
 age profile of brain-drain-relevant emigration.
 
 Data source: Eurostat, ``migr_emi1ctz``
@@ -12,7 +12,7 @@ Data source: Eurostat, ``migr_emi1ctz``
 
 Note: migr_emi1ctz counts emigrants *leaving* a given country (geo) who hold
 a given citizenship (citizen).  Filtering geo=CZ & citizen=CZ gives Czech
-citizens emigrating from CZ.  NOT a destination breakdown – total outflows.
+citizens emigrating from CZ.  NOT a destination breakdown -- total outflows.
 
 Output
 ------
@@ -138,12 +138,12 @@ if have_buckets and not df_youth.empty and not df_mid.empty:
     ax.plot(
         df_youth["time"], df_youth[val_col] / 1_000,
         color=PALETTE[0], linewidth=2.2, marker="o", markersize=3.5,
-        label="15–34 let (mládež)",
+        label="15--34 let (mládež)",
     )
     ax.plot(
         df_mid["time"], df_mid[val_col] / 1_000,
         color=PALETTE[1], linewidth=2.2, marker="s", markersize=3.5,
-        label="35–49 let (střední kariéra)",
+        label="35--49 let (střední kariéra)",
     )
     if not df_total.empty:
         ax.plot(

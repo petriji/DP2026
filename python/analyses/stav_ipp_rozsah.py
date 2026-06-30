@@ -1,25 +1,25 @@
 r"""
-CA institutional breadth — IPP-derived timeline (2007–2025).
+CA institutional breadth --- IPP-derived timeline (2007--2025).
 
 Shows two diverging trends in Czech collective agreements:
 
-Figure A – ``ipp_ca_breadth``
-    Three-line timeline (2007–2025) showing the share of surveyed CAs that
+Figure A -- ``ipp_ca_breadth``
+    Three-line timeline (2007--2025) showing the share of surveyed CAs that
     include each of three institutional provisions:
 
     1. **Formal wage-tariff scale** (``mzda_tarify`` A1a, "Jsou v KS sjednány
-       mzdové tarify") — sum of % with 12-grade monthly TS and % with other
+       mzdové tarify") --- sum of % with 12-grade monthly TS and % with other
        monthly TS.  Documents whether CAs establish a hierarchical wage
        structure, not just agree to a flat % increase.
 
      2. **Concretized union operating conditions**
          (``spoluprace_smluvnich_stran`` A19a,
          "Konkretizovány podmínky pro výkon činnosti odborové organizace")
-         — share of CAs that explicitly define operating conditions for union
+         --- share of CAs that explicitly define operating conditions for union
          activity. Indicator of procedural quality and enforceability.
 
     3. **Union release time** (``spoluprace_smluvnich_stran`` A19a,
-       "Sjednán časový rozsah uvolnění pro výkon") — paid time off for union
+       "Sjednán časový rozsah uvolnění pro výkon") --- paid time off for union
        representatives specified in the CA.  Indicator of institutional
        empowerment of union reps.
 
@@ -32,7 +32,7 @@ Figure A – ``ipp_ca_breadth``
       entrenchment of unions within enterprises.
     - Together these trends suggest that Czech CAs retain their procedural
       union-rights architecture while losing their wage-setting infrastructure
-      — consistent with the thesis argument that social dialogue in CZ is
+      --- consistent with the thesis argument that social dialogue in CZ is
       institutionally thin.
 
 Data sources
@@ -64,12 +64,12 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_ipp
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style_pgf()
+apply_style()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 START_YEAR = 2007
@@ -109,7 +109,7 @@ def _extract_tariff_coverage(path: Path, year: int) -> float | None:
         v_12grade = pd.to_numeric(df.iloc[celkem, 12], errors="coerce")
         v_other   = pd.to_numeric(df.iloc[celkem, 14], errors="coerce")
     except IndexError:
-        # 2007–2008 A1a lacks the tariff columns (shorter layout)
+        # 2007--2008 A1a lacks the tariff columns (shorter layout)
         return None
 
     total = 0.0
@@ -118,7 +118,7 @@ def _extract_tariff_coverage(path: Path, year: int) -> float | None:
     if pd.notna(v_other) and v_other >= 0:
         total += float(v_other)
 
-    # Sanity check: percentage should be in 0–100
+    # Sanity check: percentage should be in 0--100
     if 0 < total <= 100:
         return total
     return None
@@ -127,7 +127,7 @@ def _extract_tariff_coverage(path: Path, year: int) -> float | None:
 def _extract_spoluprace(path: Path, year: int) -> tuple[float | None, float | None]:
     """Return (conditions_pct, release_time_pct) from spoluprace A19a.
 
-    Column mapping (consistent 2007–2025):
+    Column mapping (consistent 2007--2025):
         col 9  = % KS with concretized union operating conditions
                          ('Konkretizovány podmínky pro výkon činnosti odborové organizace')
         col 7  = % KS with agreed union release time ('Sjednán čas. rozsah uvolnění')
@@ -154,7 +154,7 @@ def _extract_spoluprace(path: Path, year: int) -> tuple[float | None, float | No
 
 
 # ── 1. Download and parse mzda_tarify ─────────────────────────────────────────
-print(f"Fetching mzda_tarify {START_YEAR}–{END_YEAR} …")
+print(f"Fetching mzda_tarify {START_YEAR}--{END_YEAR} …")
 tariff: dict[int, float] = {}
 for yr in range(START_YEAR, END_YEAR + 1):
     try:
@@ -169,7 +169,7 @@ for yr in range(START_YEAR, END_YEAR + 1):
         print(f"  mzda_tarify {yr}: skipped ({exc})")
 
 # ── 2. Download and parse spoluprace_smluvnich_stran ──────────────────────────
-print(f"\nFetching spoluprace {START_YEAR}–{END_YEAR} …")
+print(f"\nFetching spoluprace {START_YEAR}--{END_YEAR} …")
 conditions: dict[int, float] = {}
 release: dict[int, float] = {}
 for yr in range(START_YEAR, END_YEAR + 1):
@@ -187,7 +187,7 @@ for yr in range(START_YEAR, END_YEAR + 1):
         print(f"  spoluprace {yr}: skipped ({exc})")
 
 if not (tariff or conditions or release):
-    print("\nNo IPP breadth data available — exiting without figures.")
+    print("\nNo IPP breadth data available --- exiting without figures.")
     sys.exit(0)
 
 # ── 3. Build figure ────────────────────────────────────────────────────────────
@@ -231,7 +231,7 @@ for yr, (label, va) in _EVENTS.items():
                 color="grey", va="bottom", rotation=0)
 
 ax.set_xlabel("rok")
-ax.set_ylabel("podíl KS [%]")
+ax.set_ylabel("podíl \acs{KS} [%]")
 ax.set_xlim(START_YEAR, END_YEAR)
 ax.set_ylim(0, 100)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
@@ -244,8 +244,8 @@ ax.set_title(
 
 fig.tight_layout()
 
-out_pdf = savefig_pgf(fig, "stav_ipp_rozsah")
-out_tex = save_figure_tex_pgf(
+out_pdf = savefig(fig, "stav_ipp_rozsah", out_dir=LATEX_PICS_DIR)
+out_tex = save_figure_tex(
     "stav_ipp_rozsah",
     caption=(
         r"Institucionální obsah kolektivních smluv, ČR, 2007--2025. "
@@ -261,7 +261,6 @@ out_tex = save_figure_tex_pgf(
     ),
     cite_keys="mpsv_ipp",
     label="fig:stav_ipp_rozsah",
-    strings={},
 )
 print(f"\nSaved: {out_pdf}")
 print(f"Saved TeX: {out_tex}")

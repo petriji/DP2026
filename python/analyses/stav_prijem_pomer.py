@@ -1,5 +1,5 @@
 r"""
-Ratio of hourly net personal income (PPS) to GDP per capita per avg hour – timeline.
+Ratio of hourly net personal income (PPS) to GDP per capita per avg hour -- timeline.
 
 Plots: (hourly net income in PPS) / (GDP PPS/cap / avg annual hours)
      = (annual net income in EUR / PLI) / GDP PPS/cap
@@ -58,7 +58,7 @@ path_net = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# GDP per capita in PPS (absolute, current prices) – all geo
+# GDP per capita in PPS (absolute, current prices) -- all geo
 path_gdp = fetch_eurostat(
     "nama_10_pc",
     "A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.",
@@ -111,7 +111,7 @@ ds_ratio = Dataset(
 )
 
 print(f"Ratio data: {len(ds_ratio.countries)} countries, "
-      f"{ds_ratio.years[0] if ds_ratio.years else '?'}–{ds_ratio.years[-1] if ds_ratio.years else '?'}")
+      f"{ds_ratio.years[0] if ds_ratio.years else '?'}--{ds_ratio.years[-1] if ds_ratio.years else '?'}")
 
 # ── 5. Plot ───────────────────────────────────────────────────────────────────
 fig = timeline(
@@ -150,7 +150,7 @@ save_figure_tex_pgf(
     "stav_prijem_pomer",
     caption=f"Poměr čistého příjmu k~HDP na obyvatele (EU27\\,=\\,100), {START_YEAR}--{last_year}.",
     label="fig:stav_prijem_pomer",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
     strings={},
 )

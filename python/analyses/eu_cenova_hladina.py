@@ -1,10 +1,10 @@
 r"""
-Price Level Index choropleth – purchasing power variability across Europe.
+Price Level Index choropleth -- purchasing power variability across Europe.
 
 Shows the GDP Price Level Index (PLI_EU27_2020.GDP, EU27=100) for each
 European country.  A PLI below 100 means the country is cheaper than the EU27
 average (wages/income in EUR buy *more* goods), above 100 means it is more
-expensive.  The map illustrates the east–west purchasing power gap that
+expensive.  The map illustrates the east--west purchasing power gap that
 motivates PPS-adjusted comparisons throughout this thesis.
 
 Data source: Eurostat ``prc_ppp_ind``
@@ -64,7 +64,7 @@ ds = Dataset(
     source_url="Eurostat/prc_ppp_ind",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

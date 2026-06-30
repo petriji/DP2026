@@ -33,7 +33,7 @@ apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # CBC: Collective Bargaining Coverage, single measure ERB (% of salaried).
-# Download full dataset — no geo filter needed; from_oecd_csv handles column
+# Download full dataset --- no geo filter needed; from_oecd_csv handles column
 # detection for both old (LOCATION/Value) and new (REF_AREA/OBS_VALUE) formats.
 path = fetch_oecd("CBC", start_period=2010)
 
@@ -48,7 +48,7 @@ ds = Dataset.from_oecd_csv(
 # Drop the OECD aggregate row (not an individual country)
 ds.df = ds.df[ds.df["geo"] != "OECD"].copy()
 
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────

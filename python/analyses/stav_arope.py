@@ -46,9 +46,9 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/ilc_peps01n",
 )
 
-print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}–{ds.years[-1]}")
+print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
-# ── 2. Figure A – Europe choropleth (latest year) ─────────────────────────────
+# ── 2. Figure A -- Europe choropleth (latest year) ─────────────────────────────
 map_name = f"stav_arope_mapa_{ds.latest_year}"
 fig_a = choropleth(
     ds,
@@ -69,7 +69,7 @@ save_figure_tex_pgf(
     strings={},
 )
 
-# ── 3. Figure B – Timeline for Central European countries ─────────────────────
+# ── 3. Figure B -- Timeline for Central European countries ─────────────────────
 V4_AND_NEIGHBOURS = ["CZ", "SK", "PL", "HU", "AT", "DE", "SI", "HR"]
 fig_b = timeline(
     ds,
@@ -106,7 +106,7 @@ save_figure_tex_pgf(
     strings={},
 )
 
-# ── 4. Figure C – Country-group averages ──────────────────────────────────────
+# ── 4. Figure C -- Country-group averages ──────────────────────────────────────
 GROUPS = {
     "V4":   ["CZ", "SK", "PL", "HU"],
     "S-EU": ["SE", "FI", "DK", "NO", "IS"],

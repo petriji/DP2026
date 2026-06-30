@@ -1,13 +1,13 @@
 r"""
-Foreign language knowledge – EU comparison (AES survey data).
+Foreign language knowledge -- EU comparison (AES survey data).
 
 Three choropleth maps illustrating language capabilities relevant to
 brain drain: overall population, prime working-age, and tertiary-educated.
 
 Data sources: Eurostat Adult Education Survey (AES), ~5-year rounds (2007/2011/2016/2022).
-  edat_aes_l21 – by number of foreign languages and sex
-  edat_aes_l22 – by number of foreign languages and age
-  edat_aes_l23 – by number of foreign languages and educational attainment (ISCED)
+  edat_aes_l21 -- by number of foreign languages and sex
+  edat_aes_l22 -- by number of foreign languages and age
+  edat_aes_l23 -- by number of foreign languages and educational attainment (ISCED)
 
 Filter for all three: persons knowing >= 2 foreign languages (n_lang = GE2 or 2+).
 
@@ -17,10 +17,10 @@ A  ``language_skills_total_map``
     EU choropleth: % total population knowing 2+ foreign languages (edat_aes_l21, sex=T).
 
 B  ``language_skills_age_map``
-    EU choropleth: % of persons aged 25–54 knowing 2+ foreign languages (edat_aes_l22).
+    EU choropleth: % of persons aged 25--54 knowing 2+ foreign languages (edat_aes_l22).
 
 C  ``language_skills_isced_map``
-    EU choropleth: % of tertiary-educated (ISCED 5–8) knowing 2+ foreign languages
+    EU choropleth: % of tertiary-educated (ISCED 5--8) knowing 2+ foreign languages
     (edat_aes_l23). Key brain-drain indicator: high-skill workers who CAN leave CZ.
 
 Output
@@ -132,7 +132,7 @@ def _make_choropleth(
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A – edat_aes_l21: total population knowing 2+ languages (sex=T)
+# Figure A -- edat_aes_l21: total population knowing 2+ languages (sex=T)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure A: edat_aes_l21 (total population) …")
 try:
@@ -178,10 +178,10 @@ try:
     _make_choropleth(
         snap_l21,
         title=(
-            f"Znalost alespoň 2 cizích jazyků — populace 25–64 let ({latest_l21})\n"
+            f"Znalost alespoň 2 cizích jazyků --- populace 25--64 let ({latest_l21})\n"
             "% osob s\u00a02+ cizími jazyky"
         ),
-        cbar_label="% populace 25–64",
+        cbar_label="% populace 25--64",
         stem="problemy_jazyky_celkem",
         caption=(
             f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
@@ -194,7 +194,7 @@ except Exception as exc:
     print(f"  Figure A skipped: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B – edat_aes_l22: by age group, filter Y25-54
+# Figure B -- edat_aes_l22: by age group, filter Y25-54
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure B: edat_aes_l22 (by age group, Y25-54) …")
 try:
@@ -246,10 +246,10 @@ try:
     _make_choropleth(
         snap_l22,
         title=(
-            f"Znalost ≥2 cizích jazyků — věková skupina 25–64 let ({latest_l22})\n"
-            "% věkové skupiny s\u00a02+ cizími jazyky"
+            f"Znalost $\\geq$\\,2 cizích jazyků --- věková skupina 25--64 let ({latest_l22})\n"
+            "% věkové skupiny s~2+ cizími jazyky"
         ),
-        cbar_label="% věkové skupiny 25–64",
+        cbar_label="% věkové skupiny 25--64",
         stem="problemy_jazyky_vek",
         caption=(
             f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
@@ -262,7 +262,7 @@ except Exception as exc:
     print(f"  Figure B skipped: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C – edat_aes_l23: by ISCED level, filter tertiary (ED5-8)
+# Figure C -- edat_aes_l23: by ISCED level, filter tertiary (ED5-8)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure C: edat_aes_l23 (by ISCED, tertiary ED5-8) …")
 try:
@@ -319,8 +319,8 @@ try:
     _make_choropleth(
         snap_l23,
         title=(
-            f"Znalost ≥2 cizích jazyků — vysokoškolsky vzdělaní ({latest_l23})\n"
-            "% osob s\u00a0ISCED\u00a05\u20138 znajících 2+ cizí jazyky"
+            f"Znalost $\\geq$\\,2 cizích jazyků --- vysokoškolsky vzdělaní ({latest_l23})\n"
+            "% osob s~ISCED~5--8 znajících 2+ cizí jazyky"
         ),
         cbar_label="% terciárně vzdělané populace",
         stem="problemy_jazyky_isced",
