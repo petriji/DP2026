@@ -35,6 +35,8 @@
 %   Software list  : software (default)   nosoftware
 %   Back matter    : backmatter (default)  nobackmatter     — LOF, LOT, appendices
 %   Author email   : email (default)      noemail           — mailto link in header; on cover (draft)
+%   TikZ caching   : tikzextern                             — externalize TikZ figures (faster rebuilds)
+%                    OFF by default; requires -shell-escape in the pdflatex recipe when active
 %   Math layout    : leqno                fleqn             — left eq. numbers; flush-left display
 %                    default: right-side eq. numbers, centered display equations
 %
@@ -64,6 +66,11 @@
 \newif\ifCTUsoftware    \CTUsoftwaretrue
 \newif\ifCTUbackmatter  \CTUbackmattertrue
 \newif\ifCTUemail       \CTUemailtrue
+% \ifCTUtikzextern: false by default; set true via tikzextern option.
+%   When true, loads the external library and calls \tikzexternalize.
+%   Requires the -shell-escape compiler flag — add it to the pdflatex
+%   tool args in .vscode/settings.json when this option is active.
+\newif\ifCTUtikzextern
 % × "\if@compatibility" guards from report.cls have been removed: this class
 %   requires LaTeX2e (see \NeedsTeXFormat above), so the 2.09 compat branches
 %   were always dead code.
@@ -121,6 +128,10 @@
 %   also display the email below the author table on the cover page (draft only).
 \DeclareOption{email}{\CTUemailtrue}
 \DeclareOption{noemail}{\CTUemailfalse}
+% tikzextern: enable TikZ figure externalization (caches compiled figures as
+%   PDFs in build/). Speeds up repeated builds when figures are unchanged.
+%   Requires -shell-escape in the pdflatex recipe — see .vscode/settings.json.
+\DeclareOption{tikzextern}{\CTUtikzexterntrue}
 % (openbib option purged: referenced \@openbib@code and \newblock which were
 %  removed with thebibliography; biblatex is used instead.)
 % letterpaper is overridden by the a4paper DeclareOption above.
@@ -806,9 +817,14 @@
 % blox: TikZ block-diagram library — summing junctions, transfer-function blocks.
 \RequirePackage{blox}
 % standalone: lets TikZ files compile as independent documents.
-%   \usetikzlibrary{external} and \tikzexternalize are in main.tex because
-%   tikzexternalize is a build-behavior directive, not boilerplate.
 \RequirePackage{standalone}
+% tikzextern option: cache compiled TikZ figures as external PDFs.
+%   Disabled by default — add tikzextern to \documentclass options and
+%   add -shell-escape to the pdflatex tool args in .vscode/settings.json.
+\ifCTUtikzextern
+  \usetikzlibrary{external}%
+  \tikzexternalize
+\fi
 
 % ==============================================================================
 % Packages: Lists, Quotation Marks, And Inline Helpers
@@ -861,19 +877,6 @@
   autolang    = other,
   bibencoding = UTF8,
 ]{biblatex}
-
-% ==============================================================================
-% Utility Macro: Concatenate External TeX Files
-% ==============================================================================
-% \inputAllFiles{dir}: shell-escapes to cat all *.tex files in a directory into
-%   a temporary file that is then \input. For the optional Citace appendix.
-%   Requires the -shell-escape compiler flag.
-%   (No \makeatletter needed — @ is already a letter in class context.)
-\def\app@exe{\immediate\write18}
-\def\inputAllFiles#1{%
-  \app@exe{ls #1/*.tex | xargs cat >> \jobname.tmp}%
-  \InputIfFileExists{\jobname.tmp}{}
-  \AtEndDocument{\app@exe{rm -f #1/\jobname.tmp}}}
 
 \endinput
 %%
