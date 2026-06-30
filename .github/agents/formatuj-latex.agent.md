@@ -131,13 +131,13 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 ```latex
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\columnwidth]{../pics/python/filename}
+  \includegraphics[width=\columnwidth]{../python/figures/filename}
   \caption{Popis obrázku.\label{fig:filename}}
 \end{figure}
 ```
 - Caption ends with `.` before `\label{}`.
 - Use `[htbp]` placement unless section context requires `[H]` (forced position).
-- Reference image path relative to the `.tex` file location (usually `../pics/python/`).
+- Reference image path relative to the `.tex` file location (always `../python/figures/`).
 
 ### 7. Tables
 
@@ -177,9 +177,60 @@ Always use `\SI{value}{unit}` for physical quantities with units:
 - Decimal separator in Czech: comma inside `\SI{}{}` is fine — siunitx handles it.
 - Bare percentages in text (without `\SI`): `11{,}4~\%` (note `{,}` for comma as decimal separator).
 
-### 10. Typography
+**Project-specific custom units** (defined in `latex/texparts/references/acro_variables.tex`):
 
-- Quotes via `csquotes`: `\enquote{text}` or `"text"` (outer quotes mapped to locale-correct form).
+| LaTeX command | Renders as | Usage example |
+|---------------|------------|---------------|
+| `\eur` | € | `\SI{1200}{\eur}` |
+| `\czk` | Kč | `\SI{45000}{\czk}` |
+| `\pps` | PPS | `\SI{12{,}5}{\pps}` |
+| `\week` | týd. | `\SI{40}{\week}` |
+| `\month` | měs. | `\SI{6}{\month}` |
+| `\person` | os. | `\SI{500}{\person}` |
+
+**Compound units** — combine with siunitx `\per` and built-in units (`\hour`, `\year`, `\metre`, etc.):
+
+| Pattern | LaTeX | Renders as |
+|---------|-------|------------|
+| PPS per hour | `\SI{12{,}5}{\pps\per\hour}` | `12,5 PPS/h` |
+| € per hour | `\SI{18}{\eur\per\hour}` | `18 €/h` |
+| Kč per month | `\SI{45000}{\czk\per\month}` | `45 000 Kč/měs.` |
+| persons per year | `\SI{200}{\person\per\year}` | `200 os./rok` |
+
+Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_variables.tex`.
+
+- Never use bare `€`, `Kč`, `EUR`, `PPS` as units next to numbers — always wrap with `\SI{}{}` using the custom command.
+- `\eur` not `\EUR` — the project defines lowercase.
+
+### 10. Typography & csquotes
+
+#### Czech quotation marks
+
+The project uses the `csquotes` package with Czech locale. Correct Unicode pairing:
+
+| Position | Character | Unicode | Name |
+|----------|-----------|---------|------|
+| Opening  | „         | U+201E  | double low-9 quotation mark |
+| Closing  | "         | U+201D  | right double quotation mark |
+
+**Common errors that cause `csquotes` "Unbalanced groups" compilation failure:**
+
+| Wrong closing | Unicode | How it looks | Fix |
+|---------------|---------|-------------|-----|
+| `"`           | U+0022  | straight/ASCII double quote | → `"` (U+201D) |
+| `"`           | U+201C  | left double quotation mark  | → `"` (U+201D) |
+
+Examples:
+- **Wrong:** `„kolektivní vyjednávání"` (ASCII `"` closing) → compilation error
+- **Wrong:** `„kolektivní vyjednávání"` (U+201C closing) → compilation error
+- **Correct:** `„kolektivní vyjednávání"` (U+201D closing)
+
+Preferred alternative: use `\enquote{text}` — csquotes picks the correct locale quotes automatically.
+
+When formatting pasted text, **always check** that every `„` is closed by `"` (U+201D), never by ASCII `"` or `"` (U+201C).
+
+#### Other typography rules
+
 - Non-standard dash: en-dash `--` for ranges, em-dash `---` for parenthetical.
 - Ellipsis: `\ldots` or `…` (UTF-8 accepted).
 - Czech decimal separator: `{,}` inside math or `\num{}` from siunitx (`11{,}4~\%`). English: plain `.`.
