@@ -62,6 +62,20 @@ bash run.sh stats_analytics.py --force all # force-regenerate all
 bash run.sh stats_analytics.py --list      # show which texparts are referenced
 ```
 
+## Optional review tooling
+
+Acrobat PDF review ingestion lives under `tools/` and is intentionally separate
+from the analytics/build pipeline. It converts reviewer comments and highlights
+from dirty-build PDFs into `review/review_register.md` with ranked source
+candidates for manual triage.
+
+```bash
+pip install -r requirements-review.txt
+python tools/pdf_review_to_register.py ../review/*.pdf --repo-root .. --out ../review/review_register.md
+```
+
+See `tools/README-review.md` for details and caveats.
+
 ## LaTeX integration
 
 Figures are generated automatically before every LaTeX build via two hooks:
