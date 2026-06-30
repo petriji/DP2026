@@ -128,7 +128,7 @@ def _make_choropleth(
         vmax=vmax,
         colorbar_label=cbar_label,
         label_countries=True,
-        highlight_colorbar=["CZ"],
+        highlight_colorbar=["CZ", "DK", "AT", "DE", "PL", "SK"],
     )
     apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
     savefig_pgf(fig, stem, strings=strings, nudge_labels=nudge_labels)
