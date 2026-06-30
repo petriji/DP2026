@@ -47,6 +47,7 @@ ADDING A NEW ANALYSIS SCRIPT
 
 from __future__ import annotations
 
+import ast
 import argparse
 import fnmatch
 import json
@@ -80,10 +81,27 @@ with open(PYTHON_DIR / "analytics_registry.toml", "rb") as _f:
 _INPUT_RE   = re.compile(r'\\(?:input|include)\{([^}]+)\}')
 _PGF_RE     = re.compile(r'\\inputpgffigure\{([^}]+)\}')
 _COMMENT_RE = re.compile(r'%.*')
-_CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{(.+?)\}', re.DOTALL)
-_DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{(.+?)\}\s*%?', re.DOTALL)
-_DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{(.+?)\}\s*%?', re.DOTALL)
+_CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{')
+_DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{')
+_DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{')
 _YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
+_AUX_FIG_LABEL_RE = re.compile(r'\\newlabel\{fig:([^}]+)\}\{\{([^}]+)\}')
+
+
+def _latex_escape(text: str) -> str:
+    """Escape plain text for safe placement into LaTeX table cells."""
+    return (
+        text.replace("\\", r"\textbackslash{}")
+        .replace("&", r"\&")
+        .replace("%", r"\%")
+        .replace("$", r"\$")
+        .replace("#", r"\#")
+        .replace("_", r"\_")
+        .replace("{", r"\{")
+        .replace("}", r"\}")
+        .replace("~", r"\textasciitilde{}")
+        .replace("^", r"\textasciicircum{}")
+    )
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
     """Recursively collect Python-generated figure stems from *tex_file*.
@@ -243,6 +261,23 @@ def _run_fallback_for_uncovered(referenced: set[str], *, target_year: int) -> No
         sys.exit(2)
 
 
+def _extract_balanced_brace_payload(text: str, open_brace_index: int) -> str | None:
+    """Return payload inside a balanced { ... } group starting at open_brace_index."""
+    if open_brace_index < 0 or open_brace_index >= len(text) or text[open_brace_index] != "{":
+        return None
+
+    depth = 0
+    for i in range(open_brace_index, len(text)):
+        ch = text[i]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_brace_index + 1 : i]
+    return None
+
+
 def _collect_caption_texts(stem: str) -> list[str]:
     """Collect caption-like texts associated with one generated stem."""
     texts: list[str] = []
@@ -254,9 +289,18 @@ def _collect_caption_texts(stem: str) -> list[str]:
         if not path.exists():
             continue
         body = path.read_text(encoding="utf-8", errors="replace")
-        texts.extend(_CAPTION_RE.findall(body))
-        texts.extend(_DEF_CAPTION_RE.findall(body))
-    return [t.strip() for t in texts if t.strip()]
+
+        for m in _CAPTION_RE.finditer(body):
+            payload = _extract_balanced_brace_payload(body, m.end() - 1)
+            if payload and payload.strip():
+                texts.append(payload.strip())
+
+        for m in _DEF_CAPTION_RE.finditer(body):
+            payload = _extract_balanced_brace_payload(body, m.end() - 1)
+            if payload and payload.strip():
+                texts.append(payload.strip())
+
+    return texts
 
 
 def _collect_wrapper_string_defs(stem: str) -> list[tuple[str, str]]:
@@ -264,15 +308,332 @@ def _collect_wrapper_string_defs(stem: str) -> list[tuple[str, str]]:
     path = FIG_TEX_DIR / f"{stem}.tex"
     if not path.exists():
         return []
+
     body = path.read_text(encoding="utf-8", errors="replace")
-    return [(macro, value.strip()) for macro, value in _DEF_STR_RE.findall(body) if value.strip()]
+    out: list[tuple[str, str]] = []
+    for m in _DEF_STR_RE.finditer(body):
+        macro = m.group(1)
+        payload = _extract_balanced_brace_payload(body, m.end() - 1)
+        if payload and payload.strip():
+            out.append((macro, payload.strip()))
+    return out
 
 
 def _extract_years(text: str) -> list[int]:
     return [int(y) for y in _YEAR_RE.findall(text)]
 
 
-def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
+def _is_figure_stem(stem: str) -> bool:
+    """Heuristic: stem is a figure when there is a rendered figure output."""
+    if (FIG_TEX_DIR / f"{stem}.tex").exists():
+        return True
+    return any((PICS_DIR / f"{stem}{ext}").exists() for ext in FIG_EXTS)
+
+
+def _stem_to_script(referenced: set[str]) -> dict[str, str]:
+    """Resolve each referenced stem to the script declared in the registry."""
+    mapping: dict[str, str] = {}
+    for stem in sorted(referenced):
+        for entry in REGISTRY.values():
+            for pattern in entry["texparts"]:
+                if fnmatch.fnmatch(stem, pattern):
+                    mapping[stem] = entry["script"]
+                    break
+            if stem in mapping:
+                break
+    return mapping
+
+
+def _stem_to_figure_number_from_main_aux() -> dict[str, str]:
+    """Read figure numbering from latex/build/main.aux as stem -> figure number."""
+    aux_path = LATEX_DIR / "build" / "main.aux"
+    if not aux_path.exists():
+        return {}
+
+    text = aux_path.read_text(encoding="utf-8", errors="replace")
+    mapping: dict[str, str] = {}
+    for stem, fig_no in _AUX_FIG_LABEL_RE.findall(text):
+        mapping[stem] = fig_no
+    return mapping
+
+
+def _node_as_text(node: ast.AST, source: str) -> str:
+    """Best-effort conversion of an AST node to compact text."""
+    if isinstance(node, ast.Constant):
+        return str(node.value)
+    seg = ast.get_source_segment(source, node)
+    if not seg:
+        return "?"
+    return " ".join(seg.strip().split())
+
+
+def _collect_script_quality_metadata(script_relpath: str) -> dict:
+    """Extract dataset/filter/fallback metadata from one analysis script.
+
+    Fallbacks are attributed per output stem: each warn_fallback() call is
+    associated with the next savefig_pgf / save_figure_tex_pgf call that
+    follows it in source order, so multi-output scripts don't bleed fallback
+    remarks across unrelated figures.
+    """
+    import warnings
+
+    script_path = PYTHON_DIR / script_relpath
+    if not script_path.exists():
+        return {"datasets": [], "filters": [], "fallbacks": [], "fallbacks_by_stem": {}}
+
+    source = script_path.read_text(encoding="utf-8", errors="replace")
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SyntaxWarning)
+            tree = ast.parse(source)
+    except SyntaxError:
+        return {"datasets": [], "filters": [], "fallbacks": [], "fallbacks_by_stem": {}}
+
+    datasets: list[str] = []
+    filters: list[str] = []
+    # (lineno, message) pairs — populated below
+    fallback_calls: list[tuple[int, str]] = []
+    # (lineno, stem) pairs from savefig_pgf / save_figure_tex_pgf
+    save_calls: list[tuple[int, str]] = []
+
+    module_doc = ast.get_docstring(tree) or ""
+    for raw_line in module_doc.splitlines():
+        line = raw_line.strip()
+        lower = line.lower()
+        if lower.startswith("data source:") or lower.startswith("data sources:"):
+            datasets.append(line.split(":", 1)[1].strip())
+        if lower.startswith("filter:") or lower.startswith("filters:"):
+            filters.append(line.split(":", 1)[1].strip())
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        func_name = ""
+        if isinstance(node.func, ast.Name):
+            func_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            func_name = node.func.attr
+
+        if func_name in {"fetch_eurostat", "fetch_oecd"}:
+            source_label = "Eurostat" if func_name == "fetch_eurostat" else "OECD"
+            dataset = _node_as_text(node.args[0], source) if node.args else "?"
+            filter_expr = _node_as_text(node.args[1], source) if len(node.args) > 1 else ""
+
+            options: list[str] = []
+            for kw in node.keywords:
+                if kw.arg in {"start_period", "end_period", "force"}:
+                    options.append(f"{kw.arg}={_node_as_text(kw.value, source)}")
+
+            datasets.append(f"{source_label} {dataset}")
+            if filter_expr or options:
+                payload = []
+                if filter_expr:
+                    payload.append(filter_expr)
+                payload.extend(options)
+                filters.append(f"{dataset}: " + ", ".join(payload))
+
+        if func_name == "warn_fallback":
+            msg = _node_as_text(node.args[0], source) if node.args else "fallback path used"
+            lineno = getattr(node, "lineno", 0)
+            fallback_calls.append((lineno, msg))
+
+        if func_name == "savefig_pgf":
+            # savefig_pgf(fig, stem, ...) — stem is the second argument
+            stem_raw = _node_as_text(node.args[1], source) if len(node.args) > 1 else ""
+            stem_clean = stem_raw.strip("'\"")
+            if stem_clean:
+                lineno = getattr(node, "lineno", 0)
+                save_calls.append((lineno, stem_clean))
+
+        if func_name == "save_figure_tex_pgf":
+            # save_figure_tex_pgf(stem, ...) — stem is the first argument
+            stem_raw = _node_as_text(node.args[0], source) if node.args else ""
+            stem_clean = stem_raw.strip("'\"")
+            if stem_clean:
+                lineno = getattr(node, "lineno", 0)
+                save_calls.append((lineno, stem_clean))
+
+    # Sort both lists by source line number.
+    fallback_calls.sort()
+    save_calls.sort()
+
+    # Attribute each fallback to the next save call that follows it.
+    # If a fallback appears after all saves (e.g. post-loop clean-up), assign
+    # it to the last save stem instead.
+    fallbacks_by_stem: dict[str, list[str]] = {}
+    for fb_line, fb_msg in fallback_calls:
+        target_stem: str | None = None
+        for save_line, save_stem in save_calls:
+            if save_line > fb_line:
+                target_stem = save_stem
+                break
+        if target_stem is None and save_calls:
+            target_stem = save_calls[-1][1]
+        if target_stem:
+            fallbacks_by_stem.setdefault(target_stem, []).append(fb_msg)
+
+    # Keep order stable while deduplicating.
+    def _uniq(values: list[str]) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for val in values:
+            key = val.strip()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            out.append(key)
+        return out
+
+    # Deduplicate per-stem fallbacks too.
+    fallbacks_by_stem = {s: _uniq(msgs) for s, msgs in fallbacks_by_stem.items()}
+
+    return {
+        "datasets": _uniq(datasets),
+        "filters": _uniq(filters),
+        "fallbacks": _uniq([msg for _, msg in fallback_calls]),
+        "fallbacks_by_stem": fallbacks_by_stem,
+    }
+
+
+def _write_pipeline_quality_table(
+    referenced: set[str],
+    audit_rows: list[dict],
+    *,
+    target_year: int,
+) -> None:
+    """Create a TeX table for pipeline attachment with dataset/filter metadata."""
+    audit_by_stem = {row["stem"]: row for row in audit_rows}
+    stem_script = _stem_to_script(referenced)
+    stem_to_fig_no = _stem_to_figure_number_from_main_aux()
+
+    script_meta_cache: dict[str, dict[str, list[str]]] = {}
+    rows: list[dict[str, str]] = []
+
+    for stem in sorted(s for s in referenced if _is_figure_stem(s)):
+        script = stem_script.get(stem, "<unmapped>")
+        if script not in script_meta_cache:
+            script_meta_cache[script] = _collect_script_quality_metadata(script)
+        meta = script_meta_cache[script]
+
+        audit_row = audit_by_stem.get(stem, {})
+        years = audit_row.get("years", [])
+        fig_no = stem_to_fig_no.get(stem)
+        figure_ref = f"Obr. {fig_no}" if fig_no else "Obr. ?"
+        script_display = script.replace("analyses/", "")
+
+        # Merge dataset + filter info into one column.
+        # Format per dataset: "DatasetCode (filter_string)" when filter available.
+        filter_map: dict[str, str] = {}
+        for f in meta["filters"]:
+            # filters have format "datasetcode: filter_expr, ..."
+            if ": " in f:
+                ds_key, rest = f.split(": ", 1)
+                filter_map[ds_key.strip()] = rest.strip()
+
+        dataset_parts: list[str] = []
+        for ds in meta["datasets"]:
+            # ds is "Eurostat datasetcode" or "OECD datasetcode"
+            parts = ds.split(None, 1)
+            ds_code = parts[1] if len(parts) == 2 else ds
+            filt = filter_map.get(ds_code, "")
+            if filt:
+                dataset_parts.append(f"{ds} ({filt})")
+            else:
+                dataset_parts.append(ds)
+        datasets_filters_txt = "; ".join(dataset_parts) if dataset_parts else "Neuvedeno (sdilene helpery nebo staticka data)"
+
+        # Build remarks: year audit note + stem-specific fallback branches.
+        remarks_parts: list[str] = []
+        if years:
+            remarks_parts.append("Roky v popisku: " + ", ".join(str(y) for y in years))
+        else:
+            remarks_parts.append("Rok v popisku: neuvedeno")
+        if audit_row.get("status") == "warning" and audit_row.get("message"):
+            msg = audit_row["message"]
+            # shorten common message
+            if "do not include target year" in msg:
+                remarks_parts.append(f"Nesedi cilovy rok {target_year}")
+            elif "no year token" in msg:
+                remarks_parts.append("Rok v popisku nenalezen")
+            elif "no caption text" in msg:
+                remarks_parts.append("Popisek nenalezen")
+            else:
+                remarks_parts.append(msg)
+        stem_fallbacks = meta.get("fallbacks_by_stem", {}).get(stem, [])
+        if stem_fallbacks:
+            remarks_parts.append("Fallback vetve: " + "; ".join(stem_fallbacks))
+        remarks_txt = " | ".join(remarks_parts)
+
+        rows.append(
+            {
+                "stem": figure_ref,
+                "script": script_display,
+                "datasets": datasets_filters_txt,
+                "remarks": remarks_txt,
+            }
+        )
+
+    REVIEW_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = REVIEW_DIR / "data_quality_pipeline_table.json"
+    tex_path = REVIEW_DIR / "data_quality_pipeline_table.tex"
+    json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Column layout (4 columns, widths sum to ~0.97\linewidth after \tabcolsep):
+    #   Obr.    0.08  — figure reference number
+    #   Skript  0.20  — analysis script filename (no analyses/ prefix)
+    #   Dataset 0.38  — dataset codes + filters merged
+    #   Pozn.   0.29  — remarks: years, audit warnings, fallback branches
+    col_spec = "p{0.08\\linewidth}p{0.20\\linewidth}p{0.38\\linewidth}p{0.29\\linewidth}"
+    hdr = "Obr. & Skript & Dataset(y) a filtry & Pozn\\'{a}mky (roky, fallback)"
+
+    lines = [
+        "% Auto-generated by python/stats_analytics.py. Do not edit manually.",
+        "\\begingroup",
+        "\\scriptsize",
+        "\\setlength{\\tabcolsep}{3pt}",
+        "\\renewcommand{\\arraystretch}{1.12}",
+        "\\begin{longtable}{" + col_spec + "}",
+        "\\caption{Metadata datov\\'{e} kvality -- v\\v{s}echny obr\\'{a}zky z main.tex (c\\'{i}lov\\'{y} rok " + str(target_year) + ").}\\\\",
+        "\\hline",
+        hdr + " \\\\",
+        "\\hline",
+        "\\endfirsthead",
+        "\\hline",
+        hdr + " \\\\",
+        "\\hline",
+        "\\endhead",
+    ]
+
+    for row in rows:
+        lines.append(
+            " & ".join(
+                [
+                    _latex_escape(row["stem"]),
+                    _latex_escape(row["script"]),
+                    _latex_escape(row["datasets"]),
+                    _latex_escape(row["remarks"]),
+                ]
+            )
+            + r" \\"
+        )
+
+    lines.extend([
+        "\\hline",
+        "\\end{longtable}",
+        "\\endgroup",
+        "",
+    ])
+
+    tex_path.write_text("\n".join(lines), encoding="utf-8")
+    print(
+        f"[data-quality] pipeline table written: {tex_path.relative_to(DP_DIR)} "
+        f"({len(rows)} rows)",
+        flush=True,
+    )
+
+
+def _audit_target_year(referenced: set[str], *, target_year: int) -> list[dict]:
     """Warn for referenced outputs that don't clearly use target data year."""
     rows: list[dict] = []
 
@@ -368,6 +729,7 @@ def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
         f"Report: {md_path.relative_to(DP_DIR)}",
         flush=True,
     )
+    return rows
 
 
 def _sync_strings_from_tex(referenced: set[str]) -> None:
@@ -465,7 +827,8 @@ def main() -> None:
         print("[stats_analytics] all outputs present — nothing to do.", flush=True)
 
     _sync_strings_from_tex(referenced)
-    _audit_target_year(referenced, target_year=args.target_year)
+    audit_rows = _audit_target_year(referenced, target_year=args.target_year)
+    _write_pipeline_quality_table(referenced, audit_rows, target_year=args.target_year)
 
 
 if __name__ == "__main__":
