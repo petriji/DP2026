@@ -427,7 +427,7 @@ def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
 
 
 def plot_pension_comparison(
-    income_max: int = 200_000,
+    income_max: int = 250_000,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
     """Vykreslí srovnání výše starobního důchodu v závislosti na celkových nákladech.
@@ -561,7 +561,7 @@ def plot_pension_comparison(
 
 
 def plot_pension_solidarity(
-    income_max: int = 200_000,
+    income_max: int = 250_000,
     income_min_rr: int = OSVC_MIN_MONTHLY_BASE * 2,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
@@ -644,17 +644,6 @@ def plot_pension_solidarity(
                 ax_top.axvline(x_e / 1_000, color=color,
                                linewidth=0.5, linestyle=":", alpha=0.4)
 
-    # Minimální výše důchodu
-    min_pension_kczk = MIN_TOTAL_PENSION / 1_000
-    ax_top.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
-                   linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
-    ax_top.annotate(
-        f"Min. důchod ({_fmt_czk(MIN_TOTAL_PENSION)})",
-        xy=(income_max * 0.01 / 1_000, min_pension_kczk),
-        xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
-    )
-
     # Referenční svislé čáry
     _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
                       f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
@@ -689,7 +678,7 @@ def plot_pension_solidarity(
     rr_emp = p_emp_rr / _net_income_emp(x_rr) * 100
     ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
 
-    _RR_CAP = 250.0  # y-axis upper limit; extreme values near min wage are hidden by ylim
+    _RR_CAP = 150.0  # y-axis upper limit; extreme values near min wage are hidden by ylim
     for expense_rate, label, color in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
         ni_osvc   = _net_income_osvc_vydajovy(x_rr, expense_rate)
