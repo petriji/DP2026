@@ -25,12 +25,12 @@ National accounts aggregate — GDP per capita in PPS.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `gdp_ppp_timeline.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
-| `income_pps_map.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
-| `net_income_ratio_timeline.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
-| `correlation_analyses.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
-| `coverage_income_scatter.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.CP_PPS_EU27_2020_HAB.B1GQ.{GEO}` | — |
+| `stav_hdp_vyvoj.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
+| `eu_prijem_pps.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
+| `stav_prijem_pomer.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
+| `korelace_analyza.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
+| `eu_pokryti_prijem.py` | `A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.CP_PPS_EU27_2020_HAB.B1GQ.{GEO}` | — |
 
 ---
 
@@ -46,7 +46,7 @@ Nominal labour productivity per hour, PPS relative to EU27.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `wage_gdp_convergence.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
+| `eu_konvergence.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
 
 ---
 
@@ -62,10 +62,10 @@ Income inequality index, range 0–100. Based on EU-SILC survey.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `gini_income_timeline.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
-| `union_gini_scatter.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
-| `correlation_analyses.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.TOTAL.GINI_HND.{GEO}` | — |
+| `eu_gini_prijem.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
+| `korelace_hustota_gini.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
+| `korelace_analyza.py` | `A.TOTAL.GINI_HND.` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.TOTAL.GINI_HND.{GEO}` | — |
 
 ---
 
@@ -82,9 +82,9 @@ Net earnings after tax and SSC for a single person without children at 100 % of 
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `net_income_ratio_timeline.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
-| `wage_gdp_convergence.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
-| `correlation_analyses.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
+| `stav_prijem_pomer.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
+| `eu_konvergence.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
+| `korelace_analyza.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 
 ---
 
@@ -95,8 +95,8 @@ Single person at 100 % average worker, no children.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `tax_wedge_map.py` | *(none — all countries)* | `2015`– |
-| `flexicurity_table.py` | `A.{GEO}` | — |
+| `eu_danovy_klin.py` | *(none — all countries)* | `2015`– |
+| `prakticka_srovnani.py` | `A.{GEO}` | — |
 
 ---
 
@@ -115,9 +115,9 @@ Usual weekly hours in main job, employed persons 15–64.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `correlation_analyses.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}` | — |
-| `strike_activity.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
+| `korelace_analyza.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}` | — |
+| `stav_stavky.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
 
 ---
 
@@ -135,9 +135,9 @@ Employment rate of working-age population as % of population in that age group.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `employment_rate_timeline.py` | `A.EMP_LFS.T.Y20-64.PC_POP.{GEO}` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.EMP_LFS.T.Y20-64.PC_POP.{GEO}` | — |
-| `strike_activity.py` | `A.EMP_LFS.T.Y20-64.THS_PER.DK` | `START_YEAR`– |
+| `stav_zamestnanost.py` | `A.EMP_LFS.T.Y20-64.PC_POP.{GEO}` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.EMP_LFS.T.Y20-64.PC_POP.{GEO}` | — |
+| `stav_stavky.py` | `A.EMP_LFS.T.Y20-64.THS_PER.DK` | `START_YEAR`– |
 
 ---
 
@@ -147,8 +147,8 @@ Difference between average gross hourly earnings of male and female employees, a
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `gender_wage_stratification.py` | *(none — all countries)* | `2018`– |
-| `rscp_stratification.py` | `A.PC.B-S_X_O.{GEO}` | `START_YEAR`– |
+| `problemy_gpg.py` | *(none — all countries)* | `2018`– |
+| `problemy_stratifikace.py` | `A.PC.B-S_X_O.{GEO}` | `START_YEAR`– |
 
 ---
 
@@ -167,7 +167,7 @@ Gross hourly earnings from Structure of Earnings Survey — D1, median, D9.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `gender_wage_stratification.py` | `A.B-S_X_O.TOTAL.TOTAL.TOTAL.M+F.D1_E_EUR+MED_E_EUR+D9_E_EUR.{GEO}` | — |
+| `problemy_gpg.py` | `A.B-S_X_O.TOTAL.TOTAL.TOTAL.M+F.D1_E_EUR+MED_E_EUR+D9_E_EUR.{GEO}` | — |
 
 ---
 
@@ -177,7 +177,7 @@ Proportion of employees earning < 2/3 of national median gross hourly earnings.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `flexicurity_table.py` | `A.T.{GEO}` | — |
+| `prakticka_srovnani.py` | `A.T.{GEO}` | — |
 
 ---
 
@@ -192,9 +192,9 @@ Price level index relative to EU27 (2020) = 100. For converting EUR to comparabl
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `pli_map.py` | `A.PLI_EU27_2020.GDP.` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.PLI_EU27_2020.GDP.{GEO}` | `YEAR - 3`– |
-| `sector_wages_net_pps.py` | `A.PLI_EU27_2020.GDP.` | `DISPLAY_YEAR`– |
+| `eu_cenova_hladina.py` | `A.PLI_EU27_2020.GDP.` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.PLI_EU27_2020.GDP.{GEO}` | `YEAR - 3`– |
+| `eu_odvetvove_mzdy.py` | `A.PLI_EU27_2020.GDP.` | `DISPLAY_YEAR`– |
 
 ---
 
@@ -210,9 +210,9 @@ Annual index of total hourly labour costs, base 2020 = 100.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `ipp_wage_growth.py` | `A.I20.B-S.D1_D4_MD5.{GEO}` | `START_YEAR - 1`– |
-| `ipp_supplementary.py` | `A.I20.B-S.D1_D4_MD5.CZ` | `START_YEAR - 1`– |
-| `rscp_sector_wages.py` | `A.I20.{NACE}.D1_D4_MD5.{GEO}` (loop over B-E, C, F, G-J, K-N) | `START_YEAR - 1`– |
+| `stav_ipp_mzdy.py` | `A.I20.B-S.D1_D4_MD5.{GEO}` | `START_YEAR - 1`– |
+| `stav_ipp_doplnkove.py` | `A.I20.B-S.D1_D4_MD5.CZ` | `START_YEAR - 1`– |
+| `problemy_sektor_mzdy.py` | `A.I20.{NACE}.D1_D4_MD5.{GEO}` (loop over B-E, C, F, G-J, K-N) | `START_YEAR - 1`– |
 
 ---
 
@@ -228,9 +228,9 @@ Absolute hourly labour costs in EUR. Cross-country level comparison.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `flexicurity_table.py` | `A.EUR.D1_D4_MD5.B-S_X_O.{GEO}` (fallback `B-S`) | `YEAR - 3`– |
-| `sector_wages_net_pps.py` | `A.EUR.D1_D4_MD5.C+G+J+K.{GEO}` | `DISPLAY_YEAR`– |
-| `sector_wages_net_pps.py` | `A.EUR.D1_D4_MD5.C+G+J+K.` (all geo) | `DISPLAY_YEAR`– |
+| `prakticka_srovnani.py` | `A.EUR.D1_D4_MD5.B-S_X_O.{GEO}` (fallback `B-S`) | `YEAR - 3`– |
+| `eu_odvetvove_mzdy.py` | `A.EUR.D1_D4_MD5.C+G+J+K.{GEO}` | `DISPLAY_YEAR`– |
+| `eu_odvetvove_mzdy.py` | `A.EUR.D1_D4_MD5.C+G+J+K.` (all geo) | `DISPLAY_YEAR`– |
 
 ---
 
@@ -244,8 +244,8 @@ Ratio of population 65+ to population 20–64 (× 100).
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `old_age_dependency_map.py` | `A.OLDDEP1.` | `START_YEAR`– |
-| `flexicurity_table.py` | `A.OLDDEP1.{GEO}` | — |
+| `vyhled_zavislost.py` | `A.OLDDEP1.` | `START_YEAR`– |
+| `prakticka_srovnani.py` | `A.OLDDEP1.{GEO}` | — |
 
 ---
 
@@ -261,7 +261,7 @@ Job vacancy rate: vacancies / (occupied posts + vacancies) × 100.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `flexicurity_table.py` | `A.B-S_X_O.GE10.JVR.{GEO}` (fallbacks: `TOTAL`/`B-S_X_O..JVR`) | — |
+| `prakticka_srovnani.py` | `A.B-S_X_O.GE10.JVR.{GEO}` (fallbacks: `TOTAL`/`B-S_X_O..JVR`) | — |
 
 ---
 
@@ -277,7 +277,7 @@ At risk of poverty or social exclusion (EU2030 definition). Combines income pove
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `arope_example.py` | `A.PC.TOTAL.T.` | — |
+| `stav_arope.py` | `A.PC.TOTAL.T.` | — |
 
 ---
 
@@ -287,7 +287,7 @@ Distribution of adult population by number of foreign languages known (Adult Edu
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `language_skills.py` | *(none — full download)* | — |
+| `problemy_jazyky.py` | *(none — full download)* | — |
 
 ### `edat_aes_l22` — Foreign language skills by age group
 
@@ -295,7 +295,7 @@ Same survey, broken down by age group. Post-filtered to Y25-54.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `language_skills.py` | *(none — full download)* | — |
+| `problemy_jazyky.py` | *(none — full download)* | — |
 
 ### `edat_aes_l23` — Foreign language skills by education level
 
@@ -303,7 +303,7 @@ Same survey, broken down by ISCED level. Post-filtered to ED5-8 (tertiary).
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `language_skills.py` | *(none — full download)* | — |
+| `problemy_jazyky.py` | *(none — full download)* | — |
 
 ---
 
@@ -313,7 +313,7 @@ Employment by place of residence vs. place of work (regional LFS). No pre-filter
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `cross_border_commuting.py` | *(none — full download)* | `START_YEAR`– |
+| `problemy_dojezdeni.py` | *(none — full download)* | `START_YEAR`– |
 
 ### `lfst_r_lfe2emprtn` — Regional employment rates (NUTS 2)
 
@@ -327,7 +327,7 @@ Employment rates at NUTS 2 regional level.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `cross_border_commuting.py` | `A.THS_PER.T.TOTAL.` | `2015`– |
+| `problemy_dojezdeni.py` | `A.THS_PER.T.TOTAL.` | `2015`– |
 
 ---
 
@@ -341,7 +341,7 @@ Average number of live births per woman.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `natality_timeline.py` | `A.TOTFERRT.` | `START_YEAR`– |
+| `vyhled_porodnost.py` | `A.TOTFERRT.` | `START_YEAR`– |
 
 ---
 
@@ -356,7 +356,7 @@ Harmonised Index of Consumer Prices — annual rate of change.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `ipp_supplementary.py` | `A.RCH_A_AVG.CP00.CZ` | `START_YEAR`– |
+| `stav_ipp_doplnkove.py` | `A.RCH_A_AVG.CP00.CZ` | `START_YEAR`– |
 
 ---
 
@@ -374,7 +374,7 @@ Number of persons emigrating from the reporting country, by citizenship.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `emigration_cz.py` | `A.CZ...NR.T.CZ` | `START_YEAR`– |
+| `problemy_emigrace.py` | `A.CZ...NR.T.CZ` | `START_YEAR`– |
 
 ---
 
@@ -391,7 +391,7 @@ Employment by professional status — total employed vs. self-employed.
 
 | Script | Filter | Period |
 |--------|--------|--------|
-| `self_employment_map.py` | `A.THS_PER.T.Y15-74.EMP+SELF.` | `2015`– |
+| `eu_osvc_mapa.py` | `A.THS_PER.T.Y15-74.EMP+SELF.` | `2015`– |
 
 ---
 
@@ -407,11 +407,11 @@ Source: OECD/AIAS ICTWSS database.
 
 | Script | Filter | start_period | Post-filter |
 |--------|--------|-------------|-------------|
-| `coverage_income_scatter.py` | `all` | `START_YEAR` | `ERB` measure |
-| `correlation_analyses.py` | `all` | `START_YEAR` | `ERB` measure |
-| `cb_coverage_timeline.py` | `all` | `1993` | `ERB` + `ERC` measures |
-| `kv_coverage_map.py` | `all` | `2010` | `ERB` measure |
-| `flexicurity_table.py` | `all` | `YEAR - 10` | `ERB` measure |
+| `eu_pokryti_prijem.py` | `all` | `START_YEAR` | `ERB` measure |
+| `korelace_analyza.py` | `all` | `START_YEAR` | `ERB` measure |
+| `eu_pokryti_kv_vyvoj.py` | `all` | `1993` | `ERB` + `ERC` measures |
+| `eu_pokryti_kv_mapa.py` | `all` | `2010` | `ERB` measure |
+| `prakticka_srovnani.py` | `all` | `YEAR - 10` | `ERB` measure |
 
 ---
 
@@ -422,11 +422,11 @@ Source: OECD/AIAS ICTWSS database.
 
 | Script | Filter | start_period | Post-filter |
 |--------|--------|-------------|-------------|
-| `union_density_trend.py` | `all` | `1993` | `INDICATOR=TUD` |
-| `union_density_map.py` | `all` | `2010` | `INDICATOR=TUD` |
-| `union_gini_scatter.py` | `all` | `2010` | `INDICATOR=TUD` |
-| `correlation_analyses.py` | `all` | `2004` | `INDICATOR=TUD` |
-| `flexicurity_table.py` | `all` | `YEAR - 10` | `INDICATOR=TUD` |
+| `stav_hustota_vyvoj.py` | `all` | `1993` | `INDICATOR=TUD` |
+| `eu_hustota_mapa.py` | `all` | `2010` | `INDICATOR=TUD` |
+| `korelace_hustota_gini.py` | `all` | `2010` | `INDICATOR=TUD` |
+| `korelace_analyza.py` | `all` | `2004` | `INDICATOR=TUD` |
+| `prakticka_srovnani.py` | `all` | `YEAR - 10` | `INDICATOR=TUD` |
 
 ---
 
@@ -436,9 +436,9 @@ Household Finance and Consumption Survey — wealth inequality indicators.
 
 | Script | Filter | start_period | Post-filter |
 |--------|--------|-------------|-------------|
-| `gini_wealth_map.py` | `all` | `2008` | `SH_TOP10` (top-10 % share) |
-| `gini_wealth_timeline.py` | `all` | `2008` | `SH_TOP10` |
-| `wealth_top20_timeline.py` | `all` | `2008` | `SH_TOP5` (top-5 % share) |
+| `eu_bohatstvi_mapa.py` | `all` | `2008` | `SH_TOP10` (top-10 % share) |
+| `eu_bohatstvi_vyvoj.py` | `all` | `2008` | `SH_TOP10` |
+| `eu_bohatstvi_top20.py` | `all` | `2008` | `SH_TOP5` (top-5 % share) |
 
 ---
 
@@ -448,9 +448,9 @@ Public expenditure on labour market policies as % of GDP.
 
 | Script | Filter | start_period | Post-filter |
 |--------|--------|-------------|-------------|
-| `lmp_expenditure.py` | `all` | `2004` | `MEASURE=EXP`, `UNIT_MEASURE=PT_B1GQ`, `PROGRAMME=_T` |
-| `lmp_expenditure_map.py` | `all` | — | same |
-| `flexicurity_table.py` | `all` | `YEAR - 5` | same |
+| `eu_apz_vydaje.py` | `all` | `2004` | `MEASURE=EXP`, `UNIT_MEASURE=PT_B1GQ`, `PROGRAMME=_T` |
+| `eu_apz_mapa.py` | `all` | — | same |
+| `prakticka_srovnani.py` | `all` | `YEAR - 5` | same |
 
 ---
 
@@ -462,7 +462,7 @@ Days not worked due to strikes and lockouts per 1 000 workers (annual).
 
 | Script | Params | Notes |
 |--------|--------|-------|
-| `strike_activity.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | DK missing → supplemented from Statistics Denmark |
+| `stav_stavky.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | DK missing → supplemented from Statistics Denmark |
 
 ---
 
@@ -481,8 +481,8 @@ Sheet A15a — agreed wage increases by agreement type (higher-level vs. enterpr
 
 | Script | Years | Notes |
 |--------|-------|-------|
-| `ipp_wage_growth.py` | 2007–2025 | Extracts median negotiated wage increase |
-| `ipp_supplementary.py` | 2007–2025 | Compared with LCI and HICP |
+| `stav_ipp_mzdy.py` | 2007–2025 | Extracts median negotiated wage increase |
+| `stav_ipp_doplnkove.py` | 2007–2025 | Compared with LCI and HICP |
 
 ### `mzda_tarify` — Wage tariff provisions
 
@@ -490,7 +490,7 @@ Sheet A1a — share of collective agreements containing wage tariff tables.
 
 | Script | Years | Notes |
 |--------|-------|-------|
-| `ipp_ca_breadth.py` | 2007–2025 | Tracks provision breadth over time |
+| `stav_ipp_rozsah.py` | 2007–2025 | Tracks provision breadth over time |
 
 ### `spoluprace_smluvnich_stran` — Social partner cooperation
 
@@ -498,7 +498,7 @@ Sheet A19a — cooperation provisions between trade unions and employers.
 
 | Script | Years | Notes |
 |--------|-------|-------|
-| `ipp_ca_breadth.py` | 2007–2025 | Alias `spoluprace_sml_stran` for 2007–2008 |
+| `stav_ipp_rozsah.py` | 2007–2025 | Alias `spoluprace_sml_stran` for 2007–2008 |
 
 ---
 
@@ -513,9 +513,9 @@ Contains: median, mean, P10, P25, P75, P90 gross monthly earnings by NACE sectio
 
 | Script | Years | Notes |
 |--------|-------|-------|
-| `rscp_sector_wages.py` | 2016–2024 | NACE-level wage comparison (CZ) |
-| `rscp_stratification.py` | 2016–2024 | P90/P10 stratification by NACE |
-| `wage_pension_distribution.py` | 2016–2024 | Wage distribution vs. pension formula |
+| `problemy_sektor_mzdy.py` | 2016–2024 | NACE-level wage comparison (CZ) |
+| `problemy_stratifikace.py` | 2016–2024 | P90/P10 stratification by NACE |
+| `problemy_mzda_duchod.py` | 2016–2024 | Wage distribution vs. pension formula |
 
 ### Public sphere (`nepodnikatelska`)
 
@@ -523,7 +523,7 @@ Same structure for public-sector employees.
 
 | Script | Years | Notes |
 |--------|-------|-------|
-| `public_private_wages.py` | 2025 (GUID) | Public vs. private wage comparison |
+| `problemy_verejny_soukromy.py` | 2025 (GUID) | Public vs. private wage comparison |
 
 ---
 
@@ -536,9 +536,9 @@ Variable `AdjCov` — adjusted CB coverage for EU27 (except DE, SK which use OEC
 
 | Script | Notes |
 |--------|-------|
-| `cb_coverage_timeline.py` | Full ICTWSS timeseries |
-| `correlation_analyses.py` | Cross-section for scatter plots |
-| `flexicurity_table.py` | Single-year value |
+| `eu_pokryti_kv_vyvoj.py` | Full ICTWSS timeseries |
+| `korelace_analyza.py` | Cross-section for scatter plots |
+| `prakticka_srovnani.py` | Single-year value |
 
 ### GISCO NUTS GeoJSON — Regional boundaries
 
@@ -547,9 +547,9 @@ NUTS regions at 20 m resolution, EPSG:3035 (LAEA Europe).
 
 | Script | Notes |
 |--------|-------|
-| `cross_border_commuting.py` | NUTS 2/3 commuting map |
-| `gender_wage_stratification.py` | Regional gender pay gap map |
-| `language_skills.py` | Regional language proficiency map |
+| `problemy_dojezdeni.py` | NUTS 2/3 commuting map |
+| `problemy_gpg.py` | Regional gender pay gap map |
+| `problemy_jazyky.py` | Regional language proficiency map |
 
 ### Natural Earth GeoJSON — Country boundaries
 
@@ -567,7 +567,7 @@ Working days lost due to strikes — Denmark doesn't report to ILOSTAT.
 
 | Script | Notes |
 |--------|-------|
-| `strike_activity.py` | DK supplement to ILOSTAT data |
+| `stav_stavky.py` | DK supplement to ILOSTAT data |
 
 ### ČSSZ pension yearbooks
 
@@ -576,7 +576,7 @@ Excel tables with pension distribution data, years 2022–2024.
 
 | Script | Notes |
 |--------|-------|
-| `wage_pension_distribution.py` | Pension amount distribution by decile |
+| `problemy_mzda_duchod.py` | Pension amount distribution by decile |
 
 ### MPSV Čistá mzda workbooks
 
@@ -603,10 +603,10 @@ These scripts use only built-in statutory constants or import from other analysi
 
 | Script | Purpose |
 |--------|---------|
-| `cz_pension_model.py` | Czech pension formula (§ 155/1995 Sb.) |
+| `problemy_cz_duchod.py` | Czech pension formula (§ 155/1995 Sb.) |
 | `cz_tax_model.py` | Czech tax wedge model (statutory rates) |
 | `cz_calculator.py` | Pension calculator (imports `cz_pension_model`) |
-| `cz_figures.py` | Visualization of pension/tax model outputs |
+| `problemy_cz_model.py` | Visualization of pension/tax model outputs |
 
 ---
 
