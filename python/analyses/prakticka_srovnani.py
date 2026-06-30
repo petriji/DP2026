@@ -381,7 +381,7 @@ try:
     _path_tud = fetch_oecd("TUD", start_period=YEAR - 10)
     ds_density = Dataset.from_oecd_csv(
         _path_tud,
-        name="Hustota odborů", unit="%",
+        name="Odborová organizovanost", unit="%",
         source_url="OECD AIAS ICTWSS / TUD",
         filters={"INDICATOR": "TUD"},
     )
@@ -449,7 +449,7 @@ _year_map: dict[str, dict[str, int]] = {
     "APZ výdaje":        _yr_apz,
     "Nízkopříjm. zaměst.": _yr_lowwage,
     "Pokrytí KV":        _yr_cba,
-    "Hustota odborů":    _yr_density,
+    "Odborová organizovanost":    _yr_density,
 }
 
 _deviations: list[tuple[str, str, int]] = [
@@ -505,7 +505,7 @@ L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost \newline (20--64~let)~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
 L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_nace2}", "JVR")
 L_CBA      = _m(r"Pokrytí \ac{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
-L_DENSITY  = _m(r"Hustota odborů~\cite{oecd_aias_ictwss_TUD_pct}", "Hustota odborů")
+L_DENSITY  = _m(r"Odborová organizovanost~\cite{oecd_aias_ictwss_TUD_pct}", "Odborová organizovanost")
 L_APZ      = _m(r"Výdaje na \acs{APZ} \newline (poměr k~\acs{HDP})~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 

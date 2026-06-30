@@ -71,8 +71,8 @@ ds_gini = Dataset.from_sdmx_csv(
 # ── 3. Scatter plot ───────────────────────────────────────────────────────────
 # scatter_xy uses the latest common year by default
 STRINGS = {
-    "title": r"Korelace: hustota odborů a Giniho koeficient (\acs{geo-EU}27)",
-    "xlabel": r"hustota odborů [\%]",
+    "title": r"Korelace: odborová organizovanost a Giniho koeficient (\acs{geo-EU27})",
+    "xlabel": r"odborová organizovanost [\%]",
     "ylabel": "Giniho koeficient [0–100]",
 }
 fig = scatter_xy(
@@ -93,7 +93,7 @@ fig = scatter_xy(
 add_pgf_tooltips_scatter(
     fig.axes[0], fig._scatter_merged,
     fmt_x="{:.1f}", fmt_y="{:.1f}",
-    label_x="hustota odborů [%]",
+    label_x="odborová organizovanost [%]",
     label_y="Giniho koeficient",
 )
 for _child in fig.axes[0].get_children():
@@ -112,7 +112,7 @@ display_year = common_years[-1] if common_years else "?"
 
 save_figure_tex_pgf(
     "korelace_hustota_gini",
-    caption=f"Hustota odborů a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
+    caption=f"Odborová organizovanost a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
     label="fig:korelace_hustota_gini",
     resizebox_width=r"\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],

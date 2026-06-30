@@ -95,7 +95,7 @@ def load_union_density(*, start_period: int = 1990) -> Dataset:
     path = fetch_oecd("TUD", start_period=start_period)
     ds = Dataset.from_oecd_csv(
         path,
-        name="Hustota odborů",
+        name="Odborová organizovanost",
         unit="%",
         source_url="OECD AIAS ICTWSS / TUD",
         filters={"INDICATOR": "TUD"},

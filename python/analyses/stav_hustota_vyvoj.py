@@ -66,8 +66,8 @@ def _add_tooltips_and_geo(ax, countries):
 
 # ── 3. Timeline figure (full history, grey cloud) ─────────────────────────────
 STRINGS_FULL = {
-    "title": "Hustota odborových organizací",
-    "ylabel": r"hustota odborů [\% zaměstnanců]",
+    "title": "Odborová organizovanost",
+    "ylabel": r"odborová organizovanost [\% zaměstnanců]",
 }
 
 fig = timeline(
@@ -104,8 +104,8 @@ save_figure_tex_pgf(
 # ── 6. Second variant: 2004--latest (cropped x-axis) ──────────────────────────
 YEAR_2004 = 2004
 STRINGS_2004 = {
-    "title": f"Hustota odborových organizací ({YEAR_2004}--{ds.years[-1]})",
-    "ylabel": r"hustota odborů [\% zaměstnanců]",
+    "title": f"Odborová organizovanost ({YEAR_2004}--{ds.years[-1]})",
+    "ylabel": r"odborová organizovanost [\% zaměstnanců]",
 }
 
 fig2 = timeline(
