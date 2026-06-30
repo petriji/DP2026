@@ -8,8 +8,10 @@ WID variable: ``shwealj992`` (share · hweal · equal-split · adults 992)
 Percentile:   ``p99p100`` (top 1 %)
 Values:        fractions in [0, 1] → multiplied by 100 to give percent.
 
-Data source: World Inequality Database (WID) bulk CSV: https://wid.world/bulk_download/
-Filter: variable == shwealj992, percentile == p99p100 (top 1 % share of net household wealth)
+Data source
+-----------
+World Inequality Database, wid.world/bulk_download/
+Per-country bulk CSV: ``https://wid.world/bulk_download/WID_data_{CC}.csv``
 
 Output
 ------
@@ -32,7 +34,6 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import DATA_DIR
-from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -117,8 +118,6 @@ latest_rows["value"] = latest_rows["value"] * 100.0  # fraction → percent
 display_year = int(latest_rows["time"].max())
 print(f"\nDisplay year (global max): {display_year}")
 print(f"Countries with data: {sorted(latest_rows['geo'].tolist())}")
-warn_non_target_year(source="WID shwealj992", year=display_year, context="Top 1% wealth-share WID map reference year")
-warn_years("WID shwealj992", latest_rows["time"].tolist(), context="Top 1% wealth-share WID map country fill years")
 
 ds = Dataset(
     latest_rows[["geo", "time", "value"]],
@@ -136,7 +135,6 @@ STRINGS = {
     "title": f"Podíl top 1\\,\\% domácností na čistém jmění (WID, do {display_year})",
     "colorbar_label": r"podíl top 1\,\% na čistém jmění [\%]",
 }
-NUDGE_LABELS = [(c, c) for c in ["CZ", "DK", "AT", "DE", "PL", "SK"]]
 
 fig = choropleth(
     ds,
@@ -148,23 +146,25 @@ fig = choropleth(
     vmax=_vmax,
     label_countries=True,
     fill_latest=True,
-    highlight_colorbar=["CZ", "DK", "AT", "DE", "PL", "SK"],
+    highlight_colorbar=["CZ"],
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_bohatstvi_top1_wid", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+savefig_pgf(fig, "eu_bohatstvi_top1_wid", strings=STRINGS)
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_bohatstvi_top1_wid",
-    caption=f"Podíl top 1\\,\\% domácností na čistém jmění, \\acs{{geo-EU27}} mapa, do~{display_year}",
+    caption=(
+        f"Podíl top 1\\,\\% domácností na čistém jmění, \\acs{{geo-EU27}} mapa, "
+        f"do~{display_year}. Zdroj dat: \\acs{{WID}}~\\cite{{wid_world_shweal}}."
+    ),
     label="fig:eu_bohatstvi_top1_wid",
     resizebox_width=r"\linewidth",
     cite_key="wid_world_shweal",
     strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("\nDone: eu_bohatstvi_top1_wid")
