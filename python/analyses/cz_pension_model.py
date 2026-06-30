@@ -122,22 +122,23 @@ def pension_employee(gross_monthly: float, years: int = DEFAULT_YEARS) -> float:
 
 def pension_osvc(
     revenue_monthly: float,
-    expense_rate: float = 0.55,
+    expense_rate: float = 0.60,
     years: int = DEFAULT_YEARS,
 ) -> float:
     """Statutory monthly old-age pension for OSVČ using výdajový paušál.
 
-    The OSVČ SP assessment base = 55 % of (revenue − paušální výdaje).
-    This mirrors the tax-model computation but uses the SP vyměřovací základ
-    as the personal assessment base for pension purposes.
+    The OSVČ SP assessment base = 55 % of the tax base, where the tax base
+    equals revenue × (1 − expense_rate).  This is the personal assessment
+    base (OVZ) used for pension entitlement.
 
     Parameters
     ----------
     revenue_monthly:
         Monthly turnover in Kč.
     expense_rate:
-        Výdajový paušál coefficient (default 0.55, i.e. § 5b SP).
-        For výdaje 80 % pass 0.80, for 60 % pass 0.60, etc.
+        Výdajový paušál coefficient – the fraction of revenue recognised as
+        expenses (default 0.60 for živnosti ostatní).  Pass 0.80 for živnosti
+        řemeslné, 0.40 for jiné příjmy.
     years:
         Years of pensionable service.
     """
@@ -174,17 +175,17 @@ def replacement_rate(pension: float, gross_monthly: float) -> float:
 
 X = np.linspace(MIN_WAGE, 200_000, 800)   # gross wage / OSVČ revenue axis
 
-pen_emp    = np.array([pension_employee(x)          for x in X])
-pen_60     = np.array([pension_osvc(x, 0.40)        for x in X])  # 60% výdaje → 40% základ
-pen_80     = np.array([pension_osvc(x, 0.20)        for x in X])  # 80% výdaje → 20% základ
-pen_40     = np.array([pension_osvc(x, 0.60)        for x in X])  # 40% výdaje → 60% základ
-pen_paul   = np.array([pension_pausalni(x)          for x in X])  # constant
+pen_emp     = np.array([pension_employee(x)          for x in X])
+pen_vyd60   = np.array([pension_osvc(x, 0.60)         for x in X])  # výdaje 60 %
+pen_vyd80   = np.array([pension_osvc(x, 0.80)         for x in X])  # výdaje 80 %
+pen_vyd40   = np.array([pension_osvc(x, 0.40)         for x in X])  # výdaje 40 %
+pen_paul    = np.array([pension_pausalni(x)            for x in X])  # constant
 
-rr_emp     = np.array([replacement_rate(p, w) for p, w in zip(pen_emp,  X)])
-rr_60      = np.array([replacement_rate(p, r) for p, r in zip(pen_60,   X)])
-rr_80      = np.array([replacement_rate(p, r) for p, r in zip(pen_80,   X)])
-rr_40      = np.array([replacement_rate(p, r) for p, r in zip(pen_40,   X)])
-rr_paul    = np.array([replacement_rate(p, r) for p, r in zip(pen_paul, X)])
+rr_emp      = np.array([replacement_rate(p, w) for p, w in zip(pen_emp,    X)])
+rr_vyd60    = np.array([replacement_rate(p, r) for p, r in zip(pen_vyd60,  X)])
+rr_vyd80    = np.array([replacement_rate(p, r) for p, r in zip(pen_vyd80,  X)])
+rr_vyd40    = np.array([replacement_rate(p, r) for p, r in zip(pen_vyd40,  X)])
+rr_paul     = np.array([replacement_rate(p, r) for p, r in zip(pen_paul,   X)])
 
 
 # ── Figure 1: cz_pension_solidarity (2-panel) ─────────────────────────────────
@@ -192,11 +193,11 @@ rr_paul    = np.array([replacement_rate(p, r) for p, r in zip(pen_paul, X)])
 fig1, (ax_a, ax_b) = plt.subplots(1, 2, figsize=cm2in(18, 9))
 
 # Panel A – absolute pension
-ax_a.plot(X / 1_000, pen_emp  / 1_000, color=PALETTE[0], label="Zaměstnanec")
-ax_a.plot(X / 1_000, pen_60   / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
-ax_a.plot(X / 1_000, pen_80   / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
-ax_a.plot(X / 1_000, pen_40   / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
-ax_a.plot(X / 1_000, pen_paul / 1_000, color=PALETTE[4], linestyle="--",
+ax_a.plot(X / 1_000, pen_emp    / 1_000, color=PALETTE[0], label="Zaměstnanec")
+ax_a.plot(X / 1_000, pen_vyd60  / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
+ax_a.plot(X / 1_000, pen_vyd80  / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
+ax_a.plot(X / 1_000, pen_vyd40  / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
+ax_a.plot(X / 1_000, pen_paul   / 1_000, color=PALETTE[4], linestyle="--",
           label="Paušální daň pás. 1")
 
 for ax in (ax_a, ax_b):
@@ -212,11 +213,11 @@ ax_a.set_title("Výše starobního důchodu")
 ax_a.legend(fontsize=FONT_SIZE - 1, loc="upper left")
 
 # Panel B – replacement rate
-ax_b.plot(X / 1_000, rr_emp  * 100, color=PALETTE[0])
-ax_b.plot(X / 1_000, rr_60   * 100, color=PALETTE[1])
-ax_b.plot(X / 1_000, rr_80   * 100, color=PALETTE[2])
-ax_b.plot(X / 1_000, rr_40   * 100, color=PALETTE[3])
-ax_b.plot(X / 1_000, rr_paul * 100, color=PALETTE[4], linestyle="--")
+ax_b.plot(X / 1_000, rr_emp    * 100, color=PALETTE[0])
+ax_b.plot(X / 1_000, rr_vyd60  * 100, color=PALETTE[1])
+ax_b.plot(X / 1_000, rr_vyd80  * 100, color=PALETTE[2])
+ax_b.plot(X / 1_000, rr_vyd40  * 100, color=PALETTE[3])
+ax_b.plot(X / 1_000, rr_paul   * 100, color=PALETTE[4], linestyle="--")
 
 ax_b.scatter([MEDIAN_EMP_WAGE / 1_000],
              [replacement_rate(pension_employee(MEDIAN_EMP_WAGE),
@@ -252,11 +253,11 @@ save_figure_tex(
 
 fig2, ax2 = plt.subplots(figsize=cm2in(15, 9))
 
-ax2.plot(X / 1_000, pen_emp  / 1_000, color=PALETTE[0], label="Zaměstnanec")
-ax2.plot(X / 1_000, pen_60   / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
-ax2.plot(X / 1_000, pen_80   / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
-ax2.plot(X / 1_000, pen_40   / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
-ax2.plot(X / 1_000, pen_paul / 1_000, color=PALETTE[4], linestyle="--",
+ax2.plot(X / 1_000, pen_emp    / 1_000, color=PALETTE[0], label="Zaměstnanec")
+ax2.plot(X / 1_000, pen_vyd60  / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
+ax2.plot(X / 1_000, pen_vyd80  / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
+ax2.plot(X / 1_000, pen_vyd40  / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
+ax2.plot(X / 1_000, pen_paul   / 1_000, color=PALETTE[4], linestyle="--",
          label="Paušální daň pás. 1")
 
 ax2.axvline(MIN_WAGE / 1_000,      color="grey", linewidth=0.8, linestyle=":")
@@ -300,10 +301,10 @@ tw_60_arr     = np.array([tax_wedge_osvc_vydajovy(r, 0.60)   for r in REV_RANGE]
 tw_80_arr     = np.array([tax_wedge_osvc_vydajovy(r, 0.80)   for r in REV_RANGE])
 tw_paul_arr   = np.array([tax_wedge_osvc_pausalni(r)         for r in REV_RANGE])
 
-rr_emp_arr    = np.array([replacement_rate(pension_employee(g), g) for g in gross_range])
-rr_60_arr     = np.array([replacement_rate(pension_osvc(r, 0.40), r) for r in REV_RANGE])
-rr_80_arr     = np.array([replacement_rate(pension_osvc(r, 0.20), r) for r in REV_RANGE])
-rr_paul_arr   = np.array([replacement_rate(pension_pausalni(r), r) for r in REV_RANGE])
+rr_emp_arr    = np.array([replacement_rate(pension_employee(g), g)              for g in gross_range])
+rr_60_arr     = np.array([replacement_rate(pension_osvc(r, 0.60), r)            for r in REV_RANGE])
+rr_80_arr     = np.array([replacement_rate(pension_osvc(r, 0.80), r)            for r in REV_RANGE])
+rr_paul_arr   = np.array([replacement_rate(pension_pausalni(r), r)              for r in REV_RANGE])
 mask_paul_sc  = ~np.isnan(tw_paul_arr)
 
 fig3, ax3 = plt.subplots(figsize=cm2in(15, 9))
