@@ -64,6 +64,7 @@ python/
 └── analyses/               – one script per figure group
     ├── cz_tax_model.py     – CZ tax/levy: pure calculation module (no matplotlib, no external imports)
     ├── cz_pension_model.py – CZ pension: pure calculation module (imports levy constants from cz_tax_model)
+    ├── cz_calculator.py    – Individual pension calculator (VVZ/PK history, earnings history, early/late/children)
     ├── cz_figures.py       – all 7 CZ model figures (imports from the two modules above)
     ├── gdp_ppp_timeline.py – GDP per capita in PPS (EU timeline)
     ├── tax_wedge_map.py    – OECD tax wedge choropleth
@@ -110,7 +111,7 @@ python/
 
 ## CZ pension & tax model
 
-Three-file architecture:
+Three-file model + one calculator:
 - **`cz_tax_model.py`** — pure calculation module (no external dependencies):
   tax/levy constants (`AVG_WAGE`, income tax rates, employee/OSVČ levy rates,
   `EMPLOYER_INS_RATE`, `OSVC_BASE_RATIO`, `OSVC_MIN_MONTHLY_BASE`); paušální
@@ -120,6 +121,12 @@ Three-file architecture:
   (RH thresholds, OVZ rates, `INSURANCE_YEARS`, `MIN_TOTAL_PENSION`); imports
   shared levy constants from `cz_tax_model`.  Provides `pension_employee`,
   `pension_osvc_vydajovy`, and the internal `_pension`/`_rovz` helpers.
+- **`cz_calculator.py`** — individual pension calculator: year-parameterised
+  `get_params(year)` (VVZ/PK table, declining `first_limit_pct` 2026–2035),
+  `compute_ovz()` from actual earnings history, `calculate_pension()` (full),
+  `calculate_pension_simple()` (constant gross estimate), early/late retirement
+  penalties, children bonus.  Zero above RH2 (zákon č. 270/2023 Sb.).
+  Run directly for a CLI demo or import for custom analyses.
 - **`cz_figures.py`** — single entry point for all 7 figures; imports both
   modules above; defines figure-only constants (reference wages, OSVČ types,
   paušál segments); owns all matplotlib code.  Run directly or via the registry.
