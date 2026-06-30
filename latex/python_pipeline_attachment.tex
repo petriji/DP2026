@@ -21,7 +21,6 @@
 
 \usepackage[most]{tcolorbox}
 \tcbuselibrary{breakable,listings,skins}
-\usepackage{longtable}
 
 % Reuse the paper/colour logic already used by the poster class: white paper,
 % CTU blue for structure, neutral grey for secondary text, light grey-blue fills.
@@ -92,14 +91,13 @@
 \hrule height 0.5pt
 \vspace{0.8\baselineskip}
 
-\section*{Účel a hranice roury \textit{(pipeline)}}
+\section*{Účel a hranice pipeline}
 Python část repozitáře vytváří reprodukovatelné obrázky, tabulky a krátké
-\LaTeX{}ové vstupy používané v hlavním textu práce. Roura \textit{(pipeline)} není obecný datový
-sklad: je to řízený řetězec sestavení \textit{(build)}, který spojuje zdrojová
-data, lokální mezipaměť \textit{(cache)}, jednotlivé analýzy, registr výstupů
-a \LaTeX{}ový dokument. Ruční zásahy patří do komentářů a do git-tracked
-obalů \textit{(wrappers)} PGF obrázků, nikoli do generovaných souborů
-v \texttt{latex/texparts/python/}.
+\LaTeX{}ové vstupy používané v hlavním textu práce. Pipeline není obecný datový
+sklad: je to řízený build řetězec, který spojuje zdrojová data, lokální cache,
+jednotlivé analýzy, registr výstupů a \LaTeX{}ový dokument. Ruční zásahy patří
+do komentářů a do git-tracked wrapperů PGF obrázků, nikoli do generovaných
+souborů v \texttt{latex/texparts/python/}.
 
 \begin{center}
 \resizebox{\linewidth}{!}{%
@@ -108,21 +106,16 @@ v \texttt{latex/texparts/python/}.
   \node[pipebox,right=of sources] (fetch) {\texttt{stattool.fetch}\\download + cache};
   \node[storebox,right=of fetch] (data) {\texttt{python/data/}\\raw cache};
   \node[pipebox,right=of data] (analysis) {\texttt{analyses/*.py}\\clean + compute};
-  
-  \node[pipebox,below=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
-  \node[storebox,left=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
-  \node[pipebox,left=of outputs] (quality) {\texttt{stats\_analytics.py}\\data-quality audit};
-  \node[storebox,left=of quality] (reports) {\texttt{review/data\_quality\_report.*}};
-  \node[pipebox,below=of quality] (latex) {\texttt{main.tex}\\commentary};
+  \node[pipebox,right=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
+  \node[storebox,right=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
+  \node[pipebox,right=of outputs] (latex) {\texttt{main.tex}\\commentary};
 
   \draw[flow] (sources) -- (fetch);
   \draw[flow] (fetch) -- (data);
   \draw[flow] (data) -- (analysis);
   \draw[flow] (analysis) -- (style);
   \draw[flow] (style) -- (outputs);
-  \draw[flow] (outputs) -- (quality);
-  \draw[flow] (quality) -- (reports);
-  \draw[weakflow] (quality) -- (latex);
+  \draw[flow] (outputs) -- (latex);
 \end{tikzpicture}}
 \end{center}
 
@@ -132,16 +125,13 @@ vykreslováním aplikuje jednotný styl. Tím je zajištěno, že změna šablon
 barevné palety nebo způsobu exportu nevyžaduje úpravy v hlavním textu.
 
 \section*{Řízení generování}
-Orchestrátor \textit{(orchestrator)} \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
+Orchestrátor \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
 \texttt{latex/main.tex} a všechny aktivní \texttt{\textbackslash input} soubory.
 Zachytává jen výstupy vložené jako \texttt{texparts/python/STEM} nebo
-\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené kořeny \textit{(stems)}
+\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené stemmy
 s registrem \texttt{python/analytics\_registry.toml}; spustí pouze ty skupiny,
 které jsou v textu skutečně použité a kterým chybí očekávaný výstup, případně
-ty, které byly vynuceny volbou \texttt{--force}. Po dokončení generování navíc
-provede audit datové kvality: zkontroluje explicitnost roku v popiscích,
-vypíše varování pro fallback cesty a upozorní na použití jiného roku než je
-cílový rok dat.
+ty, které byly vynuceny volbou \texttt{--force}.
 
 \begin{center}
 \resizebox{0.92\linewidth}{!}{%
@@ -150,15 +140,11 @@ cílový rok dat.
   \node[pipebox,text width=34mm,right=of scan] (stems) {aktivní stemmy\\\texttt{texparts/python}};
   \node[pipebox,text width=34mm,right=of stems] (registry) {match v\\\texttt{analytics\_registry.toml}};
   \node[pipebox,text width=34mm,right=of registry] (run) {spustit skript\\jen když chybí výstup};
-  \node[pipebox,text width=34mm,below=of run] (audit) {audit roku dat\\a fallback varování};
   \node[storebox,text width=34mm,below=of registry] (skip) {neaktivní nebo kompletní\\skupiny se přeskočí};
-  \node[storebox,text width=34mm,left=of audit] (report) {\texttt{review/data\_quality\_report.*}};
 
   \draw[flow] (scan) -- (stems);
   \draw[flow] (stems) -- (registry);
   \draw[flow] (registry) -- (run);
-  \draw[flow] (run) -- (audit);
-  \draw[flow] (audit) -- (report);
   \draw[weakflow] (registry) -- (skip);
 \end{tikzpicture}}
 \end{center}
@@ -168,24 +154,7 @@ cd python
 bash run.sh stats_analytics.py              # doplni chybejici aktivni vystupy
 bash run.sh stats_analytics.py --list       # vypise stemmy nalezene v LaTeXu
 bash run.sh stats_analytics.py --force all  # pregeneruje vsechny aktivni skupiny
-bash run.sh stats_analytics.py --target-year 2025  # explicitni audit proti cili 2025
 \end{pipelinecode}
-
-Datová kvalita je od května 2026 součástí stejného kroku, nikoli samostatná
-ruční kontrola. Výchozí cílový rok je 2025; lze jej změnit volbou
-\texttt{--target-year} nebo proměnnou prostředí \texttt{DP\_TARGET\_YEAR}.
-Analytické skripty mají používat helpery \texttt{warn\_fallback(...)} a
-\texttt{warn\_non\_target\_year(...)} z modulu \texttt{stattool.data\_quality},
-takže se do logu promítne každý sekundární zdroj, hardcoded hodnota, expertní
-odhad i použití jiného roku než 2025.
-
-Výstupem tohoto kroku nejsou jen varovné řádky v terminálu, ale i dva soubory
-pro transparentní deklaraci v popiscích a komentářích:
-
-\begin{itemize}
-  \item \texttt{review/data\_quality\_report.json}: strojově čitelný přehled auditovaných stemmů.
-  \item \texttt{review/data\_quality\_report.md}: stručný report pro lidskou revizi.
-\end{itemize}
 
 \section*{Smlouva mezi Pythonem a LaTeXem}
 Registr je jediným místem, kde se analytický skript mapuje na výstupy. Klíč
@@ -203,10 +172,9 @@ pics     = ["eu_prijem_pps"]
 \end{pipelinecode}
 
 Minimální analýza má stejnou kostru bez ohledu na zdroj dat: import cest a
-stylu, stažení dat přes pomocnou funkci \textit{(helper)}, zpracování v pandas,
-vykreslení a zápis obalu \textit{(wrapper)} v \LaTeX{}u. Při PGF podložce
-\textit{(backend)} se text v grafu renderuje až v hlavním dokumentu, takže
-v popiscích fungují makra jako \texttt{\textbackslash SI\{\}\{\}}
+stylu, stažení dat přes helper, zpracování v pandas, vykreslení a zápis
+\LaTeX{}ového wrapperu. Při PGF backendu se text v grafu renderuje až v hlavním
+dokumentu, takže v popiscích fungují makra jako \texttt{\textbackslash SI\{\}\{\}}
 nebo \texttt{\textbackslash acs\{geo-CZ\}}.
 
 \begin{pipelinecode}[Kostra analytického skriptu]
@@ -231,12 +199,11 @@ save_figure_tex_pgf(
 \end{pipelinecode}
 
 \section*{Výstupy a ruční úpravy}
-Podložka \textit{(backend)} PDF vytváří hotový graf a obal \textit{(wrapper)},
-který jej vkládá přes \texttt{\textbackslash includegraphics}. Podložka
-\textit{(backend)} PGF vytváří zdrojový \texttt{.pgf} fragment
-v \texttt{python/figures/}, jednořádkový kompatibilní obal \textit{(wrapper)}
-v \texttt{latex/texparts/python/} a editovatelný soubor
-v \texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
+PDF backend vytváří hotový graf a wrapper, který jej vkládá přes
+\texttt{\textbackslash includegraphics}. PGF backend vytváří zdrojový
+\texttt{.pgf} fragment v \texttt{python/figures/}, jednořádkový kompatibilní
+wrapper v \texttt{latex/texparts/python/} a editovatelný soubor v
+\texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
 deduplikují do \texttt{python/figures/\_shared/}. Výsledkem je, že velké
 mapy mohou zůstat datově generované, ale jejich titulky a textové řetězce lze
 ladit v \LaTeX{}u.
@@ -249,39 +216,21 @@ ladit v \LaTeX{}u.
   \item \texttt{latex/texparts/commentary/}: metodické a interpretační odstavce.
 \end{itemize}
 
-\section*{Sestavení \textit{(build)} a kontrola}
+\section*{Build a kontrola}
 Ve VS Code je běžný postup zachycen v receptech LaTeX Workshopu: recept s
 analytics nejprve spustí \texttt{setup\_venv}, poté \texttt{stats\_analytics.py}
-a až potom sestavení \textit{(build)} v \LaTeX{}u. Při ručním sestavení
-\textit{(build)} lze rouru \textit{(pipeline)} spustit explicitně nebo nastavit
-\texttt{RUN\_PYTHON\_ANALYTICS=1} pro háček před sestavením \textit{(pre-build hook)}
-v \texttt{latexmkrc}.
+a až potom LaTeX build. Při ručním buildu lze pipeline spustit explicitně nebo
+nastavit \texttt{RUN\_PYTHON\_ANALYTICS=1} pro pre-build hook v \texttt{latexmkrc}.
 
 \begin{pipelinecode}[Ruční build]
 cd latex
 RUN_PYTHON_ANALYTICS=1 latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build main.tex
-pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=build python_pipeline_attachment.tex
+latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build python_pipeline_attachment.tex
 \end{pipelinecode}
-
-Je-li recept spuštěn z VS Code, analytics log se současně ukládá do
-\texttt{latex/build/stats-analytics.log} (případně
-\texttt{stats-analytics-force.log}). To je důležité právě pro datovou kvalitu:
-fallback varování a upozornění na použití jiného roku než 2025 jsou dohledatelná
-jak v terminálovém výstupu, tak ve stálém logu a v reportech v adresáři
-\texttt{review/}.
 
 Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
 \texttt{texparts/python} výstup se řeší během Pythonu, chyba v citaci nebo makru
 se řeší v \LaTeX{}u a ručně upravený generovaný texpart se nefixuje na místě,
-ale vrací se do příslušného skriptu nebo do editovatelného obalu \textit{(wrapper)} PGF.
-
-\section*{Tabulka datové kvality (auto)}
-Následující přehled je generovaný při běhu \texttt{stats\_analytics.py}.
-
-\IfFileExists{../review/data_quality_pipeline_table.tex}{%
-  \input{../review/data_quality_pipeline_table.tex}
-}{%
-  \textit{Tabulka zatím není vygenerována. Spusťte: \texttt{bash run.sh stats\_analytics.py}}.
-}
+ale vrací se do příslušného skriptu nebo do editovatelného PGF wrapperu.
 
 \end{document}
