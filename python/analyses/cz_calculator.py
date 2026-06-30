@@ -190,8 +190,16 @@ def _vvz_growth_coeff(earnings_year: int, retirement_year: int) -> float:
     if earnings_year >= retirement_year - 1:
         return 1.0
     ref = retirement_year - 2
-    if ref not in VVZ_PK or earnings_year not in VVZ_PK:
-        return 1.0  # konzervativní záloha
+    if ref not in VVZ_PK:
+        raise ValueError(
+            f"VVZ/PK[{ref}] not available -- add it to VVZ_PK "
+            f"(needed to project earnings for retirement_year={retirement_year})."
+        )
+    if earnings_year not in VVZ_PK:
+        raise ValueError(
+            f"VVZ/PK[{earnings_year}] not available -- add it to VVZ_PK "
+            f"(needed for earnings_year={earnings_year})."
+        )
     vvz_ref, pk_ref = VVZ_PK[ref]
     vvz_earn, _     = VVZ_PK[earnings_year]
     return max((vvz_ref * pk_ref) / vvz_earn, 1.0)
@@ -352,6 +360,12 @@ def calculate_pension_simple(
 
     OVZ ≈ monthly_gross (koeficienty nárůstu VVZ se za konstantního příjmu
     vyruší -- vzájemná normalizace na aktuální mzdovou úroveň).
+
+    Poznámka: Tato zjednodušená verze předpokládá vyměřovací základ SP =
+    100 % hrubé mzdy (zaměstnanec).  Pro OSVC je VZ jen 55 % zisku, tj.
+    správný odhad důchodu OSVC se počítá jako
+    ``calculate_pension_simple(0.55 * monthly_profit, ...)`` nebo lze použít
+    funkce ``pension_osvc()`` v ``problemy_cz_duchod``.
 
     Parameters
     ----------
