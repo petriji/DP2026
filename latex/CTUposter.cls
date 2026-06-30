@@ -101,16 +101,16 @@
 \gdef\@CTUgitsha{}
 % \normostrana is the public command used by latexmkrc's tmp file.
 \providecommand\normostrana[1]{\gdef\@normostrana{#1}}
-% Load tmp files only at \AtBeginDocument: the latexmkrc-generated stats and
-% textcheck files contain their own \makeatletter…\makeatother pair, which
-% would permanently change @'s catcode if read during class loading (where @
-% is a letter).  At \AtBeginDocument @ is "other" anyway, so the embedded
-% \makeatletter/other works as intended and is locally scoped.
+% Load tmp files only at \AtBeginDocument.  The author/email temp files contain
+% internal macros such as \@author, so read them under \makeatletter; otherwise
+% TeX tokenizes \@author as \@ + "author" and the poster keeps the placeholder.
 \AtBeginDocument{%
+  \makeatletter
   \InputIfFileExists{build/main-gitauthor.tmp}{}{}%
   \InputIfFileExists{build/main-gitemail.tmp}{}{}%
   \InputIfFileExists{build/main-normostrana.tmp}{}{}%
   \InputIfFileExists{build/main-stats.tmp}{}{}%
+  \makeatother
 }
 
 % Switch main language at \begin{document} when english option is given.
@@ -167,7 +167,6 @@
 \setlist{nosep,leftmargin=*}
 
 \RequirePackage{csquotes}
-\RequirePackage{qrcode}
 
 % Two-column body
 \RequirePackage{multicol}
@@ -185,8 +184,6 @@
   bookmarks     = false,
   pdfpagelayout = SinglePage,
 ]{hyperref}
-% Improve URL line breaking (important in narrow poster bibliography columns).
-\RequirePackage{xurl}
 
 % Tooltip annotations used by generated PGF assets.
 \RequirePackage{pdfcomment}
@@ -273,13 +270,13 @@
 % ----------------------------------------------------------------------------
 % Acro — loaded so that thesis text reused on the poster (with \ac{}, \acs{},
 % \acp{}, \acl{}) typesets without errors.  No list is ever printed on the
-% poster, so list-related templates and acronym links are deliberately omitted.
+% poster, so list-related templates from the thesis are deliberately omitted.
 % Per-thesis declaration files (acro.tex, acro_variables.tex) must still be
 % \input in the poster preamble — same as in main.tex.
 % ----------------------------------------------------------------------------
 \RequirePackage{acro}
 \acsetup{
-  make-links   = false,   % no acronym list target exists in the poster
+  make-links   = true,    % clickable but no list target → harmless
   list/display = used,    % no effect (we never call \printacronyms)
   single       = false,   % expand on first use even if used only once
 }
@@ -317,9 +314,9 @@
 \newcommand\CTUP@lbl@phone     {Tel.}
 \newcommand\CTUP@lbl@repo      {Repozitář}
 \newcommand\CTUP@lbl@references{Literatura}
-\newcommand\CTUP@lbl@stats@figs{obr\'{á}zk\r{u}}
+\newcommand\CTUP@lbl@stats@figs{obrázků}
 \newcommand\CTUP@lbl@stats@tabs{tabulek}
-\newcommand\CTUP@lbl@stats@atts{p\v{r}\'{\i}loh}
+\newcommand\CTUP@lbl@stats@atts{příloh}
 \newcommand\CTUP@lbl@stats@nstr{normostran}
 \AtBeginDocument{%
   \ifCTUP@english
@@ -424,7 +421,7 @@
 % Inside: standard text, \section{...}, figures via \captionof{figure}{...}
 %   (use [H] floats sparingly — multicol does not support standard floats).
 \newenvironment{posterbody}
-  {\begin{multicols*}{2}}
+  {\begin{multicols*}{2}\fontsize{15.5}{18.2}\selectfont}
   {\end{multicols*}}
 
 % ----------------------------------------------------------------------------
@@ -446,7 +443,7 @@
       colbacktitle= CTUblue,
       fonttitle   = \large\bfseries,
     ]
-    \itshape #2%
+    \sffamily #2%
   \end{tcolorbox}\par\vspace{4mm}%
   \endgroup
 }
@@ -474,80 +471,35 @@
 % The tag does NOT need to exist at compile time; the URL becomes valid as
 % soon as the tag is pushed to the remote.
 % ----------------------------------------------------------------------------
-\newsavebox{\CTUP@contacttextbox}
-\newsavebox{\CTUP@contactfullbox}
-\newlength\CTUP@contacttextheight
 \newcommand{\postercontactblock}{%
-  % Render the whole contact block (rule + text + QR) into ONE unbreakable box
-  % so that \vspace*{\fill} can sit its BOTTOM exactly on the column bottom
-  % without the loose lines overflowing past the page edge.
-  \sbox{\CTUP@contactfullbox}{%
-    \begin{minipage}[t]{\linewidth}
-      {\color{CTUgrey}\hrule height 0.3mm}\vspace{3mm}%
-      \begingroup
-      \sffamily\small
-      \edef\CTUP@tmpurl{\CTU@posterurl}%
-      \ifx\CTUP@tmpurl\@empty
-        \textbf{\CTUP@lbl@contact:}\\
-        \CTUP@author
-        \ifx\CTUP@emailx\@empty\else
-          \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
-        \fi
-        \ifx\CTUP@phone\@empty\else
-          \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
-        \fi
-        \par
-        \ifx\CTUP@supervisor\@empty\else
-          \medskip\textit{\CTUP@supervisor}\par
-        \fi
-        \ifx\CTUP@year\@empty\else
-          \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
-        \fi
-      \else
-        \sbox{\CTUP@contacttextbox}{%
-          \begin{minipage}[t]{0.68\linewidth}
-            \vspace{0pt}% ensure top baseline anchor
-            \textbf{\CTUP@lbl@contact:}\\
-            \CTUP@author
-            \ifx\CTUP@emailx\@empty\else
-              \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
-            \fi
-            \ifx\CTUP@phone\@empty\else
-              \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
-            \fi
-            \par
-            \ifx\CTUP@supervisor\@empty\else
-              \medskip\textit{\CTUP@supervisor}\par
-            \fi
-            \medskip
-            \textbf{\CTUP@lbl@repo:}\\
-            \href{\CTUP@tmpurl}{\nolinkurl{\CTUP@tmpurl}}\par
-            \ifx\CTUP@year\@empty\else
-              \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
-            \fi
-          \end{minipage}%
-        }%
-        \setlength\CTUP@contacttextheight{\ht\CTUP@contacttextbox}%
-        \addtolength\CTUP@contacttextheight{\dp\CTUP@contacttextbox}%
-        \leavevmode
-        \noindent\usebox{\CTUP@contacttextbox}%
-        \hfill
-        \begin{minipage}[t]{0.28\linewidth}
-          \vspace{0pt}% ensure top baseline anchor
-          \raggedleft
-          \qrcode[height=\CTUP@contacttextheight]{\CTUP@tmpurl}\par
-        \end{minipage}%
-      \fi
-      \endgroup
-    \end{minipage}%
-  }%
-  % Push the boxed block to the column bottom. The boxed minipage[t] has a
-  % large DEPTH (content below its top baseline); \raisebox by that depth makes
-  % the box depth zero (bottom edge = baseline), so after \vspace*{\fill} the
-  % baseline lands on the column bottom and the whole block sits ABOVE it
-  % without spilling past the page edge.
-  \par\vspace*{\fill}\nopagebreak
-  \noindent\raisebox{\dp\CTUP@contactfullbox}{\usebox{\CTUP@contactfullbox}}\par
+  % Keep contact details at the bottom of the current column.
+  \par\vspace*{\fill}%
+  \par\vspace{4mm}%
+  {\color{CTUgrey}\hrule height 0.3mm}\vspace{3mm}%
+  \begingroup
+  \sffamily\small
+  \textbf{\CTUP@lbl@contact:}\\
+  \CTUP@author
+  \ifx\CTUP@emailx\@empty\else
+    \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
+  \fi
+  \ifx\CTUP@phone\@empty\else
+    \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
+  \fi
+  \par
+  \ifx\CTUP@supervisor\@empty\else
+    \medskip\textit{\CTUP@supervisor}\par
+  \fi
+  \edef\CTUP@tmpurl{\CTU@posterurl}%
+  \ifx\CTUP@tmpurl\@empty\else
+    \medskip
+    \textbf{\CTUP@lbl@repo:}\\
+    \href{\CTUP@tmpurl}{\nolinkurl{\CTUP@tmpurl}}\par
+  \fi
+  \ifx\CTUP@year\@empty\else
+    \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
+  \fi
+  \endgroup
 }
 
 % ----------------------------------------------------------------------------
@@ -557,52 +509,23 @@
 %   Output:  62 normostran · 18 obrázků · 7 tabulek · 3 přílohy
 % ----------------------------------------------------------------------------
 \newif\ifCTUP@firststat
-% Czech pluralization used by thesis counters (1, 2-4, 5+).
-\newcommand\CTUP@czplural[4]{%
-  \begingroup
-    \@tempcnta=#1\relax
-    \ifnum\@tempcnta=1
-      #2%
-    \else
-      \ifnum\@tempcnta<5
-        #3%
-      \else
-        #4%
-      \fi
-    \fi
-  \endgroup}
-\newcommand{\CTUP@enplural}[3]{%
-  \ifnum#1=1 #2\else #3\fi
-}
-\newcommand{\CTUP@statitem}[6]{%
-  % #1 = number
-  % #2/#3/#4 = Czech forms (1, 2-4, 5+)
-  % #5/#6    = English forms (1, plural)
-  % Prints "N label" only when N > 0.
+\newcommand{\CTUP@statitem}[2]{%
+  % #1 = number  #2 = label.  Print "N label" only when N > 0.
   \ifnum#1>0
     \ifCTUP@firststat\else\space\textbullet\space\fi
     \CTUP@firststatfalse
-    #1~\ifCTUP@english
-      \CTUP@enplural{#1}{#5}{#6}%
-    \else
-      \CTUP@czplural{#1}{#2}{#3}{#4}%
-    \fi
+    #1~#2%
   \fi
 }
 \newcommand{\posterthesisstats}{%
   \CTUP@firststattrue
   \begingroup\sffamily\small\color{CTUgrey}
     \ifx\@normostrana\@empty\else
-      \CTUP@firststatfalse
-      \@normostrana~\ifCTUP@english
-        \CTUP@enplural{\@normostrana}{standard page}{standard pages}%
-      \else
-        \CTUP@czplural{\@normostrana}{normostrana}{normostrany}{normostran}%
-      \fi
+      \CTUP@firststatfalse \@normostrana~\CTUP@lbl@stats@nstr
     \fi
-    \CTUP@statitem{\@CTUnfigures}    {obr\'{a}zek}{obr\'{a}zky}{obr\'{a}zk\r{u}}{figure}{figures}%
-    \CTUP@statitem{\@CTUntables}     {tabulka}{tabulky}{tabulek}{table}{tables}%
-    \CTUP@statitem{\@CTUnattachments}{p\v{r}\'{\i}loha}{p\v{r}\'{\i}lohy}{p\v{r}\'{\i}loh}{attachment}{attachments}%
+    \CTUP@statitem{\@CTUnfigures}    {\CTUP@lbl@stats@figs}%
+    \CTUP@statitem{\@CTUntables}     {\CTUP@lbl@stats@tabs}%
+    \CTUP@statitem{\@CTUnattachments}{\CTUP@lbl@stats@atts}%
   \par\endgroup
 }
 
@@ -617,37 +540,36 @@
 %   The optional argument is forwarded to \printbibliography so callers can
 %   pass `keyword=poster`, `nottype=online`, etc.
 % ----------------------------------------------------------------------------
-\newcommand{\posterbibliography}[1][]{%
-  \par\vspace{4mm}%
-  \begingroup
-  % Heading — same look as \section but no \section{} so no TOC entry attempt.
-  {\sffamily\bfseries\color{CTUblue}\fontsize{30}{36}\selectfont
+\newsavebox{\CTUP@bibbox}
+\newlength{\CTUP@posterbibmaxheight}
+\setlength{\CTUP@posterbibmaxheight}{55mm}
+\newcommand{\posterbibliographymaxheight}[1]{%
+  \setlength{\CTUP@posterbibmaxheight}{#1}%
+}
+\newcommand{\CTUP@posterbibcontent}[1]{%
+  {\sffamily\bfseries\color{CTUblue}\fontsize{24}{28}\selectfont
     \CTUP@lbl@references\par}%
   \vspace{1mm}%
   \renewcommand*{\bibfont}{\scriptsize}%
   \setlength{\bibitemsep}{0.15\baselineskip}%
   \setlength{\bibhang}{1.2em}%
-  % Encourage URL/token wrapping so entries stay inside the column width.
-  \setcounter{biburlnumpenalty}{1}%
-  \setcounter{biburlucpenalty}{1}%
-  \setcounter{biburllcpenalty}{1}%
-  \Urlmuskip=0mu plus 2mu\relax
-  % Fallback breakpoints for stubborn URL-like tokens.
-  \def\UrlBreaks{\do\/\do\-\do\_\do\?\do\&\do\#\do\=\do\%}%
-  % Allow generous inter-word spacing so long URLs and author names break
-  % at the column boundary without producing overfull hboxes:
-  \emergencystretch=8em
-  \raggedright
-  \sloppy
   \selectlanguage{\CTUP@biblang}%
-  \begin{NoHyper}%
-    \printbibliography[heading=none,#1]%
-  \end{NoHyper}%
+  \printbibliography[heading=none,#1]%
 }
 \newcommand{\posterbibliography}[1][]{%
   \par\vspace{2mm}%
   \begingroup
-  \CTUP@posterbibcontent{#1}%
+  \sbox{\CTUP@bibbox}{%
+    \begin{minipage}{\linewidth}%
+      \CTUP@posterbibcontent{#1}%
+    \end{minipage}%
+  }%
+  \dimen0=\dimexpr\ht\CTUP@bibbox+\dp\CTUP@bibbox\relax
+  \ifdim\dimen0>\CTUP@posterbibmaxheight
+    \resizebox{!}{\CTUP@posterbibmaxheight}{\usebox{\CTUP@bibbox}}%
+  \else
+    \usebox{\CTUP@bibbox}%
+  \fi
   \par
   \endgroup
 }
@@ -668,18 +590,6 @@
 % Convenience — \inputpgffigure mirrors the thesis macro so PGF/matplotlib
 % figures dropped into texparts/figures/<name>.tex render identically.
 % ----------------------------------------------------------------------------
-% \CTUfitpgf{<content>} scales down only when content exceeds \linewidth.
-% For postercompactpgf we keep explicit full-width scaling + font remap.
-\newsavebox{\CTU@pgfbox}
-\newcommand{\CTUfitpgf}[1]{%
-  \sbox{\CTU@pgfbox}{#1}%
-  \ifdim\wd\CTU@pgfbox>\linewidth
-    \resizebox{\linewidth}{!}{\usebox{\CTU@pgfbox}}%
-  \else
-    \makebox[\linewidth][c]{\usebox{\CTU@pgfbox}}%
-  \fi
-}
-
 \newcommand{\inputpgffigure}[1]{%
   \IfFileExists{../python/figures/#1.pgf}{%
     \input{texparts/figures/#1}%
@@ -692,63 +602,6 @@
       }%
     \end{center}%
   }%
-}
-
-% ----------------------------------------------------------------------------
-% Compact PGF figure helpers for poster composition
-% ----------------------------------------------------------------------------
-% Configure two-level PGF font remapping used by \posterpgfinput:
-% - source font sizes <= threshold map to "small" target size
-% - source font sizes  > threshold map to "large" target size
-% Defaults are tuned for A1 poster readability when ingesting thesis PGF files.
-\gdef\CTUP@pgfthreshold{11.5}
-\gdef\CTUP@pgfsmallsize{16.6}
-\gdef\CTUP@pgfsmalllead{19.2}
-\gdef\CTUP@pgflargesize{17.8}
-\gdef\CTUP@pgflargelead{20.8}
-
-\newcommand{\posterpgfthreshold}[1]{\gdef\CTUP@pgfthreshold{#1}}
-\newcommand{\posterpgfsmallfont}[2]{%
-  \gdef\CTUP@pgfsmallsize{#1}%
-  \gdef\CTUP@pgfsmalllead{#2}%
-}
-\newcommand{\posterpgflargefont}[2]{%
-  \gdef\CTUP@pgflargesize{#1}%
-  \gdef\CTUP@pgflargelead{#2}%
-}
-
-\newcommand{\posterpgfinput}[1]{%
-  \begingroup
-  \let\CTUP@origfontsize\fontsize
-  \renewcommand{\fontsize}[2]{%
-    \ifdim##1pt>\CTUP@pgfthreshold pt
-      \CTUP@origfontsize{\CTUP@pgflargesize}{\CTUP@pgflargelead}%
-    \else
-      \CTUP@origfontsize{\CTUP@pgfsmallsize}{\CTUP@pgfsmalllead}%
-    \fi
-  }%
-  \input{../python/figures/#1.pgf}%
-  \endgroup
-}
-
-\newcommand{\postercompactpgf}[3]{%
-  \begingroup
-  \captionsetup{type=figure,font=CTUPpostercaption,labelfont=bf,justification=raggedright,singlelinecheck=false,skip=1pt}%
-  \centering
-  \resizebox{\linewidth}{!}{\posterpgfinput{#1}}\par\vspace{-0.5mm}%
-  \captionof{figure}{#2}%
-  \label{fig:poster-#3}%
-  \endgroup
-}
-
-\newcommand{\postertwofigures}[6]{%
-  \par\noindent
-  \begin{minipage}[t]{0.49\linewidth}
-    \postercompactpgf{#1}{#2}{#3}%
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.49\linewidth}
-    \postercompactpgf{#4}{#5}{#6}%
-  \end{minipage}\par\vspace{2mm}%
 }
 
 \endinput
