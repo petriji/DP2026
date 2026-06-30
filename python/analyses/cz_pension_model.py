@@ -179,18 +179,18 @@ OSVC_MIN_HEALTH_BASE: int = AVG_WAGE // 2  # 24 484 Kč/měsíc (2026)
 
 # ── Minimální mzda ────────────────────────────────────────────────────────────
 # Nařízení vlády č. 405/2025 Sb. – platné od 1. 1. 2026.
-MIN_WAGE: int = 20_800  # CZK/měsíc (hrubá mzda, zaměstnanec)
+MIN_WAGE: int = 22_400  # CZK/měsíc (hrubá mzda, zaměstnanec)
 # Celkové náklady zaměstnavatele při minimální mzdě (osa x ekvivalent):
-MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830 Kč
+MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 29 971 Kč
 
 # ── Mediánová mzda zaměstnance ────────────────────────────────────────────────
-# Zdroj: ISPV (Informační systém o průměrném výdělku), ČSÚ/MPSV, rok 2024.
-# Medián hrubé měsíční mzdy zaměstnanců v podnikatelské sféře: 40 709 Kč.
+# Zdroj: ISPV (Informační systém o průměrném výdělku), ČSÚ/MPSV, rok 2025.
+# Medián hrubé měsíční mzdy zaměstnanců v podnikatelské sféře: 43 241 Kč.
 # ISPV se vztahuje pouze na zaměstnance v podnicích; pro OSVČ srovnatelná
 # statistika mediánu zisku není zveřejňována (viz komentář ve funkci
 # plot_tax_wedge_comparison()).
-MEDIAN_EMP_WAGE: int = 40_709   # CZK/měsíc hrubé mzdy (ISPV 2024)
-MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 54 469 Kč
+MEDIAN_EMP_WAGE: int = 43_241   # CZK/měsíc hrubé mzdy (ISPV 2025)
+MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 57 856 Kč
 
 # ── Medián mzdy ICT specialistů (CZ-ISCO 25) ─────────────────────────────────
 # Zdroj: ISPV, mzdová sféra (podnikatelská sféra), H1 2025.
@@ -201,6 +201,15 @@ IT_MEDIAN_TOTAL_COST: int = int(IT_MEDIAN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈
 # ── Hranice chudoby ───────────────────────────────────────────────────────────
 # Zdroj: ČSÚ, rok 2025. Definice: 60 % mediánu čistého příjmu domácnosti.
 POVERTY_THRESHOLD: int = 18_600  # CZK/měsíc (2025)
+
+# ── DPH (daň z přidané hodnoty) ──────────────────────────────────────────────
+# Zákon č. 235/2004 Sb. o dani z přidané hodnoty, § 6.
+# OSVČ s ročním obratem nad 2 000 000 Kč se stává plátcem DPH.
+# Pro švarc-systém srovnání: klient platí cenu služby + DPH; OSVČ si ponechává
+# jen cenu bez DPH a zbytek odvádí státu.  Vstupní DPH zanedbáváme (OSVČ
+# v švarc systému provádí hlavně práci a nemá významné vstupy).
+DPH_RATE: float = 0.21               # základní sazba DPH: 21 %
+DPH_THRESHOLD_MONTHLY: int = 166_666  # 2 000 000 Kč/rok ÷ 12 ≈ 166 666 Kč/měs.
 
 # ── Polohy zlomů (kinks) na ose x (celkové náklady / příjmy) pro RH1/RH2 ─────
 # Redukční hranice RH1 a RH2 jsou prahové hodnoty OVZ, nikoliv osy x.
@@ -267,6 +276,14 @@ OSVC_VYDAJOVY_CAP: dict[float, int] = {
     0.40:  66_667,  # max měsíční příjmy pro uplatnění 40 % paušálu
 }
 
+# ── Typický Švarc systém – výdajová sazba ─────────────────────────────────────────
+# OSVČ v švarc systému (přepracovaný zaměstnanec) má minimální skutečné výdaje:
+# domácí kancelář, telefon, případně odpisování zřízení.
+# 16 % je přibližný podíl takových výdajů.  Zobrazuje se jako teóretická
+# křivka nad limitem výdajového paušálu (kde paušál nelze dále uplatnit).
+SVARC_EXPENSE_RATE: float = 0.16   # typický Švarc: ~16 % skutečných výdajů
+SVARC_LINESTYLE           = (0, (6, 1))  # dlouhá čárková linie; odlišená od ostatních
+
 # ── Pomocné výpočetní funkce ──────────────────────────────────────────────────
 
 def _fmt_czk(amount: int) -> str:
@@ -275,6 +292,17 @@ def _fmt_czk(amount: int) -> str:
     Příklad: 17121 → '17\u202f121\u00a0Kč'
     """
     return f"{amount:,}".replace(",", "\u202f") + "\u00a0Kč"
+
+
+def _revenue_after_dph(client_payment: np.ndarray | float) -> np.ndarray | float:
+    """Skutečný příjem OSVČ po odvodu DPH (zákon č. 235/2004 Sb., § 6).
+
+    Nad prahem obratu 2 000 000 Kč/rok (DPH_THRESHOLD_MONTHLY měsíčně) je OSVČ
+    plátcem DPH.  Z platby klienta X si ponechá X / (1 + DPH_RATE); zbytek
+    odvádí jako DPH.  Pod prahem klient platí cenu služby přímo (bez DPH).
+    """
+    x = np.asarray(client_payment, dtype=float)
+    return np.where(x > DPH_THRESHOLD_MONTHLY, x / (1 + DPH_RATE), x)
 
 
 def _rovz(ovz: np.ndarray | float) -> np.ndarray | float:
@@ -369,7 +397,8 @@ def pension_osvc_vydajovy(revenue: np.ndarray | float,
         Zisk = příjmy × (1 − expense_rate).
     """
     rev = np.asarray(revenue, dtype=float)
-    profit = (1.0 - expense_rate) * rev
+    actual_rev = _revenue_after_dph(rev)
+    profit = (1.0 - expense_rate) * actual_rev
     ovz = np.maximum(OSVC_BASE_RATIO * profit, OSVC_MIN_MONTHLY_BASE)
     return _pension(ovz, years)
 
@@ -392,7 +421,8 @@ def _net_income_osvc_vydajovy(revenue: np.ndarray | float,
                                expense_rate: float) -> np.ndarray | float:
     """Čistý příjem OSVČ s výdajovým paušálem (ZD − SP − ZP − DPFO)."""
     x = np.asarray(revenue, dtype=float)
-    zd = (1.0 - expense_rate) * x
+    actual_rev = _revenue_after_dph(x)
+    zd = (1.0 - expense_rate) * actual_rev
     social_base = np.maximum(OSVC_BASE_RATIO * zd, OSVC_MIN_MONTHLY_BASE)
     health_base = np.maximum(OSVC_ZP_BASE_RATIO * zd, OSVC_MIN_HEALTH_BASE)
     social = OSVC_SOCIAL_RATE * social_base
