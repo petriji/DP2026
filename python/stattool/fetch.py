@@ -156,19 +156,26 @@ def fetch_ipp(
     year:
         Survey / reference year (e.g., ``2025``).
     topic:
-        File topic code.  Known codes and the data they contain:
+        File topic code.  Use the *canonical* name; year-specific filename
+        variants are resolved automatically (see table below).
 
-        Available in all years (2016–present):
+        Available in all years (2007–present):
 
         - ``"odmenovani"``                      – remuneration: negotiated wage
           increases, forms of pay, tariff vs. non-tariff systems.
         - ``"mzda_tarify"``                     – wage tariff levels agreed in CAs.
-        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
-          components (overtime, night shifts, holiday pay, …).
+
+        Available 2009–present:
+
         - ``"zamestnanost_rozvoj_BOZP_dohody"`` – employment, personnel
           development, health & safety, and other agreements.
         - ``"spoluprace_smluvnich_stran"``      – cooperation of contracting
           parties (unions and employers).
+
+        Available 2019–present:
+
+        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
+          components (overtime, night shifts, holiday pay, …).
 
         New from 2025:
 
@@ -178,19 +185,45 @@ def fetch_ipp(
           changes to the employment relationship.
         - ``"prac_podminky_benefity"``           – working conditions and
           employee benefits (meal vouchers, transport, home-office, …).
+
+        Historical-only (2007–2008):
+
+        - ``"doba_zmeny_pomeru"``               – working time and changes to
+          employment relationships.
+
     force:
         Re-download even when a cached copy already exists.
 
     Returns
     -------
     Path
-        Local path to the cached ``.xlsx`` file.  Load it with
-        :func:`pandas.read_excel` or :meth:`~stattool.dataset.Dataset.from_ipp_excel`.
+        Local path to the cached ``.xls`` / ``.xlsx`` file.  Load it with
+        :func:`pandas.read_excel`.
     """
+    # Some topic filenames changed between the ISPP (2007–2008) era and later.
+    # Map canonical topic names to their historical filename variants.
+    _TOPIC_ALIASES: dict[str, dict[range, str]] = {
+        "spoluprace_smluvnich_stran": {
+            # 2007–2008 used a shorter name
+            range(2007, 2009): "spoluprace_sml_stran",
+        },
+    }
+    resolved_topic = topic
+    for year_range, alias in _TOPIC_ALIASES.get(topic, {}).items():
+        if year in year_range:
+            resolved_topic = alias
+            break
+
     yy = str(year)[2:]  # last two digits: 2024 → "24"
-    filename = f"IPP_{yy}_{topic}.xlsx"
+    if year >= 2019:
+        prefix, ext = "IPP", ".xlsx"
+    elif year >= 2015:
+        prefix, ext = "IPP", ".xls"
+    else:  # 2007–2014: published as ISPP (double-P) .xls
+        prefix, ext = "ISPP", ".xls"
+    filename = f"{prefix}_{yy}_{resolved_topic}{ext}"
     url = f"https://www.kolektivnismlouvy.cz/download/{year}/{filename}"
-    return fetch(url, suffix=".xlsx", force=force)
+    return fetch(url, suffix=ext, force=force)
 
 
 def fetch_ispv(
@@ -253,7 +286,20 @@ def fetch_ispv(
     prefix = "ISPV" if sphere == "podnikatelska" else "RSCP"
     filename = f"{prefix}_{yy}H{half}.xlsx"
     url = f"https://www.ispv.cz/files/{filename}"
-    return fetch(url, suffix=".xlsx", force=force)
+    path = fetch(url, suffix=".xlsx", force=force)
+    # Validate: a valid XLSX/ZIP file starts with the PK magic bytes (50 4B).
+    # The ISPV portal returns a 2149-byte HTML error page with status 200 when
+    # the old /files/ URL pattern is used.  Detect and reject that here.
+    with open(path, "rb") as _fh:
+        _magic = _fh.read(2)
+    if _magic != b"PK":
+        raise ValueError(
+            f"Downloaded file is not a valid XLSX (magic={_magic!r}). "
+            "The ISPV portal has likely changed its URL structure. "
+            "Use stattool.fetch.fetch() with the current GUID-based URL from "
+            "https://www.ispv.cz/cz/Vysledky-setreni/Aktualni.aspx"
+        )
+    return path
 
 
 def fetch_eurostat(

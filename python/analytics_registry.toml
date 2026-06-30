@@ -75,6 +75,11 @@ script   = "analyses/ipp_supplementary.py"
 texparts = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
 pics     = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
 
+[ipp_ca_breadth]
+script   = "analyses/ipp_ca_breadth.py"
+texparts = ["ipp_ca_breadth"]
+pics     = ["ipp_ca_breadth"]
+
 [rscp_sector_wages]
 script   = "analyses/rscp_sector_wages.py"
 texparts = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
@@ -82,8 +87,10 @@ pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispe
 
 [rscp_stratification]
 script   = "analyses/rscp_stratification.py"
-texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
-pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles",
+            "rscp_regional_wages_map"]
+pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles",
+            "rscp_regional_wages_map"]
 
 [old_age_dependency]
 script   = "analyses/old_age_dependency_map.py"
@@ -158,6 +165,11 @@ script   = "analyses/gini_wealth_timeline.py"
 texparts = ["wealth_top10_timeline"]
 pics     = ["wealth_top10_timeline"]
 
+[wealth_top20_timeline]
+script   = "analyses/wealth_top20_timeline.py"
+texparts = ["wealth_top20_timeline"]
+pics     = ["wealth_top20_timeline"]
+
 [wealth_map]
 script   = "analyses/gini_wealth_map.py"
 texparts = ["wealth_top10_map"]
@@ -171,3 +183,37 @@ texparts = ["sector_wages_bar", "sector_wages_deviation",
 pics     = ["sector_wages_bar", "sector_wages_deviation",
             "sector_wages_map_C", "sector_wages_map_G",
             "sector_wages_map_J", "sector_wages_map_K"]
+
+[cross_border_commuting]
+script   = "analyses/cross_border_commuting.py"
+texparts = ["cross_border_commuting_timeline", "cross_border_commuting_map",
+            "cross_border_commuting_nuts2"]
+pics     = ["cross_border_commuting_timeline", "cross_border_commuting_map",
+            "cross_border_commuting_nuts2"]
+
+[language_skills]
+script   = "analyses/language_skills.py"
+texparts = ["language_skills_total_map", "language_skills_age_map",
+            "language_skills_isced_map"]
+pics     = ["language_skills_total_map", "language_skills_age_map",
+            "language_skills_isced_map"]
+
+[emigration_cz]
+script   = "analyses/emigration_cz.py"
+texparts = ["emigration_cz_timeline"]
+pics     = ["emigration_cz_timeline"]
+
+[gender_wage_stratification]
+script   = "analyses/gender_wage_stratification.py"
+texparts = ["gender_pay_gap_map", "gender_wage_stratification"]
+pics     = ["gender_pay_gap_map", "gender_wage_stratification"]
+
+[public_private_wages]
+script   = "analyses/public_private_wages.py"
+texparts = ["rscp_public_private_sector", "rscp_public_private_distribution"]
+pics     = ["rscp_public_private_sector", "rscp_public_private_distribution"]
+
+[natality]
+script   = "analyses/natality_timeline.py"
+texparts = ["natality_tfr_timeline", "natality_tfr_map"]
+pics     = ["natality_tfr_timeline", "natality_tfr_map"]
