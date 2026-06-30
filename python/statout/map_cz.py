@@ -222,9 +222,18 @@ def choropleth_cz(
     # ── Colourbar ─────────────────────────────────────────────────────────────
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
-    # shrink/pad aligned with statout.map_europe.choropleth so the rasterised
-    # colourbar strip has identical pixel dimensions and dedups via _shared/.
-    cb = fig.colorbar(sm, ax=ax, shrink=0.6, pad=0.02)
+    # Fixed-size colourbar in inches (independent of axes aspect) so the
+    # rasterised strip pixel dimensions are identical to map_europe output
+    # and dedups to python/figures/_shared/ via content hash.
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+    cax = inset_axes(
+        ax, width=0.10, height=2.10,  # inches
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        bbox_transform=ax.transAxes,
+        borderpad=0,
+    )
+    cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
     if colorbar_label:
         cb.set_label(colorbar_label, fontsize=FONT_SIZE)
     cb.ax.tick_params(labelsize=FONT_SIZE - 1)
@@ -235,13 +244,14 @@ def choropleth_cz(
     ax.set_axis_off()
 
     if title:
-        fig.subplots_adjust(top=0.88)
-        fig._subplots_adjust_kwargs = {"top": 0.88}
-        fig._suptitle_gap_pt = 11
+        # Aligned with statout.map_europe.choropleth so axes/colourbar layout
+        # matches and the rasterised colourbar dedups via _shared/.
+        fig.subplots_adjust(top=0.85)
+        fig._subplots_adjust_kwargs = {"top": 0.85}
         fig.suptitle(
             title,
             fontsize=plt.rcParams.get("axes.titlesize", 9),
-            y=0.97, ha="center",
+            y=0.95, ha="center",
         )
 
     return fig

@@ -195,7 +195,18 @@ def choropleth(
     cbar = None
     if show_colorbar:
         cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
-        cbar = fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
+        # Fixed-size colourbar in inches (independent of axes aspect) so the
+        # rasterised strip pixel dimensions are identical to map_cz output
+        # and dedups to python/figures/_shared/ via content hash.
+        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+        cax = inset_axes(
+            ax, width=0.10, height=2.10,  # inches
+            loc="center left",
+            bbox_to_anchor=(1.02, 0.5),
+            bbox_transform=ax.transAxes,
+            borderpad=0,
+        )
+        cbar = fig.colorbar(sm, cax=cax, label=cb_label)
 
     if highlight_colorbar and cbar is not None:
         import matplotlib.transforms as _mtx
