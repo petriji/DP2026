@@ -197,10 +197,6 @@ def choropleth(
         cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
         cbar = fig.colorbar(sm, ax=ax, shrink=0.6, label=cb_label)
 
-    # Default colorbar marks: thesis comparator countries (CZ first).
-    if highlight_colorbar is None:
-        highlight_colorbar = ["CZ", "SK", "PL", "DE", "AT", "DK"]
-
     if highlight_colorbar and cbar is not None:
         import matplotlib.transforms as _mtx
         _pgf = mpl.get_backend() == "pgf"
@@ -226,15 +222,7 @@ def choropleth(
                 [-0.12], [val], marker=">", markersize=4,
                 color=color, clip_on=False, zorder=6, transform=trans,
             )
-            # Country code label.  In PGF mode use a plain ISO-2 code wrapped
-            # in \pdftooltip showing the long Czech name (no \acs{geo-XX}: that
-            # would create a broken hyperlink to a non-printed acronym entry).
-            from stattool.style import GEO_LONG_NAMES
-            if _pgf:
-                long = GEO_LONG_NAMES.get(geo, geo)
-                lbl = rf"\pdftooltip{{{geo}}}{{{long}}}"
-            else:
-                lbl = geo
+            lbl = rf"\acs{{geo-{geo}}}" if _pgf else geo
             # Place label 3pt to the left of the marker using an offset transform.
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(

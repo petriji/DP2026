@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -197,6 +198,18 @@ def scatter_xy(
     # Stash the merged (geo, x, y) data on the figure so callers (e.g. PGF
     # scripts) can attach hover tooltips with add_pgf_tooltips_scatter().
     fig._scatter_merged = merged.copy()  # type: ignore[attr-defined]
+
+    if mpl.get_backend() == "pgf":
+        from stattool.style import (
+            add_pgf_tooltips_scatter as _ats,
+            apply_geo_labels_pgf as _agl,
+        )
+        _x_lbl = (xlabel if xlabel
+                  else (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
+        _y_lbl = (ylabel if ylabel
+                  else (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
+        _ats(ax, merged, label_x=_x_lbl, label_y=_y_lbl)
+        _agl(ax)
 
     return fig
 
