@@ -788,6 +788,58 @@ def _dedup_pgf_companion_images(
     return rewritten
 
 
+def _suppress_hyperref_in_rotated_pgftext(pgf_path: Path) -> int:
+    r"""Wrap rotated ``\pgftext`` payloads with ``\NoHyper ... \endNoHyper``.
+
+    hyperref produces axis-aligned PDF link annotations; when the surrounding
+    text is rotated (e.g. y-axis labels at 90°, vertical colorbar labels),
+    the link box stays horizontal and floats away from the visible text.
+    Suppressing hyperref inside rotated labels removes the stray boxes.
+
+    Operates line by line on ``\pgftext[...rotate=...]{...}`` lines.  The
+    visible payload sits between ``\def%{\%}`` and the closing ``}}`` at the
+    end of the line — wrap it.
+
+    Returns the number of payloads modified.
+    """
+    import re as _re
+    lines = pgf_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    marker = r"\def%{\%}"
+    pgftext_rot = _re.compile(r"\\pgftext\[[^\]]*rotate=")
+    n = 0
+    for i, line in enumerate(lines):
+        if not pgftext_rot.search(line):
+            continue
+        if r"\NoHyper" in line:
+            continue
+        idx = line.find(marker)
+        if idx < 0:
+            continue
+        payload_start = idx + len(marker)
+        # Find the closing "}}" that terminates \color{textcolor}{...}.
+        # The line typically ends with "}}%\n" or "}}\n".
+        stripped = line.rstrip("\n")
+        if stripped.endswith("}}%"):
+            payload_end = len(stripped) - 3
+            tail = "}}%\n" if line.endswith("\n") else "}}%"
+        elif stripped.endswith("}}"):
+            payload_end = len(stripped) - 2
+            tail = "}}\n" if line.endswith("\n") else "}}"
+        else:
+            continue
+        payload = line[payload_start:payload_end]
+        new_line = (
+            line[:payload_start]
+            + r"\NoHyper " + payload + r" \endNoHyper"
+            + tail
+        )
+        lines[i] = new_line
+        n += 1
+    if n:
+        pgf_path.write_text("".join(lines), encoding="utf-8")
+    return n
+
+
 def _optimize_pgf_assets(pgf_path: Path) -> list[str]:
     """Run enabled PGF post-export optimizations and return status messages."""
     notes: list[str] = []
@@ -802,6 +854,10 @@ def _optimize_pgf_assets(pgf_path: Path) -> list[str]:
     if PGF_RECOMPRESS_COMPANION_IMAGES:
         # Placeholder switch: kept for future pngquant/zopfli pipeline.
         notes.append("recompression switch enabled (no-op placeholder)")
+
+    n = _suppress_hyperref_in_rotated_pgftext(pgf_path)
+    if n:
+        notes.append(f"{n} rotated label(s) wrapped with \\NoHyper")
 
     return notes
 
