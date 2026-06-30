@@ -112,7 +112,7 @@ N_PENSION = 2_367_000
 
 # X-axis evaluation grid – net-income scale (Kč/měsíc)
 # Gross 120 000 Kč/měsíc → net ≈ 88 500 Kč; use 5–90 tis. to cover both series.
-_X_MIN   =  5_000
+_X_MIN   =  0
 _X_MAX   = 90_000
 _X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
 
