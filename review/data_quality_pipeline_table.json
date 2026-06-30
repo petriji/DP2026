@@ -42,13 +42,13 @@
     "remarks": "Roky v popisku: 2024 | Nesedi cilovy rok 2025"
   },
   {
-    "stem": "4.18",
+    "stem": "4.17",
     "script": "eu_odvetvove_mzdy.py",
     "datasets": "Eurostat lc_lci_lev (f\"A.EUR.D1_D4_MD5.{sector_filter}.\", start_period=DISPLAY_YEAR); Eurostat prc_ppp_ind (A.PLI_EU27_2020.GDP., start_period=DISPLAY_YEAR)",
     "remarks": "Roky v popisku: 2025"
   },
   {
-    "stem": "4.17",
+    "stem": "4.18",
     "script": "eu_odvetvove_mzdy.py",
     "datasets": "Eurostat lc_lci_lev (f\"A.EUR.D1_D4_MD5.{sector_filter}.\", start_period=DISPLAY_YEAR); Eurostat prc_ppp_ind (A.PLI_EU27_2020.GDP., start_period=DISPLAY_YEAR)",
     "remarks": "Roky v popisku: 2025"
@@ -78,19 +78,19 @@
     "remarks": "Roky v popisku: 2008, 2025"
   },
   {
-    "stem": "4.43",
+    "stem": "4.42",
     "script": "korelace_analyza.py",
     "datasets": "Eurostat lfsa_ewhan2 (A.TOTAL.EMP.TOTAL.Y15-64.T.HR., start_period=START_YEAR); Eurostat earn_nt_net (A.PPS.NET.P1_NCH_AW100., start_period=START_YEAR); Eurostat earn_gr_gpgr2 (A.PC.B-S_X_O., start_period=START_YEAR); Eurostat ilc_di12 (A.TOTAL.GINI_HND., start_period=START_YEAR); Eurostat nama_10_lp_ulc (A.PC_EU27_2020_MPPS_CP.NLPR_HW., start_period=START_YEAR)",
     "remarks": "Roky v popisku: 2024 | Nesedi cilovy rok 2025"
   },
   {
-    "stem": "4.41",
+    "stem": "4.40",
     "script": "practical_ternary_social_dialog.py",
     "datasets": "Neuvedeno (sdilene helpery nebo staticka data)",
     "remarks": "Roky v popisku: 2025, 2026 | Nesedi cilovy rok 2025"
   },
   {
-    "stem": "4.42",
+    "stem": "4.41",
     "script": "practical_ternary_social_dialog.py",
     "datasets": "Neuvedeno (sdilene helpery nebo staticka data)",
     "remarks": "Rok v popisku: neuvedeno | Rok v popisku nenalezen"
@@ -129,7 +129,7 @@
     "stem": "4.13",
     "script": "problemy_gpg.py",
     "datasets": "Eurostat earn_gr_gpgr2 (start_period=2018); Eurostat earn_ses_hourly (ses_filter); Eurostat prc_ppp_ind (f\"A.PLI_EU27_2020.GDP.{GEO_6}\", start_period=2014)",
-    "remarks": "Roky v popisku: 2022 | Nesedi cilovy rok 2025"
+    "remarks": "Roky v popisku: 2022 | Nesedi cilovy rok 2025 | Fallback vetve: PLI missing for exact SES year; latest available country PLI used for conversion AT, CZ, DE, DK, PL, SK"
   },
   {
     "stem": "4.30",
@@ -159,7 +159,7 @@
     "stem": "4.22",
     "script": "stav_arope_dual.py",
     "datasets": "Eurostat ilc_peps01n (A.PC.TOTAL.T.); Eurostat ilc_di01 (A.D1+D2+D3+D4+D5+D6+D7+D8+D9.TC.PPS+EUR.); Eurostat prc_ppp_ind (A.PLI_EU27_2020.GDP.EU27_2020)",
-    "remarks": "Roky v popisku: 2017, 2025"
+    "remarks": "Roky v popisku: 2017, 2025 | Fallback vetve: EU27 D3 PPS series missing in years [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]; EUR converted to PPS via PLI used as fallback"
   },
   {
     "stem": "4.1",
@@ -168,25 +168,25 @@
     "remarks": "Roky v popisku: 2004, 2025"
   },
   {
-    "stem": "4.35",
+    "stem": "4.34",
     "script": "stav_hustota_vyvoj.py",
     "datasets": "OECD AIAS ICTWSS (via OECD Stats API, dataset ``TUD``)",
     "remarks": "Roky v popisku: 2004, 2024 | Nesedi cilovy rok 2025"
   },
   {
-    "stem": "4.36",
+    "stem": "4.35",
     "script": "stav_ipp_mzdy.py",
     "datasets": "Eurostat lc_lci_r2_a (f\"A.I20.B-S.D1_D4_MD5.{GEO_ALL}\", start_period=START_YEAR - 1)",
     "remarks": "Roky v popisku: 2007, 2025"
   },
   {
-    "stem": "4.37",
+    "stem": "4.36",
     "script": "stav_ipp_rozsah.py",
     "datasets": "MPSV IPP (Informační systém o pracovních podmínkách, 2007--2025)",
     "remarks": "Roky v popisku: 2007, 2025"
   },
   {
-    "stem": "4.40",
+    "stem": "4.39",
     "script": "stav_kolektivni_spory_vyvoj.py",
     "datasets": "ČMKOS (Zpráva o průběhu kolektivního vyjednávání v ČR, počty sporů před zprostředkovatelem a rozhodcem, 2013--2025)",
     "remarks": "Roky v popisku: 2013, 2025"
@@ -198,13 +198,13 @@
     "remarks": "Roky v popisku: 2023 | Nesedi cilovy rok 2025"
   },
   {
-    "stem": "4.39",
+    "stem": "4.38",
     "script": "stav_socialni_mir_mapa.py",
     "datasets": "ETUI, ILOSTAT a expertni odhady (Social-peace benchmark, 2025)",
-    "remarks": "Roky v popisku: 2025"
+    "remarks": "Roky v popisku: 2025 | Fallback vetve: Strike-days benchmark missing for some countries; ternary B4 remains covered by expert scores; B4 benchmark combines ETUI/ILOSTAT with national fallback assumptions for lacunae"
   },
   {
-    "stem": "4.38",
+    "stem": "4.37",
     "script": "stav_stavky.py",
     "datasets": "ILOSTAT STR_DAYS_ECO_RT_A; Statistics Denmark ABST1; Eurostat lfsa_ewhun2; Eurostat lfsi_emp_a (A.EMP_LFS.T.Y20-64.THS_PER.DK, start_period=START_YEAR); Eurostat lfsa_ewhun2 (A.TOTAL.EMP.TOTAL.Y15-64.T.HR., start_period=START_YEAR)",
     "remarks": "Roky v popisku: 2000, 2025"
@@ -213,7 +213,7 @@
     "stem": "4.4",
     "script": "stav_volna_mista_vyvoj.py",
     "datasets": "Eurostat jvs_a_r21",
-    "remarks": "Roky v popisku: 2010, 2025"
+    "remarks": "Roky v popisku: 2010, 2025 | Fallback vetve: Vacancy-rate timeline used B-O aggregate instead of preferred B-S_X_O"
   },
   {
     "stem": "4.3",
