@@ -83,6 +83,8 @@ FIGURE_LABEL_SIZE: int = LATEX_SMALL_SIZE_PT
 # Dense combined plots can use a compact profile without going below 10pt.
 FIGURE_COMPACT_TEXT_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
 FIGURE_COMPACT_LABEL_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
+# Country labels on Europe choropleth maps — compact but never below 10 pt floor.
+MAP_COUNTRY_LABEL_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
 TABLE_FONT_SIZE_LATEX: str = "small"
 
 # Colour palette – qualitative, colour-blind safe (based on Wong 2011).

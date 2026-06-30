@@ -232,7 +232,7 @@ ax.text(
 
 ax.set_xlabel(STRINGS["xlabel"])
 ax.set_ylabel(STRINGS["ylabel"])
-ax.set_title(STRINGS["title"])
+ax.set_title(STRINGS["title"], fontsize=FIGURE_TEXT_SIZE)
 ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=7))
 ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=7))
 ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))

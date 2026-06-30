@@ -58,7 +58,7 @@ import matplotlib.patheffects as mpe
 import pandas as pd
 import geopandas as gpd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE
 from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch, fetch_eurostat
 from stattool.dataset import Dataset

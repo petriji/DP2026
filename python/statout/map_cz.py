@@ -26,7 +26,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpe
 import pandas as pd
 
-from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, FONT_SIZE
+from config import (
+    FIGURE_TEXT_SIZE,
+    FIGURE_TITLE_SIZE,
+    MAP_COUNTRY_LABEL_SIZE,
+)
 from stattool.fetch import fetch
 from stattool.style import cm2in
 
@@ -208,7 +212,7 @@ def choropleth_cz(
     y_lim = ylim or _CZ_YLIM_DEFAULT
 
     _is_pgf = mpl.get_backend() == "pgf"
-    _font = float(label_fontsize) if label_fontsize is not None else FONT_SIZE - 1
+    _font = float(label_fontsize) if label_fontsize is not None else MAP_COUNTRY_LABEL_SIZE
     _nudges: dict = dict(_DEFAULT_CZ_LABEL_NUDGES)
     if label_nudges is not None:
         _nudges.update(label_nudges)
@@ -291,8 +295,8 @@ def choropleth_cz(
     )
     cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
     if colorbar_label:
-        cb.set_label(colorbar_label, fontsize=FONT_SIZE - 1)
-    cb.ax.tick_params(labelsize=FONT_SIZE - 1)
+        cb.set_label(colorbar_label, fontsize=MAP_COUNTRY_LABEL_SIZE)
+    cb.ax.tick_params(labelsize=MAP_COUNTRY_LABEL_SIZE)
 
     # ── Axes formatting ───────────────────────────────────────────────────────
     ax.set_xlim(x_lim)
@@ -306,7 +310,7 @@ def choropleth_cz(
         fig._subplots_adjust_kwargs = {"top": 0.85}
         fig.suptitle(
             title,
-            fontsize=plt.rcParams.get("axes.titlesize", 9),
+            fontsize=FIGURE_TITLE_SIZE,
             y=0.95, ha="center",
         )
 

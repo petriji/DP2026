@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import matplotlib.pyplot as plt
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import COUNTRY_COLORS, FIGURE_LABEL_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
@@ -103,7 +103,7 @@ for country in COUNTRIES:
         f"{country}",
         xy=(last[ds_highlighted.time_col], last[ds_highlighted.value_col]),
         xytext=(4, 0), textcoords="offset points",
-        fontsize=FONT_SIZE, color=color, va="center",
+        fontsize=FIGURE_LABEL_SIZE, color=color, va="center",
     )
 
 STRINGS = {

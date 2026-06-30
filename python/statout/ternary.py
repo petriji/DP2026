@@ -43,7 +43,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import numpy as np
 
-from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE
+from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE, FIGURE_TITLE_SIZE
 from stattool.style import GEO_LONG_NAMES
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -528,7 +528,7 @@ def ternary_diagram(
     # ── Layout ────────────────────────────────────────────────────────────
     if title:
         # Extra title pad for corners-on so title clears the A corner label that overflows above axes.
-        ax.set_title(title, fontsize=FIGURE_TEXT_SIZE, pad=20 if show_corner_labels else 2)
+        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE, pad=20 if show_corner_labels else 2)
     # Identical limits for both variants → identical data/inch scale → identical visual appearance.
     # Corner labels that fall outside this range render via clip_on=False / annotation_clip=False.
     ax.set_xlim(-0.15, 1.15)

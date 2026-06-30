@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR, FONT_SIZE
+from config import LATEX_PICS_DIR, FIGURE_LABEL_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
@@ -100,7 +100,7 @@ ax.annotate(
     xy=(ds.years[-1], 100),
     xytext=(-30, 4),
     textcoords="offset points",
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
     color="gray",
     alpha=0.8,
 )

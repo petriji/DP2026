@@ -38,7 +38,8 @@ from config import (
     COUNTRY_COLORS,
     FIGURE_COMPACT_LABEL_SIZE,
     FIGURE_COMPACT_TEXT_SIZE,
-    FONT_SIZE,
+    FIGURE_LABEL_SIZE,
+    MAP_COUNTRY_LABEL_SIZE,
     LATEX_PICS_DIR,
 )
 from stattool.fetch import fetch_eurostat
@@ -201,7 +202,7 @@ ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
 ax1.set_ylabel(STRINGS_BAR["ylabel"])
 ax1.set_title(STRINGS_BAR["title"])
-ax1.legend(frameon=False, fontsize=FONT_SIZE, ncol=4)
+ax1.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
 ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
@@ -249,7 +250,7 @@ if "EU27_2020" in lc_pps.index:
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
     ax2.set_xlabel(STRINGS_ODCH["xlabel"])
     ax2.set_title(STRINGS_ODCH["title"])
-    ax2.legend(frameon=False, fontsize=FONT_SIZE, ncol=6)
+    ax2.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
@@ -321,6 +322,7 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         vmax=vmax_global,
         ax=ax_i,
         label_countries=True,
+        country_label_size=MAP_COUNTRY_LABEL_SIZE,
         show_colorbar=False,  # shared colorbar added centrally below
     )
     apply_geo_labels_pgf(

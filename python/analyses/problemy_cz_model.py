@@ -366,6 +366,7 @@ def plot_pension_comparison(
         f"Výše starobního důchodu v závislosti na nákladech na práci\n"
         f"(pojistná doba~{years}~let, parametry~2026)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
@@ -791,6 +792,7 @@ def plot_tax_wedge_vs_income(
         "Daňový klín v závislosti na nákladech práce\n"
         "(parametry~2026)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
@@ -887,6 +889,7 @@ def plot_net_income_vs_income(
         "Čistý příjem pracovníka v závislosti na nákladech práce\n"
         "(parametry~2026; OSVČ s výdajovým paušálem: po odečtení paušálních výdajů)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
@@ -988,6 +991,7 @@ def plot_sp_vs_income(
         "Odvody na sociální pojistné v závislosti na nákladech práce\n"
         "(parametry~2026; zaměstnanec: SP zaměstnance + SP zaměstnavatele)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
@@ -1127,6 +1131,7 @@ def plot_pension_sp_ratio_vs_income(
         f"(parametry~2026, pojistná doba~{years}~let; "
         f"zaměstnanec: celkové SP)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
@@ -1297,6 +1302,7 @@ def plot_tax_wedge_comparison(
         "Náhradový poměr v závislosti na daňovém klínu pro různé modely práce\n"
         f"(parametry~2026, pojistná doba~{years}~let)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax.set_xlim(left=0)
     ax.set_ylim(0, _RR_CAP)
