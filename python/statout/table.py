@@ -35,6 +35,7 @@ def to_latex(
     index_name: str = "",
     bold_header: bool = True,
     midrule_after: Optional[list[str]] = None,
+    italic_rows: Optional[list[str]] = None,
 ) -> str:
     r"""Generate a LaTeX ``table`` + ``tabular`` environment in *booktabs* style.
 
@@ -68,6 +69,9 @@ def to_latex(
         Wrap column header cells in ``\\textbf{}``.
     midrule_after:
         List of row *index values* after which to insert a ``\midrule``.
+    italic_rows:
+        List of row *index values* whose entire row (label + all cells) should
+        be wrapped in ``\textit{}``.  Use for sub-rows and derived indicators.
     """
     if cite_keys:
         caption = caption + " " + "".join(f"\\cite{{{k}}}" for k in cite_keys)
@@ -96,6 +100,8 @@ def to_latex(
     rows_str: list[str] = []
     for idx, row in df.iterrows():
         cells = [str(idx)] + [_fmt(v) for v in row]
+        if italic_rows and idx in italic_rows:
+            cells = [f"\\textit{{{c}}}" for c in cells]
         rows_str.append("  " + " & ".join(cells) + r" \\")
         if midrule_after and idx in midrule_after:
             rows_str.append(r"  \midrule")
