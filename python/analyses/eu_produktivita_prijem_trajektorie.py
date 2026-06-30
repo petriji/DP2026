@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+import math
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -62,6 +63,13 @@ LABEL_OFFSETS: dict[str, tuple[float, float]] = {
     "DE": (6, -2),
     "DK": (6, 3),
 }
+
+# Angle-based label nudges (deg; 0 = east, 90 = north).
+LABEL_ANGLE_NUDGES: dict[str, float] = {
+    "AT": 180.0,  # west of point
+    "DE": 15.0,   # 15° counter-clockwise from east
+}
+LABEL_RADIUS_PTS: float = 6.0
 
 # -- 0. Style ------------------------------------------------------------------
 
@@ -198,7 +206,14 @@ for geo in COUNTRIES:
     )
     first = traj.iloc[0]
     last = traj.iloc[-1]
-    offset = LABEL_OFFSETS.get(geo, (6, 0))
+    if geo in LABEL_ANGLE_NUDGES:
+        _ang = math.radians(LABEL_ANGLE_NUDGES[geo])
+        offset = (
+            LABEL_RADIUS_PTS * math.cos(_ang),
+            LABEL_RADIUS_PTS * math.sin(_ang),
+        )
+    else:
+        offset = LABEL_OFFSETS.get(geo, (6, 0))
     ax.annotate(
         rf"\acs{{geo-{geo}}}",
         xy=(last["prod"], last["income_pps_hour"]),
@@ -228,7 +243,7 @@ ax.axvline(100, color="#555555", linewidth=0.8, linestyle="--", alpha=0.7, zorde
 ax.text(
     100,
     ax.get_ylim()[1],
-    r"\acs{geo-EU}27 = 100",
+    "EU27",
     fontsize=FIGURE_COMPACT_LABEL_SIZE,
     color="#555555",
     ha="right",
@@ -270,7 +285,7 @@ add_pgf_tooltips_scatter(
 
 # Re-apply reference label after limits are fixed.
 for child in ax.get_children():
-    if hasattr(child, "get_text") and child.get_text() == r"\acs{geo-EU}27 = 100":
+    if hasattr(child, "get_text") and child.get_text() == "EU27":
         child.set_position((100, y_max))
 
 fig._tight_layout_kwargs = {"pad": 1.2}

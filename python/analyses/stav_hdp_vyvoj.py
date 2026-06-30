@@ -86,7 +86,7 @@ fig = timeline(
     label_offsets=LABEL_OFFSETS,
 )
 
-# Add EU27 = 100 reference line
+# Add EU27 reference line
 ax = fig.axes[0]
 if XLIM is not None:
     ax.set_xlim(*XLIM)
@@ -96,7 +96,7 @@ if YLIM is not None:
     ax.set_ylim(*YLIM)
 ax.axhline(100, color="gray", linewidth=0.8, linestyle="--", alpha=0.6, zorder=1)
 ax.annotate(
-    "EU27 = 100",
+    "EU27",
     xy=(ds.years[-1], 100),
     xytext=(-30, 4),
     textcoords="offset points",
@@ -124,12 +124,12 @@ for _child in ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-# Per-label y-nudge knobs: end-of-line country labels + the "EU27 = 100" tag.
+# Per-label y-nudge knobs: end-of-line country labels + the "EU27" tag.
 # Each entry creates a \NudgeStavHdpVyvoj<ID>{0pt} macro override-able from
 # latex/texparts/figures/stav_hdp_vyvoj.tex via \renewcommand.
 NUDGE_LABELS = [
     (geo, rf"\acs{{geo-{geo}}}") for geo in COUNTRIES
-] + [("EU27ref", "EU27 = 100")]
+] + [("EU27ref", "EU27")]
 
 savefig_pgf(fig, "stav_hdp_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 

@@ -69,7 +69,7 @@ ax.bar(
     df["collective_disputes_total"],
     color=COUNTRY_COLORS.get("CZ", "#D62728"),
     alpha=0.35,
-    label="kolektivni spory (rizeni pred zprostredkovatelem)",
+    label="kolektivní spory",
 )
 
 ax.plot(
@@ -78,7 +78,7 @@ ax.plot(
     color="#1f3b73",
     marker="o",
     linewidth=1.8,
-    label="stavkove pohotovosti",
+    label="stávkové pohotovosti",
 )
 ax.plot(
     x,
@@ -86,7 +86,7 @@ ax.plot(
     color="#2b8c2b",
     marker="s",
     linewidth=1.6,
-    label="stavky",
+    label="stávky",
 )
 
 ax.set_xticks(x)
@@ -95,7 +95,7 @@ ax.set_xlim(-0.6, len(df) - 0.4)
 ax.set_ylim(0, max(df["collective_disputes_total"]) + 5)
 
 STRINGS = {
-    "title": r"Kolektivni spory, stavkove pohotovosti a stavky, \acs{geo-CZ}",
+    "title": r"Kolektivní spory, stávkové pohotovosti a stávky, \acs{geo-CZ}",
     "ylabel": "počet případů",
 }
 ax.set_title(STRINGS["title"])

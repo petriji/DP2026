@@ -180,7 +180,7 @@ for geo in COUNTRIES:
 
 # EU27=100 reference line
 ax.axhline(100, color="#555555", linewidth=0.8, linestyle=":", alpha=0.7, zorder=2)
-ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
+ax.text(START_YEAR + 0.3, 101.5, "EU27",
         fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", alpha=0.8, va="bottom")
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
