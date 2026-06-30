@@ -28,13 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    add_pgf_tooltips_scatter,
-    apply_style_pgf,
-    load_angle_nudges_from_figure_tex,
-    save_figure_tex_pgf,
-    savefig_pgf,
-)
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_union_density
@@ -49,7 +43,6 @@ EU27_ISO2 = {
 }
 START_YEAR = 2010
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
@@ -78,8 +71,8 @@ ds_gini = Dataset.from_sdmx_csv(
 # ── 3. Scatter plot ───────────────────────────────────────────────────────────
 # scatter_xy uses the latest common year by default
 STRINGS = {
-    "title": r"Korelace: hustota odborů a Giniho koeficient (\acs{geo-EU}27)",
-    "xlabel": r"hustota odborů [\%]",
+    "title": r"Korelace: odborová organizovanost a Giniho koeficient (\acs{geo-EU27})",
+    "xlabel": r"odborová organizovanost [\%]",
     "ylabel": "Giniho koeficient [0–100]",
 }
 fig = scatter_xy(
@@ -94,9 +87,15 @@ fig = scatter_xy(
     x_min=0,
     countries=sorted(EU27),
     year_tolerance=3,
-    label_angle_nudges=load_angle_nudges_from_figure_tex("korelace_hustota_gini", LABEL_ANGLE_NUDGES),
 )
 
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+add_pgf_tooltips_scatter(
+    fig.axes[0], fig._scatter_merged,
+    fmt_x="{:.1f}", fmt_y="{:.1f}",
+    label_x="odborová organizovanost [%]",
+    label_y="Giniho koeficient",
+)
 for _child in fig.axes[0].get_children():
     if hasattr(_child, "get_text"):
         _txt = _child.get_text().strip()
@@ -113,12 +112,11 @@ display_year = common_years[-1] if common_years else "?"
 
 save_figure_tex_pgf(
     "korelace_hustota_gini",
-    caption=f"Hustota odborů a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
+    caption=f"Odborová organizovanost a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
     label="fig:korelace_hustota_gini",
     resizebox_width=r"\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],
     strings=STRINGS,
-    angle_labels=LABEL_ANGLE_NUDGES,
 )
 
 print("Done.")

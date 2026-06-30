@@ -20,8 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR, IS_POSTER_RUN, poster_stem
-from stattool.data_quality import warn_non_target_year
+from config import LATEX_PICS_DIR
 from stattool.style import (
     apply_style_pgf,
     savefig_pgf,
@@ -45,10 +44,9 @@ _values = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
-_vmin = min(_values.values())
 _vmax = max(_values.values())
 COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
-NUDGE_LABELS = [(c, c) for c in COUNTRIES]
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 STRINGS = {
     "title": f"Odborová organizovanost ({ds.latest_year})",
     "colorbar_label": r"odborová organizovanost [\% zaměstnanců]",
@@ -60,7 +58,7 @@ fig = choropleth(
     title=STRINGS["title"],
     colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn",
-    vmin=_vmin,
+    vmin=0,
     vmax=_vmax,
     label_countries=True,
     highlight_colorbar=COUNTRIES,
@@ -68,11 +66,13 @@ fig = choropleth(
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
-savefig_pgf(fig, poster_stem("eu_hustota_mapa"), strings=STRINGS, nudge_labels=NUDGE_LABELS)
-if not IS_POSTER_RUN:
-    save_figure_tex_pgf(
-        "eu_hustota_mapa",
-    caption=f"Odborová organizovanost, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
+savefig_pgf(fig, "eu_hustota_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+
+# ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
+save_figure_tex_pgf(
+    "eu_hustota_mapa",
+    caption=(
+        f"Odborová organizovanost, EU mapa, {ds.latest_year}."),
     label="fig:eu_hustota_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
