@@ -102,6 +102,9 @@ def choropleth(
     highlight_colorbar: Optional[list[str]] = None,
     show_colorbar: bool = True,
 ) -> plt.Figure:
+    # Default markers on every choropleth colorbar (key reference economies).
+    if highlight_colorbar is None:
+        highlight_colorbar = ["CZ", "DK", "AT", "DE", "PL", "SK"]
     """Draw a choropleth map of Europe coloured by *ds* values.
 
     Parameters
@@ -195,14 +198,19 @@ def choropleth(
     cbar = None
     if show_colorbar:
         cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
+        # Wrap colorbar label in \NoHyper so that hyperref boxes (from \acs{})
+        # do not float horizontally next to a vertically-rotated label.
+        if mpl.get_backend() == "pgf" and cb_label and "\\acs" in cb_label:
+            cb_label = r"\NoHyper " + cb_label + r" \endNoHyper"
         # Fixed-size colourbar in inches (independent of axes aspect) so the
         # rasterised strip pixel dimensions are identical to map_cz output
         # and dedups to python/figures/_shared/ via content hash.
+        # bbox_to_anchor x=1.10 leaves ~10pt extra gap between map and colorbar.
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         cax = inset_axes(
             ax, width=0.10, height=2.10,  # inches
             loc="center left",
-            bbox_to_anchor=(1.02, 0.5),
+            bbox_to_anchor=(1.10, 0.5),
             bbox_transform=ax.transAxes,
             borderpad=0,
         )
