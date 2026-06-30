@@ -31,19 +31,20 @@ import math
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import COUNTRY_COLORS, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import COUNTRY_COLORS, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, FIGURE_HEIGHT_STANDARD_CM
 from statout.timeline import EU27
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
     GEO_LONG_NAMES,
     apply_style_pgf,
-    add_pgf_tooltips_scatter,
     cm2in,
+    load_angle_nudges_from_figure_tex,
     save_figure_tex_pgf,
     savefig_pgf,
 )
@@ -150,7 +151,7 @@ STRINGS = {
     "ylabel": r"čistý hodinový příjem [\si{\pps\per\hour}]",
 }
 
-fig, ax = plt.subplots(figsize=cm2in(15, 10))
+fig, ax = plt.subplots(figsize=cm2in(15, FIGURE_HEIGHT_STANDARD_CM))
 
 background_geos = sorted((EU27 & set(country_panel["geo"])) - set(COUNTRIES) - EXCLUDE_OUTLIERS)
 for geo in background_geos:
@@ -177,16 +178,8 @@ if not eu_traj.empty:
         markersize=2.5,
         zorder=2,
     )
-    eu_last = eu_traj.iloc[-1]
-    ax.annotate(
-        r"\acs{geo-EU}27",
-        xy=(eu_last["prod"], eu_last["income_pps_hour"]),
-        xytext=(5, 4),
-        textcoords="offset points",
-        fontsize=FIGURE_LABEL_SIZE,
-        color="#444444",
-        va="center",
-    )
+
+_angle_nudges = load_angle_nudges_from_figure_tex(STEM, LABEL_ANGLE_NUDGES)
 
 for geo in COUNTRIES:
     traj = country_panel[country_panel["geo"] == geo].sort_values("time")
@@ -207,8 +200,8 @@ for geo in COUNTRIES:
     )
     first = traj.iloc[0]
     last = traj.iloc[-1]
-    if geo in LABEL_ANGLE_NUDGES:
-        _ang = math.radians(LABEL_ANGLE_NUDGES[geo])
+    if geo in _angle_nudges:
+        _ang = math.radians(_angle_nudges[geo])
         offset = (
             LABEL_RADIUS_PTS * math.cos(_ang),
             LABEL_RADIUS_PTS * math.sin(_ang),
@@ -241,16 +234,6 @@ for geo in COUNTRIES:
     )
 
 ax.axvline(100, color="#555555", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
-ax.text(
-    100,
-    ax.get_ylim()[1],
-    "EU27",
-    fontsize=FIGURE_COMPACT_LABEL_SIZE,
-    color="#555555",
-    ha="right",
-    va="top",
-    rotation=90,
-)
 
 ax.set_xlabel(STRINGS["xlabel"])
 ax.set_ylabel(STRINGS["ylabel"])
@@ -262,34 +245,44 @@ ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
 ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
 
-x_min = max(40, country_panel["prod"].min() - 5)
-x_max = min(175, country_panel["prod"].max() + 8)
+x_min = 40
+x_max = 160
 y_min = max(0, country_panel["income_pps_hour"].min() - 1.5)
 y_max = country_panel["income_pps_hour"].max() + 2.0
 ax.set_xlim(x_min, x_max)
 ax.set_ylim(y_min, y_max)
 
-# PGF hover tooltips for all trajectory points (selected countries, EU27, cloud).
-_tooltip_points = (
-    panel[["geo", "prod", "income_pps_hour"]]
-    .dropna(subset=["prod", "income_pps_hour"])
-    .rename(columns={"prod": "x", "income_pps_hour": "y"})
-)
-add_pgf_tooltips_scatter(
-    ax,
-    _tooltip_points,
-    fmt_x="{:.1f}",
-    fmt_y="{:.1f}",
-    label_x="prod",
-    label_y="net",
-)
+if mpl.get_backend() == "pgf":
+    tooltip_points = panel[["geo", "time", "prod", "income_pps_hour"]].dropna(
+        subset=["prod", "income_pps_hour"]
+    )
+    for _, row in tooltip_points.iterrows():
+        if not (x_min <= float(row["prod"]) <= x_max):
+            continue
+        if not (y_min <= float(row["income_pps_hour"]) <= y_max):
+            continue
+        geo = str(row["geo"])
+        year = int(row["time"])
+        if geo == "EU27_2020":
+            tooltip_text = f"{year}: {row['income_pps_hour']:.1f}"
+        else:
+            long = GEO_LONG_NAMES.get(geo, geo)
+            tooltip_text = (
+                f"{long} {year}: {row['prod']:.1f} / {row['income_pps_hour']:.1f}"
+            )
+        ax.text(
+            float(row["prod"]),
+            float(row["income_pps_hour"]),
+            r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + tooltip_text + r"}",
+            fontsize=FIGURE_LABEL_SIZE,
+            ha="center",
+            va="center",
+            transform=ax.transData,
+            clip_on=True,
+            zorder=10,
+        )
 
-# Re-apply reference label after limits are fixed.
-for child in ax.get_children():
-    if hasattr(child, "get_text") and child.get_text() == "EU27":
-        child.set_position((100, y_max))
-
-fig._tight_layout_kwargs = {"pad": 1.2}
+fig._tight_layout_kwargs = {"pad": 0.15}
 
 # -- 4. Save -------------------------------------------------------------------
 
@@ -309,6 +302,7 @@ save_figure_tex_pgf(
     label=f"fig:{STEM}",
     resizebox_width=r"\linewidth",
     strings=STRINGS,
+    angle_labels=LABEL_ANGLE_NUDGES,
 )
 
 print("Done.")

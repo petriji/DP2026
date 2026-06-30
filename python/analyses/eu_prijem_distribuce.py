@@ -209,14 +209,17 @@ for country in COUNTRIES:
         )
 
 # ── Inline country labels (replace legend) ────────────────────────────────────
-# Order along x-axis (left → right) as given; positions span the central 50 %
-# of the x-axis range, uniformly spaced; each label is offset above the
-# country's curve y-value at that x, left-aligned.
-LABEL_ORDER = ["SK", "CZ", "PL", "DK", "AT", "DE"]
-x_span = X_MAX - X_MIN
-x_start = X_MIN + 0.25 * x_span
-x_step = (0.5 * x_span) / (len(LABEL_ORDER) - 1)
-for i, country in enumerate(LABEL_ORDER):
+# Fixed x positions in thousands of PPS as requested; y is sampled from each
+# country's fitted curve at that same x.
+LABEL_X_TIS = {
+    "SK": 16.0,
+    "CZ": 18.0,
+    "PL": 22.0,
+    "DK": 28.0,
+    "AT": 36.0,
+    "DE": 56.0,
+}
+for country, x_lab_tis in LABEL_X_TIS.items():
     if country not in fits:
         continue
     mu, sigma = fits[country]

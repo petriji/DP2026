@@ -55,10 +55,11 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, FIGURE_HEIGHT_STANDARD_CM
 from stattool.fetch import fetch, fetch_ispv
 from stattool.data_quality import warn_non_target_year
 from stattool.style import (
+    _apply_figure_layout,
     _add_vertical_ref,
     _fmt_czk,
     apply_style_pgf,
@@ -576,34 +577,47 @@ freq_pension = pdf_pension * _Y_SCALE
 # ════════════════════════════════════════════════════════════════════════════
 # Figure -- combined frequency plot
 # ════════════════════════════════════════════════════════════════════════════
-fig, ax = plt.subplots(figsize=cm2in(16, 10))
+fig, ax = plt.subplots(figsize=cm2in(15, FIGURE_HEIGHT_STANDARD_CM))
 
 
 def _tooltip(ax, x, y, text):
     ax.text(
         x, y,
-        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
+        r"\pdftooltip{\phantom{\rule{6pt}{6pt}}}{" + text + r"}",
         fontsize=FIGURE_LABEL_SIZE,
-        ha="center", va="center", clip_on=True, zorder=10,
+        ha="center", va="center", clip_on=False, zorder=10,
     )
+
+
+def _fmt_int_space(v: float) -> str:
+    """Format integer-like value with spaces as thousands separators."""
+    return f"{int(round(v)):,}".replace(",", " ")
 
 
 # ── Curves ────────────────────────────────────────────────────────────────────
 ax.fill_between(
-    _X_GRID / 1_000, freq_wage,
+    x_grid / 1_000, freq_wage,
     alpha=0.10, color=_COLOR_WAGE, zorder=2,
 )
 ax.plot(
-    _X_GRID / 1_000, freq_wage,
+    x_grid / 1_000, freq_wage,
     color=_COLOR_WAGE, linewidth=1.6, zorder=4,
+)
+ax.plot(
+    x_grid / 1_000, freq_wage_public,
+    color=_COLOR_WAGE_PUBLIC, linewidth=1.5, linestyle=(0, (4, 2)), zorder=5,
+)
+ax.plot(
+    x_grid / 1_000, freq_wage_combined,
+    color="#7A7A7A", linewidth=1.0, linestyle=(0, (3, 2)), zorder=3,
 )
 
 ax.fill_between(
-    _X_GRID / 1_000, freq_pension,
+    x_grid / 1_000, freq_pension,
     alpha=0.10, color=_COLOR_PENSION, zorder=2,
 )
 ax.plot(
-    _X_GRID / 1_000, freq_pension,
+    x_grid / 1_000, freq_pension,
     color=_COLOR_PENSION, linewidth=1.6, zorder=4,
 )
 
@@ -667,12 +681,13 @@ _ann_w = ax.annotate(
     f"medián~čisté~mzdy\n{_fmt_czk(int(round(med_wage_net)))}",
     xy=(48.0, 1),
     xycoords=("data", "axes fraction"),
-    xytext=(0, 8),
+    xytext=(0, 0),
     textcoords="offset points",
-    fontsize=FIGURE_LABEL_SIZE,
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
     color=_COLOR_WAGE,
     va="bottom",
     ha="center",
+    multialignment="center",
 )
 _ann_w.set_clip_on(False)
 
@@ -680,12 +695,13 @@ _ann_p = ax.annotate(
     f"medián~důchodu\n{_fmt_czk(int(round(med_pension)))}",
     xy=(32.0, 1),
     xycoords=("data", "axes fraction"),
-    xytext=(0, 8),
+    xytext=(0, 0),
     textcoords="offset points",
-    fontsize=FIGURE_LABEL_SIZE,
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
     color=_COLOR_PENSION,
     va="bottom",
     ha="center",
+    multialignment="center",
 )
 _ann_p.set_clip_on(False)
 
@@ -715,23 +731,26 @@ ax.annotate(
 
 # ── Axis styling ──────────────────────────────────────────────────────────────
 ax.set_xlabel(STRINGS["xlabel"], fontsize=FIGURE_LABEL_SIZE)
-ax.set_ylabel(STRINGS["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax.tick_params(axis="both", labelsize=FIGURE_LABEL_SIZE)
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
-ax.set_title(STRINGS["title"], fontsize=FIGURE_TEXT_SIZE, pad=34)
-
-# Minor grid
+ax.set_title(STRINGS["title"], fontsize=FIGURE_TEXT_SIZE)
 ax.minorticks_on()
-ax.grid(which="major", axis="both", linestyle=":", linewidth=0.5, alpha=0.6)
-ax.grid(which="minor", axis="both", linestyle=":", linewidth=0.3, alpha=0.3)
+_apply_figure_layout(ax)
+fig._suptitle_gap_pt = 5
+_spa = dict(getattr(fig, "_subplots_adjust_kwargs", {}))
+_spa["left"] = 0.11
+_spa["right"] = 0.95
+fig._subplots_adjust_kwargs = _spa
+fig.subplots_adjust(left=0.11, right=0.95)
 
 savefig_pgf(fig, "problemy_mzda_duchod", strings=STRINGS)
 save_figure_tex_pgf(
     "problemy_mzda_duchod",
-    caption=f"Distribuce čistých mezd ({wage_year}) a~starobních důchodů ({pension_year}), \\acs{{geo-CZ}}",
+    caption=f"Distribuce čistých mezd/platů ({wage_private_year}) a~starobních důchodů ({pension_year}), \\acs{{geo-CZ}}",
     cite_keys=["mpsv_ispv", "cssz_rocenka_duchod"],
     label="fig:problemy_mzda_duchod",
     resizebox_width=r"\linewidth",

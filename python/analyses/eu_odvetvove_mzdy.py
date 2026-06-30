@@ -55,7 +55,7 @@ from stattool.style import (
     save_figure_tex_pgf,
     apply_geo_labels_pgf,
 )
-from statout.map_europe import choropleth
+from statout.map_europe import choropleth, CHOROPLETH_COLORBAR_HEIGHT_IN
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -345,9 +345,9 @@ fig_maps.suptitle(
     y=1.007,
 )
 
-# Shared central colorbar — uses the EXACT same inset_axes(width=0.10, height=2.10)
-# code path as the standard choropleth helper, so the raster strip is byte-identical
-# and deduplicates to the same _shared/ PNG as all other RdYlGn choropleths.
+# Shared central colorbar — width=0.08 and CHOROPLETH_COLORBAR_HEIGHT_IN match
+# the standard EU single-map colorbars so the raster strip deduplicates to the
+# same _shared/ PNG as all other RdYlGn choropleths via content hash.
 # bbox_transform=transFigure lets bbox_to_anchor=(0.5, 0.5) mean "figure centre".
 import matplotlib as mpl_lib
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
@@ -364,9 +364,9 @@ sm_shared = mpl_lib.cm.ScalarMappable(cmap=_shared_cmap, norm=norm_shared)
 sm_shared.set_array([])
 cax_center = _inset_axes(
     axes[0, 0],                        # parent axes (positional anchor only)
-    width=0.10, height=2.10,           # identical to choropleth helper → same PNG
+    width=0.08, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
     loc="center",
-    bbox_to_anchor=(0.5, 0.5),         # figure centre
+    bbox_to_anchor=(0.475, 0.47),      # slightly lower to center against the 2x2 map matrix
     bbox_transform=fig_maps.transFigure,
     borderpad=0,
 )
@@ -379,13 +379,13 @@ cb_center.set_label(
 )
 
 # Subplot spacing — no large central gap needed; colorbar is an inset overlay.
-fig_maps.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.04,
-                         wspace=0.14, hspace=0.10)
+fig_maps.subplots_adjust(left=0.0, right=1.0, top=0.88, bottom=0.03,
+                         wspace=0.06, hspace=0.12)
 # Prevent savefig's tight_layout from clobbering the manual layout.
 fig_maps._tight_layout_kwargs = {"pad": 0.4}
-fig_maps._subplots_adjust_kwargs = {"left": 0.02, "right": 0.98,
-                                    "top": 0.92, "bottom": 0.04,
-                                    "wspace": 0.14, "hspace": 0.10}
+fig_maps._subplots_adjust_kwargs = {"left": 0.0, "right": 1.0,
+                                    "top": 0.88, "bottom": 0.03,
+                                    "wspace": 0.06, "hspace": 0.12}
 
 savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
