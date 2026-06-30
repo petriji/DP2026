@@ -92,7 +92,7 @@ fig = scatter_xy(
     highlight=HIGHLIGHT_COUNTRIES,
     x_min=0,
     countries=sorted(EU27),
-    year_tolerance=8,
+    year_tolerance=3,
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
