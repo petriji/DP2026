@@ -59,7 +59,16 @@ Before formatting, consult these files when context is needed:
 | Accusative long only | `\aclacc{ID}` | always the declined long form |
 | Locative long only | `\aclloc{ID}` | always the declined long form |
 | Instrumental long only | `\aclins{ID}` | always the declined long form |
-| Country code in figures | `\acs{geo-CZ}` | renders "CZ"; hidden from printed lists |
+| **Force-first** (acc, most common) | `\acaccf{ID}` | resets used-flag + accusative first-form: re-introduces "long-form (SHORT)" at start of dense-use block |
+| Force-first genitive | `\acgenf{ID}` | resets + genitive first-form |
+| Force-first dative | `\acdatf{ID}` | resets + dative first-form |
+| Force-first locative | `\aclocf{ID}` | resets + locative first-form |
+| Force-first instrumental | `\acinsf{ID}` | resets + instrumental first-form |
+| Force-first nominative | `\acf{ID}` | built-in acro; same role for nominative |
+| Country code in figures | `\acs{geo-CZ}` | renders "CZ"; figures/tables ONLY |
+| Country full name (rare) | `\acl{geo-XX}` | full Czech name; prefer plain Czech word in prose |
+| Czech Republic in prose | `\ac{ČR}` | separate acronym; renders "Česká republika (ČR)" first / "ČR" later |
+| ČR declined | `\acgen{ČR}` etc. | declined "České republiky" (gen), `\acacc{ČR}`, `\acdat{ČR}`, `\acloc{ČR}`, `\acins{ČR}` |
 
 **NEVER** write out the expanded form manually. Always use `\ac{ID}` etc.
 Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `ML`).
@@ -67,8 +76,22 @@ Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `
 **Czech declension**: When an acronym appears in an oblique case, use the appropriate
 declension command (`\acgen{}`, `\acdat{}`, etc.) instead of writing the declined long form by hand.
 Declension forms are set per-acronym via `\AcroPropertiesSet{ID}{long-genitive-form=..., ...}`.
-Currently declared: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV.
-If a needed acronym lacks declension forms, invoke `Citace a zkratky` to add them.
+Currently declared: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV, ČR.
+**If a needed acronym lacks declension forms, invoke `Citace a zkratky` to add them BEFORE
+inserting the declension command.** Do not leave undefined cases — they expand to empty long
+forms and break the prose.
+
+**Force-first variants** (`\acaccf`, `\acgenf`, `\acdatf`, `\aclocf`, `\acinsf`, `\acf`):
+use at the start of a paragraph or section where an acronym repeats heavily and needs
+re-introducing in full. Resets the used-flag, then expands to "long-case-form (SHORT)"
+regardless of prior usage. Most common in Czech prose: `\acaccf{KEY}` (accusative).
+
+**Country codes — STRICT split**:
+- `\acs{geo-XX}` is reserved for **figure and table content only** (axis labels, legends,
+  cells, captions). Never write it in prose.
+- For Czech Republic in prose, use `\ac{ČR}` (separate acronym, with full declension).
+- For other countries in prose, write the plain Czech name (`Německo`, `Polsko`) or
+  `\acl{geo-XX}` for the formal long form.
 
 **Country codes**: Use `\acs{geo-XX}` for ISO country codes (tag `geo`, hidden from lists).
 All EU-27 codes are declared. Example: `\acs{geo-CZ}` → "CZ".
@@ -90,17 +113,41 @@ If the input contains an acronym not yet in `acro.tex`, **add it** to `latex/tex
 	}
 ```
 
-**Tags**: `zkr` for abbreviations, `vel` for variables, `geo` for country codes.
-Only `zkr` and `vel` appear in the printed lists.
+**Tags**: `zkr` for abbreviations, `vel` for variables, `idx` for indices, `geo` for country codes.
+Printed lists: `zkr`, `vel`, `idx` (geo entries stay hidden).
 
 For a math variable, add to `latex/texparts/references/acro_variables.tex`:
 
 ```latex
-% simple symbol
-\DeclareVariable{var-id}{\ensuremath{X}}{description [unit]}
-% symbol with subscript index
-\DeclareIndex{var-id}{\ensuremath{X_0}}{\ensuremath{0}}{description}
+% simple symbol — entry tagged `vel`, printed in the variables list
+\DeclareVariable{var-w}{\ensuremath{w}}{mzda [\SI{}{\czk\per\hour}]}
+
+% subscript / superscript index — entry tagged `idx`, printed in the indices list
+%   #1 = key
+%   #2 = list display (placeholder form, square_*)
+%   #3 = inline display (bare token used in math, e.g. z, M, PPS)
+%   #4 = long description
+\DeclareIndex{idx-z}{\ensuremath{\square_z}}{\ensuremath{z}}{zaměstnanec}
+
+% accent index — declared for the list, applied via helper macro
+\DeclareIndex{idx-tilde}{\ensuremath{\tilde{\square}}}{\ensuremath{\tilde{\square}}}{medián veličiny}
+% applied as: \acidxtilde{\acs{var-w}}  →  \tilde{w}
 ```
+
+**Using indices in equations and prose** (always paired with a variable, never standalone):
+
+```latex
+% in math / equations
+\acs{var-N}_{\acs{idx-z},\acs{idx-M}}      % → N_{z,M}
+\acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}     % → c_{SP,Z} (zaměstnavatel)
+\acs{var-y}^{\acs{idx-PPS}}                % → y^{PPS}
+\acidxbar{\acs{var-M}}                     % → \bar{M}  (auto-\acuse)
+
+% in prose: same pattern, wrapped in $...$
+počet zaměstnaných mužů $\acs{var-N}_{\acs{idx-z},\acs{idx-M}}$ vzrostl…
+```
+
+`\acs{idx-z}` renders only the bare token `z` inline; the placeholder form `\square_z` appears solely in the indices list (driven by the `index` property declared on each idx-* entry).
 
 After editing, use the new ID in the formatted text immediately.
 
@@ -214,6 +261,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 ```
 - In-line math: `$…$`
 - Variable symbols in text that correspond to `vel`-tagged acro entries: use `\acs{var-xxx}` or `\acuse{var-xxx}` to register usage.
+- Index symbols in equations and prose are always paired with a variable: `\acs{var-N}_{\acs{idx-z},\acs{idx-M}}` → `N_{z,M}`. `\acs{idx-X}` standalone is reserved for math/equations only — never as a free word in prose. Accents (`\bar`, `\tilde`, `\hat`) on a variable use the helper macros `\acidxbar{...}`, `\acidxtilde{...}`, `\acidxhat{...}` which auto-register the corresponding `idx-*` entry.
 
 ### 9. Units — `siunitx`
 
