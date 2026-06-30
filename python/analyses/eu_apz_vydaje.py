@@ -36,6 +36,26 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 START_YEAR = 2004
 HIGHLIGHT = ["CZ", "DK"]
 
+# ── TUNING KNOBS (edit + re-run script to apply) ─────────────────────────────
+# Axis limits: set to None for matplotlib auto-fit.
+XLIM:  tuple[float, float] | None = None  # auto-extends to max(years[-1], 2025)
+YLIM:  tuple[float, float] | None = (0, 7.5)
+# Second variant (cropped to 2004--latest, narrower y-range)
+XLIM2: tuple[float, float] | None = None
+YLIM2: tuple[float, float] | None = (0, 2.0)
+
+# Per-label nudges (matplotlib offset_points). End-of-line country labels.
+# Final tweaks can also be done LaTeX-side via
+#   \renewcommand\NudgeEuApzVydajeCZ{-3pt}
+# in latex/texparts/figures/eu_apz_vydaje.tex (no Python re-run needed).
+LABEL_OFFSETS: dict[str, tuple[float, float]] = {"SK": (4, 5), "PL": (4, -5)}
+
+# Per-label y-nudge knobs exposed to LaTeX — auto-derived from COUNTRIES.
+# Each entry creates a \NudgeEuApzVydaje<ID> macro overridable via \renewcommand.
+NUDGE_LABELS = [
+    (geo, rf"\acs{{geo-{geo}}}") for geo in COUNTRIES
+] + [("COVID", "COVID-19")]
+
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
 
@@ -52,12 +72,16 @@ fig = timeline(
     ylabel="výdaje na APZ [% HDP]",
     highlight=HIGHLIGHT,
     annotate_last=True,
-    label_offsets={"SK": (4, 5), "PL": (4, -5)},
+    label_offsets=LABEL_OFFSETS,
     show_eu_avg=False,
     background_eu=True,
 )
-fig.axes[0].set_xlim(START_YEAR, max(ds_all.years[-1], 2025))
-fig.axes[0].set_ylim(0, 7.5)
+if XLIM is not None:
+    fig.axes[0].set_xlim(*XLIM)
+else:
+    fig.axes[0].set_xlim(START_YEAR, max(ds_all.years[-1], 2025))
+if YLIM is not None:
+    fig.axes[0].set_ylim(*YLIM)
 
 # COVID-19 annotation: 2020 spike was caused by emergency short-time work
 # schemes (Kurzarbeit/furlough), extended unemployment benefits, and wage
@@ -86,7 +110,7 @@ for _child in _ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_apz_vydaje")
+savefig_pgf(fig, "eu_apz_vydaje", nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -100,6 +124,7 @@ save_figure_tex_pgf(
     resizebox_width=r"0.95\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",
     strings={},
+    nudge_labels=NUDGE_LABELS,
 )
 
 # ── 6. Second variant: 2004--latest (cropped x-axis) ──────────────────────────
@@ -112,16 +137,20 @@ fig2 = timeline(
     ylabel="výdaje na APZ [% HDP]",
     highlight=HIGHLIGHT,
     annotate_last=True,
-    label_offsets={"SK": (4, 5), "PL": (4, -5)},
+    label_offsets=LABEL_OFFSETS,
     show_eu_avg=False,
     background_eu=True,
 )
-fig2.axes[0].set_xlim(YEAR_2004, max(ds_all.years[-1], 2025))
-fig2.axes[0].set_ylim(0, 5.0)
+if XLIM2 is not None:
+    fig2.axes[0].set_xlim(*XLIM2)
+else:
+    fig2.axes[0].set_xlim(YEAR_2004, max(ds_all.years[-1], 2025))
+if YLIM2 is not None:
+    fig2.axes[0].set_ylim(*YLIM2)
 
 _ax2 = fig2.axes[0]
 _ax2.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
-_ax2.text(2020.2, 4.7, "COVID-19", fontsize=FONT_SIZE - 1, color="#CC4444", alpha=0.85, va="top")
+_ax2.text(2020.2, 1.7, "COVID-19", fontsize=FONT_SIZE - 1, color="#CC4444", alpha=0.85, va="top")
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
 _pivot_fg2 = (
@@ -140,7 +169,7 @@ for _child in _ax2.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig2, "eu_apz_vydaje_2004")
+savefig_pgf(fig2, "eu_apz_vydaje_2004", nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_apz_vydaje_2004",
     caption=(
@@ -152,6 +181,7 @@ save_figure_tex_pgf(
     resizebox_width=r"0.95\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",
     strings={},
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

@@ -34,6 +34,19 @@ START_YEAR = 2004  # EU enlargement year for CZ/SK/PL
 
 HIGHLIGHT = ["CZ"]  # emphasised line
 
+# ── TUNING KNOBS (edit + re-run script to apply) ─────────────────────────────
+# Axis limits: set to None for matplotlib auto-fit.
+XLIM: tuple[float, float] | None = (START_YEAR, 2025)
+YLIM: tuple[float, float] | None = None
+
+# Per-label nudges (matplotlib offset_points) for end-of-line country labels.
+# Final position can also be tweaked LaTeX-side via \renewcommand\NudgeStavHdpVyvojCZ{-3pt}
+# in latex/texparts/figures/stav_hdp_vyvoj.tex (no Python re-run needed for that).
+LABEL_OFFSETS: dict[str, tuple[float, float]] = {
+    # "CZ": (4, 0),
+    # "SK": (4, -3),
+}
+
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
 
@@ -65,11 +78,18 @@ fig = timeline(
     ylabel="HDP na obyvatele [PPS, EU27 = 100]",
     highlight=HIGHLIGHT,
     annotate_last=True,
-    show_eu_avg=False,    background_eu=True,)
+    show_eu_avg=False,    background_eu=True,
+    label_offsets=LABEL_OFFSETS,
+)
 
 # Add EU27 = 100 reference line
 ax = fig.axes[0]
-ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
+if XLIM is not None:
+    ax.set_xlim(*XLIM)
+else:
+    ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
+if YLIM is not None:
+    ax.set_ylim(*YLIM)
 ax.axhline(100, color="gray", linewidth=0.8, linestyle="--", alpha=0.6, zorder=1)
 ax.annotate(
     "EU27 = 100",
@@ -100,7 +120,14 @@ for _child in ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_hdp_vyvoj")
+# Per-label y-nudge knobs: end-of-line country labels + the "EU27 = 100" tag.
+# Each entry creates a \NudgeStavHdpVyvoj<ID>{0pt} macro override-able from
+# latex/texparts/figures/stav_hdp_vyvoj.tex via \renewcommand.
+NUDGE_LABELS = [
+    (geo, rf"\acs{{geo-{geo}}}") for geo in COUNTRIES
+] + [("EU27ref", "EU27 = 100")]
+
+savefig_pgf(fig, "stav_hdp_vyvoj", nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -113,6 +140,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
     strings={},
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
