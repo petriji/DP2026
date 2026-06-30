@@ -122,7 +122,7 @@ def _first_val(df: pd.DataFrame, col_list: list[str], keywords: list[str]) -> st
             return str(matches[0])
     return None
 
-unit_val     = _first_val(df, unit_candidates,    ["THS_PER", "THOUS", "THS", "PC_ACT", "PC_EMP", "PC"])
+unit_val     = _first_val(df, unit_candidates,    ["PC_ACT", "PC_EMP", "PC", "THS_PER", "THOUS", "THS"])
 wrkplace_val = _first_val(df, wrkplace_candidates, ["FOR", "ABROAD", "ABRD", "TOTAL"])
 sex_val      = _first_val(df, sex_candidates,      ["T", "TOTAL"])
 age_val      = _first_val(df, age_candidates,      ["Y20-64", "Y_GE15", "TOTAL", "Y15-74"])
