@@ -185,7 +185,7 @@ savefig(fig1, "sector_wages_bar", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "sector_wages_bar",
     caption=(
-        f"Celkové hodinové náklady práce, klíčová odvětví, {ref_year}. [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
+        f"Celkové hodinové náklady práce [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
         f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
         f"Plná čára s~zarážkami = průměr EU27 pro dané odvětví."
     ),
@@ -216,7 +216,7 @@ if "EU27_2020" in lc_pps.index:
     ax2.axvline(0, color="black", linewidth=0.9, zorder=2)
     ax2.set_yticks(y)
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
-    ax2.set_xlabel("odchylka od průměru EU27 [PPS/h]")
+    ax2.set_xlabel("odchylka od průměru EU27 [p.\\,b., EU27 = 100]")
     ax2.set_title(f"Srovnání nákladů práce ve vybraných odvětvích a zemích EU27 ({ref_year})")
     ax2.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=6)
     # x minor grid + remove y minor ticks
@@ -228,7 +228,7 @@ if "EU27_2020" in lc_pps.index:
     save_figure_tex(
         "sector_wages_deviation",
         caption=(
-            f"Odchylka nákladů práce od průměru EU27, {ref_year}.. "
+            f"Odchylka nákladů práce od průměru EU27, {ref_year}. "
             f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
             f"Záporné hodnoty = nižší náklady práce než průměr EU27."
         ),
