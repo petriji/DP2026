@@ -1,5 +1,5 @@
 r"""
-Union density × Gini coefficient scatter -- EU27 countries.
+Union density × Gini coefficient scatter – EU27 countries.
 
 Shows the inverse correlation between trade union density and income
 inequality (Gini on disposable income), underpinning the thesis argument
@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import COUNTRY_COLORS, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_union_density
@@ -45,7 +45,7 @@ START_YEAR = 2010
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Load union density ─────────────────────────────────────────────────────
 ds_tud = load_union_density(start_period=START_YEAR)
@@ -70,17 +70,12 @@ ds_gini = Dataset.from_sdmx_csv(
 
 # ── 3. Scatter plot ───────────────────────────────────────────────────────────
 # scatter_xy uses the latest common year by default
-STRINGS = {
-    "title": r"Korelace: odborová organizovanost a Giniho koeficient (\acs{geo-EU27})",
-    "xlabel": r"odborová organizovanost [\%]",
-    "ylabel": "Giniho koeficient [0–100]",
-}
 fig = scatter_xy(
     ds_tud,
     ds_gini,
-    title=STRINGS["title"],
-    xlabel=STRINGS["xlabel"],
-    ylabel=STRINGS["ylabel"],
+    title="Korelace: hustota odborů a Giniho koeficient (EU27)",
+    xlabel="hustota odborů [%]",
+    ylabel="Giniho koeficient [0\u2013100]",
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
@@ -89,34 +84,20 @@ fig = scatter_xy(
     year_tolerance=3,
 )
 
-# ── PGF tooltips & geo labels ───────────────────────────────────────────
-add_pgf_tooltips_scatter(
-    fig.axes[0], fig._scatter_merged,
-    fmt_x="{:.1f}", fmt_y="{:.1f}",
-    label_x="odborová organizovanost [%]",
-    label_y="Giniho koeficient",
-)
-for _child in fig.axes[0].get_children():
-    if hasattr(_child, "get_text"):
-        _txt = _child.get_text().strip()
-        if _txt in HIGHLIGHT_COUNTRIES:
-            _child.set_text(f"\\acs{{geo-{_txt}}}")
-
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "korelace_hustota_gini", strings=STRINGS)
+savefig(fig, "korelace_hustota_gini", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 # Determine the year actually plotted
 common_years = sorted(set(ds_tud.years) & set(ds_gini.years))
 display_year = common_years[-1] if common_years else "?"
 
-save_figure_tex_pgf(
+save_figure_tex(
     "korelace_hustota_gini",
-    caption=f"Odborová organizovanost a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
+    caption=f"Hustota odborů a~příjmová nerovnost, EU27, {display_year}.",
     label="fig:korelace_hustota_gini",
-    resizebox_width=r"\linewidth",
+    width=r"0.85\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],
-    strings=STRINGS,
 )
 
 print("Done.")

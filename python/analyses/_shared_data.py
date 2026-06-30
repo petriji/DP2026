@@ -35,11 +35,11 @@ _ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 1. Collective-bargaining coverage (ICTWSS AdjCov + OECD CBC ERB for DE, SK)
+# 1. Collective-bargaining coverage (ICTWSS AdjCov + OECD CBC ERB for DE, SK, SI)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
-    """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK) + OECD CBC ERB."""
+    """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK, SI) + OECD CBC ERB."""
     # ── ICTWSS AdjCov ─────────────────────────────────────────────────────────
     with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
         raw_csv = resp.read().decode("utf-8-sig")
@@ -48,7 +48,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
     adjcov_records: list[dict] = []
     for row in reader:
         iso3 = row.get("iso3", "").strip().upper()
-        if iso3 not in _EU27_ISO3 or iso3 in ("DEU", "SVK"):
+        if iso3 not in _EU27_ISO3 or iso3 in ("DEU", "SVK", "SVN"):
             continue
         val = row.get("AdjCov", "").strip()
         year = row.get("year", "").strip()
@@ -61,7 +61,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         })
     df_adjcov = pd.DataFrame(adjcov_records)
 
-    # ── OECD CBC ERB (DE, SK) ─────────────────────────────────────────────────
+    # ── OECD CBC ERB (DE, SK, SI) ─────────────────────────────────────────────
     path_cbc = fetch_oecd("CBC", start_period=start_period)
     ds_cbc = Dataset.from_oecd_csv(
         path_cbc,
@@ -70,7 +70,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         source_url="OECD AIAS ICTWSS / CBC (ERB)",
         filters={"MEASURE": "ERB"},
     )
-    df_erb = ds_cbc.df[ds_cbc.df["geo"].isin(["DE", "SK"])][
+    df_erb = ds_cbc.df[ds_cbc.df["geo"].isin(["DE", "SK", "SI"])][
         ["geo", "time", "value"]
     ].copy()
 
@@ -82,7 +82,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         df,
         name="Pokrytí KV",
         unit="%",
-        source_url="ICTWSS AdjCov; OECD CBC ERB (DE, SK)",
+        source_url="ICTWSS AdjCov; OECD CBC ERB (DE, SK, SI)",
     )
 
 
@@ -157,7 +157,47 @@ def load_lmp_active(*, start_period: int = 1998) -> Dataset:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 5. IPP negotiated wage increase (MPSV odmenovani, sheet A15a)
+# 5. Employer organisation density (ICTWSS ED)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def load_employer_density(*, start_period: int = 1990) -> Dataset:
+    """Load employer organisation density (ED) from ICTWSS v2 CSV.
+
+    ED = share of employees working in firms that belong to an employer
+    organisation (%).  Data are sparse for most EU-27 countries.
+    """
+    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
+        raw_csv = resp.read().decode("utf-8-sig")
+
+    reader = csv.DictReader(StringIO(raw_csv))
+    records: list[dict] = []
+    for row in reader:
+        iso3 = row.get("iso3", "").strip().upper()
+        if iso3 not in _EU27_ISO3:
+            continue
+        val = row.get("ED", "").strip()
+        year = row.get("year", "").strip()
+        if not val or not year:
+            continue
+        records.append({
+            "geo": _ISO3_TO_ISO2[iso3],
+            "time": int(year),
+            "value": float(val),
+        })
+
+    df = pd.DataFrame(records)
+    df = df[df["time"] >= start_period]
+
+    return Dataset(
+        df,
+        name="Hustota zaměstnavatelských organizací",
+        unit="%",
+        source_url="OECD/AIAS ICTWSS v2 (ED)",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. IPP negotiated wage increase (MPSV odmenovani, sheet A15a)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _extract_ipp_negotiated_increase(path: Path, year: int) -> Optional[float]:
