@@ -48,6 +48,11 @@ from statout.timeline import timeline, EU27 as _EU27
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 HIGHLIGHT = ["CZ"]
+START_YEAR = 2017
+
+# Per-label y-nudge knobs exposed to LaTeX (one macro per country, applies
+# to both panels because the labels share the same \acs{geo-XX} text).
+NUDGE_LABELS = [(geo, rf"\acs{{geo-{geo}}}") for geo in COUNTRIES]
 
 apply_style_pgf()
 
@@ -128,8 +133,8 @@ fig, (ax_top, ax_bot) = plt.subplots(
 )
 
 STRINGS = {
-    "ylabel_top": r"míra \acs{AROPE} [\%]",
-    "ylabel_bot": r"D3 (\acs{PPS}, \acs{geo-EU}\,=\,100)",
+    "ylabel_top": r"míra \acs{AROPE} [\si{\percent}]",
+    "ylabel_bot": r"\acs{var-D3} (\acs{PPS}, \acs{geo-EU}\,=\,100) [\si{\percent}]",
 }
 # --- Top panel: AROPE -------------------------------------------------------
 timeline(
@@ -140,6 +145,7 @@ timeline(
     xlabel="",
     highlight=HIGHLIGHT,
     background_eu=True,
+    show_eu_avg=False,
     ax=ax_top,
 )
 
@@ -152,11 +158,19 @@ timeline(
     xlabel="rok",
     highlight=HIGHLIGHT,
     background_eu=True,
+    show_eu_avg=False,
     ax=ax_bot,
 )
 # EU=100 reference line
 ax_bot.axhline(100.0, color="#888888", linewidth=0.8, linestyle="--",
                alpha=0.7, zorder=2)
+
+# Axis limits — common x-range, panel-specific y-range
+LAST_YEAR = max(2025, last_year)
+ax_top.set_xlim(START_YEAR, LAST_YEAR)
+ax_bot.set_xlim(START_YEAR, LAST_YEAR)
+ax_top.set_ylim(0, 35)
+ax_bot.set_ylim(0, 140)
 
 # Hide x-axis label/ticks on the top panel (sharex shows them on bottom)
 ax_top.set_xlabel("")
@@ -192,7 +206,7 @@ _decorate(ax_bot, ds_d3, "{:.1f}")
 fig.subplots_adjust(hspace=0.08)
 
 # ── 5. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_arope_dual", strings=STRINGS)
+savefig_pgf(fig, "stav_arope_dual", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "stav_arope_dual",
@@ -207,6 +221,7 @@ save_figure_tex_pgf(
         "eurostat_ilc_di01_D3_PPS",
     ],
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print(f"\nDone. Output in {LATEX_PICS_DIR} / texparts.")

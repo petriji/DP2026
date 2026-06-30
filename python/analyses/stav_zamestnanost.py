@@ -66,8 +66,8 @@ print(f"Countries: {ds.countries}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 STRINGS = {
-    "title": "Míra zaměstnanosti (20--64 let)",
-    "ylabel": r"míra zaměstnanosti [\%]",
+    "title": r"Konvergence míry zaměstnanosti (20--64 let)",
+    "ylabel": r"míra zaměstnanosti (\acs{geo-EU}27 = 100) [\si{\percent}]",
 }
 fig = timeline(
     ds,
@@ -77,20 +77,31 @@ fig = timeline(
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
-    show_eu_avg=True,
+    eu_norm=True,
 )
 
 _ax = fig.axes[0]
+# EU27 = 100 reference line (matches eu_norm normalisation)
+_ax.axhline(100, color="gray", linewidth=0.8, linestyle="--", alpha=0.6, zorder=1)
+
 _pivot = (
     ds.df[ds.df["geo"].isin(COUNTRIES)]
     .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
 )
+# Re-normalise the tooltip values so they match the rendered scale (EU27 = 100)
+_eu_mean = (
+    ds.df[ds.df["geo"].isin(_EU27)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+    .mean(axis=1)
+)
+_pivot = _pivot.div(_eu_mean, axis=0) * 100
 add_pgf_tooltips(_ax, _pivot, fmt="{:.1f}")
 _bg = sorted(set(_EU27) - set(COUNTRIES))
 _pivot_bg = (
     ds.df[ds.df["geo"].isin(_bg)]
     .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
 )
+_pivot_bg = _pivot_bg.div(_eu_mean, axis=0) * 100
 add_pgf_tooltips(_ax, _pivot_bg, fmt="{:.1f}")
 for _child in _ax.get_children():
     if hasattr(_child, "get_text"):
