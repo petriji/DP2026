@@ -114,6 +114,7 @@ python/
     ├── stav_hustota_vyvoj.py – Trade union density over time
     ├── eu_apz_vydaje.py  – Labour market policy expenditure
     ├── eu_konvergence.py – Wage–GDP convergence scatter
+    ├── eu_produktivita_prijem_trajektorie.py – Productivity vs hourly net income trajectories
     ├── korelace_hustota_gini.py – Union density vs Gini scatter
     ├── stav_ipp_mzdy.py  – IPP wage growth analysis
     ├── stav_ipp_doplnkove.py – IPP supplementary figures

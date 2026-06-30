@@ -58,6 +58,11 @@ script   = "analyses/eu_konvergence.py"
 texparts = ["eu_konvergence"]
 pics     = ["eu_konvergence"]
 
+[productivity_income_trajectory]
+script   = "analyses/eu_produktivita_prijem_trajektorie.py"
+texparts = ["eu_produktivita_prijem_trajektorie"]
+pics     = ["eu_produktivita_prijem_trajektorie"]
+
 [union_gini]
 script   = "analyses/korelace_hustota_gini.py"
 texparts = ["korelace_hustota_gini"]
