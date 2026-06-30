@@ -72,17 +72,17 @@ pics     = ["korelace_hustota_gini"]
 script   = "analyses/problemy_cz_model.py"
 texparts = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
             "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 pics     = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
             "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 
 [cz_tax_model]
 script   = "analyses/problemy_cz_model.py"
 texparts = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 pics     = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 
 [ipp_wage_growth]
 script   = "analyses/stav_ipp_mzdy.py"
@@ -227,8 +227,8 @@ pics     = ["problemy_gpg_mapa", "problemy_gpg_stratifikace"]
 
 [public_private_wages]
 script   = "analyses/problemy_verejny_soukromy.py"
-texparts = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
-pics     = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
+texparts = ["problemy_verejny_soukromy"]
+pics     = ["problemy_verejny_soukromy"]
 
 [natality]
 script   = "analyses/vyhled_porodnost.py"
