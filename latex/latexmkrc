@@ -1,4 +1,33 @@
 $out_dir = 'build';
+
+# ── Auto-generate figures before LaTeX build ──────────────────────────────────
+# Calls python/stats_analytics.py to regenerate figure PDFs and .tex snippets.
+# Skipped by default — run only when RUN_PYTHON_ANALYTICS=1 is set.
+# Use the "Analytics + latexmk" VS Code recipe to trigger this automatically.
+#
+# The venv is resolved in order:
+#   1. python/.venv   (created by python/setup_venv.sh, preferred)
+#   2. ~/.venvs/dp_thesis  (legacy location)
+#   3. plain python3  (system Python, if deps are installed globally)
+{
+    if ($ENV{RUN_PYTHON_ANALYTICS}) {
+        my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
+        my $script = "$proj/../python/stats_analytics.py";
+
+        if (-f $script) {
+            my $venv1  = "$proj/../python/.venv/bin/python";
+            my $venv2  = "$ENV{HOME}/.venvs/dp_thesis/bin/python";
+            my $python = -f $venv1 ? $venv1
+                       : -f $venv2 ? $venv2
+                       : 'python3';
+
+            my $rc = system($python, $script);
+            if ($rc != 0) {
+                die "stats_analytics.py failed (exit " . ($rc >> 8) . "). Aborting LaTeX build.\n";
+            }
+        }
+    }
+}
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
