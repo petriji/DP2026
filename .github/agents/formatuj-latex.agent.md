@@ -1,6 +1,6 @@
 ---
 name: "Formatuj LaTeX"
-description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries. Do NOT use for: generating new content, writing Python, building/compiling."
+description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}, \\acgen{}, \\acdat{}, \\acacc{}, \\acloc{}, \\acins{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries, Czech declension of acronyms. Do NOT use for: generating new content, writing Python, building/compiling."
 tools: [read, search, edit, agent]
 agents: ["Citace a zkratky"]
 argument-hint: "Paste raw text or a .tex fragment to format"
@@ -43,9 +43,30 @@ Before formatting, consult these files when context is needed:
 | Forced full form | `\acf{ID}` | always "long form (SHORT)", use rarely |
 | Sentence-initial (capitalised) | `\Ac{ID}` | first word capitalised |
 | Mark as used without printing | `\acuse{ID}` | for variables used in math mode |
+| **Genitive** (2. pád) | `\acgen{ID}` | first use: declined long + (SHORT); then SHORT |
+| **Dative** (3. pád) | `\acdat{ID}` | same pattern |
+| **Accusative** (4. pád) | `\acacc{ID}` | same pattern |
+| **Locative** (6. pád) | `\acloc{ID}` | same pattern |
+| **Instrumental** (7. pád) | `\acins{ID}` | same pattern |
+| Genitive long only | `\aclgen{ID}` | always the declined long form |
+| Dative long only | `\acldat{ID}` | always the declined long form |
+| Accusative long only | `\aclacc{ID}` | always the declined long form |
+| Locative long only | `\aclloc{ID}` | always the declined long form |
+| Instrumental long only | `\aclins{ID}` | always the declined long form |
+| Country code in figures | `\acs{geo-CZ}` | renders "CZ"; hidden from printed lists |
 
 **NEVER** write out the expanded form manually. Always use `\ac{ID}` etc.
 Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `ML`).
+
+**Czech declension**: When an acronym appears in an oblique case, use the appropriate
+declension command (`\acgen{}`, `\acdat{}`, etc.) instead of writing the declined long form by hand.
+Declension forms are set per-acronym via `\AcroPropertiesSet{ID}{long-genitive-form=..., ...}`.
+Currently declared: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV.
+If a needed acronym lacks declension forms, invoke `Citace a zkratky` to add them.
+
+**Country codes**: Use `\acs{geo-XX}` for ISO country codes (tag `geo`, hidden from lists).
+All EU-27 codes are declared. Example: `\acs{geo-CZ}` → "CZ".
+Renders as a hover tooltip ("Česká republika") but is **not clickable** — tag=geo entries skip the GoTo Link wrapper because their target is never registered in the printed acronym list. This is intentional; do not add `\hypertarget{geo-XX}` workarounds.
 
 #### Adding a new abbreviation
 
@@ -62,6 +83,9 @@ If the input contains an acronym not yet in `acro.tex`, **add it** to `latex/tex
 	tag			= zkr
 	}
 ```
+
+**Tags**: `zkr` for abbreviations, `vel` for variables, `geo` for country codes.
+Only `zkr` and `vel` appear in the printed lists.
 
 For a math variable, add to `latex/texparts/references/acro_variables.tex`:
 
@@ -128,6 +152,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 
 ### 6. Figures
 
+**Standard (PDF) figure:**
 ```latex
 \begin{figure}[htbp]
   \centering
@@ -138,6 +163,15 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 - Caption ends with `.` before `\label{}`.
 - Use `[htbp]` placement unless section context requires `[H]` (forced position).
 - Reference image path relative to the `.tex` file location (always `../python/figures/`).
+
+**PGF (LaTeX-native) figure:**
+```latex
+\inputpgffigure{figure_name}
+```
+- Defined in `CTUthesis.cls`. Checks if `.pgf` exists; shows yellow warning box if not.
+- Resolves to `\input{texparts/figures/figure_name}` which contains `\def` macros + `figure` env.
+- `texparts/figures/figure_name.tex` is git-tracked and hand-editable — change caption, annotations there.
+- Do NOT use `\begin{figure}` manually for PGF figures — the strings file already contains it.
 
 ### 7. Tables
 
