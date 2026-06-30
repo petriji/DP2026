@@ -6,9 +6,9 @@
   \centering
   \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
-    font=\sffamily\fontsize{9}{10.5}\selectfont,
+    font=\sffamily\small,
     every node/.style={align=center, inner sep=2pt,
-      font=\sffamily\fontsize{9}{10.5}\selectfont,
+      font=\sffamily\small,
       execute at begin node=\linespread{0.9}\selectfont},
     coreBox/.style       ={draw=black!85, fill=black!18, rounded corners=3pt,
                            text width=2.8cm, minimum height=2.0cm, line width=0.8pt},
@@ -20,8 +20,8 @@
     branch/.style        ={->, line width=1.0pt, draw=black!85, >=Stealth},
     branchDashed/.style  ={->, dashed, line width=1.0pt, draw=black!85, >=Stealth},
     branchPlain/.style   ={line width=1.0pt, draw=black!85},
-    lblA/.style          ={midway, above=1pt, font=\sffamily\fontsize{9}{10.5}\selectfont},
-    lblB/.style          ={midway, below=1pt, font=\sffamily\fontsize{9}{10.5}\selectfont},
+    lblA/.style          ={midway, above=1pt, font=\sffamily\small},
+    lblB/.style          ={midway, below=1pt, font=\sffamily\small},
   ]
     % --- Centrální uzel ---
     \node[coreBox] (W) at (0,0) {\textbf{Pracovník /\\ domácnost}};
@@ -44,7 +44,7 @@
     % --- Sociální dialog (shora, obousměrný) ---
     \draw[flowDual]
       (W.north |- 0,2.4) -- (W.north)
-      node[at start, above=10pt, font=\sffamily\fontsize{9}{10.5}\selectfont]
+      node[at start, above=10pt, font=\sffamily\small]
       {Sociální dialog (legislativa, \acs{KSVS}, \acs{KS}, odbory)};
 
     % --- Výstupy (vpravo, sloupec sedmi větví) ---
