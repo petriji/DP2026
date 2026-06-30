@@ -232,7 +232,7 @@ df_net = raw_net.copy()
 ds_netpps = Dataset(
     df_net[["geo", "time", "net_pps"]].rename(columns={"net_pps": "value"}),
     name="Čistý příjem (PPS)",
-    unit="EUR PPS/rok",
+    unit="PPS/rok",
     source_url="Eurostat/earn_nt_net",
 )
 
@@ -294,7 +294,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         x_min=0,
         ax=ax,
         countries=EU27_LIST,
-        year_tolerance=8,
+        year_tolerance=3,
     )
     # Subcaption label
     ax.text(
