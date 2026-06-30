@@ -381,7 +381,7 @@ lines = [
     r"\caption{Korelace pokrytí KV a hustoty odborů s~vybranými veličinami pracovního trhu "
     r"(Pearsonovo $r$ a Spearmanovo $\rho$; panelový koeficient na všech dostupných "
     r"geo$\times$rok pozorováních, $r_{\text{akt.}}$ = průřezový Pearsonův $r$ pro rok "
-    rf"{_year_label}).\footnote{{{_EXCL_NOTE}}}" + "}",
+    rf"{_year_label}).}}",
     r"\label{tab:korelace_tabulka}",
     r"\begin{tabular}{lrrrrrr}",
     r"\toprule",
@@ -399,6 +399,7 @@ for row in rows:
 lines += [
     r"\bottomrule",
     r"\end{tabular}",
+    rf"\par\vspace{{2pt}}\footnotesize {_EXCL_NOTE}",
     r"\end{table}",
 ]
 
