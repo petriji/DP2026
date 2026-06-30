@@ -29,7 +29,7 @@ bash setup_venv.sh        # creates .venv with --copies (NTFS-safe)
 ## Run
 
 ```bash
-bash run.sh analyses/gdp_ppp_timeline.py   # single script
+bash run.sh analyses/stav_hdp_vyvoj.py   # single script
 bash run.sh stats_analytics.py             # regenerate everything missing
 bash run.sh stats_analytics.py --force all # force-regenerate all
 bash run.sh stats_analytics.py --list      # show which texparts are referenced
@@ -63,45 +63,45 @@ python/
 │   └── table.py            – LaTeX table from DataFrame
 └── analyses/               – one script per figure group
     ├── cz_tax_model.py     – CZ tax/levy: pure calculation module (no matplotlib, no external imports)
-    ├── cz_pension_model.py – CZ pension: pure calculation module (imports levy constants from cz_tax_model)
+    ├── problemy_cz_duchod.py – CZ pension: pure calculation module (imports levy constants from cz_tax_model)
     ├── cz_calculator.py    – Individual pension calculator (VVZ/PK history, earnings history, early/late/children)
-    ├── cz_figures.py       – all 7 CZ model figures (imports from the two modules above)
-    ├── gdp_ppp_timeline.py – GDP per capita in PPS (EU timeline)
-    ├── tax_wedge_map.py    – OECD tax wedge choropleth
-    ├── arope_example.py    – At-risk-of-poverty maps + timeline
-    ├── flexicurity_table.py – Flexicurity indicator table
-    ├── union_density_trend.py – Trade union density over time
-    ├── lmp_expenditure.py  – Labour market policy expenditure
-    ├── wage_gdp_convergence.py – Wage–GDP convergence scatter
-    ├── union_gini_scatter.py – Union density vs Gini scatter
-    ├── ipp_wage_growth.py  – IPP wage growth analysis
-    ├── ipp_supplementary.py – IPP supplementary figures
-    ├── rscp_sector_wages.py – Sector wages, LCI growth, dispersion
-    ├── rscp_stratification.py – Regional wages, gender gap, percentiles
-    ├── old_age_dependency_map.py – Old-age dependency ratio map
-    ├── employment_rate_timeline.py – Employment rate timeline
-    ├── income_pps_map.py   – Income in PPS choropleth
-    ├── gini_income_timeline.py – Gini coefficient timeline
-    ├── wage_pension_distribution.py – Wage–pension distribution
-    ├── gini_wealth_map.py      – Gini wealth coefficient choropleth map
-    ├── gini_wealth_timeline.py – Gini wealth inequality over time
-    ├── wealth_top20_timeline.py – Wealth shares (top 20 %) over time
-    ├── kv_coverage_map.py      – Collective agreement coverage choropleth
-    ├── correlation_analyses.py – KV coverage correlation analyses
-    ├── coverage_income_scatter.py – KV coverage vs. income scatter
-    ├── ipp_ca_breadth.py       – IPP collective agreement breadth
-    ├── sector_wages_net_pps.py – Sector net wages in PPS
-    ├── public_private_wages.py – Public vs. private sector wage comparison
-    ├── gender_wage_stratification.py – Wage stratification by gender
-    ├── union_density_map.py    – Trade union density choropleth map
-    ├── lmp_expenditure_map.py  – LMP expenditure choropleth map
-    ├── pli_map.py              – Price level index choropleth map
-    ├── self_employment_map.py  – Self-employment rate choropleth map
-    ├── net_income_ratio_timeline.py – Net income ratio timeline
-    ├── natality_timeline.py    – Natality (TFR) maps and timeline
-    ├── language_skills.py      – Language skills maps (age, ISCED, total)
-    ├── cross_border_commuting.py – Cross-border commuting maps and timeline
-    └── emigration_cz.py        – Czech emigration timeline
+    ├── problemy_cz_model.py       – all 7 CZ model figures (imports from the two modules above)
+    ├── stav_hdp_vyvoj.py – GDP per capita in PPS (EU timeline)
+    ├── eu_danovy_klin.py    – OECD tax wedge choropleth
+    ├── stav_arope.py    – At-risk-of-poverty maps + timeline
+    ├── prakticka_srovnani.py – Flexicurity indicator table
+    ├── stav_hustota_vyvoj.py – Trade union density over time
+    ├── eu_apz_vydaje.py  – Labour market policy expenditure
+    ├── eu_konvergence.py – Wage–GDP convergence scatter
+    ├── korelace_hustota_gini.py – Union density vs Gini scatter
+    ├── stav_ipp_mzdy.py  – IPP wage growth analysis
+    ├── stav_ipp_doplnkove.py – IPP supplementary figures
+    ├── problemy_sektor_mzdy.py – Sector wages, LCI growth, dispersion
+    ├── problemy_stratifikace.py – Regional wages, gender gap, percentiles
+    ├── vyhled_zavislost.py – Old-age dependency ratio map
+    ├── stav_zamestnanost.py – Employment rate timeline
+    ├── eu_prijem_pps.py   – Income in PPS choropleth
+    ├── eu_gini_prijem.py – Gini coefficient timeline
+    ├── problemy_mzda_duchod.py – Wage–pension distribution
+    ├── eu_bohatstvi_mapa.py      – Gini wealth coefficient choropleth map
+    ├── eu_bohatstvi_vyvoj.py – Gini wealth inequality over time
+    ├── eu_bohatstvi_top20.py – Wealth shares (top 20 %) over time
+    ├── eu_pokryti_kv_mapa.py      – Collective agreement coverage choropleth
+    ├── korelace_analyza.py – KV coverage correlation analyses
+    ├── eu_pokryti_prijem.py – KV coverage vs. income scatter
+    ├── stav_ipp_rozsah.py       – IPP collective agreement breadth
+    ├── eu_odvetvove_mzdy.py – Sector net wages in PPS
+    ├── problemy_verejny_soukromy.py – Public vs. private sector wage comparison
+    ├── problemy_gpg.py – Wage stratification by gender
+    ├── eu_hustota_mapa.py    – Trade union density choropleth map
+    ├── eu_apz_mapa.py  – LMP expenditure choropleth map
+    ├── eu_cenova_hladina.py              – Price level index choropleth map
+    ├── eu_osvc_mapa.py  – Self-employment rate choropleth map
+    ├── stav_prijem_pomer.py – Net income ratio timeline
+    ├── vyhled_porodnost.py    – Natality (TFR) maps and timeline
+    ├── problemy_jazyky.py      – Language skills maps (age, ISCED, total)
+    ├── problemy_dojezdeni.py – Cross-border commuting maps and timeline
+    └── problemy_emigrace.py        – Czech emigration timeline
 ```
 
 ## Adding a new figure
@@ -136,7 +136,7 @@ Three-file model + one calculator:
   `EMPLOYER_INS_RATE`, `OSVC_BASE_RATIO`, `OSVC_MIN_MONTHLY_BASE`); paušální
   daň tables (`PAUSALNI_DAN`, `PAUSALNI_DAN_TOTAL`); DPH constants and
   `_revenue_after_dph`.  Provides `tax_wedge_*`, `net_income_*`, `sp_*` functions.
-- **`cz_pension_model.py`** — pure calculation module: pension-domain constants
+- **`problemy_cz_duchod.py`** — pure calculation module: pension-domain constants
   (RH thresholds, OVZ rates, `INSURANCE_YEARS`, `MIN_TOTAL_PENSION`); imports
   shared levy constants from `cz_tax_model`.  Provides `pension_employee`,
   `pension_osvc_vydajovy`, and the internal `_pension`/`_rovz` helpers.
@@ -146,7 +146,7 @@ Three-file model + one calculator:
   `calculate_pension_simple()` (constant gross estimate), early/late retirement
   penalties, children bonus.  Zero above RH2 (zákon č. 270/2023 Sb.).
   Run directly for a CLI demo or import for custom analyses.
-- **`cz_figures.py`** — single entry point for all 7 figures; imports both
+- **`problemy_cz_model.py`** — single entry point for all 7 figures; imports both
   modules above; defines figure-only constants (reference wages, OSVČ types,
   paušál segments); owns all matplotlib code.  Run directly or via the registry.
 
@@ -180,5 +180,5 @@ Sb., NV 365/2025 Sb., zákon č. 235/2004 Sb. o DPH).
 
 | Key | Script | Figures |
 |-----|--------|---------|
-| `cz_pension` | `cz_figures.py` | `cz_pension_income`, `cz_pension_solidarity` |
-| `cz_tax_model` | `cz_figures.py` | `cz_pension_wedge`, `cz_tax_wedge_vs_income`, `cz_net_income_vs_income`, `cz_sp_vs_income`, `cz_pension_sp_ratio` |
+| `cz_pension` | `problemy_cz_model.py` | `problemy_duchod_prijem`, `problemy_duchod_solidarita` |
+| `cz_tax_model` | `problemy_cz_model.py` | `problemy_duchod_klin`, `problemy_danovy_klin_cz`, `problemy_cisty_prijem_cz`, `problemy_sp_odvody_cz`, `problemy_duchod_sp_pomer` |
