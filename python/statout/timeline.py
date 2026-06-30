@@ -19,9 +19,14 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, EU_AVERAGE_CODE, FONT_SIZE
+from config import COUNTRY_COLORS, EU_AVERAGE_CODE, FIGURE_HEIGHT_STANDARD_CM, FIGURE_TITLE_SIZE, FONT_SIZE, IS_POSTER_RUN, POSTER_FIGURE_COMPACT_LABEL_SIZE, POSTER_FIGURE_LABEL_SIZE
 from stattool.dataset import Dataset
 from stattool.style import cm2in
+
+
+# Slightly shorter than the general standard so two timeline figures plus
+# two-line captions fit on one thesis page more reliably.
+TIMELINE_FIGURE_HEIGHT_CM = FIGURE_HEIGHT_STANDARD_CM - 0.8
 
 # EU-27 country codes (ISO 3166-1 alpha-2, post geo-normalisation)
 EU27: frozenset[str] = frozenset([
@@ -82,6 +87,8 @@ def timeline(
     markers: bool = False,
     highlight: Optional[list[str]] = None,
     annotate_last: bool = True,
+    show_legend: bool = True,
+    label_offsets: Optional[dict[str, tuple[float, float]]] = None,
     background_eu: bool = False,
     eu_norm: bool = False,
     show_eu_avg: Optional[bool] = None,
@@ -137,9 +144,10 @@ def timeline(
     pivot = pivot[ordered_cols]
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize or cm2in(15, 9))
+        fig, ax = plt.subplots(figsize=figsize or cm2in(15, TIMELINE_FIGURE_HEIGHT_CM))
     else:
         fig = ax.figure  # type: ignore[assignment]
+    fig._tight_layout_kwargs = {"pad": 0.15}
 
     # Property cycle iterator for fallback colors
     prop_it = iter(plt.rcParams["axes.prop_cycle"])
@@ -176,12 +184,13 @@ def timeline(
         if annotate_last:
             valid = series.dropna()
             if not valid.empty:
+                _ofs = (label_offsets or {}).get(geo, (4, 0))
                 ax.annotate(
                     geo,
                     xy=(valid.index[-1], valid.iloc[-1]),
-                    xytext=(4, 0),
+                    xytext=_ofs,
                     textcoords="offset points",
-                    fontsize=FONT_SIZE,
+                    fontsize=POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FONT_SIZE - 1,
                     va="center",
                     color=color,
                 )
@@ -202,7 +211,7 @@ def timeline(
             xy=(eu_vals.index[-1], eu_vals.iloc[-1]),
             xytext=(4, 0),
             textcoords="offset points",
-            fontsize=FONT_SIZE,
+            fontsize=POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FONT_SIZE - 1,
             va="center",
             color="#555555",
             alpha=0.8,
@@ -211,16 +220,30 @@ def timeline(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel or ylabel_default)
     if title:
-        ax.set_title(title, loc="center")
+        fig._suptitle_gap_pt = 5
+        fig.suptitle(title, y=1.0, fontsize=FIGURE_TITLE_SIZE, va="bottom")
+        if IS_POSTER_RUN:
+            # Reserve top headroom so the LaTeX-inflated title is not clipped at
+            # the canvas top (matplotlib measures the title shorter than LaTeX
+            # renders it). Main thesis export keeps the default tight top.
+            fig._subplots_adjust_kwargs = {"top": 0.90}
 
     # Tight x-axis + integer year ticks + minor grid
     if not pivot.empty:
         ax.set_xlim(pivot.index.min(), pivot.index.max())
         _apply_year_ticks(ax, pivot.index)
 
-    if not annotate_last:
+    if (not annotate_last) and show_legend:
         ax.legend(bbox_to_anchor=(1.01, 1), loc="upper left",
-                  borderaxespad=0, frameon=False, fontsize=FONT_SIZE)
+                  borderaxespad=0, frameon=False,
+                  fontsize=POSTER_FIGURE_LABEL_SIZE if IS_POSTER_RUN else FONT_SIZE - 1)
+
+    # Stash the pivots so savefig_pgf() can attach \pdftooltip nodes after
+    # the script has finalised xlim/ylim, and so apply_geo_labels_pgf() can
+    # replace bare ISO-2 country code annotations with \acs{geo-XX}.
+    fig._timeline_pivot = pivot
+    if background_eu and 'bg_pivot' in locals():
+        fig._timeline_pivot_bg = bg_pivot
 
     return fig
 
@@ -270,7 +293,8 @@ def timeline_groups(
     if show_eu_avg is None:
         show_eu_avg = (not eu_norm) and (eu_series is not None)
 
-    fig, ax = plt.subplots(figsize=figsize or cm2in(15, 9))
+    fig, ax = plt.subplots(figsize=figsize or cm2in(15, TIMELINE_FIGURE_HEIGHT_CM))
+    fig._tight_layout_kwargs = {"pad": 0.15}
     prop_it = iter(plt.rcParams["axes.prop_cycle"])
 
     x_min, x_max = None, None
@@ -295,7 +319,7 @@ def timeline_groups(
                 xy=(avg.index[-1], avg.iloc[-1]),
                 xytext=(4, 0),
                 textcoords="offset points",
-                fontsize=FONT_SIZE,
+                fontsize=FONT_SIZE - 1,
                 va="center",
                 color=color,
             )
@@ -310,7 +334,7 @@ def timeline_groups(
         ax.annotate("EU27",
                     xy=(eu_vals.index[-1], eu_vals.iloc[-1]),
                     xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE, va="center", color="#555555", alpha=0.8)
+                    fontsize=FONT_SIZE - 1, va="center", color="#555555", alpha=0.8)
         if x_min is not None:
             x_min = min(x_min, eu_vals.index.min())
             x_max = max(x_max, eu_vals.index.max())
@@ -318,7 +342,8 @@ def timeline_groups(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel or ylabel_default)
     if title:
-        ax.set_title(title, loc="center")
+        fig._suptitle_gap_pt = 5
+        fig.suptitle(title, y=1.0, fontsize=FIGURE_TITLE_SIZE, va="bottom")
 
     if x_min is not None:
         ax.set_xlim(x_min, x_max)
@@ -326,6 +351,6 @@ def timeline_groups(
         _apply_year_ticks(ax, idx)
 
     if not annotate_last:
-        ax.legend(frameon=False, fontsize=FONT_SIZE)
+        ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
     return fig

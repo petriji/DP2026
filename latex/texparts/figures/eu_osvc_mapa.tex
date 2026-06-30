@@ -1,0 +1,22 @@
+% Editable figure definition for eu_osvc_mapa
+% Edit freely --- Python will NOT overwrite this file.
+% To regenerate defaults, delete this file and re-run the script.
+\def\strEuOsvcMapaTitle{Podíl \acs{OSVČ} na zaměstnanosti (2025)}%
+\def\strEuOsvcMapaColorbarLabel{podíl \acs{OSVČ} [\%]}%
+\def\strEuOsvcMapaCaption{Podíl \acs{OSVČ} na celkové zaměstnanosti, \acs{geo-EU27} mapa, 2025. Zdroj dat: Eurostat~\cite{eurostat_lfsa_egaps}.}%
+%
+
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeEuOsvcMapaCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeEuOsvcMapaCz{5pt}%
+\providecommand\NudgeEuOsvcMapaDk{0pt}%
+\providecommand\NudgeEuOsvcMapaAt{0pt}%
+\providecommand\NudgeEuOsvcMapaDe{0pt}%
+\providecommand\NudgeEuOsvcMapaPl{0pt}%
+\providecommand\NudgeEuOsvcMapaSk{-5pt}%
+\begin{figure}[htb]
+  \centering
+  \input{../python/figures/eu_osvc_mapa.pgf}
+  \caption{\strEuOsvcMapaCaption}
+  \label{fig:eu_osvc_mapa}
+\end{figure}

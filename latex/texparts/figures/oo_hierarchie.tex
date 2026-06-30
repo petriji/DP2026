@@ -1,0 +1,80 @@
+% Hand-drawn TikZ figure — hierarchie odborové reprezentace v ČR.
+% Konfederace (ČMKOS, ASO, …) → OS (odvětvové svazy) → ZO (základní organizace).
+% U jednoho zaměstnavatele se ZO mohou koordinovat v P~KOV; §24 ZP řeší pluralitu OO.
+% Edit freely —  not generated.
+\def\strOOHierarchieCaption{Hierarchie odborové reprezentace v~\acs{geo-CZ}.}%
+% Poster override (before \input this file):
+%   \renewcommand\DPPosterOOBaseSize{\large}
+%   \renewcommand\DPPosterOONoteSize{\normalsize}
+\providecommand\DPFigureTextSize{\normalsize}
+\providecommand\DPFigureLabelSize{\small}
+\providecommand\DPOOBaseSize{\DPFigureTextSize}
+\providecommand\DPOONoteSize{\DPFigureLabelSize}
+%
+\begin{figure}[H]
+  \centering
+  \resizebox{0.95\linewidth}{!}{%
+  \begin{tikzpicture}[
+    font=\sffamily\DPOOBaseSize,
+    every node/.style={align=center, inner sep=3pt,
+      font=\sffamily\DPOOBaseSize,
+      execute at begin node=\linespread{0.9}\selectfont},
+    topBox/.style    ={draw=black!85, fill=black!22, rounded corners=3pt,
+                       text width=3.4cm, minimum height=1.0cm, line width=0.9pt},
+    midBox/.style    ={draw=black!85, fill=black!12, rounded corners=3pt,
+                       text width=2.4cm, minimum height=0.9cm, line width=0.8pt},
+    botBox/.style    ={draw=black!85, fill=white, rounded corners=2pt,
+                       text width=1.8cm, minimum height=0.7cm, line width=0.7pt},
+    coordBox/.style  ={draw=black!85, dashed, fill=black!5, rounded corners=2pt,
+                       text width=2.0cm, minimum height=0.7cm, line width=0.7pt},
+    link/.style      ={->, line width=0.9pt, draw=black!85, >=Stealth},
+    linkDashed/.style={->, dashed, line width=0.8pt, draw=black!75, >=Stealth},
+    dots/.style      ={font=\sffamily\DPOOBaseSize},
+  ]
+    % --- Vrcholová úroveň: konfederace ---
+    \node[topBox] (CMKOS) at (-3.2,3.0) {\textbf{\acs{ČMKOS}}\\konfederace};
+    \node[topBox] (ASO)   at ( 3.2,3.0) {\textbf{\acs{ASO}}\\konfederace};
+    \node[dots]           at ( 6.6,3.0) {\ldots};
+
+    % --- Střední úroveň: OS (odborové svazy) ---
+    \node[midBox] (OS1) at (-5.0,1.0) {\acs{OS}~A};
+    \node[midBox] (OS2) at (-1.5,1.0) {\acs{OS}~B};
+    \node[midBox] (OS3) at ( 3.0,1.0) {\acs{OS}~C};
+    \node[dots]         at ( 6.6,1.0) {\ldots};
+
+    % --- Spojení konfederace → OS ---
+    \draw[link] (CMKOS.south) -- (OS1.north);
+    \draw[link] (CMKOS.south) -- (OS2.north);
+    \draw[link] (ASO.south)   -- (OS3.north);
+
+    % --- Základní úroveň: ZO (podnikové / lokální organizace) ---
+    \node[botBox] (ZO11) at (-5.8,-1.2) {\acs{ZO}~1};
+    \node[botBox] (ZO12) at (-3.8,-1.2) {\acs{ZO}~2};
+    \node[botBox] (ZO21) at (-0.8,-1.2) {\acs{ZO}~3};
+    \node[botBox] (ZO22) at ( 1.2,-1.2) {\acs{ZO}~4};
+    \node[botBox] (ZO31) at ( 3.0,-1.2) {\acs{ZO}~5};
+    \node[dots]          at ( 6.6,-1.2) {\ldots};
+
+    % --- Spojení OS → ZO ---
+    \draw[link] (OS1.south) -- (ZO11.north);
+    \draw[link] (OS1.south) -- (ZO12.north);
+    \draw[link] (OS2.south) -- (ZO21.north);
+    \draw[link] (OS2.south) -- (ZO22.north);
+    \draw[link] (OS3.south) -- (ZO31.north);
+
+    % --- Koordinační úroveň u jednoho zaměstnavatele: P~KOV ---
+    \node[coordBox] (PKOV) at (-2.3,-3.0) {\acs{PKOV}\\u~zaměstnavatele};
+    \draw[linkDashed] (ZO12.south) -- (PKOV.north);
+    \draw[linkDashed] (ZO21.south) -- (PKOV.north);
+    \draw[linkDashed] (ZO22.south) -- (PKOV.north);
+
+    % --- Anotace: pluralita §24 ZákP ---
+    \node[draw=black!60, dashed, rounded corners=2pt,
+          text width=4.2cm, inner sep=4pt, font=\sffamily\DPOONoteSize]
+         (Note) at ( 5.0,-3.0)
+         {Více \acs{ZO} u~jednoho zaměstnavatele může jednat koordinovaně v~\acs{PKOV}; pluralitu \acs{OO} upravuje \mbox{§~24} \acs{ZP}};
+    \draw[linkDashed] (Note.west) -- (PKOV.east);
+  \end{tikzpicture}}
+  \caption{\strOOHierarchieCaption}
+  \label{fig:oo_hierarchie}
+\end{figure}

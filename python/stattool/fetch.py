@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import random
+import time
 from pathlib import Path
 from typing import Optional, Union
 from urllib.parse import urlparse
@@ -29,6 +31,9 @@ log = logging.getLogger(__name__)
 
 # Timeout for HTTP requests (connect, read) in seconds
 _TIMEOUT = (10, 120)
+_MAX_DOWNLOAD_ATTEMPTS = 5
+_BACKOFF_BASE_SECONDS = 1.5
+_BACKOFF_MAX_SECONDS = 20.0
 
 
 def _cache_path(url: str, suffix: Optional[str] = None) -> Path:
@@ -41,6 +46,71 @@ def _cache_path(url: str, suffix: Optional[str] = None) -> Path:
     stem = Path(original_name).stem
     ext = suffix or Path(original_name).suffix or ".bin"
     return DATA_DIR / f"{stem}_{url_hash}{ext}"
+
+
+def _download_with_progress(
+    url: str,
+    dest: Path,
+    *,
+    chunk_size: int = 1 << 20,
+) -> Path:
+    """Stream *url* into *dest* with the standard progress bar style."""
+    tmp_dest = dest.with_suffix(dest.suffix + ".part")
+    last_exc: Exception | None = None
+
+    for attempt in range(1, _MAX_DOWNLOAD_ATTEMPTS + 1):
+        try:
+            response = requests.get(url, stream=True, timeout=_TIMEOUT)
+            response.raise_for_status()
+
+            total = int(response.headers.get("content-length", 0)) or None
+            with tmp_dest.open("wb") as fh, tqdm(
+                total=total,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=dest.name,
+                leave=False,
+            ) as bar:
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    fh.write(chunk)
+                    bar.update(len(chunk))
+
+            tmp_dest.replace(dest)
+            log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
+            return dest
+
+        except requests.exceptions.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            # Retry transient server/rate-limit failures; fail fast on client errors.
+            if status not in {429, 500, 502, 503, 504}:
+                raise
+            last_exc = exc
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+
+        if tmp_dest.exists():
+            tmp_dest.unlink()
+
+        if attempt >= _MAX_DOWNLOAD_ATTEMPTS:
+            break
+
+        backoff = min(_BACKOFF_BASE_SECONDS * (2 ** (attempt - 1)), _BACKOFF_MAX_SECONDS)
+        # Small jitter helps avoid synchronized retries when remote endpoint is flaky.
+        backoff += random.uniform(0.0, 0.5)
+        log.warning(
+            "Download attempt %d/%d failed for %s (%s). Retrying in %.1fs",
+            attempt,
+            _MAX_DOWNLOAD_ATTEMPTS,
+            url,
+            type(last_exc).__name__ if last_exc is not None else "unknown error",
+            backoff,
+        )
+        time.sleep(backoff)
+
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"Download failed for {url}")
 
 
 def fetch(
@@ -70,24 +140,7 @@ def fetch(
         return dest
 
     log.info("Downloading %s → %s", url, dest)
-    response = requests.get(url, stream=True, timeout=_TIMEOUT)
-    response.raise_for_status()
-
-    total = int(response.headers.get("content-length", 0)) or None
-    with dest.open("wb") as fh, tqdm(
-        total=total,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        desc=dest.name,
-        leave=False,
-    ) as bar:
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            fh.write(chunk)
-            bar.update(len(chunk))
-
-    log.info("Saved %s (%.1f kB)", dest, dest.stat().st_size / 1024)
-    return dest
+    return _download_with_progress(url, dest, chunk_size=chunk_size)
 
 
 def fetch_oecd(
@@ -156,19 +209,26 @@ def fetch_ipp(
     year:
         Survey / reference year (e.g., ``2025``).
     topic:
-        File topic code.  Known codes and the data they contain:
+        File topic code.  Use the *canonical* name; year-specific filename
+        variants are resolved automatically (see table below).
 
-        Available in all years (2016–present):
+        Available in all years (2007–present):
 
         - ``"odmenovani"``                      – remuneration: negotiated wage
           increases, forms of pay, tariff vs. non-tariff systems.
         - ``"mzda_tarify"``                     – wage tariff levels agreed in CAs.
-        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
-          components (overtime, night shifts, holiday pay, …).
+
+        Available 2009–present:
+
         - ``"zamestnanost_rozvoj_BOZP_dohody"`` – employment, personnel
           development, health & safety, and other agreements.
         - ``"spoluprace_smluvnich_stran"``      – cooperation of contracting
           parties (unions and employers).
+
+        Available 2019–present:
+
+        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
+          components (overtime, night shifts, holiday pay, …).
 
         New from 2025:
 
@@ -178,19 +238,45 @@ def fetch_ipp(
           changes to the employment relationship.
         - ``"prac_podminky_benefity"``           – working conditions and
           employee benefits (meal vouchers, transport, home-office, …).
+
+        Historical-only (2007–2008):
+
+        - ``"doba_zmeny_pomeru"``               – working time and changes to
+          employment relationships.
+
     force:
         Re-download even when a cached copy already exists.
 
     Returns
     -------
     Path
-        Local path to the cached ``.xlsx`` file.  Load it with
-        :func:`pandas.read_excel` or :meth:`~stattool.dataset.Dataset.from_ipp_excel`.
+        Local path to the cached ``.xls`` / ``.xlsx`` file.  Load it with
+        :func:`pandas.read_excel`.
     """
+    # Some topic filenames changed between the ISPP (2007–2008) era and later.
+    # Map canonical topic names to their historical filename variants.
+    _TOPIC_ALIASES: dict[str, dict[range, str]] = {
+        "spoluprace_smluvnich_stran": {
+            # 2007–2008 used a shorter name
+            range(2007, 2009): "spoluprace_sml_stran",
+        },
+    }
+    resolved_topic = topic
+    for year_range, alias in _TOPIC_ALIASES.get(topic, {}).items():
+        if year in year_range:
+            resolved_topic = alias
+            break
+
     yy = str(year)[2:]  # last two digits: 2024 → "24"
-    filename = f"IPP_{yy}_{topic}.xlsx"
+    if year >= 2019:
+        prefix, ext = "IPP", ".xlsx"
+    elif year >= 2015:
+        prefix, ext = "IPP", ".xls"
+    else:  # 2007–2014: published as ISPP (double-P) .xls
+        prefix, ext = "ISPP", ".xls"
+    filename = f"{prefix}_{yy}_{resolved_topic}{ext}"
     url = f"https://www.kolektivnismlouvy.cz/download/{year}/{filename}"
-    return fetch(url, suffix=".xlsx", force=force)
+    return fetch(url, suffix=ext, force=force)
 
 
 def fetch_ispv(
@@ -253,7 +339,20 @@ def fetch_ispv(
     prefix = "ISPV" if sphere == "podnikatelska" else "RSCP"
     filename = f"{prefix}_{yy}H{half}.xlsx"
     url = f"https://www.ispv.cz/files/{filename}"
-    return fetch(url, suffix=".xlsx", force=force)
+    path = fetch(url, suffix=".xlsx", force=force)
+    # Validate: a valid XLSX/ZIP file starts with the PK magic bytes (50 4B).
+    # The ISPV portal returns a 2149-byte HTML error page with status 200 when
+    # the old /files/ URL pattern is used.  Detect and reject that here.
+    with open(path, "rb") as _fh:
+        _magic = _fh.read(2)
+    if _magic != b"PK":
+        raise ValueError(
+            f"Downloaded file is not a valid XLSX (magic={_magic!r}). "
+            "The ISPV portal has likely changed its URL structure. "
+            "Use stattool.fetch.fetch() with the current GUID-based URL from "
+            "https://www.ispv.cz/cz/Vysledky-setreni/Aktualni.aspx"
+        )
+    return path
 
 
 def fetch_eurostat(
@@ -306,4 +405,66 @@ def fetch_eurostat(
 
     url = endpoint + "?" + _urlencode(qp)
     return fetch(url, suffix=".csv", force=force)
+
+
+def fetch_ilostat(
+    indicator: str,
+    params: Optional[dict] = None,
+    *,
+    force: bool = False,
+) -> Path:
+    """Download a dataset from the ILOSTAT REST API as CSV.
+
+    Uses the ``rplumber.ilo.org`` endpoint.  The indicator code uniquely
+    identifies the dataset (e.g. ``"STR_DAYS_ECO_RT_A"`` for strike days
+    per 1000 workers).
+
+    API reference::
+
+        https://rplumber.ilo.org/data/indicator/?id={indicator}&type=both&format=.csv
+
+    Optional query parameters (passed via *params*):
+
+    - ``ref_area``  – comma-separated ISO3 country codes, e.g. ``"CZE,DEU"``
+    - ``classif1``  – first classification filter, e.g. ``"ECO_AGGREGATE_TOTAL"``
+    - ``sex``       – e.g. ``"SEX_T"`` (total), ``"SEX_M"``, ``"SEX_F"``
+    - ``timefrom``  – start year as string, e.g. ``"2000"``
+    - ``timeto``    – end year as string
+
+    CSV columns returned:
+
+        ref_area, source, indicator, sex, classif1, classif2, time,
+        obs_value, obs_status, note_*
+
+    Parameters
+    ----------
+    indicator:
+        ILOSTAT indicator code, e.g. ``"STR_DAYS_ECO_RT_A"``.
+    params:
+        Optional dict of additional query parameters (see above).
+    force:
+        Re-download even when a cached copy already exists.
+
+    Returns the local :class:`Path` to the cached CSV.
+    """
+    from urllib.parse import urlencode as _urlencode
+
+    base = "https://rplumber.ilo.org/data/indicator/"
+    qp: dict = {"id": indicator, "type": "both", "format": ".csv"}
+    if params:
+        qp.update(params)
+
+    # Build a stable cache key from indicator + sorted params (excluding format)
+    cache_params = {k: v for k, v in sorted(qp.items()) if k != "format"}
+    cache_key_str = indicator + "_" + "_".join(f"{k}-{v}" for k, v in cache_params.items() if k != "id")
+    url_hash = hashlib.sha1(cache_key_str.encode()).hexdigest()[:8]
+    dest = DATA_DIR / f"{indicator}_{url_hash}.csv"
+
+    if dest.exists() and not force:
+        log.info("Cache hit: %s", dest)
+        return dest
+
+    url = base + "?" + _urlencode(qp)
+    log.info("Downloading ILOSTAT %s → %s", indicator, dest)
+    return _download_with_progress(url, dest)
 
