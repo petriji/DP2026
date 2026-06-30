@@ -1,37 +1,58 @@
 % ==============================================================================
-% Variable And Index Definitions (acro tag = vel)
+% Variable And Index Definitions
 % ==============================================================================
-% The variables list uses the same acro template as the abbreviations list.
+% Two acro tags are used:
+%   tag = vel  → variables       (printed by \printacronyms[include=vel])
+%   tag = idx  → indices         (printed by \printacronyms[include=idx])
+%
 % Used-only behaviour works only when acro sees the symbol as used:
-%   - in text: use \acs{var-...} or \ac{var-...}
+%   - in text: use \acs{var-...}, \acs{idx-...}, or \ac{var-...}
 %   - in math written manually: keep the raw symbol and add \acuse{var-...}
-%     nearby so the entry appears in the printed variables list.
+%     (or \acuse{idx-...}) nearby so the entry appears in the printed list.
+%
+% Index display behaviour (see CTUthesis.cls short template):
+%   - For idx-* entries the `index` property carries the bare in-text token
+%     (e.g. z, M, 0); \acs{idx-z} renders that token, allowing expressions
+%     like  \acs{var-N}_{\acs{idx-z}}  →  N_z.
+%   - The `short` field carries the placeholder form (\square_z) and is shown
+%     in the bold left column of the indices list.
 % ==============================================================================
 
+% ---------------------------------------------------------------------------
+%  \DeclareVariable macro  (tag = vel — printed in the variables list)
+% ---------------------------------------------------------------------------
 \newcommand\DeclareVariable[3]{%
-	\DeclareAcronym{#1}{%
-		short = {#2},
-		long = {#3},
-		first-style = short,
-		single-style = short,
-		tag = vel
-	}}
+        \DeclareAcronym{#1}{%
+                short = {#2},
+                long = {#3},
+                first-style = short,
+                single-style = short,
+                tag = vel
+        }}
 
-% \DeclareIndex{id}{symbol}{index}{long}
-%   For subscript/superscript index variables.
-%   #2  full symbol shown in the variables list bold column (e.g. \ensuremath{\square_0})
-%   #3  index-only form used in text (e.g. \ensuremath{0}); also works for
-%       superscripts (top indices) — just pass the superscript content.
-%   #4  long description (same format as \DeclareVariable)
+% ---------------------------------------------------------------------------
+%  \DeclareIndex macro  (tag = idx — printed in the indices list, separate
+%  from the variables list)
+%
+%  #1 = key (e.g. idx-z)
+%  #2 = short / list display, with placeholder \square (e.g. \ensuremath{\square_0})
+%        — appears in the bold left column of the indices list.
+%  #3 = index display, the bare token used in math (e.g. \ensuremath{0})
+%        — what \acs{idx-...} renders inline. Allows building expressions like
+%          \acs{var-N}_{\acs{idx-z}}  →  N_z.
+%        The class' short template detects the `index` property (see
+%        CTUthesis.cls) and prints it instead of the square form.
+%  #4 = long description (right column of the indices list).
+% ---------------------------------------------------------------------------
 \newcommand\DeclareIndex[4]{%
-	\DeclareAcronym{#1}{%
-		short = {#2},
-		index = {#3},
-		long = {#4},
-		first-style = short,
-		single-style = short,
-		tag = vel
-	}}
+        \DeclareAcronym{#1}{%
+                short = {#2},
+                index = {#3},
+                long = {#4},
+                first-style = short,
+                single-style = short,
+                tag = idx
+        }}
 
 \DeclareVariable{var-one}{\ensuremath{\one}}{jednotkový skok [NDF]}
 \DeclareVariable{var-a}{\ensuremath{A}}{objemová hustota tepelného toku [\SI{}{\watt\per\cubic\meter}]; amplituda, magnituda [NDF]}
@@ -40,7 +61,7 @@
 \DeclareVariable{var-u}{\ensuremath{u}}{poměrná deformace [1]}
 \DeclareVariable{var-rho}{\ensuremath{\rho}}{hustota [\SI{}{\kilogram\per\cubic\meter}]}
 \DeclareVariable{var-omega}{\ensuremath{\omega, \Omega}}{úhlová rychlost [\SI{}{\per\second}]}
-\DeclareIndex{var-square-zero}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční}
-\DeclareIndex{var-square-in}{\ensuremath{\square_{IN}}}{\ensuremath{\mathit{IN}}}{vstupní}
-\DeclareIndex{var-square-z}{\ensuremath{\square_Z}}{\ensuremath{Z}}{v ose Z}
-\DeclareIndex{var-square-sum}{\ensuremath{\square_\Sigma}}{\ensuremath{\Sigma}}{souhrnný}
+\DeclareIndex{idx-zero}{\ensuremath{\square_0}}{\ensuremath{0}}{počáteční}
+\DeclareIndex{idx-in}{\ensuremath{\square_{IN}}}{\ensuremath{\mathit{IN}}}{vstupní}
+\DeclareIndex{idx-z}{\ensuremath{\square_Z}}{\ensuremath{Z}}{v ose Z}
+\DeclareIndex{idx-sum}{\ensuremath{\square_\Sigma}}{\ensuremath{\Sigma}}{souhrnný}
