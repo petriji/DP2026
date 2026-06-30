@@ -399,8 +399,11 @@
   \ifCTUenglish List of Abbreviations\else
     Seznam pou\v{z}it\'ych zkratek\fi}
 \newcommand\CTUvelname{%
-  \ifCTUenglish List of Variables and Indices\else
-    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych a\nobreakspace{}index\r{u}\fi}
+  \ifCTUenglish List of Variables\else
+    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych\fi}
+\newcommand\CTUidxname{%
+  \ifCTUenglish List of Indices\else
+    Seznam pou\v{z}it\'ych index\r{u}\fi}
 \newcommand\CTUbibname{%
   \ifCTUenglish Bibliography\else
     Seznam pou\v{z}it\'e literatury\fi}
@@ -1341,21 +1344,22 @@
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
 % Global flags: true when at least one captioned figure / table exists in the
-% document.  Set by patching \addcontentsline so they reflect the current run
-% rather than the per-chapter \c@figure / \c@table counters (which reset).
+% document.  Detected at \listoffigures / \listoftables call time by probing
+% for the .lof / .lot files written by \@starttoc in the previous latexmk
+% pass — this is robust against hyperref's \addcontentsline patch and any
+% other package that wraps the TOC-writing machinery.
+%
+% First-run behaviour: on a clean build no .lof/.lot exists yet, so the list
+% chapter is skipped on pass 1.  Pass 1 still writes the files via \@starttoc
+% calls inside \caption; pass 2 then detects them and emits the chapter.
+% latexmk automatically reruns to resolve cross-references, so the finished
+% PDF always contains the correct lists.
 \newif\if@CTUhasfigures
 \newif\if@CTUhastables
-\let\CTU@orig@addcontentsline\addcontentsline
-\renewcommand\addcontentsline[3]{%
-  \CTU@orig@addcontentsline{#1}{#2}{#3}%
-  \begingroup
-    \def\CTU@temp{#1}%
-    \ifx\CTU@temp\CTU@lof@name\global\@CTUhasfigurestrue\fi
-    \ifx\CTU@temp\CTU@lot@name\global\@CTUhastablestrue\fi
-  \endgroup
-}%
-\def\CTU@lof@name{lof}%
-\def\CTU@lot@name{lot}%
+\AtBeginDocument{%
+  \IfFileExists{\jobname.lof}{\@CTUhasfigurestrue}{}%
+  \IfFileExists{\jobname.lot}{\@CTUhastablestrue}{}%
+}
 \newcommand\listoffigures{%
     \if@CTUhasfigures
     \if@twocolumn
@@ -1702,6 +1706,8 @@
   exponent-product       = \cdot,
   product-units          = repeat,
   product-symbol         = \cdot,
+  range-phrase           = {--},
+  range-units            = single,
 }
 % Custom calligraphic font family for math mode: \xmcal{H}, \xmcal{L} etc.
 % (Integral/Laplace transform notation — @ is already a letter here.)
@@ -1716,6 +1722,10 @@
 % ==============================================================================
 % xcolor: color definitions — also required internally by tikz and pgfplots.
 \RequirePackage{xcolor}
+% contour: white outline around text for readability on coloured map backgrounds.
+%   Used via \contour{white}{...} on country-code labels in PGF figures.
+\RequirePackage[pdftex]{contour}
+\contourlength{0.6pt}
 % tikz: PGF/TikZ vector graphics engine.
 \RequirePackage{tikz}
 % pgfplots: data-driven plots (frequency responses, curves etc.).
@@ -1738,6 +1748,8 @@
   \usetikzlibrary{external}%
   \tikzexternalize
 \fi
+% Common TikZ libraries used by hand-drawn schemas in texparts/figures/.
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
 
 % ==============================================================================
 % Packages: Lists, Quotation Marks, And Inline Helpers
@@ -1844,6 +1856,14 @@
     }
   \NewDocumentCommand{\CTUifVariableListNonemptyTF}{mm}
     {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
+  \cs_new_protected:Npn \CTU_if_index_list_nonempty:TF #1#2
+    {
+      \group_begin:
+        \keys_set:nn {acro/list} { include = idx , display = used }
+        \acronymsmapTF {} { \group_end: #1 } { \group_end: #2 }
+    }
+  \NewDocumentCommand{\CTUifIndexListNonemptyTF}{mm}
+    {\CTU_if_index_list_nonempty:TF {#1}{#2}}
   \ExplSyntaxOff
   % --------------------------------------------------------------------------
   % Index property
@@ -1912,8 +1932,17 @@
   %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
   %   catcodes (colon and underscore as letters).
   \ExplSyntaxOn
+  % Helper: emit (visible)+tooltip without a hyperlink.  Used for entries
+  % with tag=geo whose acronym list is not printed (so no \hypertarget exists)
+  % — calling \CTU@tooltiplink would create a goto-name link to a missing
+  % destination, causing Acrobat to fall back to the cover page.
+  \cs_new:Npn \CTU@geo_tooltip:nn #1#2 { \pdftooltip{#1}{#2} }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
+      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+        \CTU@geo_tooltip:nn { \acrowrite{short} }
+                            { \acro_property_get:Vn \AcronymID { long } }%
+      }{%
       \CTU@tooltiplink{\AcronymID}{%
         \acrowrite{long}%
         \acspace(%
@@ -1922,10 +1951,16 @@
         \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
         \acrogroupcite)%
       }{ \acro_property_get:Vn \AcronymID { long } }%
+      }%
     }%
     {%
+      \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+        \CTU@geo_tooltip:nn { \acrowrite{short} }
+                            { \acro_property_get:Vn \AcronymID { long } }%
+      }{%
       \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
         { \acro_property_get:Vn \AcronymID { long } }%
+      }%
     }%
   }
   % short template: when `index` is set (subscript/superscript index variable)
@@ -1933,6 +1968,10 @@
   %   The `short` form (e.g. \square_0) is always shown in the variables list
   %   via \acrowrite{short} in the xltabular list template above.
   \RenewAcroTemplate{short}{%
+    \str_if_eq:eeTF { \acro_property_get:Vn \AcronymID { tag } } { geo } {%
+      \CTU@geo_tooltip:nn { \acrowrite{short} }
+                          { \acro_property_get:Vn \AcronymID { long } }%
+    }{%
     \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
         \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
@@ -1942,6 +1981,7 @@
         \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
+    }%
   }
   \ExplSyntaxOff
 \else
@@ -1982,6 +2022,9 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% User-level alias so Python-generated PGF files can reference it without
+% needing \makeatletter (which fails when TeX tokenises an argument group).
+\newcommand{\CTUtooltiplink}[3]{\CTU@tooltiplink{#1}{#2}{#3}}
 % \CTU@tooltiplink{destination}{visible text}{tooltip text}
 %   Creates a single GoTo Link annotation whose /Contents entry is the tooltip.
 %   This is the standard PDF mechanism for hover tooltips on hyperlinks and is
@@ -1991,7 +2034,17 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
+  % In math mode, \pdfstringdef and \pdfstartlink/\leavevmode are invalid
+  % (they trigger "Command \pdfstringdef invalid in math mode" and break
+  % subsequent token parsing).  When called from \acs{var-X} or \acs{idx-Y}
+  % inside $...$, just emit the visible text without tooltip/link annotation.
+  \ifmmode #2\else
+  % NOTE: do NOT pass #1 through \HyperDestNameFilter / \pdfstringdef.
+  % With hyperref's [unicode=true], \pdfstringdef encodes the destination name
+  % as UTF-16BE (with BOM), which then no longer matches the raw ASCII names
+  % registered by biblatex (cite.<refsection>@<key>) and acro (<AcronymID>) in
+  % the PDF /Dests Names tree.  The resulting goto name{...} lookup falls back
+  % to the cover page in Acrobat.  Pass the destination tokens raw.
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -1999,11 +2052,12 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
+  \pdfstartlink attr{\Hy@tempa} goto name{#1}\relax
   \Hy@colorlink\@linkcolor
   #2%
   \Hy@endcolorlink
   \pdfendlink
+  \fi
 }
 % Strip formatting and normalise dashes in PDF tooltip strings.
 % Also bypass the \exp_not:n (= \unexpanded) wrappers that acro3 and biblatex
@@ -2027,6 +2081,11 @@
 %   (back matter uses \Roman{page}, which would make \pageref*{LastPage} return
 %   a Roman numeral).
 \RequirePackage{lastpage}
+% pdfcomment: hover tooltip annotations in PDF viewers (Adobe Acrobat, Foxit).
+%   Must be loaded AFTER hyperref (it uses hyperref internally).
+%   Used via \pdftooltip{displayed}{tooltip text} in PGF figures.
+%   Annotations are invisible in non-interactive viewers and in print.
+\RequirePackage{pdfcomment}
 
 % ==============================================================================
 % Packages: Bibliography
@@ -2135,6 +2194,33 @@
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
   \fi}
+
+% ==============================================================================
+% \inputpgffigure{name} — include a matplotlib PGF figure
+% ==============================================================================
+% Includes the editable figure definition from texparts/figures/<name>.tex.
+% The PGF file is expected at ../python/figures/<name>.pgf (relative to the
+% latex/ directory, matching \graphicspath{{../python/figures/}}).
+%
+% If the .pgf file does not exist (script not yet run), a visible warning box
+% is shown in the PDF instead of a hard compilation error.
+%
+% Usage in commentary files:  \inputpgffigure{vyhled_porodnost_vyvoj}
+\newcommand{\inputpgffigure}[1]{%
+  \IfFileExists{../python/figures/#1.pgf}{%
+    \input{texparts/figures/#1}%
+  }{%
+    \begin{center}
+      \fboxsep=8pt
+      \colorbox{yellow!40}{%
+        \parbox{0.85\linewidth}{%
+          \color{red!70!black}\bfseries
+          \texttt{[#1.pgf]} chybí --- spusťte odpovídající Python skript.%
+        }%
+      }%
+    \end{center}%
+  }%
+}
 
 \endinput
 %%
