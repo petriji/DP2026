@@ -44,9 +44,9 @@ Before formatting, consult these files when context is needed:
 |-----------|-------|-------|
 | Auto use (first occurrence) | `\ac{ID}` | first use expands like `\acf` — "long form (SHORT)"; subsequent uses expand like `\acs` |
 | Short form only | `\acs{ID}` | always short, regardless of use count |
-| Plural variant | `\acp{ID}` | uses `long-plural-form` if declared, otherwise appends "s" |
+| ~~Plural variant~~ | ~~`\acp{ID}` / `\acsp{ID}` / `\Acsp{ID}`~~ | **PROHIBITED** — use `\acs{ID}` / `\Acs{ID}` or expand the noun (e.g. „kolektivní smlouvy" instead of `\acp{KS}`) |
 | Long form only | `\acl{ID}` | e.g. in sentences about the concept |
-| Long form plural | `\aclp{ID}` | |
+| ~~Long form plural~~ | ~~`\aclp{ID}`~~ | **PROHIBITED** — expand the noun |
 | Forced full form | `\acf{ID}` | always "long form (SHORT)", use rarely |
 | Sentence-initial (capitalised) | `\Ac{ID}` | first word capitalised |
 | Mark as used without printing | `\acuse{ID}` | for variables used in math mode |
@@ -337,6 +337,41 @@ When formatting pasted text, **always check** that every `„` is closed by `"` 
 - Non-standard dash: en-dash `--` for ranges, em-dash `---` for parenthetical.
 - Ellipsis: `\ldots` or `…` (UTF-8 accepted).
 - Czech decimal separator: `{,}` inside math or `\num{}` from siunitx (`11{,}4~\%`). English: plain `.`.
+
+---
+
+### 11. Float placement & captions (commentary-embedded figures)
+
+**Default placement** for inline figures embedded by commentary: `\begin{figure}[H]` (requires `float` package — already loaded by `CTUthesis.cls`). This keeps the figure close to the prose that introduces it.
+Use `[htbp]` only when the figure is genuinely a top/bottom float that may drift far from text (rare in this thesis).
+
+**Caption brief format** (in `latex/texparts/figures/<stem>.tex` `\def\str…Caption{…}` strings):
+
+```
+<Co>, <územní rozsah>, <rok(y)>. Zdroj dat: <Název>~\cite{key}.
+```
+
+**Caption-audit checklist** when reviewing or generating a caption:
+
+- [ ] Year present and ≥ 2023 (data captions must show recency)
+- [ ] Single `Zdroj dat:` clause — never duplicated within one caption
+- [ ] Source label uses canonical form:
+  - Eurostat → `Eurostat`
+  - OECD ICTWSS → `\acs{OECD}~\acs{ICTWSS}`
+  - OECD HFCS / LMP → `\acs{OECD}~\acs{HFCS}` / `\acs{OECD}~\acs{LMP}`
+  - MPSV ISPV / IPP → `\acs{MPSV}~\acs{ISPV}` / `\acs{MPSV}~\acs{IPP}`
+  - Czech-law model → `Model podle legislativy \aca{geo-CZ}`
+- [ ] Multiple datasets, same source → chain `\cite{k1}\cite{k2}` (no separator between)
+- [ ] Country codes use `\acs{geo-XX}` — figures/tables ONLY (axis labels, legends, cells, captions)
+- [ ] Use `\acs{geo-EU}27` (NOT `EU27`, NOT `\acs{EU}27`); use `\acs{EU}` only in „vybrané země \acs{EU}" phrasing
+- [ ] Caption stays brief — no methodology, no footnote references; methodology and trend discussion go into the commentary file
+
+**Commentary-file checklist** (`latex/texparts/commentary/<stem>.tex`):
+
+- [ ] Ends with `\input{texparts/python/<stem>}` or `\inputpgffigure{<stem>}`
+- [ ] In-prose figure ref via `obr.~\ref{fig:<stem>}`
+- [ ] Body does NOT re-cite the data source already in the caption — cite only OTHER sources used in prose
+- [ ] No `\acs{geo-XX}` in prose — use `\ac{ČR}` (with declensions) for Czech Republic, plain Czech name (`Německo`, `Polsko`) or `\acl{geo-XX}` for other countries
 
 ---
 
