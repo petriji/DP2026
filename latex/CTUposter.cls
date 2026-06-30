@@ -694,4 +694,61 @@
   }%
 }
 
+% ----------------------------------------------------------------------------
+% Compact PGF figure helpers for poster composition
+% ----------------------------------------------------------------------------
+% Configure two-level PGF font remapping used by \posterpgfinput:
+% - source font sizes <= threshold map to "small" target size
+% - source font sizes  > threshold map to "large" target size
+% Defaults are tuned for A1 poster readability when ingesting thesis PGF files.
+\gdef\CTUP@pgfthreshold{11.5}
+\gdef\CTUP@pgfsmallsize{16.6}
+\gdef\CTUP@pgfsmalllead{19.2}
+\gdef\CTUP@pgflargesize{17.8}
+\gdef\CTUP@pgflargelead{20.8}
+
+\newcommand{\posterpgfthreshold}[1]{\gdef\CTUP@pgfthreshold{#1}}
+\newcommand{\posterpgfsmallfont}[2]{%
+  \gdef\CTUP@pgfsmallsize{#1}%
+  \gdef\CTUP@pgfsmalllead{#2}%
+}
+\newcommand{\posterpgflargefont}[2]{%
+  \gdef\CTUP@pgflargesize{#1}%
+  \gdef\CTUP@pgflargelead{#2}%
+}
+
+\newcommand{\posterpgfinput}[1]{%
+  \begingroup
+  \let\CTUP@origfontsize\fontsize
+  \renewcommand{\fontsize}[2]{%
+    \ifdim##1pt>\CTUP@pgfthreshold pt
+      \CTUP@origfontsize{\CTUP@pgflargesize}{\CTUP@pgflargelead}%
+    \else
+      \CTUP@origfontsize{\CTUP@pgfsmallsize}{\CTUP@pgfsmalllead}%
+    \fi
+  }%
+  \input{../python/figures/#1.pgf}%
+  \endgroup
+}
+
+\newcommand{\postercompactpgf}[3]{%
+  \begingroup
+  \captionsetup{type=figure,font=CTUPpostercaption,labelfont=bf,justification=raggedright,singlelinecheck=false,skip=1pt}%
+  \centering
+  \resizebox{\linewidth}{!}{\posterpgfinput{#1}}\par\vspace{-0.5mm}%
+  \captionof{figure}{#2}%
+  \label{fig:poster-#3}%
+  \endgroup
+}
+
+\newcommand{\postertwofigures}[6]{%
+  \par\noindent
+  \begin{minipage}[t]{0.49\linewidth}
+    \postercompactpgf{#1}{#2}{#3}%
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.49\linewidth}
+    \postercompactpgf{#4}{#5}{#6}%
+  \end{minipage}\par\vspace{2mm}%
+}
+
 \endinput
