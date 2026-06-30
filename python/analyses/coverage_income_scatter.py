@@ -93,8 +93,7 @@ display_year = common_years[-1] if common_years else "?"
 save_figure_tex(
     "coverage_income_scatter",
     caption=(
-        f"Vztah mezi pokrytím kolektivního vyjednávání (\\% zaměstnanců, osa x) "
-        f"a HDP na obyvatele v paritě kupní síly (EU27\u00a0=\u00a0100, osa y) "
+        f"Pokrytí KV a~HDP na obyvatele v~paritě kupní síly (EU27\u00a0=\u00a0100), "
         f"pro státy OECD/EU, {display_year}. "
         f"Přerušovaná čára – regrese OLS."
     ),

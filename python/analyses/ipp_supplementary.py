@@ -80,40 +80,56 @@ apply_style()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-START_YEAR = 2016
+START_YEAR = 2007
 END_YEAR   = 2025
-
-# ── Keyword list shared with ipp_wage_growth.py ───────────────────────────────
-_KEYWORDS = [
-    "sjednaný nárůst základní mzdy",
-    "sjednaný nárůst mzdy",
-    "sjednaný nárůst",
-    "nárůst základní mzdy",
-    "medián nárůstu",
-    "medián sjednané mzdy",
-    "sjednaná mzda",
-]
 
 
 def _extract_ipp_negotiated_increase(path: Path, year: int) -> float | None:
-    """Return the median negotiated basic-wage increase (%) from one IPP file."""
-    for skiprows in range(0, 7):
-        try:
-            df = pd.read_excel(path, sheet_name=0, skiprows=skiprows, header=0)
-            df = df.dropna(how="all").reset_index(drop=True)
-            if df.shape[1] < 2 or df.shape[0] < 1:
-                continue
-            first_col = df.columns[0]
-            for _, row in df.iterrows():
-                cell = str(row[first_col]).lower().strip()
-                if any(kw in cell for kw in _KEYWORDS):
-                    for col in df.columns[1:]:
-                        val = pd.to_numeric(row[col], errors="coerce")
-                        if pd.notna(val) and 0 < val < 200:
-                            return float(val)
-        except Exception as exc:
-            log.debug("skiprows=%d failed: %s", skiprows, exc)
-    log.warning("IPP %d: could not extract negotiated increase from %s", year, path.name)
+    """Return the average negotiated wage increase (%) from one IPP odmenovani file.
+
+    Dynamically locates the ``prům.%`` column (col 9 in 2007–2013, col 11 in
+    2014+) and the "Celkem" row (col 0 in 2009+, col 1 in 2007-era files where
+    the first column is always empty).
+    """
+    try:
+        df = pd.read_excel(path, sheet_name="A15a", header=None)
+    except Exception as exc:
+        log.warning("IPP %d: cannot read A15a from %s: %s", year, path.name, exc)
+        return None
+
+    # Find the 'prům.%' column by scanning the first 15 header rows
+    prumpc_col: int | None = None
+    for row_idx in range(min(15, df.shape[0])):
+        for col_idx in range(df.shape[1]):
+            if str(df.iloc[row_idx, col_idx]).strip() == "prům.%":
+                prumpc_col = col_idx
+                break
+        if prumpc_col is not None:
+            break
+
+    if prumpc_col is None:
+        log.warning("IPP %d: 'prům.%%' column not found in %s", year, path.name)
+        return None
+
+    # Find the 'Celkem' row; check col 0 and col 1
+    celkem_row: int | None = None
+    for row_idx in range(df.shape[0]):
+        for label_col in range(min(2, df.shape[1])):
+            if str(df.iloc[row_idx, label_col]).strip().lower() == "celkem":
+                celkem_row = row_idx
+                break
+        if celkem_row is not None:
+            break
+
+    if celkem_row is None:
+        log.warning("IPP %d: 'Celkem' row not found in %s", year, path.name)
+        return None
+
+    val = pd.to_numeric(df.iloc[celkem_row, prumpc_col], errors="coerce")
+    if pd.notna(val) and 0 < val < 50:
+        return float(val)
+
+    log.warning("IPP %d: could not extract increase from %s", year, path.name)
     return None
 
 
@@ -143,7 +159,7 @@ print("Fetching Eurostat HICP for CZ …")
 try:
     path_hicp = fetch_eurostat(
         "prc_hicp_aind",
-        "A.RCH_A_AVG.HICP.CZ",
+        "A.RCH_A_AVG.CP00.CZ",
         start_period=START_YEAR,
     )
     ds_hicp_raw = Dataset.from_sdmx_csv(
@@ -164,12 +180,12 @@ print("Fetching Eurostat LCI for CZ …")
 lci_growth: dict[int, float] = {}
 try:
     path_lci = fetch_eurostat(
-        "lc_lci_r2",
-        f"A.B-S.LCI.TOTAL.I15.CZ",
+        "lc_lci_r2_a",
+        f"A.I20.B-S.D1_D4_MD5.CZ",
         start_period=START_YEAR - 1,
     )
     ds_lci_raw = Dataset.from_sdmx_csv(
-        path_lci, name="LCI CZ", unit="2015=100", source_url="Eurostat/lc_lci_r2"
+        path_lci, name="LCI CZ", unit="2020=100", source_url="Eurostat/lc_lci_r2_a"
     )
     sub = (
         ds_lci_raw.df
@@ -249,16 +265,10 @@ if years_ah:
     year_range_ah = f"{years_ah[0]}–{years_ah[-1]}"
     save_figure_tex(
         "ipp_neg_vs_inflation",
-        caption=(
-            "ČR: medián sjednaného nárůstu základní mzdy v~kolektivních smlouvách "
-            "(MPSV/IPP, plná čára) a~inflace HICP (Eurostat, přerušovaná čára), "
-            f"{year_range_ah}. "
-            "Zelené plochy označují roky s~reálným nárůstem kupní síly, "
-            "červené plochy roky, kdy inflace převýšila sjednané zvýšení mezd."
-        ),
+        caption=f"Sjednané mzdové nárůsty v~KS versus inflace HICP, {year_range_ah}.",
         label="fig:ipp_neg_vs_inflation",
         width=r"0.95\linewidth",
-        cite_key="mpsv_ipp",
+        cite_keys=["mpsv_ipp", "eurostat_hicp"],
     )
 else:
     print("Figure A skipped – no overlapping IPP + HICP years.")
@@ -320,17 +330,10 @@ if years_bc:
     yr0, yr1 = years_bc[0], years_bc[-1]
     save_figure_tex(
         "ipp_cumulative_real",
-        caption=(
-            f"ČR: kumulativní index nominálních a~reálných mezd ({yr0}\u00a0=\u00a0100), "
-            f"{yr0}\u2013{yr1}. "
-            "Plné čáry\u00a0= sjednaný nárůst v~KS (IPP/MPSV); "
-            "přerušované čáry\u00a0= skutečný nárůst mzdových nákladů (Eurostat LCI); "
-            "tečkovaná čára\u00a0= cenová hladina HICP. "
-            "Reálné řady jsou deflované indexem HICP."
-        ),
+        caption=f"Kumulativní index mezd a~reálné kupní síly, ČR, {yr0}\u2013{yr1}.",
         label="fig:ipp_cumulative_real",
         width=r"0.95\linewidth",
-        cite_key="mpsv_ipp",
+        cite_keys=["mpsv_ipp", "eurostat_lci"],
     )
 else:
     print("Figure B skipped – insufficient overlapping data.")
@@ -389,17 +392,10 @@ if years_c:
     yr0, yr1 = years_c[0], years_c[-1]
     save_figure_tex(
         "ipp_actual_vs_neg_gap",
-        caption=(
-            "ČR: rozdíl mezi skutečným meziroční nárůstem mzdových nákladů "
-            "(Eurostat LCI) a~mediánem sjednaného nárůstu základní mzdy v~KS "
-            f"(MPSV/IPP), {yr0}\u2013{yr1}. "
-            "Kladné hodnoty (zeleně) indikují, že zaměstnavatelé zvyšují mzdy "
-            "nad rámec sjednaného minima; záporné hodnoty (červeně) by naznačovaly "
-            "nedodržování sjednaných nárůstů."
-        ),
+        caption=f"Rozdíl LCI a~sjednaného nárůstu v~KS, ČR, {yr0}\u2013{yr1}.",
         label="fig:ipp_actual_vs_neg_gap",
         width=r"0.95\linewidth",
-        cite_key="mpsv_ipp",
+        cite_keys=["mpsv_ipp", "eurostat_lci"],
     )
 else:
     print("Figure C skipped – no overlapping IPP + LCI years.")
