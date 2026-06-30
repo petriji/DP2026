@@ -206,6 +206,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         show_eu_avg=False,
         background_eu=True,
     )
+    fig_a.axes[0].set_ylim(0, 8)
     # Tooltips: foreground countries + grey EU-27 background lines.
     _ax_a = fig_a.axes[0]
     _pivot_a_fg = nat[nat["geo"].isin(COUNTRIES)].pivot_table(
@@ -273,21 +274,28 @@ except Exception as exc:
 print("\nFigure C: CZ NUTS2 choropleth …")
 try:
     nuts2_data = filt[filt["geo"].str.len() == 4].copy()
-    latest_nuts2 = nuts2_data["time"].max()
-    snap_nuts2 = nuts2_data[nuts2_data["time"] == latest_nuts2].copy()
+    # Use latest non-NaN value per region — improves DE / CZ02 coverage where
+    # the very latest year is sparse.  Each region thus reports its most recent
+    # available estimate.
+    nuts2_data = nuts2_data.sort_values("time")
+    snap_nuts2 = nuts2_data.groupby("geo", as_index=False).tail(1)
+    latest_nuts2 = int(nuts2_data["time"].max())
 
     data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
+    year_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["time"]
 
-    # Flag whether German NUTS2 data is present (often missing in lfst_r_lfe2ecomm).
-    _de_regions = [g for g in data_series.index if g.startswith("DE")]
-    _de_missing = len(_de_regions) == 0
-    if _de_missing:
-        print("  NOTE: German NUTS2 data not available in lfst_r_lfe2ecomm --- "
-              "DE regions render as 'data nedostupná'.")
+    # Region long names from the GISCO NUTS layer (used for PGF tooltips).
+    _nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")
+    _nuts_gdf = gpd.read_file(_nuts_path)
+    _names_map = dict(zip(_nuts_gdf["NUTS_ID"], _nuts_gdf["NAME_LATN"]))
+    label_names = {
+        nid: f"{_names_map.get(nid, nid)} ({int(year_series.get(nid, latest_nuts2))})"
+        for nid in data_series.index
+    }
 
     STRINGS_NUTS2 = {
         "title": (
-            f"\\acs{{geo-CZ}} NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
+            f"\\acs{{geo-CZ}} a~okolí NUTS2: přeshraniční dojíždění ({latest_nuts2}, \acs{{geo-DE}} nejnovější dostupný rok)\n"
             r"\% regionální pracovní síly pracující v~zahraničí"
         ),
         "colorbar_label": r"\% regionální pracovní síly pracující v zahraničí",
@@ -298,25 +306,27 @@ try:
         title=STRINGS_NUTS2["title"],
         colorbar_label=STRINGS_NUTS2["colorbar_label"],
         cmap="RdYlGn_r",
-        label_cz=False,
+        vmin=float(data_series.min()),
+        vmax=float(data_series.max()),
+        label_cz=True,
+        label_nbr=True,
+        label_fmt="{:.1f}",
+        label_names=label_names,
+        label_tooltip_fmt=r"{:.2f}\,\%",
     )
     savefig_pgf(fig_c, "problemy_dojezdeni_nuts2", strings=STRINGS_NUTS2)
-    _de_note = (
-        " Německé regiony nejsou v~datech dostupné."
-        if _de_missing else ""
-    )
     save_figure_tex_pgf(
         "problemy_dojezdeni_nuts2",
         caption=(
-            f"Přeshraniční dojíždění, regiony NUTS2, ČR a~sousední země, {latest_nuts2}. "
+            f"Přeshraniční dojíždění, regiony NUTS2, ČR a~sousední země; nejnovější dostupný rok per region "
+            f"($\\le${latest_nuts2}). "
             r"Hodnoty: podíl regionální pracovní síly pracující v~zahraničí (\%)."
-            f"{_de_note}"
         ),
         label="fig:problemy_dojezdeni_nuts2",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
         strings=STRINGS_NUTS2,
     )
-    print(f"  Figure C done ({latest_nuts2}).")
+    print(f"  Figure C done (latest <= {latest_nuts2}).")
 except Exception as exc:
     print(f"  Figure C skipped: {exc}")
 
