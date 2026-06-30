@@ -466,6 +466,7 @@ Days not worked due to strikes and lockouts per 1 000 workers (annual).
 | Script | Params | Notes |
 |--------|--------|-------|
 | `stav_stavky.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | DK missing → supplemented from Statistics Denmark |
+| `stav_socialni_mir_data.py` | `classif1=ECO_AGGREGATE_TOTAL`, `sex=SEX_T` | Builds B4 strike benchmark snapshot for ternary + social-peace choropleths; DK supplemented from Statistics Denmark |
 
 ---
 

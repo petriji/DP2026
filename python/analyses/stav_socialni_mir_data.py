@@ -206,11 +206,10 @@ def _build_strike_snapshot(force: bool = False) -> tuple[dict[str, float], int]:
     snap, ref_year = _snapshot_latest(all_days)
     missing = [geo for geo in _EU27 if geo not in snap]
     if missing:
-        print(
-            "WARNING: missing strike-days benchmark data for countries: "
+        raise ValueError(
+            "Missing strike-days benchmark data for countries: "
             + ", ".join(missing)
-            + ". They will remain unfilled in the strike choropleth; "
-            + "B4 scoring remains covered by expert scores."
+            + ". Add a documented source or exclude from analysis explicitly."
         )
     return snap, ref_year
 

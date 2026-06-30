@@ -32,7 +32,11 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from analyses._ternary_calc import _B4_STRIKE_DAYS_PER_1000, _build_b4_scores
+from analyses.stav_socialni_mir_data import (
+    build_b4_scores,
+    get_b4_benchmark_year,
+    get_b4_strike_days_per_1000,
+)
 from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
@@ -43,7 +47,7 @@ from stattool.style import (
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
-YEAR = 2025
+YEAR = get_b4_benchmark_year()
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
@@ -52,8 +56,9 @@ apply_style_pgf()
 
 # ── 1. Build benchmark datasets ───────────────────────────────────────────────
 rows: list[dict[str, float | int | str]] = []
-_score_series = _build_b4_scores()
-for geo, days in sorted(_B4_STRIKE_DAYS_PER_1000.items()):
+_score_series = build_b4_scores()
+_strike_days = get_b4_strike_days_per_1000()
+for geo, days in sorted(_strike_days.items()):
     rows.append(
         {
             "geo": geo,
