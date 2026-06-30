@@ -1,4 +1,35 @@
 $out_dir = 'build';
+
+# ── Auto-generate figures before LaTeX build ──────────────────────────────────
+# Calls python/stats_analytics.py which is a fast no-op when all PDFs and .tex
+# snippets already exist (e.g. after a git clone).  Only runs Python scripts
+# when a file is missing or --force is used.
+#
+# The venv is resolved in order:
+#   1. python/.venv   (created by python/setup_venv.sh, preferred)
+#   2. ~/.venvs/dp_thesis  (legacy location)
+#   3. plain python3  (system Python, if deps are installed globally)
+#
+# To skip this step entirely, set SKIP_PYTHON_ANALYTICS=1 in the environment.
+{
+    unless ($ENV{SKIP_PYTHON_ANALYTICS}) {
+        my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
+        my $script = "$proj/../python/stats_analytics.py";
+
+        if (-f $script) {
+            my $venv1  = "$proj/../python/.venv/bin/python";
+            my $venv2  = "$ENV{HOME}/.venvs/dp_thesis/bin/python";
+            my $python = -f $venv1 ? $venv1
+                       : -f $venv2 ? $venv2
+                       : 'python3';
+
+            my $rc = system($python, $script);
+            if ($rc != 0) {
+                die "stats_analytics.py failed (exit " . ($rc >> 8) . "). Aborting LaTeX build.\n";
+            }
+        }
+    }
+}
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
@@ -133,80 +164,3 @@ sub ctu_update_citcount {
     }
 }
 add_hook('before_xlatex', \&ctu_update_citcount);
-
-# ---------------------------------------------------------------------------
-# Poster metadata — figure / table / attachment counts + git repo URL & tag.
-# Written to build/main-stats.tmp and consumed by CTUposter.cls so the poster
-# can display thesis-level totals without re-typesetting the thesis itself.
-#
-# Counts:
-#   figures      — \contentsline {figure} entries in build/main.lof
-#   tables       — \contentsline {table}  entries in build/main.lot
-#   attachments  — \item lines in texparts/references/list_attachments.tex
-#                  (simple regex; ignores commented-out lines)
-# Git:
-#   repo URL is normalised to https://host/owner/repo  (strips .git, ssh→https)
-#   tag is the most recent annotated tag matching `git describe --tags`.
-#   When no tag exists yet (e.g. the publication tag has not been created),
-#   we fall back to the current short commit hash; both URL fragments are
-#   exposed so the class can choose.  The user may override either via
-#   \posterrepo{}/\posterrepotag{} in the poster preamble.
-sub ctu_update_poster_stats {
-    my $tmp = "$out_dir/main-stats.tmp";
-    my $lof = "$out_dir/main.lof";
-    my $lot = "$out_dir/main.lot";
-    my $att = 'texparts/references/list_attachments.tex';
-
-    # mtime guard: rerun when any source is newer than the tmp.
-    return unless ctu_needs_update($tmp, $lof, $lot, $att);
-
-    my $nfig = 0;
-    if (-f $lof && open my $fh, '<', $lof) {
-        while (<$fh>) { $nfig++ if /\\contentsline\s*\{figure\}/; }
-        close $fh;
-    }
-    my $ntab = 0;
-    if (-f $lot && open my $fh, '<', $lot) {
-        while (<$fh>) { $ntab++ if /\\contentsline\s*\{table\}/; }
-        close $fh;
-    }
-    my $natt = 0;
-    if (-f $att && open my $fh, '<', $att) {
-        while (<$fh>) {
-            next if /^\s*%/;          # skip full-line comments
-            $natt++ if /(?<!\\)\\item\b/;
-        }
-        close $fh;
-    }
-
-    # Git remote URL → normalised https form.
-    my $remote = `git config --get remote.origin.url 2>/dev/null` // '';
-    chomp $remote;
-    my $repo = '';
-    if ($remote =~ m{^git\@([^:]+):(.+?)(?:\.git)?$}) {
-        $repo = "https://$1/$2";
-    } elsif ($remote =~ m{^https?://[^/]+/.+}) {
-        $repo = $remote;
-        $repo =~ s/\.git$//;
-    }
-
-    # Latest tag (may not exist yet — that's intentional, see class doc).
-    my $tag = `git describe --tags --abbrev=0 2>/dev/null` // '';
-    chomp $tag;
-    # Short commit hash as a fallback "ref".
-    my $sha = `git rev-parse --short HEAD 2>/dev/null` // '';
-    chomp $sha;
-
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $out, '>', $tmp) {
-        print $out "\\makeatletter\n";
-        print $out '\gdef\@CTUnfigures{'     . $nfig . "}\n";
-        print $out '\gdef\@CTUntables{'      . $ntab . "}\n";
-        print $out '\gdef\@CTUnattachments{' . $natt . "}\n";
-        print $out '\gdef\@CTUgitrepo{'      . $repo . "}\n";
-        print $out '\gdef\@CTUgittag{'       . $tag  . "}\n";
-        print $out '\gdef\@CTUgitsha{'       . $sha  . "}\n";
-        print $out "\\makeatother\n";
-    }
-}
-add_hook('before_xlatex', \&ctu_update_poster_stats);
