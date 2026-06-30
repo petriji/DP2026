@@ -128,7 +128,7 @@ def main() -> None:
     vmax_map = max(values_map.values()) if values_map else 40.0
 
     strings_map = {
-        "title": f"Vývoj kombinované sazby \\acs{{DPPO}}",
+        "title": f"Kombinovaná sazba \\acs{{DPPO}} ({ds.latest_year})",
         "colorbar_label": r"sazba [\si{\percent}]",
     }
     fig_map = choropleth(

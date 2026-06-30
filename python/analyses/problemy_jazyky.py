@@ -196,7 +196,7 @@ try:
         ),
         cbar_label=r"\% populace 25--64",
         stem="problemy_jazyky_celkem",
-        caption=f"Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) se znalostí alespoň 2~cizích jazyků, \\acs{{geo-EU27}}, 2022",
+        caption=f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, \\acs{{geo-EU27}}, 2022",
         label="fig:problemy_jazyky_celkem",
         year=latest_l21,
     )

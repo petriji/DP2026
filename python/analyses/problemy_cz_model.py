@@ -45,7 +45,7 @@ STRINGS_SOLIDARITA = {
 }
 STRINGS_KLIN = {
     "xlabel": XLABEL_NAKLADY,
-    "ylabel": "daňový klín [%]",
+    "ylabel": "daňový klín [\\%]",
 }
 STRINGS_NETINCOME = {
     "xlabel": XLABEL_NAKLADY,
