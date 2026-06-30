@@ -174,6 +174,7 @@ After editing, use the new ID in the formatted text immediately.
 - **Always** `\cite{key}` — **never** `\parencite{}` (not loaded).
 - Place citations at the **end of a logical block** (typically end of paragraph), after the terminal punctuation: `…shrnutí argumentu.~\cite{key}`.
 - Avoid inline citations in the middle of running prose; attach one cite-block to the closing claim of the block.
+- **Exception — `\caption{}` text:** In-sentence citation is correct and must be kept. The canonical forms are `Zdroj dat: <Název>~\cite{key}` and `Převzato z~\cite{key}`. Never move these to a separate end-of-sentence position.
 - If the citation key is unknown, write `\cite{TODO}` with a `% TODO: doplnit klíč` comment.
 - Multiple consecutive citations must be separated by a non-breaking space: `\cite{key1}~\cite{key2}`.
 
@@ -241,7 +242,7 @@ Example: `v~\hyperref[p:teorie]{teoretické části}` — renders "v teoretické
 \paragraph{Dánský model flexicurity}\label{par:dk_model}
 Zlatý trojúhelník flexicurity…
 ```
-or (single-line form, prefferable):
+or (single-line form):
 ```latex
 \paragraph{Dánský model flexicurity} je v~evropském srovnání…
 ```
@@ -366,7 +367,7 @@ Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_vari
 | **Error** | `„word"` (U+201E + ASCII) | — | ❌ `Unbalanced groups` |
 | **Error** | `„word"` (U+201E + U+201C) | — | ❌ `Unbalanced groups` |
 
-**When writing new content:** use `"word"` or fallback to `\enquote{word}`.
+**When writing new content:** use `"word"` or `\enquote{word}`.
 
 **Violations to detect and fix** — only mismatched Unicode pairs:
 
