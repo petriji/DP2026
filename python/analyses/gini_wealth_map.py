@@ -70,8 +70,7 @@ savefig(fig, "wealth_top10_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "wealth_top10_map",
     caption=(
-        f"Podíl horních 10\\,\\% domácností na celkovém čistém jmění "
-        f"v~evropských zemích (nejnovější dostupná data OECD HFCS, do {ds.latest_year}). "
+        f"Majetkové nerovnosti: top 10\,\%, EU, do {ds.latest_year}). "
         "Šedá = data nedostupná."
     ),
     label="fig:wealth_top10_map",

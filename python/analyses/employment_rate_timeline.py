@@ -78,8 +78,7 @@ savefig(fig, "employment_rate_timeline", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "employment_rate_timeline",
     caption=(
-        f"Vývoj míry zaměstnanosti osob ve věku 20–64 let, "
-        f"{START_YEAR}--{ds.years[-1]}."
+        f"Míra zaměstnanosti (20--64 let), {START_YEAR}--{ds.years[-1]}."
     ),
     label="fig:employment_rate_timeline",
     width=r"0.95\linewidth",

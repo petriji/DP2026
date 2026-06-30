@@ -83,8 +83,7 @@ savefig(fig, "gini_income_timeline", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "gini_income_timeline",
     caption=(
-        f"Vývoj Giniho koeficientu disponibilního příjmu domácností "
-        f"(po zdanění a transferech), "
+        f"Vývoj Giniho koeficientu disponibilního příjmu, {START_YEAR}--{ds.years[-1]}., "
         f"{START_YEAR}--{ds.years[-1]}."
     ),
     label="fig:gini_income_timeline",
