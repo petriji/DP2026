@@ -321,3 +321,9 @@ sub ctu_update_poster_stats {
     ctu_write_if_changed($tmp, $content);
 }
 add_hook('before_xlatex', \&ctu_update_poster_stats);
+
+# ── Preserve main.aux for post-build tools ────────────────────────────────────
+# After every successful main.tex build, copy build/main.aux to
+# build/main_for_tools.aux so external scripts (e.g. stats_analytics.py)
+# can resolve figure numbers even when the build artifacts are cleaned.
+$success_cmd = 'cp build/main.aux build/main_for_tools.aux 2>/dev/null; true';
