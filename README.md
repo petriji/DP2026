@@ -23,6 +23,20 @@ Full step-by-step environment setup (WSL/Windows, native Linux, macOS) lives in
 **[README_SETUP.md](README_SETUP.md)** — start there if you are setting up the
 project for the first time.
 
+A prebuilt, GitHub-hosted container image (GHCR) is available — no local
+Docker build required:
+
+```bash
+docker pull ghcr.io/petriji/dp2026-thesis:latest
+docker run --rm -it -v "$PWD":/workspace/DP2026 -w /workspace/DP2026 \
+  ghcr.io/petriji/dp2026-thesis:latest bash tools/docker_verify_full_build.sh
+```
+
+The image is built and published automatically by
+`.github/workflows/docker-ghcr.yml` on every push to `main`. Building locally
+via `Dockerfile` + `docker-compose.yml` is also possible and documented in
+[README_SETUP.md](README_SETUP.md), but not required.
+
 Once TeX Live and Python are installed:
 
 ```bash

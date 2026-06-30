@@ -5,13 +5,68 @@ This guide walks a new contributor through setting up a working environment to
 repository assumed. Pick the option matching your OS in each step; the rest of
 the guide (cloning, compiling, Python pipeline) is the same for everyone.
 
-> A container-based setup (Docker/Devcontainer) is planned as a follow-up to
-> this guide; until then, use one of the native options below.
+> A ready-to-use container setup is available for this repository and future
+> clones of `DP2026`. The **primary path is the prebuilt GitHub-hosted image
+> (GHCR)** — no local Docker build required. Building locally via
+> `Dockerfile`/`docker-compose.yml` remains available as an optional
+> alternative for contributors who want to modify the container itself.
 
 What you'll end up with:
 - A working TeX Live installation (`pdflatex`, `latexmk`, `biber`)
 - A Python 3.10+ virtual environment for the data/figure pipeline
 - (Optional) VS Code with LaTeX Workshop for an integrated build workflow
+
+---
+
+## Container Quick Start (Docker) — recommended: prebuilt GHCR image
+
+The fastest way to get a working environment is to pull the prebuilt image —
+no local Docker build, no manual TeX Live/Python install.
+
+- Workflow that builds/publishes it: `.github/workflows/docker-ghcr.yml`
+- Published image: `ghcr.io/petriji/dp2026-thesis`
+- Auto-publish on push to `main` and on version tags (`v*`)
+
+**This requires the repository to have been pushed to GitHub at least once
+with this workflow present, and the workflow to have run successfully** (on
+push to `main`, or manually via the Actions tab). Until then, no image exists
+yet at `ghcr.io/petriji/dp2026-thesis` to pull.
+
+Pull and run the hosted image (works with this repo or a future `DP2026`
+clone, unchanged):
+
+```bash
+git clone https://github.com/petriji/DP2026.git
+cd DP2026
+
+docker pull ghcr.io/petriji/dp2026-thesis:latest
+docker run --rm -it -v "$PWD":/workspace/DP2026 -w /workspace/DP2026 \
+  ghcr.io/petriji/dp2026-thesis:latest bash tools/docker_verify_full_build.sh
+```
+
+Requires a working local Docker installation with access to the Docker
+daemon/socket (or an equivalent runtime such as Podman). If you don't have
+Docker available locally, use the native setup in Step 1 onward instead.
+
+### Optional: build the image locally instead of pulling from GHCR
+
+Useful only if you are modifying the `Dockerfile` itself.
+
+```bash
+# From repository root
+docker compose build dp2026
+
+# Open a shell in the container
+docker compose run --rm dp2026 bash
+
+# Verify full pipeline + thesis build
+docker compose run --rm dp2026 bash tools/docker_verify_full_build.sh
+```
+
+Container defaults:
+- Workdir in container: `/workspace/DP2026`
+- Repository mounted to: `/workspace/DP2026`
+- Persistent venv volume: `dp2026-venv` (mounted to `/workspace/DP2026/.venv`)
 
 ---
 

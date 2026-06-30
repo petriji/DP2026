@@ -1,0 +1,18 @@
+services:
+  dp2026:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dp2026-thesis:latest
+    container_name: dp2026-thesis
+    working_dir: /workspace/DP2026
+    volumes:
+      - ./:/workspace/DP2026
+      - dp2026-venv:/workspace/DP2026/.venv
+    environment:
+      - VENV_DIR=/workspace/DP2026/.venv
+    stdin_open: true
+    tty: true
+
+volumes:
+  dp2026-venv:
