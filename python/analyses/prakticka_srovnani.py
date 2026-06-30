@@ -21,8 +21,8 @@ Indicator set (2025 / latest available):
   12. Active LMP spending [% GDP]                -- OECD LMPEXP (→ -- on error)
   13. Old-age dependency ratio (65+) [%]         -- demo_pjanind OLDDEP1
 
-Row labels embed \cite{} for non-italic rows; caption contains year only.
-Sub-rows (↳) and the derived row 5 are wrapped in \textit{} via italic_rows.
+Row labels embed \cite{} for non-derived rows; caption contains year only.
+The derived row italicizes only its descriptive label; the unit and values stay upright.
 
 Output
 ------
@@ -116,9 +116,6 @@ def _row(label: str, values: dict[str, float], fmt: str = "{:.1f}",
 def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, float],
                 fmt: str = "{:.1f}", idx_fmt: str = "{:.0f}", unit: str = "") -> dict:
     r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (\SI{idx}{\percent})``.
-
-    When the whole row is italic (derived indicator), the caller wraps via italic_rows
-    in table.py --- \textit{} around the cell content preserves the \newline.
     """
     def _cell(c: str) -> str:
         v = values.get(c)
@@ -553,12 +550,12 @@ L_GDP      = _m(r"HDP [\si{\pps\per\person\per\hour}]~\cite{eurostat_nama_10_pc}
 L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
 L_HRS      = _m(r"Odpracované hodiny \newline (průměr) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
 L_TAX      = _m(r"Daňový klín \newline (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
-L_DISP     = r"Čistý disponibilní příjem \newline (průměrný) [\si{\pps\per\hour}]"  # italic --- derived, no \cite{}
+L_DISP     = r"\textit{Čistý disponibilní příjem \newline (průměrný)} [\si{\pps\per\hour}]"  # derived, no \cite{}
 L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci \newline (\SI{67}{\percent} mediánu)~\cite{eurostat_earn_ses_pub1s}", "Nízkopříjm. zaměst.")
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost \newline (20--64~let)~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
 L_JVR      = _m(r"Volná pracovní místa~\cite{eurostat_jvs_a_r21}", "JVR")
-L_CBA      = _m(r"Pokrytí \ac{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
+L_CBA      = _m(r"Pokrytí \acs{KS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
 L_DENSITY  = _m(r"Odborová organizovanost~\cite{oecd_aias_ictwss_TUD_pct}", "Odborová organizovanost")
 L_APZ      = _m(r"Výdaje na \acs{APZ} \newline (poměr k~\acs{HDP})~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
@@ -574,7 +571,7 @@ rows = [
     _row_merged(L_HRS, v_hrs, v_hrs_idx, fmt="{:.1f}", unit=r"\hour"),
     # ── Tax group ─────────────────────────────────────────────────────────────
     _row(L_TAX,      v_tax,      fmt="{:.1f}",  unit=r"\percent"),
-    # ── Derived disposable income (italic, no \cite{}) + CZ=100 index ────────
+    # ── Derived disposable income (italic label, no \cite{}) + CZ=100 index ──
     _row_merged(L_DISP, v_disp, v_disp_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Low-wage earners ──────────────────────────────────────────────────────
     _row(L_LOWWAGE,  v_lowwage,  fmt="{:.1f}",  unit=r"\percent"),
@@ -597,11 +594,7 @@ df_table = (
 )
 df_table = df_table[[COUNTRY_LABELS[c] for c in COUNTRIES]]
 
-# ── 5. Structural parameters ──────────────────────────────────────────────────
-
-italic_rows = [L_DISP]  # derived row --- whole row italic
-
-# ── 6. Write LaTeX table ──────────────────────────────────────────────────────
+# ── 5. Write LaTeX table ──────────────────────────────────────────────────────
 
 # Build footnote: one entry per fallback year with its letter marker.
 _deviation_note = ""
@@ -624,13 +617,12 @@ save_table_tex(
     note=(
         r"Úplné náklady práce v~\si{\pps\per\hour} přepočteny z~\si{\eur\per\hour} současným \acs{PLI}. "
         r"Daňový klín pro bezdětnou svobodnou osobu. "
-        r"Pokrytí \ac{KS}: \ac{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
+        r"Pokrytí \acs{KS}: \acs{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format=r"@{}>{\raggedright\arraybackslash\rule[-0.6ex]{0pt}{2.8ex}}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
-    italic_rows=italic_rows,
     long_table=True,
     arraystretch=1.3,
     sans_serif=False,
