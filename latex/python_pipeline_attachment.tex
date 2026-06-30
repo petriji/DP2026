@@ -91,13 +91,14 @@
 \hrule height 0.5pt
 \vspace{0.8\baselineskip}
 
-\section*{Účel a hranice pipeline}
+\section*{Účel a hranice roury \textit{(pipeline)}}
 Python část repozitáře vytváří reprodukovatelné obrázky, tabulky a krátké
-\LaTeX{}ové vstupy používané v hlavním textu práce. Pipeline není obecný datový
-sklad: je to řízený build řetězec, který spojuje zdrojová data, lokální cache,
-jednotlivé analýzy, registr výstupů a \LaTeX{}ový dokument. Ruční zásahy patří
-do komentářů a do git-tracked wrapperů PGF obrázků, nikoli do generovaných
-souborů v \texttt{latex/texparts/python/}.
+\LaTeX{}ové vstupy používané v hlavním textu práce. Roura \textit{(pipeline)} není obecný datový
+sklad: je to řízený řetězec sestavení \textit{(build)}, který spojuje zdrojová
+data, lokální mezipaměť \textit{(cache)}, jednotlivé analýzy, registr výstupů
+a \LaTeX{}ový dokument. Ruční zásahy patří do komentářů a do git-tracked
+obalů \textit{(wrappers)} PGF obrázků, nikoli do generovaných souborů
+v \texttt{latex/texparts/python/}.
 
 \begin{center}
 \resizebox{\linewidth}{!}{%
@@ -125,10 +126,10 @@ vykreslováním aplikuje jednotný styl. Tím je zajištěno, že změna šablon
 barevné palety nebo způsobu exportu nevyžaduje úpravy v hlavním textu.
 
 \section*{Řízení generování}
-Orchestrátor \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
+Orchestrátor \textit{(orchestrator)} \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
 \texttt{latex/main.tex} a všechny aktivní \texttt{\textbackslash input} soubory.
 Zachytává jen výstupy vložené jako \texttt{texparts/python/STEM} nebo
-\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené stemmy
+\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené kořeny \textit{(stems)}
 s registrem \texttt{python/analytics\_registry.toml}; spustí pouze ty skupiny,
 které jsou v textu skutečně použité a kterým chybí očekávaný výstup, případně
 ty, které byly vynuceny volbou \texttt{--force}.
@@ -172,9 +173,10 @@ pics     = ["eu_prijem_pps"]
 \end{pipelinecode}
 
 Minimální analýza má stejnou kostru bez ohledu na zdroj dat: import cest a
-stylu, stažení dat přes helper, zpracování v pandas, vykreslení a zápis
-\LaTeX{}ového wrapperu. Při PGF backendu se text v grafu renderuje až v hlavním
-dokumentu, takže v popiscích fungují makra jako \texttt{\textbackslash SI\{\}\{\}}
+stylu, stažení dat přes pomocnou funkci \textit{(helper)}, zpracování v pandas,
+vykreslení a zápis obalu \textit{(wrapper)} v \LaTeX{}u. Při PGF podložce
+\textit{(backend)} se text v grafu renderuje až v hlavním dokumentu, takže
+v popiscích fungují makra jako \texttt{\textbackslash SI\{\}\{\}}
 nebo \texttt{\textbackslash acs\{geo-CZ\}}.
 
 \begin{pipelinecode}[Kostra analytického skriptu]
@@ -199,11 +201,12 @@ save_figure_tex_pgf(
 \end{pipelinecode}
 
 \section*{Výstupy a ruční úpravy}
-PDF backend vytváří hotový graf a wrapper, který jej vkládá přes
-\texttt{\textbackslash includegraphics}. PGF backend vytváří zdrojový
-\texttt{.pgf} fragment v \texttt{python/figures/}, jednořádkový kompatibilní
-wrapper v \texttt{latex/texparts/python/} a editovatelný soubor v
-\texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
+Podložka \textit{(backend)} PDF vytváří hotový graf a obal \textit{(wrapper)},
+který jej vkládá přes \texttt{\textbackslash includegraphics}. Podložka
+\textit{(backend)} PGF vytváří zdrojový \texttt{.pgf} fragment
+v \texttt{python/figures/}, jednořádkový kompatibilní obal \textit{(wrapper)}
+v \texttt{latex/texparts/python/} a editovatelný soubor
+v \texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
 deduplikují do \texttt{python/figures/\_shared/}. Výsledkem je, že velké
 mapy mohou zůstat datově generované, ale jejich titulky a textové řetězce lze
 ladit v \LaTeX{}u.
@@ -216,11 +219,13 @@ ladit v \LaTeX{}u.
   \item \texttt{latex/texparts/commentary/}: metodické a interpretační odstavce.
 \end{itemize}
 
-\section*{Build a kontrola}
+\section*{Sestavení \textit{(build)} a kontrola}
 Ve VS Code je běžný postup zachycen v receptech LaTeX Workshopu: recept s
 analytics nejprve spustí \texttt{setup\_venv}, poté \texttt{stats\_analytics.py}
-a až potom LaTeX build. Při ručním buildu lze pipeline spustit explicitně nebo
-nastavit \texttt{RUN\_PYTHON\_ANALYTICS=1} pro pre-build hook v \texttt{latexmkrc}.
+a až potom sestavení \textit{(build)} v \LaTeX{}u. Při ručním sestavení
+\textit{(build)} lze rouru \textit{(pipeline)} spustit explicitně nebo nastavit
+\texttt{RUN\_PYTHON\_ANALYTICS=1} pro háček před sestavením \textit{(pre-build hook)}
+v \texttt{latexmkrc}.
 
 \begin{pipelinecode}[Ruční build]
 cd latex
@@ -231,6 +236,6 @@ latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build python_pipe
 Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
 \texttt{texparts/python} výstup se řeší během Pythonu, chyba v citaci nebo makru
 se řeší v \LaTeX{}u a ručně upravený generovaný texpart se nefixuje na místě,
-ale vrací se do příslušného skriptu nebo do editovatelného PGF wrapperu.
+ale vrací se do příslušného skriptu nebo do editovatelného obalu \textit{(wrapper)} PGF.
 
 \end{document}
