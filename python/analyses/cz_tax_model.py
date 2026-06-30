@@ -68,8 +68,11 @@ TAX_THRESHOLD_MONTHLY: int  = 3 * AVG_WAGE  # 146 901 Kč/měsíc (2026)
 SLEVA_POPLATNIK_MONTHLY: int = 2_570  # Kč/měsíc (= 30 840 Kč/rok)
 
 # Odvody zaměstnance
-EMPLOYEE_SOCIAL_RATE: float = 0.071  # 7,1 % z hrubé mzdy (SP, § 7 zák. č. 589/1992 Sb.)
-EMPLOYEE_HEALTH_RATE: float = 0.045  # 4,5 % z hrubé mzdy (ZP, § 2 zák. č. 592/1992 Sb.)
+# SP zaměstnance: zákon č. 589/1992 Sb. § 7; od 2024 zahrnuje nemocenské (zák. č. 270/2023 Sb.)
+EMPLOYEE_PENSION_RATE:  float = 0.065  # 6,5 % důchodové pojištění
+EMPLOYEE_SICKNESS_RATE: float = 0.006  # 0,6 % nemocenské pojištění (od 2024)
+EMPLOYEE_SOCIAL_RATE:   float = EMPLOYEE_PENSION_RATE + EMPLOYEE_SICKNESS_RATE  # 7,1 % celkem
+EMPLOYEE_HEALTH_RATE:   float = 0.045  # 4,5 % z hrubé mzdy (ZP, § 2 zák. č. 592/1992 Sb.)
 
 # Odvody OSVČ
 OSVC_ZP_BASE_RATIO:   float = 0.50   # ZP VZ = 50 % ze ZD (§ 3a zák. č. 592/1992 Sb.)
