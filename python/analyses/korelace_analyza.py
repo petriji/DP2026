@@ -416,7 +416,7 @@ lines = [
     r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}.}",
     r"\label{tab:korelace_tabulka}",
     r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4cm}"
-    r"*{6}{>{\centering\arraybackslash}m{1.5cm}}@{}}",
+    r"*{6}{>{\centering\arraybackslash}m{1.40cm}}@{}}",
     r"\toprule",
     rf"\bfseries Ukazatel & \bfseries $n_{{\text{{panel}}}}$ "
     rf"& \bfseries $n_{{\text{{geo}}}}$ & \bfseries $r$ & "
@@ -556,7 +556,7 @@ pred_lines = [
     rf"\SI{{{_cz_cov_str}}}{{\percent}} na~\SI{{{_target_str}}}{{\percent}}.}}",
     r"\label{tab:model_cz}",
     r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{8cm}"
-    r"*{4}{>{\centering\arraybackslash}m{1.5cm}}@{}}",
+    r"*{4}{>{\centering\arraybackslash}m{1.40cm}}@{}}",
     r"\toprule",
     rf"\bfseries Ukazatel & \bfseries $y_{{{_max_year}}}$ "
     r"& \bfseries $\hat{\beta}$ (na \SI{}{\pp}) "
