@@ -669,7 +669,7 @@ save_table_tex(
         r"Pokrytí \acs{KS}: \acs{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}m{1.35cm}}@{}",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{4.6cm}*{6}{>{\centering\arraybackslash}p{1.35cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
     long_table=True,
