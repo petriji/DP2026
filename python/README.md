@@ -82,7 +82,26 @@ python/
     ├── employment_rate_timeline.py – Employment rate timeline
     ├── income_pps_map.py   – Income in PPS choropleth
     ├── gini_income_timeline.py – Gini coefficient timeline
-    └── wage_pension_distribution.py – Wage–pension distribution
+    ├── wage_pension_distribution.py – Wage–pension distribution
+    ├── gini_wealth_map.py      – Gini wealth coefficient choropleth map
+    ├── gini_wealth_timeline.py – Gini wealth inequality over time
+    ├── wealth_top20_timeline.py – Wealth shares (top 20 %) over time
+    ├── kv_coverage_map.py      – Collective agreement coverage choropleth
+    ├── correlation_analyses.py – KV coverage correlation analyses
+    ├── coverage_income_scatter.py – KV coverage vs. income scatter
+    ├── ipp_ca_breadth.py       – IPP collective agreement breadth
+    ├── sector_wages_net_pps.py – Sector net wages in PPS
+    ├── public_private_wages.py – Public vs. private sector wage comparison
+    ├── gender_wage_stratification.py – Wage stratification by gender
+    ├── union_density_map.py    – Trade union density choropleth map
+    ├── lmp_expenditure_map.py  – LMP expenditure choropleth map
+    ├── pli_map.py              – Price level index choropleth map
+    ├── self_employment_map.py  – Self-employment rate choropleth map
+    ├── net_income_ratio_timeline.py – Net income ratio timeline
+    ├── natality_timeline.py    – Natality (TFR) maps and timeline
+    ├── language_skills.py      – Language skills maps (age, ISCED, total)
+    ├── cross_border_commuting.py – Cross-border commuting maps and timeline
+    └── emigration_cz.py        – Czech emigration timeline
 ```
 
 ## Adding a new figure
