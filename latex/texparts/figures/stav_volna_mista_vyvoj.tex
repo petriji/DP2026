@@ -5,17 +5,17 @@
 \def\strStavVolnaMistaVyvojYlabel{volná pracovní místa [\%]}%
 % --- Per-label y-nudge knobs (override with \renewcommand)
 % Example: \renewcommand\NudgeStavVolnaMistaVyvojCz{-3pt}  % shift label up by 3pt
-\providecommand\NudgeStavVolnaMistaVyvojCz{2pt}%
+\providecommand\NudgeStavVolnaMistaVyvojCz{0pt}%
 \providecommand\NudgeStavVolnaMistaVyvojAt{0pt}%
 \providecommand\NudgeStavVolnaMistaVyvojDe{0pt}%
 \providecommand\NudgeStavVolnaMistaVyvojDk{0pt}%
-\providecommand\NudgeStavVolnaMistaVyvojPl{6pt}%
+\providecommand\NudgeStavVolnaMistaVyvojPl{0pt}%
 \providecommand\NudgeStavVolnaMistaVyvojSk{0pt}%
-\def\strStavVolnaMistaVyvojCaption{Vývoj míry volných pracovních míst, \acs{EU}, 2010--2025. Zdroj dat: Eurostat~\cite{eurostat_jvs_a_r21}.}%
+\def\strStavVolnaMistaVyvojCaption{Vývoj míry volných pracovních míst, vybrané země \acs{EU}, 2010--2025. Přerušovaně: 5letý klouzavý průměr pro \acs{geo-CZ}. Zdroj dat: Eurostat.~\cite{eurostat_jvs_a_r21}}%
 %
-\begin{figure}[htb]
+\begin{figure}[htbp]
   \centering
-  \input{../python/figures/stav_volna_mista_vyvoj.pgf}
+  \resizebox{\linewidth}{!}{\input{../python/figures/stav_volna_mista_vyvoj.pgf}}
   \caption{\strStavVolnaMistaVyvojCaption}
   \label{fig:stav_volna_mista_vyvoj}
 \end{figure}

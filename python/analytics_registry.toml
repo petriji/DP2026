@@ -266,8 +266,14 @@ pics     = ["eu_mne_mapa"]
 script   = "analyses/eu_bohatstvi_top1_wid.py"
 texparts = ["eu_bohatstvi_top1_wid"]
 pics     = ["eu_bohatstvi_top1_wid"]
+
 [stav_socialni_mir_mapa]
 script   = "analyses/stav_socialni_mir_mapa.py"
 texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
 pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+
+[stav_volna_mista_vyvoj]
+script   = "analyses/stav_volna_mista_vyvoj.py"
+texparts = ["stav_volna_mista_vyvoj"]
+pics     = ["stav_volna_mista_vyvoj"]
 
