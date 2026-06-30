@@ -129,11 +129,11 @@ def load_pli(*, start_period: int = 2005) -> Dataset:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 4. Active LMP expenditure (OECD LMPEXP, categories 2–7, % GDP)
+# 4. Active LMP expenditure (OECD LMPEXP, categories 2--7, % GDP)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_lmp_active(*, start_period: int = 1998) -> Dataset:
-    """Load active LMP expenditure (cat. 2–7) as % GDP."""
+    """Load active LMP expenditure (cat. 2--7) as % GDP."""
     path = fetch_oecd("LMPEXP", start_period=start_period)
     raw = pd.read_csv(path)
     raw = raw[

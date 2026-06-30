@@ -1,5 +1,5 @@
 r"""
-Correlation analyses – CB coverage vs labour-market outcomes.
+Correlation analyses -- CB coverage vs labour-market outcomes.
 
 Produces a combined 2×2 scatter figure (latest available year) and a
 correlation table (Pearson r and Spearman ρ).
@@ -54,11 +54,11 @@ from analyses._shared_data import load_cb_coverage, load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK", "SI", "ES"]
+HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK", "IT", "SE"]
 START_YEAR = 2004
 
-# Extend COUNTRY_COLORS at runtime for SI/ES (config.py not modified on disk)
-COUNTRY_COLORS.update({"SI": "#17becf", "ES": "#e377c2"})  # teal, pink
+# Extend COUNTRY_COLORS at runtime for IT/SE (config.py not modified on disk)
+COUNTRY_COLORS.update({"IT": "#17becf", "SE": "#e377c2"})  # teal, pink
 
 # Ireland is excluded from all analyses: its GDP/cap (EU27=100 ≈ 237) is heavily
 # distorted by large multinationals domiciled in IE for EU tax purposes (transfer
@@ -89,14 +89,14 @@ path_hours = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# Net annual earnings (PPS) – single person, no children, 100% AW
+# Net annual earnings (PPS) -- single person, no children, 100% AW
 path_net = fetch_eurostat(
     "earn_nt_net",
     "A.PPS.NET.P1_NCH_AW100.",
     start_period=START_YEAR,
 )
 
-# Gender pay gap (%) – total economy B-S_X_O
+# Gender pay gap (%) -- total economy B-S_X_O
 path_gpg = fetch_eurostat(
     "earn_gr_gpgr2",
     "A.PC.B-S_X_O.",
@@ -375,7 +375,7 @@ for pair in _PAIRS:
         ry = merged["y"].rank(method="average")
         r_spearman = rx.corr(ry, method="pearson")
     r_yr, yr, n_akt = _corr_for_latest_year(pair["ds_x"], pair["ds_y"])
-    # Diagnostic: Pearson–Spearman divergence
+    # Diagnostic: Pearson--Spearman divergence
     if not (pd.isna(r_pearson) or pd.isna(r_spearman)) and abs(r_pearson - r_spearman) > 0.12:
         print(f"  WARNING: |r − ρ| = {abs(r_pearson - r_spearman):.3f} for {pair['label']}")
     rows.append({
@@ -392,7 +392,7 @@ for pair in _PAIRS:
 
 # Build LaTeX table
 def _fmt_r(r: float) -> str:
-    return "–" if pd.isna(r) else f"{r:.3f}"
+    return "--" if pd.isna(r) else f"{r:.3f}"
 
 # Determine the single "latest year" label for the header
 _years = [row["year"] for row in rows if row["year"]]
@@ -432,5 +432,146 @@ tex_dir.mkdir(parents=True, exist_ok=True)
 table_path = tex_dir / "korelace_tabulka.tex"
 table_path.write_text("\n".join(lines), encoding="utf-8")
 print(f"Correlation table written to {table_path}")
+
+# ── 6. Prediction table: CZ at 80 % coverage ──────────────────────────────────
+print("Generating prediction table for CZ …")
+
+TARGET_COVERAGE = 80.0
+
+# Current CZ coverage (latest available year)
+_cbc_cz = ds_cbc.df[ds_cbc.df[ds_cbc.geo_col] == "CZ"].dropna(subset=[ds_cbc.value_col])
+_cz_cov_val = float(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.value_col].iloc[-1])
+_cz_cov_year = int(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.time_col].iloc[-1])
+_delta_x = TARGET_COVERAGE - _cz_cov_val
+
+
+def _get_cz_latest(ds: "Dataset") -> tuple[float, int]:
+    """Return (value, year) for CZ in the latest available year of dataset ds."""
+    df_cz = ds.df[ds.df[ds.geo_col] == "CZ"].dropna(subset=[ds.value_col])
+    if df_cz.empty:
+        return float("nan"), 0
+    row = df_cz.sort_values(ds.time_col).iloc[-1]
+    return float(row[ds.value_col]), int(row[ds.time_col])
+
+
+def _ols_beta(ds_x: "Dataset", ds_y: "Dataset") -> float:
+    """OLS slope β̂ = Cov(x,y) / Var(x) on the full panel (excluding EXCLUDE_COUNTRIES)."""
+    df_x = ds_x.df[[ds_x.geo_col, ds_x.time_col, ds_x.value_col]].rename(
+        columns={ds_x.geo_col: "geo", ds_x.time_col: "time", ds_x.value_col: "x"}
+    )
+    df_y = ds_y.df[[ds_y.geo_col, ds_y.time_col, ds_y.value_col]].rename(
+        columns={ds_y.geo_col: "geo", ds_y.time_col: "time", ds_y.value_col: "y"}
+    )
+    merged = (
+        df_x.merge(df_y, on=["geo", "time"], how="inner")
+        .dropna(subset=["x", "y"])
+    )
+    merged = merged[~merged["geo"].isin(EXCLUDE_COUNTRIES)]
+    if len(merged) < 5:
+        return float("nan")
+    xm = merged["x"].mean()
+    ym = merged["y"].mean()
+    cov_xy = ((merged["x"] - xm) * (merged["y"] - ym)).sum()
+    var_x = ((merged["x"] - xm) ** 2).sum()
+    return float(cov_xy / var_x) if var_x > 0 else float("nan")
+
+
+# Only coverage-vs-outcome pairs (first 4 in _PAIRS)
+_PRED_SPECS = [
+    {
+        "label": r"Průměrná skut.~prac.~doba",
+        "unit": r"\si{\hour\per\week}",
+        "ds_y": ds_hours,
+    },
+    {
+        "label": r"Gender pay gap",
+        "unit": r"\si{\percent}",
+        "ds_y": ds_gpg,
+    },
+    {
+        "label": r"Čistý hod.~příjem",
+        "unit": r"\si{\pps\per\hour}",
+        "ds_y": ds_netpps,
+    },
+    {
+        "label": r"Produktivita práce (EU27\,=\,100)",
+        "unit": r"\si{\percent}",
+        "ds_y": ds_prod,
+    },
+]
+
+pred_rows = []
+for spec in _PRED_SPECS:
+    beta = _ols_beta(ds_cbc, spec["ds_y"])
+    y0, y0_year = _get_cz_latest(spec["ds_y"])
+    delta_y = beta * _delta_x if not (pd.isna(beta) or pd.isna(y0)) else float("nan")
+    y1 = y0 + delta_y if not pd.isna(delta_y) else float("nan")
+    pred_rows.append({
+        "label": spec["label"],
+        "unit": spec["unit"],
+        "y0": y0,
+        "y0_year": y0_year,
+        "beta": beta,
+        "delta_y": delta_y,
+        "y1": y1,
+    })
+
+
+def _fmt_pred(v: float, sign: bool = False) -> str:
+    if pd.isna(v):
+        return "--"
+    if sign and v > 0:
+        return f"$+{v:.3g}$".replace(".", "{,}")
+    return f"${v:.3g}$".replace(".", "{,}")
+
+
+def _fmt_pred_beta(v: float) -> str:
+    if pd.isna(v):
+        return "--"
+    sign = "+" if v >= 0 else ""
+    return f"${sign}{v:.3f}$".replace(".", "{,}")
+
+
+_cz_cov_str = f"{_cz_cov_val:.1f}".replace(".", "{,}")
+_delta_x_str = f"{_delta_x:.1f}".replace(".", "{,}")
+_target_str = f"{TARGET_COVERAGE:.0f}"
+_max_year = max(r["y0_year"] for r in pred_rows)
+
+pred_lines = [
+    r"\begin{table}[htbp]",
+    r"\centering",
+    rf"\caption{{Lineární predikce dle rov.~\eqref{{eq:model_cz}}: predikovaná změna ukazatelů "
+    rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KS}} na~\SI{{{_target_str}}}{{\percent}} "
+    rf"(panelový $\hat{{\beta}}$, $\Delta x = {_target_str}{{,}}0 - {_cz_cov_str} = +{_delta_x_str}$\,pp, "
+    rf"data \acs{{geo-CZ}} z~roku {_max_year}).}}",
+    r"\label{tab:model_cz}",
+    r"\begin{tabular}{lrrrr}",
+    r"\toprule",
+    r"Ukazatel & $y_{\acs{idx-0}}$ & $\hat{\beta}$ "
+    r"& $\Delta\hat{y}_{\acs{geo-CZ}}$ & $\hat{y}_1$ \\",
+    r"\midrule",
+]
+for r in pred_rows:
+    pred_lines.append(
+        f"{r['label']} [{r['unit']}] & "
+        f"{_fmt_pred(r['y0'])} & "
+        f"{_fmt_pred_beta(r['beta'])} & "
+        f"{_fmt_pred(r['delta_y'], sign=True)} & "
+        f"{_fmt_pred(r['y1'])} \\\\"
+    )
+pred_lines += [
+    r"\bottomrule",
+    r"\end{tabular}",
+    rf"\par\vspace{{2pt}}\footnotesize "
+    rf"Pokrytí \acs{{geo-CZ}}: {_cz_cov_str}\,\% ({_cz_cov_year}). "
+    rf"Cíl: \SI{{{_target_str}}}{{\percent}}. "
+    r"Predikce je horním odhadem korelovatelné části efektu --- "
+    r"nezachycuje zpětné vazby ani náklady přechodu.",
+    r"\end{table}",
+]
+
+pred_path = tex_dir / "korelace_model_cz.tex"
+pred_path.write_text("\n".join(pred_lines), encoding="utf-8")
+print(f"Prediction table written to {pred_path}")
 
 print("Done.")
