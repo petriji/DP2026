@@ -56,7 +56,7 @@ fig = timeline(
     show_eu_avg=False,
     background_eu=True,
 )
-fig.axes[0].set_xlim(START_YEAR, ds_all.years[-1])
+fig.axes[0].set_xlim(START_YEAR, max(ds_all.years[-1], 2025))
 fig.axes[0].set_ylim(0, 7.5)
 
 # COVID-19 annotation: 2020 spike was caused by emergency short-time work
@@ -108,7 +108,7 @@ YEAR_2004 = 2004
 fig2 = timeline(
     ds_all,
     countries=COUNTRIES,
-    title=f"Výdaje na APZ ({YEAR_2004}–{ds_all.years[-1]})",
+    title=f"V\u00fddaje na APZ ({YEAR_2004}--{ds_all.years[-1]})",
     ylabel="výdaje na APZ [% HDP]",
     highlight=HIGHLIGHT,
     annotate_last=True,
@@ -116,7 +116,7 @@ fig2 = timeline(
     show_eu_avg=False,
     background_eu=True,
 )
-fig2.axes[0].set_xlim(YEAR_2004, ds_all.years[-1])
+fig2.axes[0].set_xlim(YEAR_2004, max(ds_all.years[-1], 2025))
 fig2.axes[0].set_ylim(0, 5.0)
 
 _ax2 = fig2.axes[0]

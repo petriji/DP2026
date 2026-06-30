@@ -1,5 +1,5 @@
 r"""
-Total Fertility Rate – timeline and EU choropleth.
+Total Fertility Rate -- timeline and EU choropleth.
 
 Shows the long-run collapse and partial recovery of fertility in CZ relative
 to selected European countries, plus a snapshot EU-wide choropleth.
@@ -80,7 +80,7 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/demo_find",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Latest year: {ds.latest_year}")
 
 # Print CZ key data points for verification
@@ -108,7 +108,7 @@ fig = timeline(
 )
 
 ax = fig.axes[0]
-ax.set_xlim(START_YEAR, ds.years[-1])
+ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
 
 # Tooltip on every data point (hover in Acrobat/Foxit shows country, year, value)
 _pivot = (
