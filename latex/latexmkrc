@@ -88,13 +88,13 @@ sub ctu_needs_update {
     }
     my $tmp = "$out_dir/main-textchecks.tmp";
     mkdir $out_dir unless -d $out_dir;
-    my @srcs = ('texparts/abstract.tex', 'texparts/abstract_en.tex',
-                'texparts/keywords.tex', 'texparts/keywords_en.tex');
+    my @srcs = ('texparts/mandatory/abstract.tex', 'texparts/mandatory/abstract_en.tex',
+                'texparts/mandatory/keywords.tex', 'texparts/mandatory/keywords_en.tex');
     if (ctu_needs_update($tmp, @srcs)) {
-        my $na  = ctu_texcount_chars('texparts/abstract.tex');
-        my $nae = ctu_texcount_chars('texparts/abstract_en.tex');
-        my $nk  = ctu_texcount_chars('texparts/keywords.tex');
-        my $nke = ctu_texcount_chars('texparts/keywords_en.tex');
+        my $na  = ctu_texcount_chars('texparts/mandatory/abstract.tex');
+        my $nae = ctu_texcount_chars('texparts/mandatory/abstract_en.tex');
+        my $nk  = ctu_texcount_chars('texparts/mandatory/keywords.tex');
+        my $nke = ctu_texcount_chars('texparts/mandatory/keywords_en.tex');
         if (open my $fh, '>', $tmp) {
             print $fh "\\makeatletter\n";
             print $fh '\gdef\@CTUabstractchars{'   . $na  . "}\n";
