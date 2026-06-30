@@ -142,7 +142,9 @@ STRINGS_GPG_MAP = {
 fig_a = choropleth(
     ds_gpg, year=snap_year,
     title=STRINGS_GPG_MAP["title"],
-    cmap="RdBu_r",
+    # Sequential 0..vmax → use project-wide RdYlGn_r (matches other "more = worse"
+    # choropleths so the rasterised colourbar dedups via _shared/).
+    cmap="RdYlGn_r",
     vmin=0,
     vmax=_vmax_gpg,
     colorbar_label=STRINGS_GPG_MAP["colorbar_label"],
