@@ -259,7 +259,7 @@ save_figure_tex(
     width=r"0.98\linewidth",
     cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhun2_HR_weekly",
                "eurostat_nama_10_pc_PPS_EU27eq100", "eurostat_earn_nt_net_PPS_AW100",
-               "eurostat_nama_10_lp_ulc_PPS_EU27eq100"],
+               "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
     footnote=_EXCL_NOTE,
 )
 print("  saved scatter_combined")
