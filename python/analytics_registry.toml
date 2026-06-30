@@ -28,6 +28,11 @@ script   = "analyses/stav_arope.py"
 texparts = ["stav_arope_mapa_*"]
 pics     = ["stav_arope_mapa_*"]
 
+[arope_dual]
+script   = "analyses/stav_arope_dual.py"
+texparts = ["stav_arope_dual"]
+pics     = ["stav_arope_dual"]
+
 [flexicurity]
 script   = "analyses/prakticka_srovnani.py"
 texparts = ["prakticka_srovnani"]
@@ -119,6 +124,16 @@ script   = "analyses/eu_gini_prijem.py"
 texparts = ["eu_gini_prijem"]
 pics     = ["eu_gini_prijem"]
 
+[income_distribution]
+script   = "analyses/eu_prijem_distribuce.py"
+texparts = ["eu_prijem_distribuce"]
+pics     = ["eu_prijem_distribuce"]
+
+[wage_distribution]
+script   = "analyses/eu_mzda_distribuce.py"
+texparts = ["eu_mzda_distribuce"]
+pics     = ["eu_mzda_distribuce"]
+
 [wage_pension_distribution]
 script   = "analyses/problemy_mzda_duchod.py"
 texparts = ["problemy_mzda_duchod"]
@@ -156,7 +171,7 @@ pics     = ["stav_prijem_pomer"]
 
 [correlations]
 script   = "analyses/korelace_analyza.py"
-texparts = ["korelace_scatter", "korelace_tabulka"]
+texparts = ["korelace_scatter", "korelace_tabulka", "korelace_model_cz"]
 pics     = ["korelace_scatter"]
 
 [wealth_timeline]
