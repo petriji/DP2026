@@ -698,11 +698,8 @@ if pct_df is not None and "p50" in pct_df.columns:
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
     STRINGS_PCT = {
-        "title": (
-            rf"\acs{{geo-CZ}}: rozložení mezd podle odvětví \acs{{NACE}} (\acs{{ISPV}} {ispv_year}/H2)\\"
-            r"mezikvartilový rozsah P25--P75 a medián"
-        ),
-        "xlabel": r"hrubá měsíční mzda [\acs{czk}]",
+        "title": rf"\acs{{geo-CZ}}: rozložení mezd podle odvětví \acs{{NACE}} (\acs{{ISPV}} {ispv_year}/H2); P25--P75 (\acs{{IQR}}) a medián",
+        "xlabel": r"hrubá měsíční mzda [\si{\czk}]",
     }
     ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=FONT_SIZE)
     ax_c.set_title(
