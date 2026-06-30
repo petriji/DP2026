@@ -37,6 +37,8 @@
 %   Author email   : email (default)      noemail           — mailto link on author name on cover (always);
 %                                                            email address printed below name on cover (draft only);
 %                                                            mailto link in running header (if not disabled by noheader)
+%   Language       : czech (default)      english           — switches babel; translates cover texts, TOC/LOF/LOT
+%                                                            headings, date, software list and acronym list headings
 %   TikZ caching   : tikzextern                             — externalize TikZ figures (faster rebuilds)
 %                    OFF by default; requires -shell-escape in the pdflatex recipe when active
 %   Math layout    : leqno                fleqn             — left eq. numbers; flush-left display
@@ -68,6 +70,10 @@
 \newif\ifCTUsoftware    \CTUsoftwaretrue
 \newif\ifCTUbackmatter  \CTUbackmattertrue
 \newif\ifCTUemail       \CTUemailtrue
+% \ifCTUenglish: false by default (Czech thesis); set true via english option.
+%   Switches babel main language to English and translates all class-controlled
+%   strings: cover text, university name, software list, and acronym list.
+\newif\ifCTUenglish
 % \ifCTUtikzextern: false by default; set true via tikzextern option.
 %   When true, loads the external library and calls \tikzexternalize.
 %   Requires the -shell-escape compiler flag — add it to the pdflatex
@@ -130,6 +136,11 @@
 %   also display the email below the author table on the cover page (draft only).
 \DeclareOption{email}{\CTUemailtrue}
 \DeclareOption{noemail}{\CTUemailfalse}
+% english: produce an English-language thesis — switches babel to English
+%   (auto-translating TOC, LOF, LOT, chapter/appendix names, \today) and
+%   translates class-controlled headings: cover text, university name,
+%   software list chapter, and acronym list heading.
+\DeclareOption{english}{\CTUenglishtrue}
 % tikzextern: enable TikZ figure externalization (caches compiled figures as
 %   PDFs in build/). Speeds up repeated builds when figures are unchanged.
 %   Requires -shell-escape in the pdflatex recipe — see .vscode/settings.json.
@@ -181,13 +192,31 @@
 \def\@department{\relax}
 	\newcommand{\department}[1]{\gdef\@department{#1}
 	}
-% \@course: default set by draft/final mode; overridable via \course{} in preamble.
+% \@course: default set by draft/final \times czech/english mode.
+%   \course{} in the preamble overrides this value in either mode.
 %   Accent commands used because inputenc is loaded later in this class file.
 \if@draftmode
-  \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}
+  \ifCTUenglish
+    \def\@course{RESEARCH FOR MASTER'S THESIS}%
 \else
-  \def\@course{DIPLOMOV\'{A} PR\'{A}CE}
+    \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}%
+  \fi
+\else
+  \ifCTUenglish
+    \def\@course{MASTER'S THESIS}%
+  \else
+    \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
 \fi
+\fi
+% \CTU@softwarename: chapter heading for the list of software — localised.
+%   Used in texparts/references/seznamsoftwaru.tex via \chapter*{\CTU@softwarename}.
+\newcommand\CTU@softwarename{%
+  \ifCTUenglish List of Software Used\else
+    Seznam pou\v{z}it\'{e}ho softwaru\fi}
+% \CTU@acrobacklink: PDF "back to text" label shown above the acronym list
+%   (via ocg-p; screen-only, hidden when printing). Localised.
+\newcommand\CTU@acrobacklink{%
+  \ifCTUenglish BACK TO TEXT\else ZP\v{E}T DO TEXTU\fi}
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
 % \@author / \@email: placeholder defaults; overwritten at load time when
@@ -209,6 +238,23 @@
   \let\Email\@email
   \let\Title\@title
   \let\Course\@course
+  % Language switch: if english option is active, override the babel main
+  %   language (loaded as [english,czech] with czech as default) to English.
+  %   This auto-translates \contentsname, \listfigurename, \listtablename,
+  %   \chaptername, \appendixname, and \today via babel.
+  %   Also set the acro list heading to the English equivalent.
+  \ifCTUenglish
+    \selectlanguage{english}%
+    \acsetup{list/name={List of Abbreviations}}%
+  \fi
+  % Apply the localised back-link preamble to the acronym list.
+  %   Done here (not in acro_setup.tex) so \CTU@acrobacklink reflects the
+  %   final language choice after any \selectlanguage call above.
+  \acsetup{list/preamble={%
+    \Acrobatmenu{GoBack}{%
+      \begin{ocg}[printocg=never]{name}{id1}{1}%
+        \texttt{\CTU@acrobacklink}%
+      \end{ocg}}}}
 }
 % ==============================================================================
 % Title Page
@@ -222,7 +268,8 @@
 
   \begin{flushright}
 	{\large
-	\v{C}esk\'{e} vysok\'{e} u\v{c}en\'{i} technick\'{e} v~Praze
+	\ifCTUenglish Czech Technical University in Prague\else
+	\v{C}esk\'{e} vysok\'{e} u\v{c}en\'{i} technick\'{e} v~Praze\fi
 	\vskip 0.1cm
  	\@faculty
  	\vskip 0.1cm
