@@ -39,7 +39,7 @@ HIGHLIGHT = ["CZ", "DK"]
 # ── TUNING KNOBS (edit + re-run script to apply) ─────────────────────────────
 # Axis limits: set to None for matplotlib auto-fit.
 XLIM:  tuple[float, float] | None = None  # auto-extends to max(years[-1], 2025)
-YLIM:  tuple[float, float] | None = (0, 7.5)
+YLIM:  tuple[float, float] | None = (0, 2.0)
 # Second variant (cropped to 2004--latest, narrower y-range)
 XLIM2: tuple[float, float] | None = None
 YLIM2: tuple[float, float] | None = (0, 2.0)
@@ -92,7 +92,7 @@ if YLIM is not None:
 # subsidies. DK 'Lønkompensation' covered 75% of wages --- hence the highest spike.
 _ax = fig.axes[0]
 _ax.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
-_ax.text(2020.2, 6.8, "COVID-19", fontsize=FONT_SIZE - 1,
+_ax.text(2020.2, 1.9, "COVID-19", fontsize=FONT_SIZE - 1,
          color="#CC4444", alpha=0.85, va="top")
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
@@ -119,10 +119,7 @@ savefig_pgf(fig, "eu_apz_vydaje", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_apz_vydaje",
-    caption=(
-        f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země EU, "
-        f"{START_YEAR}--{ds_all.years[-1]}."
-    ),
+    caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), vybrané země \\acs{{EU}}, 2004--2023",
     label="fig:eu_apz_vydaje",
     resizebox_width=r"\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",

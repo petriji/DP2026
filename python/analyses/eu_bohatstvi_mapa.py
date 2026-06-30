@@ -90,7 +90,7 @@ savefig_pgf(fig, "eu_bohatstvi_mapa", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_bohatstvi_mapa",
     caption=(
-        f"Podíl top 10\\,\\% domácností na čistém jmění, EU mapa, do {ds.latest_year}."),
+        f"Podíl top 10\\,\\% domácností na čistém jmění, \\acs{{geo-EU27}} mapa, do~{ds.latest_year}."),
     label="fig:eu_bohatstvi_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",

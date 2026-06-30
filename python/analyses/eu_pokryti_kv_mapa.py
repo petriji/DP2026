@@ -52,7 +52,7 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Pokrytí \\acs{{KV}} ({ds.latest_year})",
+    "title": f"Pokrytí \\acs{{KS}} ({ds.latest_year})",
     "colorbar_label": r"pokrytí \acs{KV} [\% zaměstnanců]",
 }
 
@@ -76,8 +76,7 @@ savefig_pgf(fig, "eu_pokryti_kv_mapa", strings=STRINGS, nudge_labels=NUDGE_LABEL
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_pokryti_kv_mapa",
-    caption=(
-        f"Pokrytí \\acs{{KV}}, EU mapa, {ds.latest_year}."),
+    caption=f"Pokrytí \\aclins{{KS}}, mapa Evropy, {ds.latest_year}",
     label="fig:eu_pokryti_kv_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",

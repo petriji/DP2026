@@ -97,9 +97,7 @@ savefig_pgf(fig, "eu_prijem_pps", strings=STRINGS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_prijem_pps",
-    caption=(
-        f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU}}27\\,=\\,100), EU mapa, {ds.latest_year}."
-    ),
+    caption=f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU27}}\\,=\\,100), EU mapa, {ds.latest_year}",
     label="fig:eu_prijem_pps",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",

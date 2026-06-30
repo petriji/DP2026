@@ -49,7 +49,7 @@ _values = (
 _vmax = max(_values.values())
 
 STRINGS = {
-    "title": f"Výdaje na \\ac{{APZ}} ({ds.latest_year})",
+    "title": f"Výdaje na \\acs{{APZ}} ({ds.latest_year})",
     "colorbar_label": r"výdaje na \acs{APZ} [\% \acs{HDP}]",
 }
 
@@ -74,7 +74,7 @@ savefig_pgf(fig, "eu_apz_mapa", strings=STRINGS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_apz_mapa",
-    caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), EU mapa, {ds.latest_year}.",
+    caption=f"Výdaje na \\acs{{APZ}} (\\% \\acs{{HDP}}), mapa Evropy, {ds.latest_year}",
     label="fig:eu_apz_mapa",
     resizebox_width=r"\linewidth",
     cite_keys="oecd_lmpexp",

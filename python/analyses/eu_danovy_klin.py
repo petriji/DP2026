@@ -85,10 +85,7 @@ savefig_pgf(fig, "eu_danovy_klin", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_danovy_klin",
-    caption=(
-        f"Daňový klín (\\SI{{67}}{{\\percent}} průměrné mzdy), "
-        f"EU mapa, {ds.latest_year}."
-    ),
+    caption=f"Daňový klín (\\SI{{67}}{{\\percent}} průměrné mzdy), \\acs{{geo-EU27}} mapa, {ds.latest_year}",
     label="fig:eu_danovy_klin",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_earn_nt_taxwedge_PC_AW100",
