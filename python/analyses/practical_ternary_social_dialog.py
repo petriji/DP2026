@@ -10,14 +10,14 @@ Hover tooltips show A/B/C shares in PDF viewers that support pdfcomment
 annotations (Adobe Acrobat, Foxit).
 
 Data rows: (Employees %, Employers %, State %) — integers that sum to 100.
-Coordinates are computed by ``_ternary_calc.calculate_eu27_axis_scores()`` from
-Eurostat/OECD datasets.  Three weighted composite axes (A = Employees, B = Employers,
-C = State) are normalised min-max over EU27 and then closed to a ternary simplex.
-Filter: Highlights AT, CZ, DE, DK, PL, SK; EU27 background cloud.
+Source: estimates from social-dialog literature; see thesis commentary.
+EU27 cloud values are placeholders — to be replaced with model-derived
+coordinates once the analysis is extended.
 
 Output
 ------
-    python/figures/practical_ternary_social_dialog.pgf
+  python/figures/practical_ternary_social_dialog.pgf
+  python/figures/practical_ternary_social_dialog.pdf
 
 Run
 ---
@@ -29,23 +29,17 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analyses._ternary_calc import calculate_eu27_axis_scores
-from config import COUNTRY_COLORS, FIGURES_DIR, IS_POSTER_RUN, poster_stem
+from config import COUNTRY_COLORS, FIGURES_DIR
 from statout.map_europe import choropleth
 from stattool.dataset import Dataset
 from statout.ternary import ternary_diagram
-from stattool.style import (
-    apply_geo_labels_pgf,
-    apply_style_pgf,
-    load_angle_nudges_from_figure_tex,
-    savefig,
-    savefig_pgf,
-    save_figure_tex_pgf,
-)
+from stattool.style import apply_geo_labels_pgf, apply_style_pgf, savefig, savefig_pgf, save_figure_tex_pgf
 
 # ── Toggle ───────────────────────────────────────────────────────────────────
 SHOW_EU27_CLOUD: bool = True   # set False to hide grey EU27 background dots
@@ -54,7 +48,6 @@ SHOW_EQUILIBRIUM_DISTANCE_GRID: bool = True  # set False to hide concentric equi
 # Set to False only for debugging. Hardcoded coordinates are kept below
 # as comments for reference and are no longer used at runtime.
 RECALCULATE_COORDS: bool = True
-ENABLE_PDF_EXPORT: bool = False  # keep PDF capability, disabled in normal pipeline runs
 
 # ── Featured countries (colour, foreground) ──────────────────────────────────
 # (Employees %, Employers %, State %) — integers sum to 100.
@@ -112,7 +105,6 @@ PLOT_STEM = "practical_ternary_social_dialog"
 STRENGTH_STEM = "practical_ternary_strength_map"
 
 _VERTEX_LABELS = (r"Zam\v{e}stnanci", "Firmy", r"Vl\'ada")
-_TOOLTIP_VERTEX_LABELS = ("Zaměstnanci", "Firmy", "Vláda")
 _TITLE = "Tripartitní rovnováha v~EU"
 _LABEL_ANGLE_NUDGES: dict[str, float] = {
     "CZ": 25.0,
@@ -122,27 +114,6 @@ _LABEL_ANGLE_NUDGES: dict[str, float] = {
     "PL": 8.0,
     "AT": 160.0,
 }
-_LABEL_Y_NUDGES = [(geo, geo) for geo in _FEATURED_GEOS]
-
-_TERNARY_MODEL_CITE_KEYS = [
-    "eurostat_ilc_di01",
-    "eurostat_lfsa_ewhan2_HR_weekly",
-    "eurostat_gpg",
-    "eurostat_jvs_a_r21",
-    "oecd_cts_cit",
-    "eurostat_lc_lci_lev",
-    "eurostat_prc_ppp_ind_PLI_GDP",
-    "eurostat_nama_10_gdp",
-    "eurostat_nama_10_pc",
-    "eurostat_lfsi_emp_a",
-    "eurostat_ilc_di12",
-    "ilostat_STR_DAYS_ECO_RT_A",
-    "CMKOS_ZpravaKV2025",
-]
-
-# Match CTUthesis text width (~15 cm) so wrapper resizebox{\linewidth}
-# does not downscale typography (title should remain effectively 12 pt).
-_TERNARY_FIGSIZE = cm2in(15.0, 14.1)
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
@@ -182,36 +153,20 @@ def main() -> None:
     )
     bg_alpha = 0.20 if SHOW_COLOR_BACKGROUND else 0.0
 
-    strings_main = {
-        "title": _TITLE,
-        "vertex_a": r"Zam\v{e}stnanci",
-        "vertex_b": "Firmy",
-        "vertex_c": r"Vl\'ada",
-        "caption": "Praktická tripartitní rovnováha v~\\acs{EU} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát).",
-    }
-    angle_nudges = load_angle_nudges_from_figure_tex(PLOT_STEM, _LABEL_ANGLE_NUDGES)
-
     # Primary thesis output: corners-on PGF for LaTeX.
     fig_pgf = ternary_diagram(
         data=COUNTRY_SHARES,
         colors=COUNTRY_POINT_COLORS,
         vertex_labels=_VERTEX_LABELS,
-        tooltip_labels=_TOOLTIP_VERTEX_LABELS,
         title=_TITLE,
         show_corner_labels=True,
-        label_angle_nudges=angle_nudges,
+        label_angle_nudges=_LABEL_ANGLE_NUDGES,
         figsize=(6.4, 6.0),
         bg_alpha=bg_alpha,
         background_data=cloud,
         show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
     )
-    pgf_path = savefig_pgf(
-        fig_pgf,
-        PLOT_STEM,
-        out_dir=FIGURES_DIR,
-        strings=strings_main,
-        nudge_labels=_LABEL_Y_NUDGES,
-    )
+    pgf_path = savefig_pgf(fig_pgf, PLOT_STEM, out_dir=FIGURES_DIR)
 
     # Companion PDF for visual inspection.
     fig_pdf = ternary_diagram(
@@ -226,36 +181,27 @@ def main() -> None:
         background_data=cloud,
         show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
     )
+    fig_pdf.tight_layout(pad=0.03)
+    pdf_path = FIGURES_DIR / f"{PLOT_STEM}.pdf"
+    fig_pdf.savefig(pdf_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig_pdf)
 
-    if ENABLE_PDF_EXPORT:
-        fig_pdf = ternary_diagram(
-            data=COUNTRY_SHARES,
-            colors=COUNTRY_POINT_COLORS,
-            vertex_labels=_VERTEX_LABELS,
-            tooltip_labels=_TOOLTIP_VERTEX_LABELS,
-            title=_TITLE,
-            show_corner_labels=True,
-            label_angle_nudges=angle_nudges,
-            figsize=_TERNARY_FIGSIZE,
-            bg_alpha=bg_alpha,
-            background_data=cloud,
-            show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
-        )
-        savefig(fig_pdf, PLOT_STEM, fmt="pdf", out_dir=FIGURES_DIR)
+    print(f"Saved PDF: {pdf_path}")
     
-    if not IS_POSTER_RUN:
-        save_figure_tex_pgf(
-            PLOT_STEM,
-            caption=strings_main["caption"],
-            cite_keys=_TERNARY_MODEL_CITE_KEYS,
-            label="fig:practical_ternary_social_dialog",
-            resizebox_width=r"\linewidth",
-            strings=strings_main,
-            nudge_labels=_LABEL_Y_NUDGES,
-            angle_labels=_LABEL_ANGLE_NUDGES,
-        )
+    save_figure_tex_pgf(
+        PLOT_STEM,
+        caption="Praktická tripartitní rovnováha v~\\acs{EU} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát).",
+        cite_keys=[
+            "eurostat_jvs_a_r21",
+            "oecd_cts_cit",
+            "eurostat_lc_lci_lev",
+        ],
+        label="fig:practical_ternary_social_dialog",
+        resizebox_width=r"\linewidth",
+    )
     print("Output files:")
     print(f"  - {pgf_path}")
+    print(f"  - {pdf_path}")
 
     # Complementary visualisation: average strength (A+B+C)/3.
     strength_df = pd.DataFrame(
@@ -299,31 +245,43 @@ def main() -> None:
         strings=strings_strength,
     )
 
-    if ENABLE_PDF_EXPORT:
-        fig_strength_pdf = choropleth(
-            ds_strength,
-            year=ds_strength.latest_year,
-            title=strings_strength["title"],
-            colorbar_label=strings_strength["colorbar_label"],
-            cmap="RdYlGn",
-            vmin=_vmin,
-            vmax=_vmax,
-            label_countries=True,
-            highlight_colorbar=_FEATURED_GEOS,
-        )
-        apply_geo_labels_pgf(fig_strength_pdf.axes[0], halo=True, values=values, tooltip_fmt="{:.1f}")
-        savefig(fig_strength_pdf, STRENGTH_STEM, fmt="pdf", out_dir=FIGURES_DIR)
+    # Standalone PDF export: use plain ISO marker labels on the colorbar,
+    # because this PDF is not compiled through the main acro-enabled context.
+    fig_strength_pdf = choropleth(
+        ds_strength,
+        year=ds_strength.latest_year,
+        title=strings_strength["title"],
+        colorbar_label=strings_strength["colorbar_label"],
+        cmap="RdYlGn",
+        vmin=_vmin,
+        vmax=_vmax,
+        label_countries=True,
+        highlight_colorbar=_FEATURED_GEOS,
+        plain_highlight_labels=True,
+    )
+    apply_geo_labels_pgf(fig_strength_pdf.axes[0], halo=True, values=values, tooltip_fmt="{:.1f}")
+    strength_pdf = savefig(
+        fig_strength_pdf,
+        STRENGTH_STEM,
+        fmt="pdf",
+        out_dir=FIGURES_DIR,
+    )
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption=f"Ternární model -- průměr modelových os (souhrnné skóre sociálního dialogu), \\acs{{EU}}",
-        cite_keys=_TERNARY_MODEL_CITE_KEYS,
+        caption="Průměr modelových os (A+B+C)/3 (souhrnné skóre sociálních partnerů), \\acs{EU}.",
+        cite_keys=[
+            "eurostat_jvs_a_r21",
+            "oecd_cts_cit",
+            "eurostat_lc_lci_lev",
+        ],
         label="fig:practical_ternary_strength_map",
         resizebox_width=r"\linewidth",
         strings=strings_strength,
     )
 
     print(f"  - {strength_pgf}")
+    print(f"  - {strength_pdf}")
 
 
 if __name__ == "__main__":

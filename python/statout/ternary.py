@@ -37,14 +37,13 @@ Usage
 from __future__ import annotations
 
 import math
-import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import numpy as np
 
-from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE, FIGURE_TITLE_SIZE, IS_POSTER_RUN
+from config import FONT_SIZE
 from stattool.style import GEO_LONG_NAMES
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -131,8 +130,7 @@ def _draw_grid_and_ticks(ax: plt.Axes) -> None:
                     color=_GRID_COLOR, ls=ls, lw=lw, alpha=alpha, zorder=2)
 
     T = 0.036    # tick length (data units), 200% vs original 0.018
-    # Poster: tick numerals one tier smaller than country labels (ultra remap).
-    _FS = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE
+    _FS = FONT_SIZE
     v_a = np.array([1.0, 0.0])
     v_b = np.array([0.5, -_H])
     v_c = np.array([0.5, _H])
@@ -242,8 +240,7 @@ def _draw_axis_arrows(
     Cv = np.array([1.0, 0.0])
 
     _akw = dict(arrowstyle="->", color="black", lw=1.2, mutation_scale=14)
-    # Poster: 0 % / 100 % end markers one tier smaller than country labels.
-    _FS  = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE  # end-marker font size
+    _FS  = FONT_SIZE       # end-marker font size (same as tick labels)
 
     # ── A-axis: left edge B→A, vertex_labels[0] increases toward A ───────────
     d_a = Av - Bv                     # direction B→A (unit length since |BA|=1)
@@ -257,10 +254,8 @@ def _draw_axis_arrows(
     ax.text(*(e_a + d_a * end_gap), "100 %",
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_a = (s_a + e_a) / 2.0
-    # Poster: corner / axis-name labels one tier smaller than country labels.
-    _VFS = FIGURE_LABEL_SIZE - 4 if IS_POSTER_RUN else FIGURE_LABEL_SIZE  # vertex/axis label size
     ax.text(*(mid_a + n_a * lbl_gap), vertex_labels[0],
-            ha="center", va="center", fontsize=_VFS, weight="bold",
+            ha="center", va="center", fontsize=FONT_SIZE, weight="bold",
             rotation=60, zorder=5)
 
     # ── B-axis: bottom edge C→B, vertex_labels[1] increases toward B ─────────
@@ -276,7 +271,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_b = (s_b + e_b) / 2.0
     ax.text(*(mid_b + n_b * lbl_gap), vertex_labels[1],
-            ha="center", va="top", fontsize=_VFS, weight="bold", rotation=0, zorder=5)
+            ha="center", va="top", fontsize=FONT_SIZE, weight="bold", rotation=0, zorder=5)
 
     # ── C-axis: right edge A→C, vertex_labels[2] increases toward C ──────────
     d_c = Cv - Av                     # direction A→C
@@ -291,7 +286,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_c = (s_c + e_c) / 2.0
     ax.text(*(mid_c + n_c * lbl_gap), vertex_labels[2],
-            ha="center", va="center", fontsize=_VFS, weight="bold",
+            ha="center", va="center", fontsize=FONT_SIZE, weight="bold",
             rotation=-60, zorder=5)
 
     if show_corner_labels:
@@ -301,13 +296,13 @@ def _draw_axis_arrows(
         corner_down = 0.133
         corner_up_pts = 10
         ax.text(Av[0], Av[1] + corner_a_up, vertex_labels[0],
-            ha="center", va="bottom", fontsize=_VFS, weight="bold", zorder=5)
+            ha="center", va="bottom", fontsize=FONT_SIZE, weight="bold", zorder=5)
         ax.annotate(
             vertex_labels[1],
             (Bv[0] - corner_x, Bv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="right", va="top", fontsize=_VFS, weight="bold", zorder=5,
+            ha="right", va="top", fontsize=FONT_SIZE, weight="bold", zorder=5,
             annotation_clip=False,
         )
         ax.annotate(
@@ -315,7 +310,7 @@ def _draw_axis_arrows(
             (Cv[0] + corner_x, Cv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="left", va="top", fontsize=_VFS, weight="bold", zorder=5,
+            ha="left", va="top", fontsize=FONT_SIZE, weight="bold", zorder=5,
             annotation_clip=False,
         )
 
@@ -326,43 +321,28 @@ def _add_ternary_tooltips(
     ax: plt.Axes,
     data: dict[str, tuple[float, float, float]],
     vertex_labels: tuple[str, str, str],
-    tooltip_labels: tuple[str, str, str] | None = None,
 ) -> None:
     r"""Invisible \pdftooltip anchors at each data point (PGF backend only).
 
     Tooltip text format: "Country: A_label A% / B_label B% / C_label C%".
     No-op when the active backend is not ``pgf``.
     """
-
-    def _to_plain_tooltip_text(label: str) -> str:
-        # Tooltip body is PDF-comment text; strip LaTeX macros to plain words.
-        text = label
-        text = text.replace(r"\space", " ").replace("~", " ")
-        text = re.sub(r"\\['`\^\"~=\.uvHcdbkr]\{?([A-Za-z])\}?", r"\1", text)
-        text = re.sub(r"\\[A-Za-z]+\{([^{}]*)\}", r"\1", text)
-        text = re.sub(r"\\[A-Za-z]+", "", text)
-        text = text.replace("{", "").replace("}", "")
-        return " ".join(text.split())
-
     if mpl.get_backend() != "pgf":
         return
-    a_lbl, b_lbl, c_lbl = tooltip_labels or vertex_labels
-    a_tip = _to_plain_tooltip_text(a_lbl)
-    b_tip = _to_plain_tooltip_text(b_lbl)
-    c_tip = _to_plain_tooltip_text(c_lbl)
+    a_lbl, b_lbl, c_lbl = vertex_labels
     for country, (a, b, c) in data.items():
         px, py = barycentric_to_cartesian(a, b, c)
         country_label = GEO_LONG_NAMES.get(country, country)
         tip = (
             f"{country_label}: "
-            f"{a_tip} {int(round(a))} % / "
-            f"{b_tip} {int(round(b))} % / "
-            f"{c_tip} {int(round(c))} %"
+            f"{a_lbl} {int(round(a))}\\% / "
+            f"{b_lbl} {int(round(b))}\\% / "
+            f"{c_lbl} {int(round(c))}\\%"
         )
         ax.text(
             px, py,
             r"\pdftooltip{\phantom{\rule{4pt}{4pt}}}{" + tip + r"}",
-            fontsize=FIGURE_LABEL_SIZE,
+            fontsize=FONT_SIZE,
             ha="center", va="center",
             transform=ax.transData,
             clip_on=True,
@@ -411,7 +391,7 @@ def _draw_country_points(
                 label_radius_pts * _sin,
             ),
             textcoords="offset points",
-            fontsize=FIGURE_LABEL_SIZE, ha=_ha, va=_va,
+            fontsize=FONT_SIZE, ha=_ha, va=_va,
             color=color, weight="bold",
             zorder=7,
         )
@@ -426,7 +406,6 @@ def ternary_diagram(
     data: dict[str, tuple[float, float, float]],
     colors: dict[str, str],
     vertex_labels: tuple[str, str, str] = ("A", "B", "C"),
-    tooltip_labels: tuple[str, str, str] | None = None,
     title: str = "",
     bg_alpha: float = 0.20,
     figsize: tuple[float, float] = (6.4, 5.4),
@@ -451,9 +430,6 @@ def ternary_diagram(
         Axis names for vertices A (top), B (bottom-left), C (bottom-right).
         May contain LaTeX markup (e.g. ``r"\\acs{KEY}"``).  Native UTF-8
         characters (e.g. Czech diacritics) are supported with modern pdflatex.
-    tooltip_labels:
-        Optional plain-text labels for tooltip text. If omitted,
-        ``vertex_labels`` are reused and converted to plain text.
     title:
         Figure title.  May contain LaTeX markup.
     bg_alpha:
@@ -466,8 +442,8 @@ def ternary_diagram(
         Matplotlib figure size in inches.  The default (6.4, 5.4) is sized
         for the typical content extent (≈ 1.52 × 1.29 data units) so that
         ``tight_layout(pad=0.15)`` leaves only minimal whitespace.
-        PGF export normalizes figure width to the LaTeX column width, so
-        wrappers can include the PGF directly without any resizing.
+        LaTeX's ``\\resizebox{\\linewidth}`` in the figure wrapper will scale
+        the result to the exact column width.
     resolution:
         Pixel resolution of the background heatmap (width = height).
         500 is a good default; 700 gives a smoother gradient at +50 % PNG size.
@@ -543,8 +519,8 @@ def ternary_diagram(
     # ── PGF hover tooltips ────────────────────────────────────────────────
     if enable_tooltips:
         if background_data:
-            _add_ternary_tooltips(ax, background_data, vertex_labels, tooltip_labels)
-        _add_ternary_tooltips(ax, data, vertex_labels, tooltip_labels)
+            _add_ternary_tooltips(ax, background_data, vertex_labels)
+        _add_ternary_tooltips(ax, data, vertex_labels)
 
     # ── Axis arrows + optional corner labels ──────────────────────────────
     _draw_axis_arrows(ax, vertex_labels, show_corner_labels=show_corner_labels)
@@ -552,21 +528,12 @@ def ternary_diagram(
     # ── Layout ────────────────────────────────────────────────────────────
     if title:
         # Extra title pad for corners-on so title clears the A corner label that overflows above axes.
-        # Poster: smaller pad so the (LaTeX-inflated) title stays inside the
-        # canvas top instead of being shaved.
-        _title_pad = (12 if IS_POSTER_RUN else 20) if show_corner_labels else 2
-        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE - 1 if IS_POSTER_RUN else FIGURE_TITLE_SIZE, pad=_title_pad)
+        ax.set_title(title, fontsize=FONT_SIZE + 2, pad=20 if show_corner_labels else 2)
     # Identical limits for both variants → identical data/inch scale → identical visual appearance.
     # Corner labels that fall outside this range render via clip_on=False / annotation_clip=False.
     ax.set_xlim(-0.15, 1.15)
     ax.set_ylim(-0.120, _H + 0.09)
     ax.set_aspect("equal")
     ax.axis("off")
-    # Poster: reserve extra top headroom so the inflated title is not clipped at
-    # the canvas top (matplotlib measures the title smaller than LaTeX renders),
-    # and extra bottom margin so the lower B-axis markers / "Firmy" vertex label
-    # do not overlap the LaTeX caption printed directly below the figure.
-    if IS_POSTER_RUN:
-        fig._subplots_adjust_kwargs = {"top": 0.88, "bottom": 0.08}
 
     return fig

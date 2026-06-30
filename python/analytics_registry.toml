@@ -267,6 +267,11 @@ script   = "analyses/eu_bohatstvi_top1_wid.py"
 texparts = ["eu_bohatstvi_top1_wid"]
 pics     = ["eu_bohatstvi_top1_wid"]
 
+[practical_ternary_social_dialog]
+script   = "analyses/practical_ternary_social_dialog.py"
+texparts = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+pics     = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+
 [stav_socialni_mir_mapa]
 script   = "analyses/stav_socialni_mir_mapa.py"
 texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]

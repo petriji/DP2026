@@ -21,6 +21,7 @@ Primary B2 source in the ternary model.
 | Script | Filter | Period |
 |--------|--------|--------|
 | `stav_korporatni_dan.py` | `CORP_TAX=COMB_CIT_RATE`, `UNIT_MEASURE=PC` | `2000`– |
+| `_ternary_calc.py` (B2) | same as above, fallback chain `CIT_RATE` → `CIT_RATE_LESS_SUB_NAT` → expert `CY=14.1` (2026) | `2000`– |
 
 ---
 
