@@ -1829,6 +1829,15 @@
     {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
   \ExplSyntaxOff
   % --------------------------------------------------------------------------
+  % Index property
+  % Variables that represent subscript/superscript indices (e.g. \square_0)
+  % declare an `index` property holding the in-text display form (e.g.
+  % \ensuremath{0}, \ensuremath{\Sigma}).  The `short` property retains the
+  % full \square_N symbol used in the bold left column of the variables list.
+  % When `index` is unset the behaviour is identical to the existing `short`
+  % template.  Both sub- and superscript index variables use this mechanism.
+  \NewAcroProperty{index}
+  % --------------------------------------------------------------------------
   % List template: xltabular
   % Two-column layout: bold short form (with optional /alt) | long form with
   % optional (foreign, extra) parenthetical, dot-fill, and page references.
@@ -1902,9 +1911,20 @@
         { \acro_property_get:Vn \AcronymID { long } }%
     }%
   }
+  % short template: when `index` is set (subscript/superscript index variable)
+  %   show only the index part in text; otherwise show the normal short form.
+  %   The `short` form (e.g. \square_0) is always shown in the variables list
+  %   via \acrowrite{short} in the xltabular list template above.
   \RenewAcroTemplate{short}{%
-    \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
-      { \acro_property_get:Vn \AcronymID { long } }%
+    \str_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
+      {%  no index property — normal short display
+        \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+          { \acro_property_get:Vn \AcronymID { long } }%
+      }%
+      {%  index property set — show only the index part in text
+        \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
+          { \acro_property_get:Vn \AcronymID { long } }%
+      }%
   }
   \ExplSyntaxOff
 \else
