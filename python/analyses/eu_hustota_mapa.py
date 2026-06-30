@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import LATEX_PICS_DIR
+from config import LATEX_PICS_DIR, IS_POSTER_RUN, poster_stem
 from stattool.data_quality import warn_non_target_year
 from stattool.style import (
     apply_style_pgf,
@@ -69,11 +69,10 @@ fig = choropleth(
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
-savefig_pgf(fig, "eu_hustota_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
-
-# ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
-    "eu_hustota_mapa",
+savefig_pgf(fig, poster_stem("eu_hustota_mapa"), strings=STRINGS, nudge_labels=NUDGE_LABELS)
+if not IS_POSTER_RUN:
+    save_figure_tex_pgf(
+        "eu_hustota_mapa",
     caption=f"Odborová organizovanost, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
     label="fig:eu_hustota_mapa",
     resizebox_width=r"\linewidth",

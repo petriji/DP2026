@@ -34,7 +34,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analyses._ternary_calc import calculate_eu27_axis_scores
-from config import COUNTRY_COLORS, FIGURES_DIR
+from config import COUNTRY_COLORS, FIGURES_DIR, IS_POSTER_RUN, poster_stem
 from statout.map_europe import choropleth
 from stattool.dataset import Dataset
 from statout.ternary import ternary_diagram
@@ -208,7 +208,7 @@ def main() -> None:
     )
     pgf_path = savefig_pgf(
         fig_pgf,
-        PLOT_STEM,
+        poster_stem(PLOT_STEM),
         out_dir=FIGURES_DIR,
         strings=strings_main,
         nudge_labels=_LABEL_Y_NUDGES,

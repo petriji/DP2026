@@ -41,6 +41,7 @@ from config import (
     FIGURE_COMPACT_LABEL_SIZE,
     FIGURE_COMPACT_TEXT_SIZE,
     FIGURE_LABEL_SIZE,
+    FIGURE_TITLE_SIZE,
     MAP_COUNTRY_LABEL_SIZE,
     LATEX_PICS_DIR,
 )
@@ -335,13 +336,13 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
     ax_i.set_title(
         f"({lbl}) {sec_title}",
         fontsize=FIGURE_COMPACT_TEXT_SIZE,
-        pad=4,
+        pad=5,
     )
 
 fig_maps.suptitle(
     STRINGS_MAP["title"],
-    fontsize=FIGURE_COMPACT_TEXT_SIZE,
-    y=0.98,
+    fontsize=FIGURE_TITLE_SIZE,
+    y=1.007,
 )
 
 # Shared central colorbar — uses the EXACT same inset_axes(width=0.10, height=2.10)
