@@ -1,0 +1,92 @@
+% Hand-drawn TikZ figure — pracovník jako uzel mezi firmou, státem a agregátní poptávkou.
+% Edit freely — není generován Pythonem.
+\def\strPracovnikSystemCaption{Práce jako uzel mezi zaměstnavatelem, státem a~agregátní poptávkou}%
+% DPWorkBaseSize and DPFigureLabelSize must be defined by the caller
+% (thesis: CTUthesis bridge commands; poster: DPPoster* bridge commands).
+% \providecommand here would silently ignore the caller's definition.
+\providecommand\DPFigureLabelSize{\small}% thesis fallback only — poster overrides before \input
+\providecommand\DPWorkBaseSize{\DPFigureLabelSize}% thesis fallback only
+%
+\begin{figure}[H]
+  \centering
+  % Coordinate-based sizing: 1 unit = \linewidth/17.
+  % The x-span of all content is 16.4 units → fills ~96.5 % of \linewidth
+  % without any \resizebox, so fonts stay at exactly \DPWorkBaseSize in
+  % both thesis and poster contexts.
+  \ifdefined\DPwsU\else\newlength\DPwsU\fi
+  \setlength\DPwsU{\dimexpr\linewidth/17\relax}%
+  \begin{tikzpicture}[
+    x=\DPwsU, y=\DPwsU,
+    font=\sffamily\DPWorkBaseSize,
+    every node/.style={align=center, inner sep=2pt,
+      font=\sffamily\DPWorkBaseSize,
+      execute at begin node=\linespread{0.9}\selectfont},
+    coreBox/.style       ={draw=black!85, fill=black!18, rounded corners=3pt,
+                           text width=\dimexpr 28\DPwsU/10\relax,
+                           minimum height=\dimexpr 20\DPwsU/10\relax,
+                           line width=0.8pt},
+    flowIn/.style        ={->, line width=1.0pt, draw=black!85, >=Stealth},
+    flowInDashed/.style  ={->, dashed, line width=1.0pt, draw=black!85, >=Stealth},
+    flowDual/.style      ={<->, dashed, line width=0.9pt, draw=black!75, >=Stealth},
+    trunk/.style         ={line width=1.4pt, draw=black!85},
+    trunkV/.style        ={line width=1.4pt, draw=black!85},
+    branch/.style        ={->, line width=1.0pt, draw=black!85, >=Stealth},
+    branchDashed/.style  ={->, dashed, line width=1.0pt, draw=black!85, >=Stealth},
+    branchPlain/.style   ={line width=1.0pt, draw=black!85},
+    lblA/.style          ={midway, above=1pt, font=\sffamily\DPWorkBaseSize},
+    lblB/.style          ={midway, below=1pt, font=\sffamily\DPWorkBaseSize},
+  ]
+    % --- Centrální uzel ---
+    \node[coreBox] (W) at (1,0) {\textbf{Pracovník /\\ domácnost}};
+
+    % --- Vstupy (vlevo) ---
+    \def\xL{-6.4}            % x-souřadnice začátků vstupních šipek
+    \def\yIA{1.4}            % infrastruktura státní
+    \def\yIB{0.0}            % infrastruktura zaměstnavatele
+    \def\yIC{-1.4}           % úplné náklady práce
+    \draw[flowInDashed]
+      (\xL,\yIA) -- (W.west |- 0,\yIA)
+      node[lblA] {Infrastruktura státní};
+    \draw[flowIn]
+      (\xL,\yIB) -- (W.west |- 0,\yIB)
+      node[lblA] {Infrastruktura zaměstnavatele};
+    \draw[flowIn]
+      (\xL,\yIC) -- (W.west |- 0,\yIC)
+      node[lblA] {Úplné náklady práce};
+
+    % --- Sociální dialog (shora, obousměrný) ---
+    \draw[flowDual]
+      (W.north |- 1,2.4) -- (W.north)
+      node[at start, above=12pt, font=\sffamily\DPWorkBaseSize]
+      {Sociální dialog (legislativa, kolektivní vyjednávání)};
+
+    % --- Výstupy (vpravo, sloupec sedmi větví) ---
+    \def\xT{3.0}             % x-pozice svislého trunku
+    \def\xR{8.0}             % x-konce vodorovných větví
+    \def\xRD{10.0}           % x-konec pokračování DPH
+    \def\yA{2.4}             % zdanění práce
+    \def\yB{1.6}             % odvody SP/ZP
+    \def\yC{0.8}             % spotřeba (z ní odbočuje DPH)
+    \def\yD{0.0}             % úspory
+    \def\yE{-0.8}            % investice
+    \def\yF{-1.6}            % reprodukce a péče o rodinu
+    \def\yG{-2.4}            % vývoz
+
+    % Trunk: vodorovná část (W.east -> svislý trunk) BEZ šipky a~bez popisku
+    \draw[trunk] (W.east) -- (\xT,0);
+    % Svislý trunk: spojuje y-úrovně všech větví, BEZ šipek
+    \draw[trunkV] (\xT,\yA) -- (\xT,\yG);
+
+    % Větve: terminální větve mají šipku; spotřeba pokračuje dál do DPH (bez šipky)
+    \draw[branchDashed] (\xT,\yA) -- (\xR,\yA) node[lblA] {daň z~příjmu};
+    \draw[branchDashed] (\xT,\yB) -- (\xR,\yB) node[lblA] {odvody na~\acs{SZ} a~\acs{ZdrP}};
+    \draw[branchPlain]  (\xT,\yC) -- (\xR,\yC) node[lblA] {spotřeba};
+    \draw[branchDashed] (\xR,\yC) -- (\xRD,\yC) node[lblA] {\acs{DPH}};
+    \draw[branch]       (\xT,\yD) -- (\xR,\yD) node[lblA] {vývoz};
+    \draw[branch]       (\xT,\yE) -- (\xR,\yE) node[lblA] {investice (vzdělávání)};
+    \draw[branch]       (\xT,\yF) -- (\xR,\yF) node[lblA] {reprodukce};
+    \draw[branch]       (\xT,\yG) -- (\xR,\yG) node[lblA] {zvyšování blahobytu};
+  \end{tikzpicture}%
+  \caption{\strPracovnikSystemCaption}
+  \label{fig:pracovnik_system}
+\end{figure}

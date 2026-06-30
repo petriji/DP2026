@@ -1,0 +1,21 @@
+% Editable figure definition for stav_socialni_mir_dny_mapa
+% Edit freely --- Python will NOT overwrite this file.
+% To regenerate defaults, delete this file and re-run the script.
+\def\strStavSocialniMirDnyMapaTitle{Benchmark sociálního smíru: ztracené dny práce (2025)}%
+\def\strStavSocialniMirDnyMapaColorbarLabel{ztracené dny práce na 1~000 zaměstnanců}%
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeStavSocialniMirDnyMapaCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeStavSocialniMirDnyMapaCz{0pt}%
+\providecommand\NudgeStavSocialniMirDnyMapaAt{0pt}%
+\providecommand\NudgeStavSocialniMirDnyMapaDe{0pt}%
+\providecommand\NudgeStavSocialniMirDnyMapaDk{0pt}%
+\providecommand\NudgeStavSocialniMirDnyMapaPl{0pt}%
+\providecommand\NudgeStavSocialniMirDnyMapaSk{0pt}%
+\def\strStavSocialniMirDnyMapaCaption{Stávková aktivita (dny neodpracované kvůli kolektivním sporům na 1~000 zaměstnanců), \acs{geo-EU27}, 2025. Zdroj dat:~\cite{ilostat_STR_DAYS_ECO_RT_A}}%
+%
+\begin{figure}[H]
+  \centering
+  \input{../python/figures/stav_socialni_mir_dny_mapa.pgf}
+  \caption{\strStavSocialniMirDnyMapaCaption}
+  \label{fig:stav_socialni_mir_dny_mapa}
+\end{figure}

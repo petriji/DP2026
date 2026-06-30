@@ -1,0 +1,13 @@
+Daňový klín na~práci pro svobodného bezdětného zaměstnance při~\SI{67}{\percent} průměrné mzdy řadí \acacc{ČR} v~roce~2024 nad medián \acs{geo-EU27} s~hodnotou \SI{38,9}{\percent}. Klín~$\acs{var-tau}$ se~vypočítá podle vztahu
+\begin{equation}\label{eq:tax_wedge}
+  \acs{var-tau}
+    = \frac{\acs{var-c}_{\acs{idx-SP},\acs{idx-z}}
+            + \acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}
+            + \acs{var-c}_{\acs{DPFO}}}
+           {\acs{var-w}_{\acs{idx-b}} + \acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}},
+\end{equation}
+kde čitatel zahrnuje zaměstnanecké odvody na~sociální pojištění~\(\acs{var-c}_{\acs{idx-SP},\acs{idx-z}}\), zaměstnavatelské odvody~\(\acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}\) a~daň z~příjmů fyzických osob~\(\acs{var-c}_{\acs{DPFO}}\); jmenovatel je hrubá mzda~\(\acs{var-w}_{\acs{idx-b}}\) navýšená o~zaměstnavatelské odvody.
+
+V~mapě \acs{geo-EU27} leží nad \acins{ČR} pouze Belgie, Francie, Rakousko (\SI{40,7}{\percent}) a~Německo (\SI{43,8}{\percent}); Slovensko se~pohybuje pod \acins{ČR} na~hodnotě~\SI{36}{\percent}, Polsko na~\SI{33}{\percent} a~Maďarsko se~po~reformě roku~2011 ustálilo kolem~\SI{40}{\percent}. Časový vývoj ukazuje pokles \acgen{ČR} po~reformě~2008 a~po~zvýšení slevy na~poplatníka v~roce~2022; rozptyl mezi zeměmi \acs{geo-EU27} zůstává po~celé sledované období v~pásmu \SIrange{30}{45}{\percent}.
+
+\input{texparts/python/eu_danovy_klin}

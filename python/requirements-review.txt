@@ -1,0 +1,3 @@
+# Optional tooling for Acrobat PDF review ingestion.
+# Kept separate from requirements.txt so the thesis analytics pipeline stays lean.
+PyMuPDF>=1.24

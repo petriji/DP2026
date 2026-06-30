@@ -14,103 +14,291 @@
 #   4. Run python_analytics.py — the missing output is detected automatically.
 
 [gdp]
-script   = "analyses/gdp_ppp_timeline.py"
-texparts = ["gdp_ppp_timeline"]
-pics     = ["gdp_ppp_timeline"]
+script   = "analyses/stav_hdp_vyvoj.py"
+texparts = ["stav_hdp_vyvoj"]
+pics     = ["stav_hdp_vyvoj"]
 
 [taxwedge]
-script   = "analyses/tax_wedge_map.py"
-texparts = ["tax_wedge_map"]
-pics     = ["tax_wedge_map"]
+script   = "analyses/eu_danovy_klin.py"
+texparts = ["eu_danovy_klin"]
+pics     = ["eu_danovy_klin"]
+
+[taxwedge_vyvoj]
+script   = "analyses/eu_danovy_klin_vyvoj.py"
+texparts = ["eu_danovy_klin_vyvoj"]
+pics     = ["eu_danovy_klin_vyvoj"]
 
 [arope]
-script   = "analyses/arope_example.py"
-texparts = ["arope_map_*", "arope_timeline_CE", "arope_groups"]
-pics     = ["arope_map_*", "arope_timeline_CE", "arope_groups"]
+script   = "analyses/stav_arope.py"
+texparts = ["stav_arope_mapa_*"]
+pics     = ["stav_arope_mapa_*"]
+
+[arope_dual]
+script   = "analyses/stav_arope_dual.py"
+texparts = ["stav_arope_dual"]
+pics     = ["stav_arope_dual"]
 
 [flexicurity]
-script   = "analyses/flexicurity_table.py"
-texparts = ["flexicurity_table"]
+script   = "analyses/prakticka_srovnani.py"
+texparts = ["prakticka_srovnani"]
 pics     = []
 
 [union_density]
-script   = "analyses/union_density_trend.py"
-texparts = ["union_density_trend"]
-pics     = ["union_density_trend"]
+script   = "analyses/stav_hustota_vyvoj.py"
+texparts = ["stav_hustota_vyvoj_2004"]
+pics     = ["stav_hustota_vyvoj_2004"]
 
 [lmp]
-script   = "analyses/lmp_expenditure.py"
-texparts = ["lmp_expenditure"]
-pics     = ["lmp_expenditure"]
+script   = "analyses/eu_apz_vydaje.py"
+texparts = ["eu_apz_vydaje_2004"]
+pics     = ["eu_apz_vydaje_2004"]
 
 [wage_convergence]
-script   = "analyses/wage_gdp_convergence.py"
-texparts = ["wage_gdp_convergence"]
-pics     = ["wage_gdp_convergence"]
+script   = "analyses/eu_konvergence.py"
+texparts = ["eu_konvergence"]
+pics     = ["eu_konvergence"]
+
+[productivity_income_trajectory]
+script   = "analyses/eu_produktivita_prijem_trajektorie.py"
+texparts = ["eu_produktivita_prijem_trajektorie"]
+pics     = ["eu_produktivita_prijem_trajektorie"]
 
 [union_gini]
-script   = "analyses/union_gini_scatter.py"
-texparts = ["union_gini_scatter"]
-pics     = ["union_gini_scatter"]
+script   = "analyses/korelace_hustota_gini.py"
+texparts = ["korelace_hustota_gini"]
+pics     = ["korelace_hustota_gini"]
 
 [cz_pension]
-script   = "analyses/cz_pension_model.py"
-texparts = ["cz_pension_income", "cz_pension_solidarity"]
-pics     = ["cz_pension_income", "cz_pension_solidarity"]
+script   = "analyses/problemy_cz_model.py"
+texparts = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
+pics     = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
 
 [cz_tax_model]
-script   = "analyses/cz_tax_model.py"
-texparts = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_sp_vs_income", "cz_pension_sp_ratio"]
-pics     = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_sp_vs_income", "cz_pension_sp_ratio"]
+script   = "analyses/problemy_cz_model.py"
+texparts = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
+pics     = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
 
 [ipp_wage_growth]
-script   = "analyses/ipp_wage_growth.py"
-texparts = ["ipp_wage_growth"]
-pics     = ["ipp_wage_growth"]
+script   = "analyses/stav_ipp_mzdy.py"
+texparts = ["stav_ipp_mzdy"]
+pics     = ["stav_ipp_mzdy"]
 
-[ipp_supplementary]
-script   = "analyses/ipp_supplementary.py"
-texparts = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
-pics     = ["ipp_neg_vs_inflation", "ipp_cumulative_real", "ipp_actual_vs_neg_gap"]
+[ipp_ca_breadth]
+script   = "analyses/stav_ipp_rozsah.py"
+texparts = ["stav_ipp_rozsah"]
+pics     = ["stav_ipp_rozsah"]
 
 [rscp_sector_wages]
-script   = "analyses/rscp_sector_wages.py"
-texparts = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
-pics     = ["rscp_sector_wages_cz", "rscp_sector_lci_growth", "rscp_sector_dispersion"]
+script   = "analyses/problemy_sektor_mzdy.py"
+texparts = ["problemy_sektor_lci", "problemy_sektor_disperze"]
+pics     = ["problemy_sektor_lci", "problemy_sektor_disperze"]
 
 [rscp_stratification]
-script   = "analyses/rscp_stratification.py"
-texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
-pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
+script   = "analyses/problemy_stratifikace.py"
+texparts = ["problemy_gpg_sektor", "problemy_sektor_percentily", "problemy_regiony_mapa"]
+pics     = ["problemy_gpg_sektor", "problemy_sektor_percentily", "problemy_regiony_mapa"]
 
 [old_age_dependency]
-script   = "analyses/old_age_dependency_map.py"
-texparts = ["old_age_dependency_map"]
-pics     = ["old_age_dependency_map"]
+script   = "analyses/vyhled_zavislost.py"
+texparts = ["vyhled_zavislost_mapa"]
+pics     = ["vyhled_zavislost_mapa"]
 
 [employment_rate]
-script   = "analyses/employment_rate_timeline.py"
-texparts = ["employment_rate_timeline"]
-pics     = ["employment_rate_timeline"]
+script   = "analyses/stav_zamestnanost.py"
+texparts = ["stav_zamestnanost"]
+pics     = ["stav_zamestnanost"]
 
 [income_pps]
-script   = "analyses/income_pps_map.py"
-texparts = ["income_pps_map"]
-pics     = ["income_pps_map"]
+script   = "analyses/eu_prijem_pps.py"
+texparts = ["eu_prijem_pps"]
+pics     = ["eu_prijem_pps"]
+
+[pli_map]
+script   = "analyses/eu_cenova_hladina.py"
+texparts = ["eu_cenova_hladina"]
+pics     = ["eu_cenova_hladina"]
 
 [gini_income]
-script   = "analyses/gini_income_timeline.py"
-texparts = ["gini_income_timeline"]
-pics     = ["gini_income_timeline"]
+script   = "analyses/eu_gini_prijem.py"
+texparts = ["eu_gini_prijem"]
+pics     = ["eu_gini_prijem"]
+
+[income_distribution]
+script   = "analyses/eu_prijem_distribuce.py"
+texparts = ["eu_prijem_distribuce"]
+pics     = ["eu_prijem_distribuce"]
+
+[wage_distribution]
+script   = "analyses/eu_mzda_distribuce.py"
+texparts = ["eu_mzda_distribuce"]
+pics     = ["eu_mzda_distribuce"]
 
 [wage_pension_distribution]
-script   = "analyses/wage_pension_distribution.py"
-texparts = ["wage_pension_distribution"]
-pics     = ["wage_pension_distribution"]
+script   = "analyses/problemy_mzda_duchod.py"
+texparts = ["problemy_mzda_duchod"]
+pics     = ["problemy_mzda_duchod"]
 
-[gini_wealth]
-script   = "analyses/gini_wealth_timeline.py"
-texparts = ["gini_wealth_timeline"]
-pics     = ["gini_wealth_timeline"]
+[kv_coverage_map]
+script   = "analyses/eu_pokryti_kv_mapa.py"
+texparts = ["eu_pokryti_kv_mapa"]
+pics     = ["eu_pokryti_kv_mapa"]
+
+[lmp_map]
+script   = "analyses/eu_apz_mapa.py"
+texparts = ["eu_apz_mapa"]
+pics     = ["eu_apz_mapa"]
+
+[union_density_map]
+script   = "analyses/eu_hustota_mapa.py"
+texparts = ["eu_hustota_mapa"]
+pics     = ["eu_hustota_mapa"]
+
+[self_employment_map]
+script   = "analyses/eu_osvc_mapa.py"
+texparts = ["eu_osvc_mapa"]
+pics     = ["eu_osvc_mapa"]
+
+[coverage_income_scatter]
+script   = "analyses/eu_pokryti_prijem.py"
+texparts = ["eu_pokryti_prijem"]
+pics     = ["eu_pokryti_prijem"]
+
+[net_income_ratio]
+script   = "analyses/stav_prijem_pomer.py"
+texparts = ["stav_prijem_pomer"]
+pics     = ["stav_prijem_pomer"]
+
+[correlations]
+script   = "analyses/korelace_analyza.py"
+texparts = ["korelace_scatter", "korelace_tabulka", "korelace_model_cz"]
+pics     = ["korelace_scatter"]
+
+[wealth_timeline]
+script   = "analyses/eu_bohatstvi_vyvoj.py"
+texparts = []
+pics     = []
+
+[wealth_top20_timeline]
+script   = "analyses/eu_bohatstvi_top20.py"
+texparts = []
+pics     = []
+
+[wealth_map]
+script   = "analyses/eu_bohatstvi_mapa.py"
+texparts = []
+pics     = []
+
+[sector_wages]
+script   = "analyses/eu_odvetvove_mzdy.py"
+texparts = ["eu_odvetvove_mzdy_bar",
+            "eu_odvetvove_mzdy_mapa"]
+pics     = ["eu_odvetvove_mzdy_bar",
+            "eu_odvetvove_mzdy_mapa"]
+
+[cross_border_commuting]
+script   = "analyses/problemy_dojezdeni.py"
+texparts = ["problemy_dojezdeni_vyvoj", "problemy_dojezdeni_mapa",
+            "problemy_dojezdeni_nuts2"]
+pics     = ["problemy_dojezdeni_vyvoj", "problemy_dojezdeni_mapa",
+            "problemy_dojezdeni_nuts2"]
+
+[language_skills]
+script   = "analyses/problemy_jazyky.py"
+texparts = ["problemy_jazyky_celkem", "problemy_jazyky_vek",
+            "problemy_jazyky_isced"]
+pics     = ["problemy_jazyky_celkem", "problemy_jazyky_vek",
+            "problemy_jazyky_isced"]
+
+[emigration_cz]
+script   = "analyses/problemy_emigrace.py"
+texparts = ["problemy_emigrace_vyvoj"]
+pics     = ["problemy_emigrace_vyvoj"]
+
+[gender_wage_stratification]
+script   = "analyses/problemy_gpg.py"
+texparts = ["problemy_gpg_mapa", "problemy_gpg_stratifikace"]
+pics     = ["problemy_gpg_mapa", "problemy_gpg_stratifikace"]
+
+[public_private_wages]
+script   = "analyses/problemy_verejny_soukromy.py"
+texparts = ["problemy_verejny_soukromy"]
+pics     = ["problemy_verejny_soukromy"]
+
+[natality]
+script   = "analyses/vyhled_porodnost.py"
+texparts = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
+pics     = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
+
+[employer_density]
+script   = "analyses/stav_zamestnavatele_hustota.py"
+texparts = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+pics     = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+
+[tertiary_education]
+script   = "analyses/vyhled_vzdelani.py"
+texparts = ["vyhled_vzdelani_vyvoj"]
+pics     = ["vyhled_vzdelani_vyvoj"]
+
+[digital_skills]
+script   = "analyses/vyhled_digit_dovednosti.py"
+texparts = ["vyhled_digit_dovednosti_mapa"]
+pics     = ["vyhled_digit_dovednosti_mapa"]
+
+[ict_gender]
+script   = "analyses/eu_ict_gender.py"
+texparts = ["eu_ict_gender"]
+pics     = ["eu_ict_gender"]
+
+[mne_map]
+script   = "analyses/eu_mne_mapa.py"
+texparts = ["eu_mne_mapa"]
+pics     = ["eu_mne_mapa"]
+
+[bohatstvi_top1_wid]
+script   = "analyses/eu_bohatstvi_top1_wid.py"
+texparts = ["eu_bohatstvi_top1_wid"]
+pics     = ["eu_bohatstvi_top1_wid"]
+
+[practical_ternary_social_dialog]
+script   = "analyses/practical_ternary_social_dialog.py"
+texparts = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+pics     = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+
+[stav_socialni_mir_mapa]
+script   = "analyses/stav_socialni_mir_mapa.py"
+texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+
+[stav_stavky]
+script   = "analyses/stav_stavky.py"
+texparts = ["stav_stavky"]
+pics     = ["stav_stavky"]
+
+[stav_kolektivni_spory_vyvoj]
+script   = "analyses/stav_kolektivni_spory_vyvoj.py"
+texparts = ["stav_kolektivni_spory_vyvoj"]
+pics     = ["stav_kolektivni_spory_vyvoj"]
+
+[stav_korporatni_dan]
+script   = "analyses/stav_korporatni_dan.py"
+texparts = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+pics     = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+
+[stav_volna_mista_vyvoj]
+script   = "analyses/stav_volna_mista_vyvoj.py"
+texparts = ["stav_volna_mista_vyvoj"]
+pics     = ["stav_volna_mista_vyvoj"]
+
+[stav_struktura_prac_sily]
+script   = "analyses/stav_struktura_prac_sily.py"
+texparts = ["stav_struktura_prac_sily"]
+pics     = []
+

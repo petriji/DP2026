@@ -1,0 +1,22 @@
+% Editable figure definition for vyhled_digit_dovednosti_mapa
+% Edit freely --- Python will NOT overwrite this file.
+% To regenerate defaults, delete this file and re-run the script.
+\def\strVyhledDigitDovednostiMapaTitle{Digitální dovednosti nad základní úrovní (2025)}%
+\def\strVyhledDigitDovednostiMapaColorbarLabel{podíl jednotlivců [\%]}%
+\def\strVyhledDigitDovednostiMapaCaption{Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, \acs{EU}, 2025. Zdroj dat: Eurostat~\cite{eurostat_isoc_sk_dskl_i21_AB}.}%
+%
+
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeVyhledDigitDovednostiMapaCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeVyhledDigitDovednostiMapaCz{0pt}%
+\providecommand\NudgeVyhledDigitDovednostiMapaAt{-1pt}%
+\providecommand\NudgeVyhledDigitDovednostiMapaDe{8pt}%
+\providecommand\NudgeVyhledDigitDovednostiMapaDk{0pt}%
+\providecommand\NudgeVyhledDigitDovednostiMapaPl{1pt}%
+\providecommand\NudgeVyhledDigitDovednostiMapaSk{-2pt}%
+\begin{figure}[htb]
+  \centering
+  \input{../python/figures/vyhled_digit_dovednosti_mapa.pgf}
+  \caption{\strVyhledDigitDovednostiMapaCaption}
+  \label{fig:vyhled_digit_dovednosti_mapa}
+\end{figure}

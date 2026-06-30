@@ -1,0 +1,21 @@
+% Editable figure definition for eu_danovy_klin_vyvoj
+% Edit freely --- Python will NOT overwrite this file.
+% To regenerate defaults, delete this file and re-run the script.
+\def\strEuDanovyKlinVyvojTitle{Vývoj daňového klínu (\SI{67}{\percent} průměrné mzdy)}%
+\def\strEuDanovyKlinVyvojYlabel{daňový klín (na mzdové náklady)[\si{\percent}]}%
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeEuDanovyKlinVyvojCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeEuDanovyKlinVyvojCz{0pt}%
+\providecommand\NudgeEuDanovyKlinVyvojAt{0pt}%
+\providecommand\NudgeEuDanovyKlinVyvojDe{0pt}%
+\providecommand\NudgeEuDanovyKlinVyvojSk{0pt}%
+\providecommand\NudgeEuDanovyKlinVyvojPl{0pt}%
+\providecommand\NudgeEuDanovyKlinVyvojHu{0pt}%
+\def\strEuDanovyKlinVyvojCaption{Vývoj daňového klínu (\SI{67}{\percent} průměrné mzdy, jednotlivec bez dětí), \acs{EU}, 2000--2024. Zdroj dat: Eurostat~\cite{eurostat_earn_nt_taxwedge}.}%
+%
+\begin{figure}[H]
+  \centering
+  \input{../python/figures/eu_danovy_klin_vyvoj.pgf}
+  \caption{\strEuDanovyKlinVyvojCaption}
+  \label{fig:eu_danovy_klin_vyvoj}
+\end{figure}
