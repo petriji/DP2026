@@ -42,3 +42,13 @@ Recommended fix workflow after the register is reviewed:
 	PGF wrapper as appropriate, not regenerated `texparts/python/*.tex` files.
 7. Rebuild the thesis PDF, then update each affected register entry status and
 	add a short resolution note.
+
+After a rebuild, generate a PDF-based verification report without rewriting the
+generated register:
+
+```bash
+python python/tools/verify_review_register_pdf.py \
+	--register review/review_register.md \
+	--pdf latex/build/main.pdf \
+	--out review/review_verification.md
+```
