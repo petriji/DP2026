@@ -1,83 +1,82 @@
 % Hand-drawn TikZ figure — replikace schématu Eurofound (ef25044, Figure 1)
 % Replicates: https://www.eurofound.europa.eu/en/surveys-and-data/data-catalogue/...
-% Edit freely — not generated.
-\def\strEuPayEquitySchemaCaption{\centering Horizontální a~vertikální vliv \acp{KS} na~mzdovou rovnost na~úrovni podniku (převzato a~upraveno z~\cite{eurofound_ca_pay_equity_2026}).}%
+% Edit freely — není generován Pythonem.
+\def\strEuPayEquitySchemaCaption{\centering Horizontální a~vertikální vliv \acp{KS} na~mzdovou rovnost na~úrovni podniku --- typologie pěti modelových situací (převzato a~upraveno z~\cite{eurofound_ca_pay_equity_2026}). Šířka šipek odpovídá síle vlivu odvětvové \acs{KS} na~mzdovou strukturu podniku; \acs{KS} značí \aclgen{KS}.}%
 %
 \begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{%
+  \resizebox{0.98\linewidth}{!}{%
   \begin{tikzpicture}[
     font=\sffamily\small,
-    every node/.style={align=center, inner sep=2.5pt, font=\sffamily\small,
-      execute at begin node=\linespread{0.9}\selectfont},
-    sectoralWide/.style   ={draw=black!75, fill=black!18, rounded corners=2.5pt, minimum height=1.05cm, text width=6.2cm, line width=0.6pt},
-    sectoralNoPay/.style  ={draw=black!75, fill=black!10, rounded corners=2.5pt, minimum height=1.0cm,  text width=3.7cm, line width=0.6pt},
-    nosectoral/.style     ={draw=none,    fill=none,                              minimum height=1.05cm, text width=4.1cm, line width=0pt},
-    companyCA/.style      ={draw=black!75, fill=black!06, rounded corners=2.5pt, text width=1.9cm,  minimum height=1.4cm, line width=0.5pt},
-    company/.style        ={draw=black!85, fill=black!25, rounded corners=2.5pt, text width=1.95cm, minimum height=1.0cm, anchor=north, line width=0.6pt},
+    every node/.style={align=center, inner sep=2.5pt, font=\sffamily\small},
+    sectoralWide/.style   ={draw=black!75, fill=black!18, rounded corners=2.5pt, minimum height=1.05cm, line width=0.6pt},
+    sectoralNoPay/.style  ={draw=black!75, fill=black!10, rounded corners=2.5pt, minimum height=1.0cm,  line width=0.6pt},
+    nosectoral/.style     ={draw=black!75, fill=white,    rounded corners=2.5pt, minimum height=1.0cm,  line width=0.6pt},
+    companyCA/.style      ={draw=black!75, fill=black!06, rounded corners=2.5pt, text width=2.0cm, minimum height=1.4cm, line width=0.5pt},
+    company/.style        ={draw=black!85, fill=black!25, rounded corners=2.5pt, text width=2.4cm, minimum height=1.75cm, line width=0.6pt},
     bigArrow/.style       ={->, line width=2.4pt, draw=black!70, >=Stealth},
     medArrow/.style       ={->, line width=1.6pt, draw=black!75, >=Stealth},
     thinArrow/.style      ={->, line width=0.5pt, draw=black!75, >=Stealth},
     dashArrow/.style      ={->, dashed, line width=0.5pt, draw=black!75, >=Stealth},
   ]
-    % --- Sloupcové kotvy (5 modelových podniků A–E) — užší rozteč ---
+    % --- Sloupcové kotvy (5 modelových podniků A–E) ---
     \def\cA{0}
-    \def\cB{2.4}
-    \def\cC{4.8}
-    \def\cD{7.2}
-    \def\cE{9.6}
+    \def\cB{3.2}
+    \def\cC{6.4}
+    \def\cD{9.6}
+    \def\cE{12.8}
 
     % --- Y-souřadnice čtyř řádků obdélníků ---
-    % Jednotná rozteč = 0.75 × původní rozteč řádků III–IV (0.75×2.2 = 1.65)
-    \def\rowI{5.75}    % řádek 1 — KSVS s mzdovou strukturou (A–C) + Bez KSVS (D–E)
-    \def\rowII{4.10}   % řádek 2 — KSVS bez mzdové struktury (C–D), kreslena nad šipkami
-    \def\rowIII{2.45}  % řádek 3 — podnikové KS (A, D)
-    \def\rowIV{0.8}    % řádek 4 — horní hrana podniků A–E (anchor=north)
+    \def\rowI{6.0}    % řádek 1 — KSVS s mzdovou strukturou (široká, A–C)
+    \def\rowII{4.2}   % řádek 2 — KSVS bez mzdové struktury (C–D) + bez KSVS (D–E)
+    \def\rowIII{2.2}  % řádek 3 — podnikové KS (A, D)
+    \def\rowIV{0}     % řádek 4 — podniky A–E
 
-    % --- Řádek 1: KSVS s mzdovou strukturou (A–C) a Bez odvětvové KS (D–E) ---
-    \node[sectoralWide, minimum width=6.5cm] (sPay)
+    % --- Řádek 1: KSVS s mzdovou strukturou (zahrnuje sloupce A, B, C) ---
+    \node[sectoralWide, minimum width=8.4cm] (sPay)
       at ({(\cA+\cC)/2},\rowI) {Odvětvová \acs{KS} s~mzdovou strukturou};
-    \node[nosectoral, minimum width=4.4cm] (sNone)
-      at ({(\cD+\cE)/2},\rowI) {Bez odvětvové \acs{KS}};
+
+    % --- Řádek 2: KSVS bez mzdové struktury (C, D) a Bez KSVS (D, E) ---
+    \node[sectoralNoPay, minimum width=4.0cm] (sNoPay)
+      at ({(\cC+\cD)/2},\rowII) {Odvětvová \acs{KS}\\ bez mzdové struktury};
+    \node[nosectoral, minimum width=4.0cm] (sNone)
+      at ({(\cD+\cE)/2},\rowII) {Bez odvětvové \acs{KS}};
 
     % --- Řádek 3: podnikové KS s mzdovou strukturou (sloupce A a D) ---
-    \node[companyCA] (cAca) at (\cA,\rowIII) {Podniková \acs{KS} s~mzdovou strukturou};
-    \node[companyCA] (cDca) at (\cD,\rowIII) {Podniková \acs{KS} s~mzdovou strukturou};
+    \node[companyCA] (cAca) at (\cA,\rowIII) {Podniková \acs{KS}\\ s~mzdovou\\ strukturou};
+    \node[companyCA] (cDca) at (\cD,\rowIII) {Podniková \acs{KS}\\ s~mzdovou\\ strukturou};
 
-    % --- Řádek 4: modelové podniky A–E (horní hrany zarovnané přes anchor=north) ---
-    \node[company] (compA) at (\cA,\rowIV) {Podnik~A vlastní \acs{KS} bez výrazného mzdového skluzu};
-    \node[company] (compB) at (\cB,\rowIV) {Podnik~B odvětvová mzdová struktura s~částečným skluzem};
-    \node[company] (compC) at (\cC,\rowIV) {Podnik~C vlastní mzdová struktura příznivější než odvětvové minimum};
-    \node[company] (compD) at (\cD,\rowIV) {Podnik~D vlastní \acs{KS} a~vlastní mzdová struktura};
-    \node[company] (compE) at (\cE,\rowIV) {Podnik~E bez mzdové struktury};
+    % --- Řádek 4: modelové podniky A–E ---
+    \node[company] (compA) at (\cA,\rowIV) {Podnik~A\\ dodržuje\\ vlastní \acs{KS},\\ bez výrazného\\ mzdového skluzu};
+    \node[company] (compB) at (\cB,\rowIV) {Podnik~B\\ následuje\\ odvětvovou\\ mzdovou strukturu,\\ s~částečným\\ mzdovým skluzem};
+    \node[company] (compC) at (\cC,\rowIV) {Podnik~C\\ s~vlastní mzdovou\\ strukturou,\\ příznivější\\ než odvětvové\\ minimum};
+    \node[company] (compD) at (\cD,\rowIV) {Podnik~D\\ s~vlastní\\ mzdovou\\ strukturou};
+    \node[company] (compE) at (\cE,\rowIV) {Podnik~E\\ bez mzdové\\ struktury};
 
-    % --- Vertikální vliv: šipky shora dolů (kresleny PŘED prostředním boxem řádku 2) ---
+    % --- Vertikální vliv: šipky shora dolů ---
     % Sloupec A: KSVS s mzd. strukturou -> podniková KS -> podnik A
     \draw[medArrow] (sPay.south  -| cAca.north) -- (cAca.north);
     \draw[medArrow] (cAca.south) -- (compA.north);
     % Sloupec B: KSVS s mzd. strukturou -> přímo podnik B
     \draw[medArrow] (sPay.south  -| compB.north) -- (compB.north);
-    % Sloupec C: KSVS s mzd. strukturou + KSVS bez mzd. struktury (oba vlivy)
+    % Sloupec C: může spadat pod KSVS s mzd. strukturou i pod KSVS bez mzd. struktury
     \draw[medArrow]  (sPay.south   -| compC.north) -- (compC.north);
-    % Sloupec D: vliv pouze přes KSVS bez mzd. struktury (řádek 2) -> podniková KS -> podnik D
-    \draw[medArrow]  (cDca.south) -- (compD.north);
-    % Sloupec E: Bez odvětvové KS — žádná šipka
-
-    % --- Řádek 2: KSVS bez mzdové struktury — kreslena AŽ NYNÍ, leží nad šipkami ---
-    \node[sectoralNoPay, minimum width=4.0cm] (sNoPay)
-      at ({(\cC+\cD)/2},\rowII) {Odvětvová \acs{KS} bez mzdové struktury};
-    % Krátké šipky z dolního okraje řádku 2 dolů do podniku C a podnikové KS D
     \draw[thinArrow] (sNoPay.south -| compC.north) -- (compC.north);
+    % Sloupec D: může spadat pod KSVS bez mzd. struktury i pod „bez KSVS"; oba scénáře přes podnikovou KS
     \draw[dashArrow] (sNoPay.south -| cDca.north) -- (cDca.north);
+    \draw[thinArrow] (sNone.south  -| cDca.north) -- (cDca.north);
+    \draw[medArrow]  (cDca.south) -- (compD.north);
+    % Sloupec E: bez KSVS -> přímo podnik E (bez mzdové struktury)
+    \draw[thinArrow] (sNone.south -| compE.north) -- (compE.north);
 
-    % --- Horní vodorovná šipka „Horizontální přístupy” — zprava doleva ---
+    % --- Horní vodorovná šipka „Horizontální přístupy" ---
     \draw[bigArrow]
-      ({\cE+1.7},7.35) -- ({\cA-1.7},7.35)
+      ({\cA-1.9},7.55) -- ({\cE+1.9},7.55)
       node[midway, above=2pt, font=\sffamily\bfseries] {Horizontální přístupy};
 
-    % --- Levá svislá šipka „Vertikální vliv” ---
+    % --- Levá svislá šipka „Vertikální vliv" ---
     \draw[bigArrow]
-      (-2.2,6.45) -- (-2.2,-1.9)
+      (-2.4,6.7) -- (-2.4,-1.2)
       node[midway, left=4pt, rotate=90, anchor=south, font=\sffamily\bfseries] {Vertikální vliv};
   \end{tikzpicture}}
   \caption{\strEuPayEquitySchemaCaption}
