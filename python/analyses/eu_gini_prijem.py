@@ -99,7 +99,10 @@ for _child in ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_gini_prijem", strings=STRINGS)
+# Nudge knobs: end-of-line country labels. Override LaTeX-side via
+# \renewcommand\NudgeEuGiniPrijemCZ{-3pt} in latex/texparts/figures/eu_gini_prijem.tex
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig, "eu_gini_prijem", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ───────────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -110,6 +113,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_ilc_di12_Gini",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

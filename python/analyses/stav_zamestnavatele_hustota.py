@@ -128,7 +128,8 @@ for _child in fig_tl.axes[0].get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig_tl, "stav_zamestnavatele_hustota_vyvoj", strings=STRINGS_TL)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig_tl, "stav_zamestnavatele_hustota_vyvoj", strings=STRINGS_TL, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "stav_zamestnavatele_hustota_vyvoj",
@@ -139,6 +140,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS_TL,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

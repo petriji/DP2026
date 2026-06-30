@@ -175,8 +175,9 @@ ax.annotate(
 )
 
 # ── 4. Save figure A ──────────────────────────────────────────────────────────
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 savefig_pgf(fig, "vyhled_porodnost_vyvoj", out_dir=LATEX_PICS_DIR,
-            strings=STRINGS_TIMELINE)
+            strings=STRINGS_TIMELINE, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "vyhled_porodnost_vyvoj",
@@ -185,6 +186,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys="eurostat_demo_find",
     strings=STRINGS_TIMELINE,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Figure A done.")

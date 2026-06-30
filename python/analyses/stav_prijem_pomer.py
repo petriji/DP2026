@@ -146,7 +146,8 @@ for _child in fig.axes[0].get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 # ── 6. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_prijem_pomer", strings=STRINGS)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig, "stav_prijem_pomer", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 7. LaTeX snippet ──────────────────────────────────────────────────────────
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
@@ -157,6 +158,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

@@ -109,7 +109,8 @@ if _legend:
             _t.set_text(r"\acs{geo-EU}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_zamestnanost", strings=STRINGS)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES] + [("EU", r"\acs{geo-EU}")]
+savefig_pgf(fig, "stav_zamestnanost", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -122,6 +123,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_lfsi_emp_a",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

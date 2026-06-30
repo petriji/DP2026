@@ -631,7 +631,8 @@ try:
             if _txt in COUNTRIES:
                 _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-    savefig_pgf(fig_b, "problemy_gpg_sektor", strings=STRINGS_GPG)
+    NUDGE_LABELS_GPG = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+    savefig_pgf(fig_b, "problemy_gpg_sektor", strings=STRINGS_GPG, nudge_labels=NUDGE_LABELS_GPG)
     save_figure_tex_pgf(
         "problemy_gpg_sektor",
         caption=(
@@ -641,6 +642,7 @@ try:
         resizebox_width=r"\linewidth",
         cite_key="eurostat_gpg",
         strings=STRINGS_GPG,
+        nudge_labels=NUDGE_LABELS_GPG,
     )
 except Exception as exc:
     print(f"Figure B (gender pay gap) failed: {exc}")

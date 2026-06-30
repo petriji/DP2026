@@ -87,7 +87,8 @@ for _child in _ax1.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig, "eu_pokryti_kv_vyvoj", strings=STRINGS)
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+savefig_pgf(fig, "eu_pokryti_kv_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 latest_yr = ds.years[-1]
 save_figure_tex_pgf(
@@ -104,6 +105,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 # ── 5. Cropped figure (2004--latest, xlim up to 2025) ───────────────────────
@@ -145,7 +147,7 @@ for _child in _ax2.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig2, "eu_pokryti_kv_vyvoj_2004", strings=STRINGS_2004)
+savefig_pgf(fig2, "eu_pokryti_kv_vyvoj_2004", strings=STRINGS_2004, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "eu_pokryti_kv_vyvoj_2004",
@@ -162,6 +164,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
     strings={},
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
