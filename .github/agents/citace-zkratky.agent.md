@@ -19,6 +19,10 @@ You are the Czech-locale citation and acronym manager for the CTU diploma thesis
 | `latex/texparts/references/acro.tex` | `\DeclareAcronym` entries — add new abbreviations here |
 | `latex/texparts/references/acro_variables.tex` | `\DeclareVariable` / `\DeclareIndex` entries for mathematical variables |
 | `latex/socialnidialog.bib` | BibLaTeX bibliography — all `\cite{}` keys live here |
+| `sources/scrape/` | Curated scrape extracts (one .md per source); each starts with a fenced ```bibtex``` block — primary place to discover what bib keys exist for which sources |
+| `sources/scrape/scraper-memory.md` | INDEX of all scrapes with topic, status, DP sections — consult before claiming a source is missing |
+| `sources/scrape/_GLOSSARY_DP.md` | Terminological glossary for the thesis (KV, labour market, HRM, EU/ILO vocabulary); contains proposed acro keys (`Acro` column) not yet declared in `acro.tex` — consult when deciding on a new `\DeclareAcronym` ID |
+| `sources/transcripts/` | Raw OCR/copy-paste transcripts; do NOT cite directly (cite the original source via the scrape's bib key) |
 
 ## Tasks
 
