@@ -99,6 +99,65 @@ def apply_style() -> None:
     mpl.rcParams["axes.prop_cycle"] = mpl.cycler("color", PALETTE)
 
 
+# ── Centering helper ──────────────────────────────────────────────────────────
+
+def _recenter_on_visual(fig: plt.Figure) -> None:
+    """Shift suptitle & figure legends so they appear centred after tight crop.
+
+    ``bbox_inches='tight'`` crops the figure canvas asymmetrically when the
+    axes have unequal left/right margins (e.g. ylabel on the left and inline
+    labels on the right).  This function computes the visual centre of the
+    tight bounding box and repositions the suptitle and any figure-level
+    legends to that centre so they look centred in the saved image.
+
+    It also snugs the suptitle down so it sits just above the topmost
+    axes content (vline annotations, etc.) instead of leaving a large gap.
+    """
+    has_suptitle = getattr(fig, '_suptitle', None) is not None
+    has_legends = bool(fig.legends)
+    if not has_suptitle and not has_legends:
+        return
+
+    renderer = fig.canvas.get_renderer()
+
+    # ── snug suptitle down to just above axes content ──────────────────────
+    if has_suptitle:
+        st = fig._suptitle
+        # Temporarily hide suptitle so it doesn't inflate the bbox
+        st.set_visible(False)
+        # Get top of all remaining content (axes, annotations, legends…)
+        bb_content = fig.get_tightbbox(renderer)
+        st.set_visible(True)
+        if bb_content is not None:
+            fig_h = fig.get_figheight()
+            gap_pt = 6                                    # points above content
+            content_top_frac = bb_content.y1 / fig_h
+            new_y = content_top_frac + gap_pt / 72 / fig_h
+            st.set_position((st.get_position()[0], new_y))
+
+    # ── horizontal centring on the visual crop ─────────────────────────────
+    bb = fig.get_tightbbox(renderer)
+    if bb is None:
+        return
+
+    # x_center in figure-fraction coordinates
+    # get_tightbbox returns inches, so divide by figure width in inches
+    fig_w = fig.get_figwidth()
+    x_c = (bb.x0 + bb.x1) / 2 / fig_w
+
+    if has_suptitle:
+        st = fig._suptitle
+        _, y = st.get_position()
+        st.set_position((x_c, y))
+
+    for leg in fig.legends:
+        ba = leg.get_bbox_to_anchor()
+        inv_tf = fig.transFigure.inverted()
+        ba_fig = inv_tf.transform_bbox(ba)
+        y_val = (ba_fig.y0 + ba_fig.y1) / 2
+        leg.set_bbox_to_anchor((x_c, y_val), fig.transFigure)
+
+
 # ── Save helper ───────────────────────────────────────────────────────────────
 
 def savefig(
@@ -125,10 +184,16 @@ def savefig(
         If True, call ``fig.tight_layout()`` before saving.
     """
     if tight:
+        _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
         try:
-            fig.tight_layout()
+            fig.tight_layout(**_tl_kwargs)
         except Exception:
             pass  # some constrained-layout figures raise here — safe to ignore
+        # Re-apply any subplots_adjust overrides (tight_layout may clobber hspace etc.)
+        _spa = getattr(fig, '_subplots_adjust_kwargs', None)
+        if _spa:
+            fig.subplots_adjust(**_spa)
+        _recenter_on_visual(fig)
 
     fmt = fmt or FIGURE_FORMAT
     directory = Path(out_dir) if out_dir else FIGURES_DIR
