@@ -119,11 +119,10 @@ def main() -> None:
 
     # ── 2) Choropleth map (OECD primary series, latest year) ───────────────
     values_map = ds.df[ds.df["time"] == ds.latest_year].set_index("geo")["value"].to_dict()
-    vmin_map = min(values_map.values()) if values_map else 0.0
     vmax_map = max(values_map.values()) if values_map else 40.0
 
     strings_map = {
-        "title": f"Kombinovaná sazba \\acs{{DPPO}} ({ds.latest_year})",
+        "title": f"Kombinovaná sazba DPPO ({ds.latest_year})",
         "colorbar_label": r"sazba [\si{\percent}]",
     }
     fig_map = choropleth(
@@ -132,7 +131,7 @@ def main() -> None:
         title=strings_map["title"],
         colorbar_label=strings_map["colorbar_label"],
         cmap="RdYlGn_r",
-        vmin=vmin_map,
+        vmin=0,
         vmax=vmax_map,
         label_countries=True,
         highlight_colorbar=COUNTRIES,
@@ -142,7 +141,10 @@ def main() -> None:
     savefig_pgf(fig_map, "stav_korporatni_dan_mapa", strings=strings_map, nudge_labels=nudge_labels)
     save_figure_tex_pgf(
         "stav_korporatni_dan_mapa",
-        caption=f"Vývoj kombinované statutární sazby \\aclgen{{DPPO}}, vybrané země \\acs{{EU}}, 2000--{ds.latest_year}",
+        caption=(
+            f"Kombinovaná statutární sazba daně z~příjmů právnických osob, "
+            f"\\acs{{EU}}, {ds.latest_year}."
+        ),
         label="fig:stav_korporatni_dan_mapa",
         resizebox_width=r"\linewidth",
         cite_key="oecd_cts_cit",

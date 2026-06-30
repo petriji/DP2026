@@ -28,6 +28,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -58,12 +59,13 @@ apply_style_pgf()
 rows: list[dict[str, float | int | str]] = []
 _score_series = build_b4_scores()
 _strike_days = get_b4_strike_days_per_1000()
-for geo, days in sorted(_strike_days.items()):
+for geo in sorted(_score_series.index):
+    days = _strike_days.get(geo)
     rows.append(
         {
             "geo": geo,
             "time": YEAR,
-            "days_per_1000": float(days),
+            "days_per_1000": float(days) if days is not None else np.nan,
             "score": float(_score_series.get(geo, 50.0)),
         }
     )
@@ -141,12 +143,16 @@ fig_days = choropleth(
     colorbar_label=STRINGS_DAYS["colorbar_label"],
     cmap="RdYlGn_r",
     vmin=0,
-    vmax=max(float(v) for v in _df["days_per_1000"]),
+    vmax=max(1.0, float(_df["days_per_1000"].dropna().max())),
     label_countries=True,
     highlight_colorbar=COUNTRIES,
 )
 
-_values_days = {row["geo"]: float(row["days_per_1000"]) for _, row in _df.iterrows()}
+_values_days = {
+    row["geo"]: float(row["days_per_1000"])
+    for _, row in _df.iterrows()
+    if pd.notna(row["days_per_1000"])
+}
 apply_geo_labels_pgf(fig_days.axes[0], halo=True, values=_values_days, tooltip_fmt="{:.1f}")
 
 savefig_pgf(
