@@ -185,7 +185,7 @@ savefig(fig1, "sector_wages_bar", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "sector_wages_bar",
     caption=(
-        f"celkové hodinové náklady práce (D1+D4$-$MD5) [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
+        f"Celkové hodinové náklady práce, klíčová odvětví, {ref_year}. [PPS/h] v~klíčových odvětvích NACE ({ref_year}). "
         f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\_ppp\_ind}}. "
         f"Plná čára s~zarážkami = průměr EU27 pro dané odvětví."
     ),
@@ -228,8 +228,7 @@ if "EU27_2020" in lc_pps.index:
     save_figure_tex(
         "sector_wages_deviation",
         caption=(
-            f"odchylka hodinových nákladů práce [PPS/h] od průměru EU27 "
-            f"v~klíčových odvětvích NACE ({ref_year}). "
+            f"Odchylka nákladů práce od průměru EU27, {ref_year}.. "
             f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\_ppp\_ind}}. "
             f"Záporné hodnoty = nižší náklady práce než průměr EU27."
         ),
@@ -280,9 +279,8 @@ for sec_code, sec_title in SECTOR_TITLES.items():
     save_figure_tex(
         fig_name,
         caption=(
-            f"hodinové náklady práce (D1+D4$-$MD5) [PPS/h] "
-            f"v~odvětví {sec_title}, EU27 ({ref_year}). "
-            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\_ppp\_ind}}; šedá~= data nedostupná."
+            f"Hodinové náklady práce v~odvětví {sec_title}, EU27, {ref_year}. "
+            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná."
         ),
         label=f"fig:{fig_name}",
         width=r"0.85\linewidth",

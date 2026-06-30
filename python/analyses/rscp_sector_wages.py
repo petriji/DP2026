@@ -26,7 +26,7 @@ Figure B – ``rscp_sector_lci_growth``
     Multi-line time series: CZ Labour Cost Index annual growth (%) by
     NACE sector, 2016–2025.
 
-    Data: Eurostat ``lc_lci_r2`` with available NACE breakdowns for CZ.
+    Data: Eurostat ``lc_lci_r2_a`` with available NACE breakdowns for CZ.
 
     Argumentation: Illustrates sector heterogeneity in wage dynamics.
     Sectors with persistent above-average growth signal tight labour
@@ -50,7 +50,7 @@ Data sources
 ------------
 Czech sector wages:  MPSV/TREXIMA ISPV & RSCP Excel workbooks
                      (``https://www.ispv.cz``).
-LCI by NACE:         Eurostat ``lc_lci_r2``.
+LCI by NACE:         Eurostat ``lc_lci_r2_a``.
 Sector wage levels:  Eurostat ``earn_ses_pub2s``.
 
 Output
@@ -95,14 +95,14 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 START_YEAR = 2016
 END_YEAR   = 2024   # SES and ISPV lag by one year vs IPP
 
-# NACE sections in lc_lci_r2 that Eurostat publishes for most countries.
+# NACE sections in lc_lci_r2_a that Eurostat publishes for most countries.
 # Keys = Eurostat NACE filter code; values = short Czech sector label.
 LCI_NACE_CODES: dict[str, str] = {
-    "B-E_X_D": "Průmysl (B–E)",
-    "C":        "Zpracovatelský průmysl (C)",
-    "F":        "Stavebnictví (F)",
-    "G-J":      "Obchod, doprava, IT (G–J)",
-    "K-N":      "Finance, poradenství (K–N)",
+    "B-E":  "Průmysl (B–E)",
+    "C":     "Zpracovatelský průmysl (C)",
+    "F":     "Stavebnictví (F)",
+    "G-J":   "Obchod, doprava, IT (G–J)",
+    "K-N":   "Finance, poradenství (K–N)",
 }
 
 # SES NACE codes available in earn_ses_pub2s (for inter-country comparison)
@@ -120,10 +120,64 @@ SES_NACE_CODES: dict[str, str] = {
 CZ_COLOR = COUNTRY_COLORS["CZ"]
 GRAY     = "#555555"
 
+# GUID-based URL for the 2025 ISPV national workbook (MZS sheets)
+_ISPV_NAT_2025_URL = (
+    "https://www.ispv.cz/getattachment/b568f503-6978-4af7-9f8a-d5aef8e46619"
+    "/CR_254_MZS-xlsx.aspx?disposition=attachment"
+)
+# MZS-M6 (NACE section breakdown) is embedded in the MZS-M5_6 sheet.
+# Rows 25–43 (0-based) in that sheet contain sections A–S; col 0=code, col 3=median.
+_MZS_M6_START_ROW = 25
+_MZS_M6_MEDIAN_COL = 3
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # Helpers
 # ════════════════════════════════════════════════════════════════════════════
+
+def _read_ispv_nace_from_guid(url: str) -> pd.Series | None:
+    """Download ISPV national workbook via GUID URL and extract NACE median wages.
+
+    Reads MZS-M6 (NACE section breakdown) embedded in the ``MZS-M5_6`` sheet.
+    Returns pd.Series indexed by short NACE label (e.g. "C – Zpracovatelský průmysl").
+    """
+    from stattool.fetch import fetch as _fetch
+    try:
+        path = _fetch(url, suffix=".xlsx")
+    except Exception as exc:
+        log.warning("ISPV GUID download failed: %s", exc)
+        return None
+    try:
+        df = pd.read_excel(path, sheet_name="MZS-M5_6", header=None)
+    except Exception as exc:
+        log.warning("ISPV: cannot read MZS-M5_6: %s", exc)
+        return None
+    # Find the MZS-M6 block by scanning for "sekce CZ-NACE" header row
+    start = None
+    for i in range(df.shape[0]):
+        cell = str(df.iloc[i, 0]).strip().lower()
+        if "sekce" in cell and "nace" in cell:
+            # Data starts 3 rows after the header row
+            start = i + 4
+            break
+    if start is None:
+        # Fallback: use fixed row
+        start = _MZS_M6_START_ROW
+    records = {}
+    for i in range(start, df.shape[0]):
+        code = str(df.iloc[i, 0]).strip()
+        label_raw = str(df.iloc[i, 1]).strip() if df.shape[1] > 1 else ""
+        if len(code) != 1 or not code.isalpha():
+            continue  # stop at Celkem / empty rows
+        median = pd.to_numeric(df.iloc[i, _MZS_M6_MEDIAN_COL], errors="coerce")
+        if pd.isna(median) or not (10_000 < median < 500_000):
+            continue
+        short = label_raw[:40] if label_raw and label_raw != "nan" else code
+        records[f"{code} – {short}"] = median
+    if not records:
+        return None
+    return pd.Series(records, name="median_wage")
+
 
 def _read_ispv_sector_wages(path: Path) -> pd.Series | None:
     """Parse the ISPV Excel workbook and return median monthly wages by sector.
@@ -174,13 +228,13 @@ def _fetch_lci_nace(nace_code: str, countries: list[str]) -> pd.DataFrame | None
     geo = "+".join(countries)
     try:
         path = fetch_eurostat(
-            "lc_lci_r2",
-            f"A.{nace_code}.LCI.TOTAL.I15.{geo}",
+            "lc_lci_r2_a",
+            f"A.I20.{nace_code}.D1_D4_MD5.{geo}",
             start_period=START_YEAR - 1,
         )
         from stattool.dataset import Dataset
-        ds = Dataset.from_sdmx_csv(path, name=nace_code, unit="I15=100",
-                                   source_url="Eurostat/lc_lci_r2")
+        ds = Dataset.from_sdmx_csv(path, name=nace_code, unit="I20=100",
+                                   source_url="Eurostat/lc_lci_r2_a")
         if ds.df.empty:
             return None
         pivot = (
@@ -201,17 +255,24 @@ print("Fetching ISPV sector wage data …")
 ispv_wages: pd.Series | None = None
 ispv_year: int | None = None
 
-for yr in range(END_YEAR, START_YEAR - 1, -1):
-    try:
-        path_ispv = fetch_ispv(yr, half=2, sphere="podnikatelska")
-        parsed = _read_ispv_sector_wages(path_ispv)
-        if parsed is not None and len(parsed) >= 5:
-            ispv_wages = parsed
-            ispv_year = yr
-            print(f"  ISPV {yr}H2: {len(parsed)} sectors parsed")
-            break
-    except Exception as exc:
-        print(f"  ISPV {yr}H2: skipped ({type(exc).__name__}: {exc})")
+# Try GUID-based URL (2025 national workbook) first
+ispv_wages = _read_ispv_nace_from_guid(_ISPV_NAT_2025_URL)
+if ispv_wages is not None and len(ispv_wages) >= 5:
+    ispv_year = 2025
+    print(f"  ISPV 2025 (GUID): {len(ispv_wages)} NACE sectors parsed")
+else:
+    # Fallback: try legacy fetch_ispv() URL pattern
+    for yr in range(END_YEAR, START_YEAR - 1, -1):
+        try:
+            path_ispv = fetch_ispv(yr, half=2, sphere="podnikatelska")
+            parsed = _read_ispv_sector_wages(path_ispv)
+            if parsed is not None and len(parsed) >= 5:
+                ispv_wages = parsed
+                ispv_year = yr
+                print(f"  ISPV {yr}H2: {len(parsed)} sectors parsed")
+                break
+        except Exception as exc:
+            print(f"  ISPV {yr}H2: skipped ({type(exc).__name__}: {exc})")
 
 if ispv_wages is None:
     print("  ISPV unavailable – sector bar chart will be skipped or use Eurostat fallback.")
@@ -234,11 +295,11 @@ for nace_code, label in LCI_NACE_CODES.items():
     else:
         print(f"  LCI {nace_code}: no data returned")
 
-# Also fetch the aggregate B-N (total business economy) for reference
-print("Fetching Eurostat LCI B-N (total) for 6 countries …")
+# Also fetch the aggregate B-S (total business economy) for reference
+print("Fetching Eurostat LCI B-S (total) for 6 countries …")
 lci_total: dict[str, pd.Series] = {}
 try:
-    df_total = _fetch_lci_nace("B-N_S95_X_O", COUNTRIES)
+    df_total = _fetch_lci_nace("B-S", COUNTRIES)
     if df_total is not None:
         for country in COUNTRIES:
             if country in df_total.columns:
@@ -281,8 +342,7 @@ if ispv_wages is not None:
     save_figure_tex(
         "rscp_sector_wages_cz",
         caption=(
-            f"ČR: mediánová hrubá mzda podle odvětví (ISPV {ispv_year}/H2, "
-            "MPSV/TREXIMA), normovaná na celkový medián ekonomiky\u00a0= 100. "
+            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}., normovaná na celkový medián ekonomiky\u00a0= 100. "
             "Červené sloupce\u00a0= odvětví s~nadprůměrnými mzdami; "
             "modré\u00a0= podprůměrná odvětví, kde kolektivní smlouvy plní "
             "silnější stabilizační roli mzdového minima."
@@ -339,16 +399,10 @@ if lci_by_nace:
     savefig(fig_b, "rscp_sector_lci_growth", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "rscp_sector_lci_growth",
-        caption=(
-            "ČR: meziroční nárůst indexu mzdových nákladů (Eurostat LCI, I15\u00a0=\u00a0100) "
-            f"podle odvětví NACE Rev.\u00a02, {yr0}\u2013{yr1}. "
-            "Plná čára\u00a0= celková podnikatelská sféra (B\u2013N). "
-            "Odvětví s~trvale nadprůměrným nárůstem indikují těsnější trhy "
-            "práce, kde tržní mzdy překračují kolektivně sjednané minimum."
-        ),
+        caption=f"ČR: meziroční nárůst LCI podle odvětví NACE, {yr0}\u2013{yr1}.",
         label="fig:rscp_sector_lci_growth",
         width=r"0.95\linewidth",
-        cite_key="eurostat_lci",
+        cite_keys="eurostat_lci",
     )
 else:
     print("Figure B (LCI by sector) skipped – no Eurostat NACE data available.")
@@ -417,17 +471,10 @@ if cv_by_country:
     savefig(fig_c, "rscp_sector_dispersion", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "rscp_sector_dispersion",
-        caption=(
-            f"Variační koeficient meziročního nárůstu indexu mzdových nákladů "
-            f"(Eurostat LCI) napříč odvětvími NACE v~6 srovnávaných zemích ({latest_yr}). "
-            "Vyšší hodnota\u00a0= větší heterogenita odvětvového vývoje mezd. "
-            "Země s~centralizovanějším kolektivním vyjednáváním (AT, DK) "
-            "vykazují nižší rozptyl, zatímco ČR\u00a0s~převážně podnikovou úrovní "
-            "KS má větší odchylky mezi odvětvími."
-        ),
+        caption=f"Variace nárůstu LCI napříč odvětvími (6 zemí), {latest_yr}.",
+        cite_keys="eurostat_lci",
         label="fig:rscp_sector_dispersion",
         width=r"0.95\linewidth",
-        cite_key="eurostat_lci",
     )
 else:
     print("Figure C (sector dispersion) skipped – insufficient cross-country NACE data.")
