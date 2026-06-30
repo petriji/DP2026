@@ -113,7 +113,7 @@ def _make_choropleth(
     fig = choropleth(
         ds, year=year,
         title=title,
-        cmap="YlOrRd",
+        cmap="RdYlGn_r",
         vmin=vmin,
         vmax=vmax,
         colorbar_label=cbar_label,
