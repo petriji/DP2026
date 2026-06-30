@@ -62,9 +62,9 @@ savefig(fig, "tax_wedge_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "tax_wedge_map",
     caption=(
-        f"Daňový klín na průměrnou mzdu (100\\,\\%\\,AW, bezdětný zaměstnanec), "
-        f"vyjadřuje \\% celkových nákladů práce – bez korekce v~PPS "
-        f"(daňový klín je bězrozměrný poměr). {ds.latest_year}."
+        f"Daňový klín na průměrnou mzdu, EU mapa ({ds.latest_year}), "
+        f"vyjadřuje \\% celkových nákladů práce – bez korekce v~PPS "
+        f"(daňový klín je bezrozměrný poměr)."
     ),
     label="fig:tax_wedge_map",
     width=r"0.92\linewidth",

@@ -71,13 +71,10 @@ savefig(fig, "lmp_expenditure_map", out_dir=LATEX_PICS_DIR)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex(
     "lmp_expenditure_map",
-    caption=(
-        f"Výdaje na aktivní politiku zaměstnanosti jako podíl HDP (EU, "
-        f"{ds.latest_year}; OECD LMPEXP, program \\_T = celkem)."
-    ),
+    caption=f"Výdaje na APZ jako podíl HDP, EU mapa, {ds.latest_year}.",
     label="fig:lmp_expenditure_map",
     width=r"0.92\linewidth",
-    cite_key="oecd_lmpexp",
+    cite_keys="oecd_lmpexp",
 )
 
 print("Done.")

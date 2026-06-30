@@ -66,8 +66,7 @@ savefig(fig, "union_density_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "union_density_map",
     caption=(
-        f"Hustota odborových organizací~-- podíl odborově organizovaných "
-        f"zaměstnanců, {ds.latest_year}."
+        f"Hustota odborových organizací, EU mapa, {ds.latest_year}."
     ),
     label="fig:union_density_map",
     width=r"0.92\linewidth",

@@ -197,18 +197,10 @@ savefig(fig, "wage_gdp_convergence", out_dir=LATEX_PICS_DIR)
 last_year = lp_years[-1]
 save_figure_tex(
     "wage_gdp_convergence",
-    caption=(
-        "Konvergence k~průměru EU27: reálná produktivita práce na odpracovanou hodinu "
-        "(plná čára, Eurostat/\\texttt{nama\\_10\\_lp\\_ulc}, kód \\texttt{NLPR\\_HW}) "
-        "a roční čistý disponibilní příjem pracovníka při 100\\,\\% prům.~mzdy "
-        "(přerušovaná, Eurostat/\\texttt{earn\\_nt\\_net}), "
-        "obě řady v~PPS na srovnatelné ceny, normováno na EU27\\,=\\,100. "
-        f"Šedé linie = ostatní země EU27 (pouze produktivita). "
-        f"{START_YEAR}--{last_year}."
-    ),
+    caption=f"Konvergence reálné produktivity a~čistých příjmů k~EU27, {START_YEAR}--{last_year}.",
+    cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:wage_gdp_convergence",
     width=r"0.95\linewidth",
-    cite_key="eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100,eurostat_earn_nt_net_PPS_AW100",
 )
 
 print("Done.")

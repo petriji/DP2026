@@ -78,8 +78,7 @@ savefig(fig, "income_pps_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "income_pps_map",
     caption=(
-        f"HDP na obyvatele v standardech kupní síly (EU27\xa0=\xa0100), "
-        f"{ds.latest_year}."
+        f"HDP na obyvatele v~PPS (EU27\\,=\\,100), {ds.latest_year}."
     ),
     label="fig:income_pps_map",
     width=r"0.92\linewidth",

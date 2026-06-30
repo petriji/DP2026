@@ -87,11 +87,7 @@ savefig(fig, "pli_map", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "pli_map",
     caption=(
-        f"Index cenové hladiny HDP (PLI\\_EU27\\_2020.GDP, EU27\\,=\\,100) "
-        f"pro evropské země, {ds.latest_year}. "
-        f"Hodnoty pod 100 označují nižší cenovou hladinu -- vyšší kupní sílu "
-        f"nominální mzdy; hodnoty nad 100 znamenají vyšší náklady na život. "
-        f"Šedá = data nedostupná."
+        f"Index cenové hladiny HDP, EU mapa, {ds.latest_year}."
     ),
     label="fig:pli_map",
     width=r"0.92\linewidth",

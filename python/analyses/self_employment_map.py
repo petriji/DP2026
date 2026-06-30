@@ -84,13 +84,10 @@ savefig(fig, "self_employment_map", out_dir=LATEX_PICS_DIR)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex(
     "self_employment_map",
-    caption=(
-        f"Podíl OSVČ na celkové zaměstnanosti (věk 15--74, oba pohlaví), "
-        f"{ds.latest_year}. Zdroj: Eurostat lfsa\\_egaps."
-    ),
+    caption=f"Podíl OSVČ na celkové zaměstnanosti, EU mapa, {ds.latest_year}.",
     label="fig:self_employment_map",
     width=r"0.92\linewidth",
-    cite_key="eurostat_lfsa_egaps",
+    cite_keys="eurostat_lfsa_egaps",
 )
 
 print("Done.")

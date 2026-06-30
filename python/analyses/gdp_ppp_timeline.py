@@ -88,7 +88,7 @@ savefig(fig, "gdp_ppp_timeline", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "gdp_ppp_timeline",
     caption=(
-        "HDP na obyvatele v~paritě kupní síly (PPS), index EU27\\,=\\,100 "
+        "HDP na obyvatele v~PPS, index EU27\,=\,100., index EU27\\,=\\,100 "
         "(kód \\texttt{PC\_EU27\_2020\_HAB\_MPPS\_CP}), "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
