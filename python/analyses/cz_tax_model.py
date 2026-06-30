@@ -49,12 +49,11 @@ from pathlib import Path
 from typing import Literal
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
-
-from matplotlib.lines import Line2D
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.style import apply_style, cm2in, save_figure_tex, savefig
