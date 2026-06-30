@@ -294,7 +294,7 @@ def plot_pension_comparison(
         p_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years)) / 1_000
         ax.annotate(f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%",
                     (x_end / 1_000, p_end_o),
-                    xytext=(3, 0), textcoords="offset points",
+                    xytext=(3, -4 if expense_rate == 0.80 else 0), textcoords="offset points",
                     fontsize=FONT_SIZE - 2, color=color, va="center")
     labeled_pidx_cmp: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
@@ -429,6 +429,11 @@ def plot_pension_solidarity(
     ax_top.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
                    linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
 
+    # Hranice chudoby – horní panel
+    poverty_kczk = POVERTY_THRESHOLD / 1_000
+    ax_top.axhline(poverty_kczk, color="#aa0000", linewidth=0.8,
+                   linestyle=(0, (3, 4)), alpha=0.7, zorder=1)
+
     # Referenční svislé čáry
     _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
                       f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
@@ -475,11 +480,17 @@ def plot_pension_solidarity(
         xytext=(3, 0), textcoords="offset points",
         fontsize=FONT_SIZE - 2, color="#555555", va="center",
     )
+    ax_top.annotate(
+        "chudoba",
+        xy=(x_end / 1_000, poverty_kczk),
+        xytext=(3, 0), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color="#aa0000", va="center",
+    )
     for expense_rate, _label, color in OSVC_TYPES:
         p_end_o = float(pension_osvc_vydajovy(float(x_end), expense_rate, years)) / 1_000
         ax_top.annotate(f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%",
                         (x_end / 1_000, p_end_o),
-                        xytext=(3, 0), textcoords="offset points",
+                        xytext=(3, -4 if expense_rate == 0.80 else 0), textcoords="offset points",
                         fontsize=FONT_SIZE - 2, color=color, va="center")
     labeled_pidx_sol: set[int] = set()
     for expense_rate, _label, color in OSVC_TYPES:
@@ -568,11 +579,7 @@ def plot_pension_solidarity(
         ax_bot.plot(x_ab / 1_000, rr_sv_ab,
                     color="#888888", linewidth=1.2, linestyle=SVARC_LINESTYLE, alpha=0.85, zorder=2)
 
-    # Minimální výše důchodu – dolní panel: zobrazit jako linku udávající poměr
-    ni_median_emp = net_income_employee(np.array([MEDIAN_EMP_TOTAL_COST]))[0]
-    min_pension_rr_ref = MIN_TOTAL_PENSION / max(ni_median_emp, 1) * 100
-    ax_bot.axhline(min_pension_rr_ref, color="#555555", linewidth=0.8,
-                   linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
+    # Minimální výše důchodu – dolní panel: odstraněno (přeplněný panel)
 
     # Referenční svislé čáry – dolní panel (bez popisků, aby se neopakovali)
     ax_bot.axvline(MIN_WAGE_TOTAL_COST / 1_000, color="#cc6600", linewidth=0.8,
@@ -607,6 +614,8 @@ def plot_pension_solidarity(
                         xytext=(3, 0), textcoords="offset points",
                         fontsize=FONT_SIZE - 2, color=c_emp, va="center")
     for expense_rate, _label, color in OSVC_TYPES:
+        if expense_rate == 0.40:  # přeskočit OSVČ 40 % – překryv
+            continue
         ni_end_o = float(net_income_osvc_vydajovy(float(x_end_rr), expense_rate))
         if ni_end_o <= 0:
             continue
@@ -617,23 +626,6 @@ def plot_pension_solidarity(
                             (x_end_rr / 1_000, rr_end_o),
                             xytext=(3, 0), textcoords="offset points",
                             fontsize=FONT_SIZE - 2, color=color, va="center")
-    labeled_pidx_bot: set[int] = set()
-    for expense_rate, _label, color in OSVC_TYPES:
-        segs = PAUSALNI_SEGS[expense_rate]
-        for x_s, x_e, p_idx in segs:
-            if p_idx in labeled_pidx_bot:
-                continue
-            _, monthly_base = PAUSALNI_DAN[p_idx]
-            _, total_pay_band = PAUSALNI_DAN_TOTAL[p_idx]
-            p_val = _pension(monthly_base, years)
-            x_lab = float(min(income_max, x_e))
-            net_lab = max(x_lab - float(total_pay_band), 1.0)
-            rr_lab = p_val / net_lab * 100
-            if rr_lab <= _RR_CAP:
-                ax_bot.annotate(f"paušál\u00a0{p_idx + 1}", (x_lab / 1_000, rr_lab),
-                                xytext=(3, 0), textcoords="offset points",
-                                fontsize=FONT_SIZE - 2, color=color, va="center")
-            labeled_pidx_bot.add(p_idx)
 
     # Inline popisky šedých křivek – bez výdajů a Švarc (dolní panel)
     p_no_bot = float(pension_osvc_vydajovy(float(x_end_rr), 0.0, years))
@@ -642,14 +634,6 @@ def plot_pension_solidarity(
         rr_no_bot = p_no_bot / max(ni_no_bot, 1.0) * 100
         if rr_no_bot <= _RR_CAP:
             ax_bot.annotate("bez výdajů", (x_end_rr / 1_000, rr_no_bot),
-                            xytext=(3, 0), textcoords="offset points",
-                            fontsize=FONT_SIZE - 2, color="#888888", va="center")
-    p_sv_bot = float(pension_osvc_vydajovy(float(x_end_rr), SVARC_EXPENSE_RATE, years))
-    ni_sv_bot = float(net_income_osvc_vydajovy(float(x_end_rr), SVARC_EXPENSE_RATE))
-    if ni_sv_bot > 0:
-        rr_sv_bot = p_sv_bot / max(ni_sv_bot, 1.0) * 100
-        if rr_sv_bot <= _RR_CAP:
-            ax_bot.annotate("16 % výdajů", (x_end_rr / 1_000, rr_sv_bot),
                             xytext=(3, 0), textcoords="offset points",
                             fontsize=FONT_SIZE - 2, color="#888888", va="center")
     _apply_figure_layout(ax_bot, hspace=0.08)
