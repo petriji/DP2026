@@ -1,4 +1,4 @@
-r"""Czech old-age pension (starobní důchod) – calculation model and income-comparison figure.
+r"""Czech old-age pension (starobní důchod) – calculation model and solidarity figure.
 
 Compares monthly pension as a function of gross monthly income for:
   • Zaměstnanec (employee)          – assessment base = gross wage
@@ -18,10 +18,15 @@ Reduction (§ 15 ZPDS):
          + max(min(OVZ, RH2) − RH1, 0) × 0.26
          + max(OVZ − RH2, 0) × 0.22
 
+The solidarity figure (plot_pension_solidarity) uses two panels:
+  • Top panel:    monthly pension (tis. Kč/month) vs gross income – absolute values
+  • Bottom panel: replacement rate (%) = pension / income – shows the progressive
+                  (solidarity) nature of the system; higher replacement for lower earners
+
 Output
 ------
-  pics/python/cz_pension_income.pdf
-  latex/texparts/python/cz_pension_income.tex
+  pics/python/cz_pension_solidarity.pdf
+  latex/texparts/python/cz_pension_solidarity.tex
 
 Run
 ---
@@ -175,116 +180,180 @@ def pension_pausalni(gross_income: np.ndarray | float,
 
 # ── Vizualizace ───────────────────────────────────────────────────────────────
 
-def plot_pension_comparison(
+def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
+                      color: str, alpha: float = 0.7,
+                      linestyle: tuple = (0, (3, 4))) -> None:
+    """Přidá svislou referenční čáru s anotací do grafu ax.
+
+    Anotace je umístěna pomocí souřadnic osy (axes fraction) pro y, aby
+    nevyžadovala znalost rozsahu dat před dokončením layoutu.
+    """
+    ax.axvline(x_kczk, color=color, linewidth=0.8, linestyle=linestyle,
+               alpha=alpha, zorder=1)
+    ax.annotate(
+        label,
+        xy=(x_kczk, 1),
+        xycoords=("data", "axes fraction"),
+        xytext=(3, -2), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color=color, va="top",
+    )
+
+
+def plot_pension_solidarity(
     income_max: int = 200_000,
+    income_min_rr: int = 5_000,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
-    """Vykreslí srovnání výše starobního důchodu v závislosti na hrubém příjmu.
+    """Dvoupanelový obrázek znázorňující solidární charakter důchodového systému.
+
+    Horní panel zobrazuje absolutní výši důchodu v závislosti na příjmu.
+    Dolní panel zobrazuje náhradový poměr (důchod / příjem × 100 %) – klesající
+    průběh křivek demonstruje solidární přerozdělení ve prospěch nižších příjmů.
 
     Parameters
     ----------
     income_max:
         Horní mez osy x [Kč/měsíc].
+    income_min_rr:
+        Spodní mez příjmu pro dolní panel (náhradový poměr) [Kč/měsíc].
+        Slouží k vyloučení dělení nulou při velmi nízkých příjmech.
     years:
         Předpokládaná pojistná doba [roky] pro výpočet procentní výměry.
 
     Returns
     -------
-    matplotlib Figure objekt.
+    matplotlib Figure objekt (dva panely sdílející osu x).
     """
-    income = np.linspace(0, income_max, 2_000)  # Kč/měsíc
+    # ── Datové vektory ─────────────────────────────────────────────────────────
+    income    = np.linspace(0, income_max, 2_000)         # Kč/měsíc
+    inc_rr    = np.linspace(income_min_rr, income_max, 2_000)  # pro náhradový poměr
 
-    p_emp   = pension_employee(income, years)
-    p_osvc  = pension_osvc(income, years)
+    p_emp    = pension_employee(income, years)
+    p_osvc   = pension_osvc(income, years)
 
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+    p_emp_rr  = pension_employee(inc_rr, years)
+    p_osvc_rr = pension_osvc(inc_rr, years)
 
-    # ── Křivky důchodů ────────────────────────────────────────────────────────
+    # ── Barvy ──────────────────────────────────────────────────────────────────
     c_emp, c_osvc = PALETTE[0], PALETTE[1]
-    c_pausalni = [PALETTE[2], PALETTE[3], PALETTE[4]]
+    c_pausalni    = [PALETTE[2], PALETTE[3], PALETTE[4]]
+    band_labels   = [
+        "Paušální daň – pásmo\u00a01",
+        "Paušální daň – pásmo\u00a02",
+        "Paušální daň – pásmo\u00a03",
+    ]
 
-    ax.plot(income / 1_000, p_emp / 1_000,
-            color=c_emp, linewidth=2.0, label="Zaměstnanec")
-    ax.plot(income / 1_000, p_osvc / 1_000,
-            color=c_osvc, linewidth=2.0, linestyle="--",
-            label="OSVČ – standardní odvody")
+    # ── Vytvoření figury se dvěma panely ──────────────────────────────────────
+    fig, (ax_top, ax_bot) = plt.subplots(
+        2, 1,
+        figsize=cm2in(16, 14),
+        gridspec_kw={"height_ratios": [3, 2]},
+        sharex=True,
+    )
+    fig.subplots_adjust(hspace=0.08)
 
-    # Paušální daň – pro každé pásmo horizontální segment
-    band_labels = ["Paušální daň – pásmo 1", "Paušální daň – pásmo 2", "Paušální daň – pásmo 3"]
+    # ══════════════════════════════════════════════════════════════════════════
+    # HORNÍ PANEL – výše důchodu [tis. Kč/měsíc]
+    # ══════════════════════════════════════════════════════════════════════════
+    ax_top.plot(income / 1_000, p_emp  / 1_000,
+                color=c_emp,  linewidth=2.0, label="Zaměstnanec")
+    ax_top.plot(income / 1_000, p_osvc / 1_000,
+                color=c_osvc, linewidth=2.0, linestyle="--",
+                label="OSVČ – standardní odvody")
+
     prev_max = 0
     for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN):
-        p_val = _pension(monthly_base, years)
-        x_seg = [prev_max / 1_000, max_income / 1_000]
-        y_seg = [p_val / 1_000, p_val / 1_000]
-        ax.plot(x_seg, y_seg,
-                color=c_pausalni[i], linewidth=2.5, linestyle=":",
-                label=band_labels[i])
-        # Svislá oddělovací čára na hranici pásma
+        p_val  = _pension(monthly_base, years)
+        x_seg  = [prev_max / 1_000, max_income / 1_000]
+        y_seg  = [p_val / 1_000, p_val / 1_000]
+        ax_top.plot(x_seg, y_seg,
+                    color=c_pausalni[i], linewidth=2.5, linestyle=":",
+                    label=band_labels[i])
         if i < len(PAUSALNI_DAN) - 1:
-            ax.axvline(max_income / 1_000, color=c_pausalni[i],
-                       linewidth=0.6, linestyle=":", alpha=0.5)
+            ax_top.axvline(max_income / 1_000, color=c_pausalni[i],
+                           linewidth=0.5, linestyle=":", alpha=0.4)
         prev_max = max_income
 
-    # ── Referenční přímky a anotace ───────────────────────────────────────────
-    # Minimální výše důchodu (základní výměra + min. procentní výměra)
-    min_pension_kc = MIN_TOTAL_PENSION / 1_000
-    ax.axhline(min_pension_kc, color="#555555", linewidth=0.8,
-               linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
-    ax.annotate(
-        f"Min. důchod\n({_fmt_czk(MIN_TOTAL_PENSION)})",
-        xy=(income_max * 0.01 / 1_000, min_pension_kc),
+    # Minimální výše důchodu
+    min_pension_kczk = MIN_TOTAL_PENSION / 1_000
+    ax_top.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
+                   linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
+    ax_top.annotate(
+        f"Min. důchod ({_fmt_czk(MIN_TOTAL_PENSION)})",
+        xy=(income_max * 0.01 / 1_000, min_pension_kczk),
         xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 1, color="#555555", va="bottom",
+        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
     )
 
-    # Průměrná mzda – svislá čára
-    ax.axvline(AVG_WAGE / 1_000, color="#888888", linewidth=0.8,
-               linestyle=(0, (3, 4)), alpha=0.7, zorder=1)
-    ax.annotate(
-        f"Prům. mzda\n({_fmt_czk(AVG_WAGE)})",
-        xy=(AVG_WAGE / 1_000, 0),
-        xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 1, color="#888888", va="bottom",
-    )
+    # Referenční svislé čáry – horní panel
+    _add_vertical_ref(ax_top, AVG_WAGE / 1_000,
+                      f"Prům.\u00a0mzda\n({_fmt_czk(AVG_WAGE)})",
+                      color="#888888")
+    _add_vertical_ref(ax_top, RH1 / 1_000,
+                      f"1.\u00a0RH\n({_fmt_czk(RH1)})",
+                      color="#AAAAAA", alpha=0.6, linestyle=(0, (2, 6)))
+    if RH2 <= income_max:
+        _add_vertical_ref(ax_top, RH2 / 1_000,
+                          "2.\u00a0RH",
+                          color="#BBBBBB", alpha=0.5, linestyle=(0, (2, 6)))
 
-    # 1. redukční hranice
-    ax.axvline(RH1 / 1_000, color="#AAAAAA", linewidth=0.6,
-               linestyle=(0, (2, 6)), alpha=0.6, zorder=1)
-    ax.annotate(
-        f"1.\u00a0RH\n({_fmt_czk(RH1)})",
-        xy=(RH1 / 1_000, ax.get_ylim()[1] if ax.get_ylim()[1] > 0 else 50),
-        xytext=(3, -2), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#AAAAAA", va="top",
-    )
-
-    # 2. redukční hranice (mimo viditelný rozsah – jen popis na hraně)
-    if RH2 / 1_000 <= income_max / 1_000:
-        ax.axvline(RH2 / 1_000, color="#BBBBBB", linewidth=0.6,
-                   linestyle=(0, (2, 6)), alpha=0.5, zorder=1)
-        ax.annotate(
-            f"2.\u00a0RH",
-            xy=(RH2 / 1_000, 0),
-            xytext=(3, 4), textcoords="offset points",
-            fontsize=FONT_SIZE - 2, color="#BBBBBB", va="bottom",
-        )
-
-    # ── Formátování osy ───────────────────────────────────────────────────────
-    ax.set_xlabel("Hrubý měsíční příjem [tis.\u00a0Kč]")
-    ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
-    ax.set_title(
-        f"Výše starobního důchodu v závislosti na příjmu\n"
+    ax_top.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
+    ax_top.set_title(
+        f"Výše a solidarita starobního důchodu v závislosti na příjmu\n"
         f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02024)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
-    ax.set_ylim(bottom=0)
-
-    ax.legend(
+    ax_top.set_xlim(0, income_max / 1_000)
+    ax_top.set_ylim(bottom=0)
+    ax_top.legend(
         frameon=False,
         fontsize=FONT_SIZE - 1,
         loc="upper left",
         borderaxespad=0.5,
     )
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # DOLNÍ PANEL – náhradový poměr [%] = důchod / příjem × 100
+    # Klesající průběh = solidarita: nižší příjmy mají vyšší náhradový poměr.
+    # ══════════════════════════════════════════════════════════════════════════
+    rr_emp  = p_emp_rr  / inc_rr * 100
+    rr_osvc = p_osvc_rr / inc_rr * 100
+
+    ax_bot.plot(inc_rr / 1_000, rr_emp,
+                color=c_emp,  linewidth=2.0)
+    ax_bot.plot(inc_rr / 1_000, rr_osvc,
+                color=c_osvc, linewidth=2.0, linestyle="--")
+
+    # Paušální daň – náhradový poměr v rámci každého pásma
+    prev_max = 0
+    for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN):
+        p_val  = _pension(monthly_base, years)
+        # Příjmy v tomto pásmu (začínající od max předchozího pásma + 1 Kč)
+        x_band = np.linspace(max(prev_max + 1, income_min_rr), max_income, 300)
+        rr_band = p_val / x_band * 100
+        ax_bot.plot(x_band / 1_000, rr_band,
+                    color=c_pausalni[i], linewidth=2.5, linestyle=":")
+        if i < len(PAUSALNI_DAN) - 1:
+            ax_bot.axvline(max_income / 1_000, color=c_pausalni[i],
+                           linewidth=0.5, linestyle=":", alpha=0.4)
+        prev_max = max_income
+
+    # Referenční svislé čáry – dolní panel
+    _add_vertical_ref(ax_bot, AVG_WAGE / 1_000,
+                      f"Prům.\u00a0mzda",
+                      color="#888888")
+    _add_vertical_ref(ax_bot, RH1 / 1_000,
+                      "1.\u00a0RH",
+                      color="#AAAAAA", alpha=0.6, linestyle=(0, (2, 6)))
+    if RH2 <= income_max:
+        _add_vertical_ref(ax_bot, RH2 / 1_000,
+                          "2.\u00a0RH",
+                          color="#BBBBBB", alpha=0.5, linestyle=(0, (2, 6)))
+
+    ax_bot.set_xlabel("Hrubý měsíční příjem [tis.\u00a0Kč]")
+    ax_bot.set_ylabel("Náhradový poměr\u00a0[%]")
+    ax_bot.set_xlim(0, income_max / 1_000)
+    ax_bot.set_ylim(bottom=0)
 
     return fig
 
@@ -294,20 +363,23 @@ def plot_pension_comparison(
 if __name__ == "__main__":
     apply_style()
 
-    fig = plot_pension_comparison()
-    savefig(fig, "cz_pension_income", out_dir=LATEX_PICS_DIR)
+    fig = plot_pension_solidarity()
+    savefig(fig, "cz_pension_solidarity", out_dir=LATEX_PICS_DIR)
 
     save_figure_tex(
-        "cz_pension_income",
+        "cz_pension_solidarity",
         caption=(
-            r"Výše starobního důchodu v závislosti na hrubém měsíčním příjmu "
-            r"pro zaměstnance, OSVČ se standardními odvody a OSVČ v~paušálním "
-            r"daňovém režimu (odvodový paušál). "
-            r"Parametry roku~2024, předpokládaná pojistná doba 40~let. "
+            r"Výše starobního důchodu a náhradový poměr v závislosti na hrubém "
+            r"měsíčním příjmu pro zaměstnance, OSVČ se standardními odvody a OSVČ "
+            r"v~paušálním daňovém režimu. "
+            r"Horní panel zobrazuje absolutní výši důchodu; dolní panel zobrazuje "
+            r"náhradový poměr (důchod\,/\,příjem), jehož klesající průběh "
+            r"dokládá solidární přerozdělení ve prospěch nižších příjmů. "
+            r"Parametry roku~2024, pojistná doba 40~let. "
             r"Výpočet dle zákona č.\,155/1995~Sb. "
             r"(zákon o~důchodovém pojištění), nařízení vlády č.\,286/2023~Sb."
         ),
-        label="fig:cz_pension_income",
+        label="fig:cz_pension_solidarity",
         width=r"0.95\linewidth",
     )
 
