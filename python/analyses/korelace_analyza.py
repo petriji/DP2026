@@ -555,7 +555,7 @@ pred_lines = [
     rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KV}} ze "
     rf"\SI{{{_cz_cov_str}}}{{\percent}} na~\SI{{{_target_str}}}{{\percent}}.}}",
     r"\label{tab:model_cz}",
-    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{8cm}"
+    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.5cm}"
     r"*{4}{>{\centering\arraybackslash}m{1.40cm}}@{}}",
     r"\toprule",
     rf"\bfseries Ukazatel & \bfseries $y_{{{_max_year}}}$ "
