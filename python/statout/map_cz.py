@@ -40,8 +40,9 @@ _GISCO_NUTS_URL = (
 _NEIGHBOURS = ["DE", "AT", "PL", "SK"]
 
 # Default bounding box — tighter CZ-centred crop in EPSG:3035 metres (~1.5x zoom vs old)
-_CZ_XLIM_DEFAULT = (4_300_000, 5_000_000)
-_CZ_YLIM_DEFAULT = (2_700_000, 3_250_000)
+# Left/top/bottom edges each cropped by 10% of the original range.
+_CZ_XLIM_DEFAULT = (4_370_000, 5_000_000)
+_CZ_YLIM_DEFAULT = (2_755_000, 3_195_000)
 
 # Module-level cache
 _NUTS_ALL: "gpd.GeoDataFrame | None" = None
