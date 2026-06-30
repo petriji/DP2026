@@ -66,7 +66,7 @@ def _add_tooltips_and_geo(ax, countries):
 
 # ── 3. Timeline figure (full history, grey cloud) ─────────────────────────────
 STRINGS_FULL = {
-    "title": "Odborová organizovanost",
+    "title": "Odborová organizovanost (podíl zaměstnanců, 2004--2024)",
     "ylabel": r"odborová organizovanost [\% zaměstnanců]",
 }
 

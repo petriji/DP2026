@@ -289,7 +289,7 @@ def main() -> None:
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption=f"Praktická tripartitní rovnováha v~\\acs{{EU}} na základě modelu preferencí aktérů sociálního dialogu (odpovídající zaměření na zaměstnance, firmy a stát)",
+        caption=f"Průměr modelových os (A+B+C)/3 (souhrnné skóre sociálních partnerů), \\acs{{EU}}, {ds_strength.latest_year}",
         cite_keys=[
             "eurostat_jvs_a_r21",
             "oecd_cts_cit",

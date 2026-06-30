@@ -214,10 +214,7 @@ ax1.tick_params(axis="x", which="minor", bottom=False)
 savefig_pgf(fig1, "eu_odvetvove_mzdy_bar", strings=STRINGS_BAR)
 save_figure_tex_pgf(
     "eu_odvetvove_mzdy_bar",
-    caption=(
-        f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~klíčových odvětvích \\acs{{NACE}}, "
-        f"vybrané země EU, {ref_year}."
-    ),
+    caption=f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~odvětvích Průmysl~(C), Obchod~(G), \\acs{{ICT}}~(J) a~Finance~(K), \\acs{{geo-EU27}}, {ref_year}",
     label="fig:eu_odvetvove_mzdy_bar",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
@@ -291,7 +288,7 @@ fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(15, 12))
 panel_labels = iter("abcd")
 
 STRINGS_MAP = {
-    "title": f"Hodinové náklady práce dle odvětví, EU27 ({ref_year})",
+    "title": f"Hodinové náklady práce dle odvětví, \\acs{{geo-EU27}} ({ref_year})",
     "colorbar_label": r"[\si{\pps\per\hour}]",
 }
 

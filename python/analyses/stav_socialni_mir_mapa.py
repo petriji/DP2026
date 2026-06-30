@@ -96,7 +96,7 @@ _ds_days = Dataset(
 
 # ── 2. Score choropleth ───────────────────────────────────────────────────────
 STRINGS_SCORE = {
-    "title": f"Sociální mír (B4): semikvantitativní skóre ({YEAR})",
+    "title": f"Sociální smír, kvalitativní skóre ({YEAR})",
     "colorbar_label": r"skóre sociálního míru [0/25/50/75/100]",
 }
 
@@ -124,11 +124,7 @@ savefig_pgf(
 
 save_figure_tex_pgf(
     "stav_socialni_mir_skore_mapa",
-    caption=(
-        f"Semikvantitativní skóre sociálního míru (B4), \\acs{{geo-EU27}}, {YEAR}. "
-        "Kategorizace: 0/25/50/75/100 podle benchmarku ztracených dnů práce "
-        "a institucionálního kontextu kolektivního vyjednávání."
-    ),
+    caption=f"Expertní skóre sociálního smíru, \\acs{{geo-EU27}}, {YEAR}",
     label="fig:stav_socialni_mir_skore_mapa",
     resizebox_width=r"\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "etui_cba", "CMKOS_ZpravaKV2025"],

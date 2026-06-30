@@ -77,7 +77,7 @@ COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Koeficient ekonomického zatížení seniory ({ds.latest_year})",
+    "title": f"Index závislosti seniorů ({ds.latest_year})",
     "colorbar_label": r"osoby 65+ / osoby 20--64 [\%]",
 }
 
@@ -101,8 +101,7 @@ savefig_pgf(fig, "vyhled_zavislost_mapa", strings=STRINGS, nudge_labels=NUDGE_LA
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "vyhled_zavislost_mapa",
-    caption=(
-        f"Koeficient ekonomického zatížení seniory, evropské země, {ds.latest_year}."),
+    caption=f"Index závislosti seniorů, \\acs{{EU}}, {ds.latest_year}",
     label="fig:vyhled_zavislost_mapa",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_demo_pjanind",

@@ -73,8 +73,7 @@ savefig_pgf(fig, "eu_hustota_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_hustota_mapa",
-    caption=(
-        f"Odborová organizovanost, \\acs{{geo-EU27}} mapa, {ds.latest_year}."),
+    caption=f"Odborová organizovanost, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
     label="fig:eu_hustota_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
