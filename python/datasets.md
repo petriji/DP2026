@@ -47,6 +47,7 @@ Nominal labour productivity per hour, PPS relative to EU27.
 | Script | Filter | Period |
 |--------|--------|--------|
 | `eu_konvergence.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
+| `eu_produktivita_prijem_trajektorie.py` | `A.PC_EU27_2020_MPPS_CP.NLPR_HW.` | `START_YEAR`– |
 
 ---
 
@@ -85,6 +86,7 @@ Net earnings after tax and SSC for a single person without children at 100 % of 
 | `stav_prijem_pomer.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 | `eu_konvergence.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 | `korelace_analyza.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
+| `eu_produktivita_prijem_trajektorie.py` | `A.PPS.NET.P1_NCH_AW100.` | `START_YEAR`– |
 
 ---
 
@@ -116,6 +118,7 @@ Usual weekly hours in main job, employed persons 15–64.
 | Script | Filter | Period |
 |--------|--------|--------|
 | `korelace_analyza.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
+| `eu_produktivita_prijem_trajektorie.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
 | `prakticka_srovnani.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.{GEO}` | — |
 | `stav_stavky.py` | `A.TOTAL.EMP.TOTAL.Y15-64.T.HR.` | `START_YEAR`– |
 
