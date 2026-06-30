@@ -17,16 +17,26 @@
 %
 % Usage reference — \documentclass[<options>]{CTUthesis}
 %
-%   Paper size : a4paper (default)  a5paper
-%   Font size  : 10pt               11pt              12pt (default)
-%   Binding    : oneside (default)  twoside
-%   Columns    : onecolumn (default) twocolumn
-%   Mode       : final (default)    draft        — modifies title and prints full date
-%   Debug aids : debug                           — overfull box marks + visible hyperlink targets
-%   Page order : openany (default)   openright
-%   Cover page : titlepage (default)  notitlepage (suppresses \maketitle)
-%   Math layout: leqno (left eq. numbers)    fleqn (flush-left equations)
-%                 default: right-side numbers, centered display equations
+%   Paper size     : a4paper (default)    a5paper
+%   Font size      : 12pt (default)       10pt              11pt
+%   Binding        : oneside (default)    twoside
+%   Columns        : onecolumn (default)  twocolumn
+%   Mode           : final (default)      draft             — cover text and date format
+%                    final → "DIPLOMOVÁ PRÁCE", year only
+%                    draft → "REŠERŠE K DIPLOMOVÉ PRÁCI", full date
+%                    \course{} in preamble overrides cover text in either mode
+%   Debug          : debug                                  — overfull marks + colored link boxes
+%   Page order     : openany (default)    openright
+%   Cover page     : titlepage (default)  notitlepage       — suppresses \maketitle entirely
+%   Header         : header (default)     noheader          — author/chapter running head + rule
+%   Front matter   : frontmatter (def.)   nofrontmatter     — abstract, declarations, assignment
+%   Acronym lists  : acro (default)       noacro            — acronym and variable lists
+%   Bibliography   : bibliography (def.)  nobibliography
+%   Software list  : software (default)   nosoftware
+%   Back matter    : backmatter (default)  nobackmatter     — LOF, LOT, appendices
+%   Author email   : email (default)      noemail           — mailto link in header; on cover (draft)
+%   Math layout    : leqno                fleqn             — left eq. numbers; flush-left display
+%                    default: right-side eq. numbers, centered display equations
 %
 % Default: \documentclass[a4paper,12pt,oneside,onecolumn,final,openany]{CTUthesis}
 %
@@ -45,6 +55,15 @@
 % \if@debug: true when debug option is given — marks overfull boxes and shows
 %   hyperlink targets as colored boxes (via hyperref without hidelinks).
 \newif\if@debug
+% Section visibility flags — all true by default; set to false via their no* option.
+%   Prefixed CTU to avoid collisions: \ifCTUheader, \ifCTUfrontmatter, etc.
+\newif\ifCTUheader      \CTUheadertrue
+\newif\ifCTUfrontmatter \CTUfrontmattertrue
+\newif\ifCTUacro        \CTUacrotrue
+\newif\ifCTUbiblio      \CTUbibliotrue
+\newif\ifCTUsoftware    \CTUsoftwaretrue
+\newif\ifCTUbackmatter  \CTUbackmattertrue
+\newif\ifCTUemail       \CTUemailtrue
 % × "\if@compatibility" guards from report.cls have been removed: this class
 %   requires LaTeX2e (see \NeedsTeXFormat above), so the 2.09 compat branches
 %   were always dead code.
@@ -78,6 +97,30 @@
 \DeclareOption{twocolumn}{\@twocolumntrue}
 \DeclareOption{leqno}{\input{leqno.clo}}
 \DeclareOption{fleqn}{\input{fleqn.clo}}
+% header/noheader: show or suppress running page headers (headrule + author/chapter line).
+\DeclareOption{header}{\CTUheadertrue}
+\DeclareOption{noheader}{\CTUheaderfalse}
+% frontmatter/nofrontmatter: include or suppress front matter
+%   (ethical declaration, thank-you note, thesis assignment form, abstract).
+\DeclareOption{frontmatter}{\CTUfrontmattertrue}
+\DeclareOption{nofrontmatter}{\CTUfrontmatterfalse}
+% acro/noacro: print or suppress the acronym and variable lists.
+\DeclareOption{acro}{\CTUacrotrue}
+\DeclareOption{noacro}{\CTUacrofalse}
+% bibliography/nobibliography: print or suppress the bibliography.
+\DeclareOption{bibliography}{\CTUbibliotrue}
+\DeclareOption{nobibliography}{\CTUbibliofalse}
+% software/nosoftware: print or suppress the list of software.
+\DeclareOption{software}{\CTUsoftwaretrue}
+\DeclareOption{nosoftware}{\CTUsoftwarefalse}
+% backmatter/nobackmatter: print or suppress back matter except bibliography
+%   (list of figures, list of tables, appendices).
+\DeclareOption{backmatter}{\CTUbackmattertrue}
+\DeclareOption{nobackmatter}{\CTUbackmatterfalse}
+% email/noemail: add a mailto: hyperlink to the author name in running headers;
+%   also display the email below the author table on the cover page (draft only).
+\DeclareOption{email}{\CTUemailtrue}
+\DeclareOption{noemail}{\CTUemailfalse}
 % (openbib option purged: referenced \@openbib@code and \newblock which were
 %  removed with thebibliography; biblatex is used instead.)
 % letterpaper is overridden by the a4paper DeclareOption above.
@@ -134,6 +177,12 @@
 \fi
 	\newcommand{\course}[1]{\gdef\@course{#1}
 	}
+% \@email: contact address; used in page header (mailto link) and below the
+%   author table on the cover page in draft mode (\ifCTUemail must be set).
+%   Defaults to empty — call \email{addr} in preamble to set.
+\def\@email{}
+	\newcommand{\email}[1]{\gdef\@email{#1}
+	}
 % ==============================================================================
 % Title Page
 % ==============================================================================
@@ -167,6 +216,10 @@
         \@author
       \end{xltabular}\par}%
      \end{minipage}
+  \if@draftmode\ifCTUemail\ifx\@email\@empty\else
+    \vskip 0.3cm
+    {\small\href{mailto:\@email}{\texttt{\@email}}\par}%
+  \fi\fi\fi
 %      \vskip 0.8cm%
   \vfill
   {\normalsize \if@draftmode\@date\else\number\year\fi \par}%
@@ -610,19 +663,25 @@
 %  \let-bound in main.tex before \begin{document} — safe because these are
 %  expanded at page-output time, not at definition time)
 % ==============================================================================
+% \CTU@authorhead: expands to \Author with a mailto: hyperlink when CTUemail is
+%   set and \@email is non-empty; plain \Author otherwise.
+%   \href is resolved at page-output time, so hyperref need not be loaded yet.
+\newcommand\CTU@authorhead{%
+  \ifCTUemail\ifx\@email\@empty\Author\else\href{mailto:\@email}{\Author}\fi
+  \else\Author\fi}
 \newpagestyle{fancy}{
-	\headrule
-	\sethead{\Author}{}{\MakeUppercase{\chaptertitle}}
+	\ifCTUheader\headrule\fi
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\MakeUppercase{\chaptertitle}\fi}
 	\setfoot{}{\thepage}{}
 }
 \renewpagestyle{plain}{
-	\headrule
-	\sethead{\Author}{}{\Course}
+	\ifCTUheader\headrule\fi
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\Course\fi}
 	\setfoot{}{\thepage}{}
 }
 \newpagestyle{nonum}{
-	\headrule
-	\sethead{\Author}{}{\MakeUppercase{\Course}}
+	\ifCTUheader\headrule\fi
+	\sethead{\ifCTUheader\CTU@authorhead\fi}{}{\ifCTUheader\MakeUppercase{\Course}\fi}
 	\footrule
 	\setfoot{}{\begin{minipage}[t]{\textwidth}\centering\Title\end{minipage}}{}
 }
