@@ -72,17 +72,17 @@ pics     = ["korelace_hustota_gini"]
 script   = "analyses/problemy_cz_model.py"
 texparts = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
             "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_duchod_sp_pomer"]
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
 pics     = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
             "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_duchod_sp_pomer"]
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
 
 [cz_tax_model]
 script   = "analyses/problemy_cz_model.py"
 texparts = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_duchod_sp_pomer"]
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
 pics     = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_duchod_sp_pomer"]
+            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
 
 [ipp_wage_growth]
 script   = "analyses/stav_ipp_mzdy.py"
@@ -227,8 +227,8 @@ pics     = ["problemy_gpg_mapa", "problemy_gpg_stratifikace"]
 
 [public_private_wages]
 script   = "analyses/problemy_verejny_soukromy.py"
-texparts = ["problemy_verejny_soukromy"]
-pics     = ["problemy_verejny_soukromy"]
+texparts = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
+pics     = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
 
 [natality]
 script   = "analyses/vyhled_porodnost.py"
@@ -261,39 +261,3 @@ pics     = ["eu_ict_gender"]
 script   = "analyses/eu_mne_mapa.py"
 texparts = ["eu_mne_mapa"]
 pics     = ["eu_mne_mapa"]
-
-[bohatstvi_top1_wid]
-script   = "analyses/eu_bohatstvi_top1_wid.py"
-texparts = ["eu_bohatstvi_top1_wid"]
-pics     = ["eu_bohatstvi_top1_wid"]
-
-[practical_ternary_social_dialog]
-script   = "analyses/practical_ternary_social_dialog.py"
-texparts = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
-pics     = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
-
-[stav_socialni_mir_mapa]
-script   = "analyses/stav_socialni_mir_mapa.py"
-texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
-pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
-
-[stav_kolektivni_spory_vyvoj]
-script   = "analyses/stav_kolektivni_spory_vyvoj.py"
-texparts = ["stav_kolektivni_spory_vyvoj"]
-pics     = ["stav_kolektivni_spory_vyvoj"]
-
-[stav_korporatni_dan]
-script   = "analyses/stav_korporatni_dan.py"
-texparts = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
-pics     = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
-
-[stav_volna_mista_vyvoj]
-script   = "analyses/stav_volna_mista_vyvoj.py"
-texparts = ["stav_volna_mista_vyvoj"]
-pics     = ["stav_volna_mista_vyvoj"]
-
-[stav_struktura_prac_sily]
-script   = "analyses/stav_struktura_prac_sily.py"
-texparts = ["stav_struktura_prac_sily"]
-pics     = []
-
