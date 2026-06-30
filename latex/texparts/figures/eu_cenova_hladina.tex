@@ -1,22 +1,11 @@
 % Editable figure definition for eu_cenova_hladina
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strEuCenovaHladinaTitle{Index cenové hladiny \acs{HDP} (2024)}%
-\def\strEuCenovaHladinaColorbarLabel{\acs{PLI} [\acs{geo-EU27} = 100]}%
-\def\strEuCenovaHladinaCaption{Index cenové hladiny \acs{HDP}, \acs{geo-EU27} mapa, 2024. Zdroj dat: Eurostat~\cite{eurostat_prc_ppp_ind_PLI_GDP}.}%
+\def\strEuCenovaHladinaCaption{\centering Index cenové hladiny HDP, EU mapa, 2024. Zdroj dat: Eurostat~\cite{eurostat_prc_ppp_ind_PLI_GDP}.}%
 %
-
-% --- Per-label y-nudge knobs (override with \renewcommand)
-% Example: \renewcommand\NudgeEuCenovaHladinaCz{-3pt}  % shift label up by 3pt
-\providecommand\NudgeEuCenovaHladinaCz{5pt}%
-\providecommand\NudgeEuCenovaHladinaAt{2pt}%
-\providecommand\NudgeEuCenovaHladinaDe{-2pt}%
-\providecommand\NudgeEuCenovaHladinaDk{0pt}%
-\providecommand\NudgeEuCenovaHladinaPl{0pt}%
-\providecommand\NudgeEuCenovaHladinaSk{-5pt}%
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/eu_cenova_hladina.pgf}}
+  \resizebox{0.92\linewidth}{!}{\input{../python/figures/eu_cenova_hladina.pgf}}
   \caption{\strEuCenovaHladinaCaption}
   \label{fig:eu_cenova_hladina}
 \end{figure}

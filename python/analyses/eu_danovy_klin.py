@@ -23,11 +23,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # Full dataset – no geo filter so all European countries appear on the map.
@@ -56,18 +56,19 @@ fig = choropleth(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "eu_danovy_klin", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "eu_danovy_klin")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "eu_danovy_klin",
     caption=(
         f"Daňový klín (67\\,\\% průměrné mzdy, \\% celkových nákladů práce), "
         f"EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_danovy_klin",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_key="eurostat_earn_nt_taxwedge_PC_AW100",
+    strings={},
 )
 
 print("Done.")

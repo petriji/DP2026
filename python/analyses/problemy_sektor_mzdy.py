@@ -83,12 +83,12 @@ import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_ispv, fetch_eurostat
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -337,15 +337,15 @@ if ispv_wages is not None:
     below = mpatches.Patch(color="#4393C3", alpha=0.8, label="Podprůměrné mzdy (< průměr ekonomiky)")
     ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
 
-    savefig(fig_a, "problemy_sektor_mzdy_cz", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_a, "problemy_sektor_mzdy_cz")
+    save_figure_tex_pgf(
         "problemy_sektor_mzdy_cz",
         caption=(
-            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}, normovaná na celkový medián ekonomiky~= 100"
-        ),
+            f"Mediánová hrubá mzda podle odvětví, ČR, {ispv_year}, normovaná na celkový medián ekonomiky~= 100"),
         label="fig:problemy_sektor_mzdy_cz",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_key="mpsv_ispv",
+        strings={},
     )
 else:
     print("Figure A (ISPV sector bars) skipped – ISPV data unavailable.")
@@ -392,13 +392,14 @@ if lci_by_nace:
     yr1 = max(s.index.max() for s in lci_by_nace.values())
     ax_b.set_xlim(yr0 - 0.4, yr1 + 0.4)
 
-    savefig(fig_b, "problemy_sektor_lci", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_b, "problemy_sektor_lci")
+    save_figure_tex_pgf(
         "problemy_sektor_lci",
         caption=f"Meziroční nárůst LCI podle odvětví NACE, ČR, {yr0}--{yr1}",
         label="fig:problemy_sektor_lci",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_keys="eurostat_lci",
+        strings={},
     )
 else:
     print("Figure B (LCI by sector) skipped – no Eurostat NACE data available.")
@@ -464,13 +465,14 @@ if cv_by_country:
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0%")
     )
 
-    savefig(fig_c, "problemy_sektor_disperze", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_c, "problemy_sektor_disperze")
+    save_figure_tex_pgf(
         "problemy_sektor_disperze",
         caption=f"Variace nárůstu LCI napříč odvětvími, vybrané země EU, {latest_yr}",
         cite_keys="eurostat_lci",
         label="fig:problemy_sektor_disperze",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
+        strings={},
     )
 else:
     print("Figure C (sector dispersion) skipped – insufficient cross-country NACE data.")

@@ -79,13 +79,13 @@ import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -510,8 +510,8 @@ if ispv_path is not None:
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
         ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                     loc="lower right")
-        savefig(fig_a, "problemy_regiony", out_dir=LATEX_PICS_DIR)
-        save_figure_tex(
+        savefig_pgf(fig_a, "problemy_regiony")
+        save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
                 f"ČR: mediánová hrubá mzda podle kraje (ISPV {ispv_year}/H2, "
@@ -523,8 +523,9 @@ if ispv_path is not None:
             ),
             cite_keys="mpsv_ispv",
             label="fig:problemy_regiony",
-            width=r"0.95\linewidth",
+            resizebox_width=r"0.95\linewidth",
             cite_key="mpsv_ispv",
+            strings={},
         )
         regional_done = True
 
@@ -556,8 +557,8 @@ if not regional_done:
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
         ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                      loc="lower right")
-        savefig(fig_a2, "problemy_regiony", out_dir=LATEX_PICS_DIR)
-        save_figure_tex(
+        savefig_pgf(fig_a2, "problemy_regiony")
+        save_figure_tex_pgf(
             "problemy_regiony",
             caption=(
                 "ČR: mediánová hrubá mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA), "
@@ -569,8 +570,9 @@ if not regional_done:
                 "reálnou kupní sílu zaměstnanců v~různých částech republiky."
             ),
             label="fig:problemy_regiony",
-            width=r"0.95\linewidth",
+            resizebox_width=r"0.95\linewidth",
             cite_key="mpsv_ispv",
+            strings={},
         )
         regional_done = True
     else:
@@ -612,18 +614,36 @@ try:
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
     )
 
-    savefig(fig_b, "problemy_gpg_sektor", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    # ── PGF tooltips & geo labels ───────────────────────────────────────────
+    _pivot_gpg = (
+        ds_gpg.df[ds_gpg.df["geo"].isin(COUNTRIES)]
+        .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+    )
+    add_pgf_tooltips(ax_b, _pivot_gpg, fmt="{:.1f}")
+    _bg_gpg = sorted(set(_EU27) - set(COUNTRIES))
+    _pivot_gpg_bg = (
+        ds_gpg.df[ds_gpg.df["geo"].isin(_bg_gpg)]
+        .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+    )
+    add_pgf_tooltips(ax_b, _pivot_gpg_bg, fmt="{:.1f}")
+    for _child in ax_b.get_children():
+        if hasattr(_child, "get_text"):
+            _txt = _child.get_text().strip()
+            if _txt in COUNTRIES:
+                _child.set_text(f"\\acs{{geo-{_txt}}}")
+
+    savefig_pgf(fig_b, "problemy_gpg_sektor")
+    save_figure_tex_pgf(
         "problemy_gpg_sektor",
         caption=(
             f"Nekorigovaný GPG, vybrané země EU, "
             f"{START_YEAR}--{END_YEAR}. "
             "Šedé linie = ostatní členské státy EU; "
-            "přerušovaná černá = průměr EU27"
-        ),
+            "přerušovaná černá = průměr EU27"),
         label="fig:problemy_gpg_sektor",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_key="eurostat_gpg",
+        strings={},
     )
 except Exception as exc:
     print(f"Figure B (gender pay gap) failed: {exc}")
@@ -688,16 +708,17 @@ if pct_df is not None and "p50" in pct_df.columns:
     )
     ax_c.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
 
-    savefig(fig_c, "problemy_sektor_percentily", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_c, "problemy_sektor_percentily")
+    save_figure_tex_pgf(
         "problemy_sektor_percentily",
         caption=(
             f"Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, {ispv_year}"
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_sektor_percentily",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_key="mpsv_ispv",
+        strings={},
     )
 else:
     print("Figure C (sector percentiles) skipped – no percentile data available.")
@@ -735,8 +756,8 @@ try:
         label_fmt="{:.0f}",
     )
 
-    savefig(fig_d, "problemy_regiony_mapa", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_d, "problemy_regiony_mapa")
+    save_figure_tex_pgf(
         "problemy_regiony_mapa",
         caption=(
             "ČR: mediánová hrubá mzda podle kraje (NUTS3) (ISPV 2025/H1, "
@@ -749,8 +770,9 @@ try:
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_regiony_mapa",
-        width=r"0.85\linewidth",
+        resizebox_width=r"0.85\linewidth",
         cite_key="mpsv_ispv",
+        strings={},
     )
     print("  Figure D done.")
 

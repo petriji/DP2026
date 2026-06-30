@@ -21,8 +21,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.style import apply_style, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from statout.timeline import timeline, EU27 as _EU27
 from analyses._shared_data import load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ START_YEAR = 1993   # post-transition baseline for all six countries
 HIGHLIGHT = ["CZ"]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Load data ──────────────────────────────────────────────────────────────
 ds = load_union_density(start_period=START_YEAR)
@@ -52,19 +52,37 @@ fig = timeline(
 )
 fig.axes[0].set_xlim(START_YEAR, 2025)
 
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_pivot_h1 = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_h1, fmt="{:.1f}")
+_bg_h = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_h1_bg = (
+    ds.df[ds.df["geo"].isin(_bg_h)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_h1_bg, fmt="{:.1f}")
+for _child in fig.axes[0].get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "stav_hustota_vyvoj", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "stav_hustota_vyvoj")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "stav_hustota_vyvoj",
     caption=(
         f"Vývoj hustoty odborových organizací, vybrané země EU, "
-        f"{START_YEAR}--{ds.years[-1]}."
-    ),
+        f"{START_YEAR}--{ds.years[-1]}."),
     label="fig:stav_hustota_vyvoj",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
+    strings={},
 )
 
 # ── 6. Second variant: 2004–latest (cropped x-axis) ──────────────────────────
@@ -84,16 +102,33 @@ fig2 = timeline(
 fig2.axes[0].set_xlim(2004, 2025)
 fig2.axes[0].set_ylim(0, 80)
 
-savefig(fig2, "stav_hustota_vyvoj_2004", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_pivot_h2 = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig2.axes[0], _pivot_h2, fmt="{:.1f}")
+_pivot_h2_bg = (
+    ds.df[ds.df["geo"].isin(_bg_h)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig2.axes[0], _pivot_h2_bg, fmt="{:.1f}")
+for _child in fig2.axes[0].get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
+savefig_pgf(fig2, "stav_hustota_vyvoj_2004")
+save_figure_tex_pgf(
     "stav_hustota_vyvoj_2004",
     caption=(
         f"Vývoj hustoty odborových organizací, vybrané země EU, "
-        f"2004--{ds.years[-1]}."
-    ),
+        f"2004--{ds.years[-1]}."),
     label="fig:stav_hustota_vyvoj_2004",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="oecd_aias_ictwss_TUD_pct",
+    strings={},
 )
 
 print("Done.")

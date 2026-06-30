@@ -58,13 +58,13 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -213,14 +213,15 @@ if years_bc:
     ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
     ax_b.set_xlim(START_YEAR, END_YEAR)
 
-    savefig(fig_b, "stav_ipp_kumulativ", out_dir=LATEX_PICS_DIR)
+    savefig_pgf(fig_b, "stav_ipp_kumulativ")
     yr0, yr1 = years_bc[0], years_bc[-1]
-    save_figure_tex(
+    save_figure_tex_pgf(
         "stav_ipp_kumulativ",
         caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), ČR, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_kumulativ",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci", "eurostat_hicp"],
+        strings={},
     )
 else:
     print("Figure B skipped – insufficient overlapping data.")
@@ -274,14 +275,15 @@ if years_c:
     ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FONT_SIZE - 1)
     ax_c.set_xlim(years_c[0] - 0.5, years_c[-1] + 0.5)
 
-    savefig(fig_c, "stav_ipp_mezera", out_dir=LATEX_PICS_DIR)
+    savefig_pgf(fig_c, "stav_ipp_mezera")
     yr0, yr1 = years_c[0], years_c[-1]
-    save_figure_tex(
+    save_figure_tex_pgf(
         "stav_ipp_mezera",
         caption=f"Rozdíl LCI a~sjednaného nárůstu v~KS, ČR, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_mezera",
-        width=r"0.95\linewidth",
+        resizebox_width=r"0.95\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci"],
+        strings={},
     )
 else:
     print("Figure C skipped – no overlapping IPP + LCI years.")

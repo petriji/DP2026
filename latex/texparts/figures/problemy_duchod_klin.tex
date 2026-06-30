@@ -1,13 +1,11 @@
 % Editable figure definition for problemy_duchod_klin
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemyDuchodKlinXlabel{celkové náklady zaměstnavatele / příjmy OSVČ [tis.~Kč/měsíc]}%
-\def\strProblemyDuchodKlinYlabel{daňový klín [\%]}%
-\def\strProblemyDuchodKlinCaption{Náhradový poměr a~efektivní daňový klín, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026. Zdroj dat: Model podle legislativy \aca{geo-CZ}~\cite{zakon_zpds_1995}\cite{zakon_duchreforma_2023}\cite{zakon_zdp_1992}\cite{zakon_sp_1992}\cite{zakon_zp_1992}\cite{nv_365_2025}.}%
+\def\strProblemyDuchodKlinCaption{\centering Náhradový poměr a~efektivní daňový klín, OSVČ a~zaměstnanec. Osa x: daňový klín = (SP + ZP + DPFO) / příjmy; zahrnuje daň z~příjmů a pojistné (zaměstnanec: i část zaměstnavatele). Pro výdajový paušál SP a ZP nejsou odečitatelné od základu DPFO (ZDP § 7 odst. 7). Sleva na poplatníka 2\,570\,Kč/měs.\ uplatněna pro zaměstnance a OSVČ se standardními/výdajovými odvody; pro paušální daň je již zahrnuta v pevné platbě. Osa y: náhradový poměr = důchod\,/\,čistý příjem. Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny přerušovaně (standardní odvody) a tečkovaně (paušální daň). Body označené kroužkem odpovídají minimální mzdě a mediánu zaměstnaneckých mezd (ISPV 2026; medián zisku OSVČ není statisticky k~dispozici). Parametry roku~2026, pojistná doba 40~let. Výpočet dle zákonů č.\,155/1995~Sb., č.\,270/2023~Sb., č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. a nařízení vlády č.\,365/2025~Sb. Zdroj dat: zákon\,ČR~\cite{zakon_zpds_1995}\cite{zakon_duchreforma_2023}\cite{zakon_zdp_1992}\cite{zakon_sp_1992}\cite{zakon_zp_1992}\cite{nv_365_2025}.}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_duchod_klin.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_duchod_klin.pgf}}
   \caption{\strProblemyDuchodKlinCaption}
   \label{fig:problemy_duchod_klin}
 \end{figure}

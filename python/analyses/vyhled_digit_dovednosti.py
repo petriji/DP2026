@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ from statout.map_europe import choropleth
 CITE_KEY = "eurostat_isoc_sk_dskl_i21_AB"
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # isoc_sk_dskl_i21: Individuals' level of digital skills (from 2021)
@@ -69,18 +69,18 @@ fig = choropleth(
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig(fig, "vyhled_digit_dovednosti_mapa", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "vyhled_digit_dovednosti_mapa")
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex(
+save_figure_tex_pgf(
     "vyhled_digit_dovednosti_mapa",
     caption=(
         f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, "
-        f"EU mapa, {ds.latest_year}."
-    ),
+        f"EU mapa, {ds.latest_year}."),
     label="fig:vyhled_digit_dovednosti_mapa",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_key=CITE_KEY,
+    strings={},
 )
 
 print("Done.")

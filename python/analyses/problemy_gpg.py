@@ -49,14 +49,14 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 COUNTRY_LABELS = {"CZ": "CZ", "AT": "AT", "DE": "DE", "DK": "DK", "PL": "PL", "SK": "SK"}
 
-apply_style()
+apply_style_pgf()
 
 # ==============================================================================
 # Figure A – Gender Pay Gap choropleth (earn_gr_gpgr2)
@@ -132,8 +132,8 @@ fig_a = choropleth(
     label_countries=True,
 )
 
-savefig(fig_a, "problemy_gpg_mapa", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_a, "problemy_gpg_mapa")
+save_figure_tex_pgf(
     "problemy_gpg_mapa",
     caption=(
         f"Nekorigovaný gender pay gap (NACE B--S), EU27, {snap_year}. "
@@ -142,8 +142,9 @@ save_figure_tex(
     ),
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_key="eurostat_gpg",
+    strings={},
 )
 
 # ==============================================================================
@@ -279,8 +280,8 @@ ax_b.legend(handles=country_handles + style_handles,
             loc="lower center", bbox_to_anchor=(0.5, -0.18),
             frameon=False, fontsize=FONT_SIZE - 1)
 
-savefig(fig_b, "problemy_gpg_stratifikace", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_b, "problemy_gpg_stratifikace")
+save_figure_tex_pgf(
     "problemy_gpg_stratifikace",
     caption=(
         f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země EU, {ses_year}. "
@@ -289,8 +290,9 @@ save_figure_tex(
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",
-    width=r"\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_ses_hourly",
+    strings={},
 )
 
 print("Done.")

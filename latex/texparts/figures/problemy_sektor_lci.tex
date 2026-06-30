@@ -1,14 +1,11 @@
 % Editable figure definition for problemy_sektor_lci
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemySektorLciTitle{\acs{geo-CZ}: růst indexu mzdových nákladů (\acs{LCI}) podle odvětví \acs{NACE}}%
-\def\strProblemySektorLciXlabel{rok}%
-\def\strProblemySektorLciYlabel{meziroční nárůst \acs{LCI} [\%]}%
-\def\strProblemySektorLciCaption{Meziroční nárůst \acs{LCI} podle odvětví \acs{NACE}, \acs{geo-CZ}, 2016--2025. Zdroj dat: Eurostat~\cite{eurostat_lci}.}%
+\def\strProblemySektorLciCaption{\centering Meziroční nárůst LCI podle odvětví NACE, ČR, 2016--2025. Zdroj dat: Eurostat~\cite{eurostat_lci}.}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_sektor_lci.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_sektor_lci.pgf}}
   \caption{\strProblemySektorLciCaption}
   \label{fig:problemy_sektor_lci}
 \end{figure}

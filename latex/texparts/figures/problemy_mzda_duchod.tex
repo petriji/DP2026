@@ -1,14 +1,11 @@
 % Editable figure definition for problemy_mzda_duchod
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemyMzdaDuchodTitle{Rozložení čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}}%
-\def\strProblemyMzdaDuchodXlabel{čistá mzda / výše důchodu [tis.~Kč/měsíc]}%
-\def\strProblemyMzdaDuchodYlabel{počet osob v intervalu 1\,tis.\,Kč [tis. osob]}%
-\def\strProblemyMzdaDuchodCaption{Distribuce čistých mezd 2025 a~starobních důchodů 2024, \acs{geo-CZ}. Zdroj dat: \acs{MPSV}~\acs{ISPV}~\cite{mpsv_ispv}, \acs{ČSSZ}~\cite{cssz_rocenka_duchod}.}%
+\def\strProblemyMzdaDuchodCaption{\centering Distribuce čistých mezd a~starobních důchodů, ČR, 2025/2024. Čisté mzdy (ISPV~2025; N\,=\,3,500\,tis.\ zaměstnanců) a~starobní důchody (CSSZ~2024; N\,=\,2,367\,tis.\ příjemců). Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\,\%), ZP (4{{,}}5\,\%) a daně z příjmů fyzických osob (DPFO\,=\,15\,\%\,$\times$\,hrubá\,$-$\,\SI{2570}{\czk\per\month} do \SI{1676052}{\czk\per\rok}; 23\,\% nad tuto hranici, §\,16 ZDP 2025); celkové mzdové náklady zaměstnavatele odpovídají násobku 1{{,}}338 hrubé mzdy (medián: \SI{56,331}{\czk}). Starobní důchody jsou vypláceny jako čistá částka. Obě distribuce jsou modelovány jako \emph{{zleva zkrácené}} log-normální rozdělení: mzdová distribuce je zkrácena na minimální čistou mzdu (\SI{17,837}{\czk}, hrubá \SI{20,800}{\czk}), penzijní distribuce na minimální důchod (\SI{5,170}{\czk}; zákon č.\,155/1995\,Sb.\ §\,29, NV č.\,364/2024\,Sb.). Parametry log-normálního rozdělení jsou fitovány metodou nejmenších čtverců na percentilové profily (P10\,--\,P90). Osa y udává počet osob v intervalu šíře \SI{1}{tis.\,\czk}. Přerušované svislé čáry označují mediány; tečkované čáry zákonná minima. Zdroj dat: MPSV/ISPV~\cite{mpsv_ispv}.}%
 %
-\begin{figure}[htb]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_mzda_duchod.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_mzda_duchod.pgf}}
   \caption{\strProblemyMzdaDuchodCaption}
   \label{fig:problemy_mzda_duchod}
 \end{figure}

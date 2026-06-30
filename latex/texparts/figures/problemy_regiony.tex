@@ -1,13 +1,11 @@
 % Editable figure definition for problemy_regiony
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemyRegionyTitle{\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1, \acs{MPSV}/TREXIMA)}%
-\def\strProblemyRegionyXlabel{Index (národní medián = 100)}%
-\def\strProblemyRegionyCaption{Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025. Zdroj dat: \acs{MPSV}~\acs{ISPV}~\cite{mpsv_ispv}.}%
+\def\strProblemyRegionyCaption{\centering ČR: mediánová hrubá mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA), normovaná na národní medián = 100. Červené sloupce = regiony s~nadprůměrnou mzdou; modré = podprůměrné kraje. Přetrvávající regionální mzdové nerovnosti dokládají, proč celostátní minimální mzda a KS různě ovlivňují reálnou kupní sílu zaměstnanců v~různých částech republiky. Zdroj dat: MPSV/ISPV~\cite{mpsv_ispv}.}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_regiony.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_regiony.pgf}}
   \caption{\strProblemyRegionyCaption}
   \label{fig:problemy_regiony}
 \end{figure}

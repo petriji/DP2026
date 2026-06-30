@@ -1,22 +1,11 @@
 % Editable figure definition for eu_pokryti_kv_mapa
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strEuPokrytiKvMapaTitle{Pokrytí kolektivními smlouvami (2024)}%
-\def\strEuPokrytiKvMapaColorbarLabel{podíl zaměstnanců [\%]}%
-\def\strEuPokrytiKvMapaCaption{Pokrytí kolektivními smlouvami, mapa Evropy, 2024. Zdroj dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
+\def\strEuPokrytiKvMapaCaption{\centering Pokrytí KV, EU mapa, 2024. Zdroj dat: OECD\,ICTWSS~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
 %
-
-% --- Per-label y-nudge knobs (override with \renewcommand)
-% Example: \renewcommand\NudgeEuPokrytiKvMapaCz{-3pt}  % shift label up by 3pt
-\providecommand\NudgeEuPokrytiKvMapaCz{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaAt{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaDe{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaDk{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaPl{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaSk{0pt}%
-\begin{figure}[htb]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/eu_pokryti_kv_mapa.pgf}}
+  \resizebox{0.92\linewidth}{!}{\input{../python/figures/eu_pokryti_kv_mapa.pgf}}
   \caption{\strEuPokrytiKvMapaCaption}
   \label{fig:eu_pokryti_kv_mapa}
 \end{figure}

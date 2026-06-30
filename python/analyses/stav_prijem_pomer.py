@@ -36,7 +36,7 @@ from statout.timeline import EU27 as _EU27
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
 from statout.timeline import timeline
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ COUNTRIES = ["CZ", "SK", "PL", "AT", "DE", "DK"]
 START_YEAR = 2004
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading Eurostat data …")
@@ -124,18 +124,35 @@ fig = timeline(
 )
 
 fig.axes[0].set_xlim(START_YEAR, max(2025, ds_ratio.years[-1]))
-
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_pivot_pp = (
+    ds_ratio.df[ds_ratio.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_pp, fmt="{:.2f}")
+_bg_pp = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_pp_bg = (
+    ds_ratio.df[ds_ratio.df["geo"].isin(_bg_pp)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(fig.axes[0], _pivot_pp_bg, fmt="{:.2f}")
+for _child in fig.axes[0].get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in COUNTRIES:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
 # ── 6. Save ───────────────────────────────────────────────────────────────────
-savefig(fig, "stav_prijem_pomer", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "stav_prijem_pomer")
 
 # ── 7. LaTeX snippet ──────────────────────────────────────────────────────────
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
-save_figure_tex(
+save_figure_tex_pgf(
     "stav_prijem_pomer",
     caption=f"Poměr čistého příjmu k~HDP na obyvatele (EU27\\,=\\,100), {START_YEAR}--{last_year}.",
     label="fig:stav_prijem_pomer",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
+    strings={},
 )
 
 print("Done.")

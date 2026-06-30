@@ -295,7 +295,10 @@ def add_pgf_tooltips(
         series = pivot[geo].dropna()
         for year, val in series.items():
             long = GEO_LONG_NAMES.get(str(geo), str(geo))
-            tooltip_text = f"{long} {int(year)}: {fmt.format(val)}"
+            tooltip_text = (
+                f"{long} {int(year)}: {fmt.format(val)}"
+                .replace('%', r'\%').replace('&', r'\&').replace('#', r'\#')
+            )
             ax.text(
                 float(year),
                 float(val),
@@ -337,7 +340,11 @@ def add_pgf_tooltips_scatter(
         long = GEO_LONG_NAMES.get(geo, geo)
         x_str = fmt_x.format(float(row[x_col]))
         y_str = fmt_y.format(float(row[y_col]))
-        tooltip_text = f"{long} | {label_x}: {x_str} | {label_y}: {y_str}"
+        tooltip_text = (
+            f"{long} | {label_x}: {x_str} | {label_y}: {y_str}"
+            .replace('%', r'\%').replace('&', r'\&').replace('#', r'\#')
+            .replace('_', r'\_').replace('^', r'\^{}').replace('~', r'\textasciitilde{}')
+        )
         ax.text(
             float(row[x_col]),
             float(row[y_col]),
@@ -874,7 +881,9 @@ def save_figure_tex_pgf(
         footnote_line = ""
 
     # ── Editable figure tex file (written once, never overwritten) ────────
-    if strings:
+    # strings={} (empty dict) is treated as "create editable file with caption
+    # macro only"; strings=None (default) falls through to inline figure env.
+    if strings is not None:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
         strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"

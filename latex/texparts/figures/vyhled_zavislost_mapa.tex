@@ -1,22 +1,11 @@
 % Editable figure definition for vyhled_zavislost_mapa
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strVyhledZavislostMapaTitle{Koeficient ekonomického zatížení seniory (2025)}%
-\def\strVyhledZavislostMapaColorbarLabel{osoby 65+ / osoby 20--64 [\%]}%
-\def\strVyhledZavislostMapaCaption{Index závislosti seniorů, mapa Evropy, 2025. Zdroj dat: Eurostat~\cite{eurostat_demo_pjanind}.}%
+\def\strVyhledZavislostMapaCaption{\centering Koeficient ekonomického zatížení seniory, evropské země, 2025. Zdroj dat: Eurostat~\cite{eurostat_demo_pjanind}.}%
 %
-
-% --- Per-label y-nudge knobs (override with \renewcommand)
-% Example: \renewcommand\NudgeVyhledZavislostMapaCz{-3pt}  % shift label up by 3pt
-\providecommand\NudgeVyhledZavislostMapaCz{-7pt}%
-\providecommand\NudgeVyhledZavislostMapaAt{-8pt}%
-\providecommand\NudgeVyhledZavislostMapaDe{0pt}%
-\providecommand\NudgeVyhledZavislostMapaSk{-4pt}%
-\providecommand\NudgeVyhledZavislostMapaPl{0pt}%
-\providecommand\NudgeVyhledZavislostMapaDk{7pt}%
-\begin{figure}[htb]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/vyhled_zavislost_mapa.pgf}}
+  \resizebox{0.92\linewidth}{!}{\input{../python/figures/vyhled_zavislost_mapa.pgf}}
   \caption{\strVyhledZavislostMapaCaption}
   \label{fig:vyhled_zavislost_mapa}
 \end{figure}

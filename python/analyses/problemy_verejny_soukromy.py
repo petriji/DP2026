@@ -60,9 +60,9 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
-apply_style()
+apply_style_pgf()
 
 # ── Constants ────────────────────────────────────────────────────────────────
 ISPV_YEAR = 2025
@@ -334,8 +334,8 @@ ax_a.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.set_axisbelow(True)
 
 fig_a.tight_layout()
-savefig(fig_a, "problemy_verejny_soukromy", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_a, "problemy_verejny_soukromy")
+save_figure_tex_pgf(
     "problemy_verejny_soukromy",
     caption=(
         f"Mediánová mzda a~plat podle sekce NACE, ČR, {ISPV_YEAR} "
@@ -349,8 +349,9 @@ save_figure_tex(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy",
-    width=r"0.92\linewidth",
+    resizebox_width=r"0.92\linewidth",
     cite_key="mpsv_ispv",
+    strings={},
 )
 print("  Figure A done.")
 
@@ -468,8 +469,8 @@ ax_b.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_b.set_axisbelow(True)
 
 fig_b.tight_layout()
-savefig(fig_b, "problemy_verejny_soukromy_dist", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_b, "problemy_verejny_soukromy_dist")
+save_figure_tex_pgf(
     "problemy_verejny_soukromy_dist",
     caption=(
         f"Mzdové rozdělení: soukromý vs. veřejný sektor, ČR, {ISPV_YEAR} "
@@ -483,8 +484,9 @@ save_figure_tex(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy_dist",
-    width=r"0.85\linewidth",
+    resizebox_width=r"0.85\linewidth",
     cite_key="mpsv_ispv",
+    strings={},
 )
 print("  Figure B done.")
 

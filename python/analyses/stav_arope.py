@@ -24,12 +24,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
 from statout.map_europe import choropleth
-from statout.timeline import timeline, timeline_groups
+from statout.timeline import timeline, timeline_groups, EU27 as _EU27
 
 # ── 0. Global style ───────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download & parse ───────────────────────────────────────────────────────
 # ilc_peps01n dimensions: freq, unit, age, sex, geo
@@ -59,14 +59,14 @@ fig_a = choropleth(
     vmin=0,
     vmax=40,
 )
-savefig(fig_a, map_name, out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_a, map_name)
+save_figure_tex_pgf(
     map_name,
     caption=(
-        f"Míra AROPE v~evropských zemích, {ds.latest_year}."
-    ),
+        f"Míra AROPE v~evropských zemích, {ds.latest_year}."),
     label=f"fig:{map_name}",
     cite_key="eurostat_ilc_peps01n_PC_pop",
+    strings={},
 )
 
 # ── 3. Figure B – Timeline for Central European countries ─────────────────────
@@ -79,12 +79,31 @@ fig_b = timeline(
     highlight=["CZ"],
     background_eu=True,
 )
-savefig(fig_b, "stav_arope_vyvoj", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+# ── PGF tooltips & geo labels ───────────────────────────────────────────
+_ax_b = fig_b.axes[0]
+_pivot_arope_b = (
+    ds.df[ds.df["geo"].isin(V4_AND_NEIGHBOURS)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax_b, _pivot_arope_b, fmt="{:.1f}")
+_bg_arope = sorted(set(_EU27) - set(V4_AND_NEIGHBOURS))
+_pivot_arope_b_bg = (
+    ds.df[ds.df["geo"].isin(_bg_arope)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(_ax_b, _pivot_arope_b_bg, fmt="{:.1f}")
+for _child in _ax_b.get_children():
+    if hasattr(_child, "get_text"):
+        _txt = _child.get_text().strip()
+        if _txt in V4_AND_NEIGHBOURS:
+            _child.set_text(f"\\acs{{geo-{_txt}}}")
+savefig_pgf(fig_b, "stav_arope_vyvoj")
+save_figure_tex_pgf(
     "stav_arope_vyvoj",
     caption=f"Vývoj míry AROPE, střední Evropa, {ds.years[0]}--{ds.years[-1]}.",
     label="fig:stav_arope_vyvoj",
     cite_key="eurostat_ilc_peps01n_PC_pop",
+    strings={},
 )
 
 # ── 4. Figure C – Country-group averages ──────────────────────────────────────
@@ -99,15 +118,22 @@ fig_c = timeline_groups(
     title="Míra AROPE podle skupin zemí",
     ylabel="míra AROPE [%]",
 )
-savefig(fig_c, "stav_arope_skupiny", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+# ── PGF tooltips (groups) ─────────────────────────────────────────────────
+import pandas as _pd
+_pivot_arope_c = _pd.DataFrame({
+    _lbl: ds.df[ds.df["geo"].isin(_geos)].groupby("time")["value"].mean()
+    for _lbl, _geos in GROUPS.items()
+})
+add_pgf_tooltips(fig_c.axes[0], _pivot_arope_c, fmt="{:.1f}")
+savefig_pgf(fig_c, "stav_arope_skupiny")
+save_figure_tex_pgf(
     "stav_arope_skupiny",
     caption=(
         "Vývoj míry AROPE podle skupin zemí, "
-        f"{ds.years[0]}--{ds.years[-1]}."
-    ),
+        f"{ds.years[0]}--{ds.years[-1]}."),
     label="fig:stav_arope_skupiny",
     cite_key="eurostat_ilc_peps01n_PC_pop",
+    strings={},
 )
 
 print(f"\nVšechny výstupy uloženy do {LATEX_PICS_DIR}")

@@ -47,7 +47,7 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, LATEX_TEXPARTS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 from analyses._shared_data import load_cb_coverage, load_union_density
@@ -77,7 +77,7 @@ _EXCL_NOTE = (
 )
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading data …")
@@ -242,6 +242,18 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         countries=EU27_LIST,
         year_tolerance=9,
     )
+    # ── PGF tooltips & geo labels (───────────────────────────────────────────
+    add_pgf_tooltips_scatter(
+        ax, fig_all._scatter_merged,
+        fmt_x="{:.1f}", fmt_y="{:.1f}",
+        label_x=spec["xlabel"].replace("\n", " "),
+        label_y=spec["ylabel"].replace("\n", " "),
+    )
+    for _schild in ax.get_children():
+        if hasattr(_schild, "get_text"):
+            _stxt = _schild.get_text().strip()
+            if _stxt in HIGHLIGHT_COUNTRIES:
+                _schild.set_text(f"\\acs{{geo-{_stxt}}}")
     # Subcaption label
     ax.text(
         0.03, 0.97, _SUBCAPTIONS[idx],
@@ -262,16 +274,17 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     for item in ax.get_xticklabels() + ax.get_yticklabels():
         item.set_fontsize(max(item.get_fontsize(), 10))
 fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
-savefig(fig_all, "korelace_scatter", out_dir=LATEX_PICS_DIR)
-save_figure_tex(
+savefig_pgf(fig_all, "korelace_scatter")
+save_figure_tex_pgf(
     "korelace_scatter",
     caption="Korelace pokrytí KV a veličin trhu práce, EU27.",
     label="fig:korelace_scatter",
-    width=r"0.98\linewidth",
+    resizebox_width=r"0.98\linewidth",
     cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhan2_HR_weekly",
                "eurostat_gpg", "eurostat_earn_nt_net_PPS_AW100",
                "eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100"],
     footnote=_EXCL_NOTE,
+    strings={},
 )
 print("  saved scatter_combined")
 

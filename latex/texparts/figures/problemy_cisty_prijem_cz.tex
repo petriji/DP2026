@@ -1,13 +1,11 @@
 % Editable figure definition for problemy_cisty_prijem_cz
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemyCistyPrijemCzXlabel{celkové náklady zaměstnavatele / příjmy OSVČ [tis.~Kč/měsíc]}%
-\def\strProblemyCistyPrijemCzYlabel{čistý příjem [tis.~Kč/měsíc]}%
-\def\strProblemyCistyPrijemCzCaption{Čistý příjem, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026. Zdroj dat: Model podle legislativy \aca{geo-CZ}~\cite{zakon_zdp_1992}\cite{zakon_sp_1992}\cite{zakon_zp_1992}\cite{nv_365_2025}.}%
+\def\strProblemyCistyPrijemCzCaption{\centering Čistý příjem, zaměstnanec vs.\ OSVČ, parametry 2026. Zaměstnanec: čistý příjem = hrubá mzda\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO. OSVČ s výdajovým paušálem: čistý příjem = základ daně (ZD)\,$-$\,SP\,$-$\,ZP\,$-$\,DPFO, kde ZD\,=\,příjmy\,$\times$\,(1\,$-$\,sazba paušálu); paušální výdaje nejsou součástí čistého příjmu (jsou uvažovány jako skutečné obchodní náklady). OSVČ paušální daň: čistý příjem = příjmy\,$-$\,celková pevná platba (skutečné výdaje nejsou modelovány). Tři typy OSVČ (výdajový paušál 40\,\%, 60\,\%, 80\,\%) zobrazeny přerušovaně (standardní odvody) a tečkovaně (paušální daň). Parametry roku~2026. Výpočet dle zákonů č.\,586/1992~Sb., č.\,589/1992~Sb., č.\,592/1992~Sb. a nařízení vlády č.\,365/2025~Sb. Zdroj dat: zákon\,ČR~\cite{zakon_zdp_1992}\cite{zakon_sp_1992}\cite{zakon_zp_1992}\cite{nv_365_2025}.}%
 %
 \begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_cisty_prijem_cz.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_cisty_prijem_cz.pgf}}
   \caption{\strProblemyCistyPrijemCzCaption}
   \label{fig:problemy_cisty_prijem_cz}
 \end{figure}

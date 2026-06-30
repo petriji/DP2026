@@ -1,13 +1,11 @@
 % Editable figure definition for problemy_sektor_percentily
-% Edit freely --- Python will NOT overwrite this file.
+% Edit freely — Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strProblemySektorPercentilyTitle{\acs{geo-CZ}: rozložení mezd podle hlavních skupin CZ-ISCO (\acs{ISPV} 2025/H2); P25--P75 (\acs{IQR}) a~medián}%
-\def\strProblemySektorPercentilyXlabel{hrubá měsíční mzda [\si{\czk}]}%
-\def\strProblemySektorPercentilyCaption{Mzdové rozdělení podle odvětví (CZ-ISCO), \acs{geo-CZ}, 2025. Zdroj dat: \acs{MPSV}~\acs{ISPV}~\cite{mpsv_ispv}.}%
+\def\strProblemySektorPercentilyCaption{\centering Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, 2025. Zdroj dat: MPSV/ISPV~\cite{mpsv_ispv}.}%
 %
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/problemy_sektor_percentily.pgf}}
+  \resizebox{0.95\linewidth}{!}{\input{../python/figures/problemy_sektor_percentily.pgf}}
   \caption{\strProblemySektorPercentilyCaption}
   \label{fig:problemy_sektor_percentily}
 \end{figure}
