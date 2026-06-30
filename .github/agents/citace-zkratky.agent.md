@@ -102,6 +102,19 @@ When a new abbreviation needs declined long forms, add them via `\AcroProperties
 	long-instrumental-form  = instrumentál
 }
 ```
+
+**Plural oblique forms** use composite endings `pgen`, `pdat`, `pacc`, `ploc`, `pins`.
+Add via:
+```latex
+\AcroPropertiesSet{ID}{
+	long-pgen-form  = genitiv pl.,
+	long-pdat-form  = dativ pl.,
+	long-pacc-form  = akuzativ pl.,
+	long-ploc-form  = lokál pl.,
+	long-pins-form  = instrumentál pl.
+}
+```
+
 Declension commands available in prose:
 
 | Command | Case | Example (`EU`) |
@@ -118,12 +131,20 @@ Declension commands available in prose:
 | `\aclocf{EU}` | force-first locative | Evropské unii (EU) |
 | `\acinsf{EU}` | force-first instrumental | Evropskou unií (EU) |
 | `\acf{EU}` | force-first nominative (built-in acro) | Evropská unie (EU) |
+| `\aclpgen{OO}` | **plural genitive** (long only) | odborových organizací |
+| `\aclpdat{OO}` | **plural dative** (long only) | odborovým organizacím |
+| `\aclpacc{OO}` | **plural accusative** (long only) | odborové organizace |
+| `\aclploc{OO}` | **plural locative** (long only) | odborových organizacích |
+| `\aclpins{OO}` | **plural instrumental** (long only) | odborovými organizacemi |
+| `\acpgen{OO}` | plural genitive first-use (long+SHORT on first, SHORT later) | odborových organizací (OO) |
 
 Use force-first variants (`\ac*f{KEY}`) at the start of a paragraph or block where the
 acronym will repeat frequently and the reader needs the long form re-introduced after a
 section break or chapter boundary.
 
-Already-declared declension forms: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV.
+Already-declared declension forms (singular): EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV, ČR, ÖGB, ZP, ZKV, PP, PV, OO, OS, SD, SDEU, NERV and others (see `acro.tex`).
+Already-declared plural oblique forms (`long-pgen-form` etc.): ICT, KS, KSVS, PKS, OO, OS, ZO, OSVČ, PKOV.
+
 **Auto-add forms when needed:** if any other agent (Komentuj analýzu, Formatuj LaTeX) is
 about to use `\acgen{KEY}`, `\acacc{KEY}` etc. for an acronym whose
 `long-<case>-form` properties are NOT set in `acro.tex`, add the missing forms via
