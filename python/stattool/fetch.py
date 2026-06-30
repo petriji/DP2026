@@ -154,19 +154,30 @@ def fetch_ipp(
     Parameters
     ----------
     year:
-        Survey / reference year (e.g., ``2024``).
+        Survey / reference year (e.g., ``2025``).
     topic:
         File topic code.  Known codes and the data they contain:
 
-        - ``"odmenovani"``                    – remuneration: negotiated wage
+        Available in all years (2016–present):
+
+        - ``"odmenovani"``                      – remuneration: negotiated wage
           increases, forms of pay, tariff vs. non-tariff systems.
-        - ``"mzda_tarify"``                   – wage tariff levels agreed in CAs.
-        - ``"priplatky_dalsi_slozky_mzdy"``   – supplements and other wage
+        - ``"mzda_tarify"``                     – wage tariff levels agreed in CAs.
+        - ``"priplatky_dalsi_slozky_mzdy"``     – supplements and other wage
           components (overtime, night shifts, holiday pay, …).
         - ``"zamestnanost_rozvoj_BOZP_dohody"`` – employment, personnel
           development, health & safety, and other agreements.
-        - ``"spoluprace_smluvnich_stran"``    – cooperation of contracting
+        - ``"spoluprace_smluvnich_stran"``      – cooperation of contracting
           parties (unions and employers).
+
+        New from 2025:
+
+        - ``"pracovni_zivotni_vyroci"``         – work and life anniversaries
+          (jubilee benefits, service-length bonuses).
+        - ``"prac_doba_zmeny_prac_pomeru"``      – working hours, leave, and
+          changes to the employment relationship.
+        - ``"prac_podminky_benefity"``           – working conditions and
+          employee benefits (meal vouchers, transport, home-office, …).
     force:
         Re-download even when a cached copy already exists.
 

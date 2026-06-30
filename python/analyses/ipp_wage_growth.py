@@ -59,7 +59,7 @@ log = logging.getLogger(__name__)
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 GEO_6 = "+".join(COUNTRIES)
 START_YEAR = 2016   # first year with consistent IPP odmenovani time-series data
-END_YEAR = 2024     # most recent complete survey year
+END_YEAR = 2025     # most recent complete survey year
 
 # IPP odmenovani workbook structure (adjust if MPSV updates the layout)
 # Each entry: year → dict with read_excel kwargs + metric column info.
