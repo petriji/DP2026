@@ -20,7 +20,7 @@ Czech Republic (negotiated):
 
 All 6 countries (actual):
     Eurostat Labour Cost Index – nominal, annual (``lc_lci_r2_a``).
-    ``B-S`` = total business economy; ``D1_D4_MD5`` = total labour cost index;
+    ``B-S`` = total business economy; ``D1_D4_MD5`` = total labour costs;
     ``I20`` = 2020 = 100 base year.
     Annual growth rate derived by dividing consecutive index values.
 
@@ -149,8 +149,8 @@ if not ipp_records:
 # ── 2. Download Eurostat labour cost index (nominal, all countries) ───────────
 # lc_lci_r2_a: Labour cost index – nominal, annual (replaced lc_lci_r2 in 2024)
 # Dimensions: freq · unit · nace_r2 · lcstruct · geo
-# Filter: A (annual) · I20 (2020=100) · B-S (business economy) · D1_D4_MD5 (total LCI)
-print("Downloading Eurostat labour cost index …")
+# Filter: A (annual) · I20 (2020=100) · B-S (business economy) · D1_D4_MD5 (total labour costs)
+print("Downloading Eurostat labour cost index (total labour costs) …")
 path_lci = fetch_eurostat(
     "lc_lci_r2_a",
     f"A.I20.B-S.D1_D4_MD5.{GEO_6}",
@@ -159,7 +159,7 @@ path_lci = fetch_eurostat(
 
 ds_lci = Dataset.from_sdmx_csv(
     path_lci,
-    name="Index mzdových nákladů",
+    name="Index nákladů práce",
     unit="2020=100",
     source_url="Eurostat/lc_lci_r2_a",
 )
