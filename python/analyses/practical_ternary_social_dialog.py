@@ -16,8 +16,7 @@ coordinates once the analysis is extended.
 
 Output
 ------
-  python/figures/practical_ternary_social_dialog.pgf
-  python/figures/practical_ternary_social_dialog.pdf
+    python/figures/practical_ternary_social_dialog.pgf
 
 Run
 ---
@@ -29,7 +28,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -55,6 +53,7 @@ SHOW_EQUILIBRIUM_DISTANCE_GRID: bool = True  # set False to hide concentric equi
 # Set to False only for debugging. Hardcoded coordinates are kept below
 # as comments for reference and are no longer used at runtime.
 RECALCULATE_COORDS: bool = True
+ENABLE_PDF_EXPORT: bool = False  # keep PDF capability, disabled in normal pipeline runs
 
 # ── Featured countries (colour, foreground) ──────────────────────────────────
 # (Employees %, Employers %, State %) — integers sum to 100.
@@ -191,25 +190,20 @@ def main() -> None:
         nudge_labels=_LABEL_Y_NUDGES,
     )
 
-    # Companion PDF for visual inspection.
-    fig_pdf = ternary_diagram(
-        data=COUNTRY_SHARES,
-        colors=COUNTRY_POINT_COLORS,
-        vertex_labels=_VERTEX_LABELS,
-        title=_TITLE,
-        show_corner_labels=True,
-        label_angle_nudges=_LABEL_ANGLE_NUDGES,
-        figsize=(6.4, 6.0),
-        bg_alpha=bg_alpha,
-        background_data=cloud,
-        show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
-    )
-    fig_pdf.tight_layout(pad=0.03)
-    pdf_path = FIGURES_DIR / f"{PLOT_STEM}.pdf"
-    fig_pdf.savefig(pdf_path, bbox_inches="tight", pad_inches=0.05)
-    plt.close(fig_pdf)
-
-    print(f"Saved PDF: {pdf_path}")
+    if ENABLE_PDF_EXPORT:
+        fig_pdf = ternary_diagram(
+            data=COUNTRY_SHARES,
+            colors=COUNTRY_POINT_COLORS,
+            vertex_labels=_VERTEX_LABELS,
+            title=_TITLE,
+            show_corner_labels=True,
+            label_angle_nudges=angle_nudges,
+            figsize=(6.4, 6.0),
+            bg_alpha=bg_alpha,
+            background_data=cloud,
+            show_equilibrium_circles=SHOW_EQUILIBRIUM_DISTANCE_GRID,
+        )
+        savefig(fig_pdf, PLOT_STEM, fmt="pdf", out_dir=FIGURES_DIR)
     
     save_figure_tex_pgf(
         PLOT_STEM,
@@ -227,7 +221,6 @@ def main() -> None:
     )
     print("Output files:")
     print(f"  - {pgf_path}")
-    print(f"  - {pdf_path}")
 
     # Complementary visualisation: average strength (A+B+C)/3.
     strength_df = pd.DataFrame(
@@ -271,27 +264,20 @@ def main() -> None:
         strings=strings_strength,
     )
 
-    # Standalone PDF export: use plain ISO marker labels on the colorbar,
-    # because this PDF is not compiled through the main acro-enabled context.
-    fig_strength_pdf = choropleth(
-        ds_strength,
-        year=ds_strength.latest_year,
-        title=strings_strength["title"],
-        colorbar_label=strings_strength["colorbar_label"],
-        cmap="RdYlGn",
-        vmin=_vmin,
-        vmax=_vmax,
-        label_countries=True,
-        highlight_colorbar=_FEATURED_GEOS,
-        plain_highlight_labels=True,
-    )
-    apply_geo_labels_pgf(fig_strength_pdf.axes[0], halo=True, values=values, tooltip_fmt="{:.1f}")
-    strength_pdf = savefig(
-        fig_strength_pdf,
-        STRENGTH_STEM,
-        fmt="pdf",
-        out_dir=FIGURES_DIR,
-    )
+    if ENABLE_PDF_EXPORT:
+        fig_strength_pdf = choropleth(
+            ds_strength,
+            year=ds_strength.latest_year,
+            title=strings_strength["title"],
+            colorbar_label=strings_strength["colorbar_label"],
+            cmap="RdYlGn",
+            vmin=_vmin,
+            vmax=_vmax,
+            label_countries=True,
+            highlight_colorbar=_FEATURED_GEOS,
+        )
+        apply_geo_labels_pgf(fig_strength_pdf.axes[0], halo=True, values=values, tooltip_fmt="{:.1f}")
+        savefig(fig_strength_pdf, STRENGTH_STEM, fmt="pdf", out_dir=FIGURES_DIR)
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
@@ -307,7 +293,6 @@ def main() -> None:
     )
 
     print(f"  - {strength_pgf}")
-    print(f"  - {strength_pdf}")
 
 
 if __name__ == "__main__":
