@@ -25,6 +25,12 @@
 %                    final → "DIPLOMOVÁ PRÁCE", year only
 %                    draft → "REŠERŠE K DIPLOMOVÉ PRÁCI", full date
 %                    \course{} in preamble overrides cover text in either mode
+%   Thesis type    : master (default)      bachelor          doctoral
+%                    Sets cover text; interacts with draft/final and czech/english
+%                    czech+final:  DIPLOMOVÁ PRÁCE / BAKALÁŘSKÁ PRÁCE / DISERTAČNÍ PRÁCE
+%                    czech+draft:  REŠERŠE K DIPLOMOVÉ / BAKALÁŘSKÉ / DISERTAČNÍ PRÁCI
+%                    english+final: MASTER'S THESIS / BACHELOR'S THESIS / DOCTORAL THESIS
+%                    english+draft: RESEARCH FOR MASTER'S/BACHELOR'S/DOCTORAL THESIS
 %   Debug          : debug                                  — overfull marks + colored link boxes
 %   Page order     : openany (default)    openright
 %   Cover page     : titlepage (default)  notitlepage       — suppresses \maketitle entirely
@@ -43,8 +49,10 @@
 %                    OFF by default; requires -shell-escape in the pdflatex recipe when active
 %   Math layout    : leqno                fleqn             — left eq. numbers; flush-left display
 %                    default: right-side eq. numbers, centered display equations
+%   Sentinel       : CTUend              — no-op; keep as last option so all others can have
+%                                          trailing commas (safe to comment/uncomment any line)
 %
-% Default: \documentclass[a4paper,12pt,oneside,onecolumn,final,openany]{CTUthesis}
+% Default: \documentclass[a4paper,12pt,oneside,onecolumn,final,openany,bachelor]{CTUthesis}
 %
 
 % \@ptsize: set to 0/1/2 by the 10pt/11pt/12pt option; selects size1X.clo below.
@@ -74,6 +82,10 @@
 %   Switches babel main language to English and translates all class-controlled
 %   strings: cover text, university name, software list, and acronym list.
 \newif\ifCTUenglish
+% \CTU@thesistype: token set by bachelor/master/doctoral option; used to select
+%   the correct nominative and dative thesis-type strings in \@course.
+%   Default: bachelor.
+\def\CTU@thesistype{bachelor}
 % \ifCTUtikzextern: false by default; set true via tikzextern option.
 %   When true, loads the external library and calls \tikzexternalize.
 %   Requires the -shell-escape compiler flag — add it to the pdflatex
@@ -141,10 +153,22 @@
 %   translates class-controlled headings: cover text, university name,
 %   software list chapter, and acronym list heading.
 \DeclareOption{english}{\CTUenglishtrue}
+% Thesis type options: set \CTU@thesistype; controls the cover page text
+%   in combination with the draft/final and czech/english options.
+%   master (default): diplomová práce / master's thesis
+%   bachelor        : bakalářská práce / bachelor's thesis
+%   doctoral        : disertační práce / doctoral thesis
+\DeclareOption{master}{\def\CTU@thesistype{master}}
+\DeclareOption{bachelor}{\def\CTU@thesistype{bachelor}}
+\DeclareOption{doctoral}{\def\CTU@thesistype{doctoral}}
 % tikzextern: enable TikZ figure externalization (caches compiled figures as
 %   PDFs in build/). Speeds up repeated builds when figures are unchanged.
 %   Requires -shell-escape in the pdflatex recipe — see .vscode/settings.json.
 \DeclareOption{tikzextern}{\CTUtikzexterntrue}
+% CTUend: no-op sentinel option — always the last option in \documentclass[].
+%   Its presence means every real option above it can have a trailing comma,
+%   so toggling options by commenting/uncommenting lines never breaks syntax.
+\DeclareOption{CTUend}{}
 % (openbib option purged: referenced \@openbib@code and \newblock which were
 %  removed with thebibliography; biblatex is used instead.)
 % letterpaper is overridden by the a4paper DeclareOption above.
@@ -192,20 +216,47 @@
 \def\@department{\relax}
 	\newcommand{\department}[1]{\gdef\@department{#1}
 	}
-% \@course: default set by draft/final \times czech/english mode.
-%   \course{} in the preamble overrides this value in either mode.
+% \@course: default set by the 3-way combination of draft/final, czech/english,
+%   and bachelor/master/doctoral.  \course{} in the preamble overrides this.
 %   Accent commands used because inputenc is loaded later in this class file.
+% Comparison tokens for \CTU@thesistype \ifx dispatch:
+\def\CTU@type@bachelor{bachelor}
+\def\CTU@type@doctoral{doctoral}
 \if@draftmode
   \ifCTUenglish
-    \def\@course{RESEARCH FOR MASTER'S THESIS}%
+    \ifx\CTU@thesistype\CTU@type@bachelor
+      \def\@course{RESEARCH FOR BACHELOR'S THESIS}%
+    \else\ifx\CTU@thesistype\CTU@type@doctoral
+      \def\@course{RESEARCH FOR DOCTORAL THESIS}%
+    \else
+      \def\@course{RESEARCH FOR MASTER'S THESIS}%
+    \fi\fi
   \else
-    \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}%
+    \ifx\CTU@thesistype\CTU@type@bachelor
+      \def\@course{RE\v{S}ER\v{S}E K~BAKAL\'{A}\v{R}SK\'{E} PR\'{A}CI}%
+    \else\ifx\CTU@thesistype\CTU@type@doctoral
+      \def\@course{RE\v{S}ER\v{S}E K~DISERTA\v{C}N\'{I} PR\'{A}CI}%
+    \else
+      \def\@course{RE\v{S}ER\v{S}E K~DIPLOMOV\'{E} PR\'{A}CI}%
+    \fi\fi
   \fi
 \else
   \ifCTUenglish
-    \def\@course{MASTER'S THESIS}%
+    \ifx\CTU@thesistype\CTU@type@bachelor
+      \def\@course{BACHELOR'S THESIS}%
+    \else\ifx\CTU@thesistype\CTU@type@doctoral
+      \def\@course{DOCTORAL THESIS}%
+    \else
+      \def\@course{MASTER'S THESIS}%
+    \fi\fi
   \else
-    \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
+    \ifx\CTU@thesistype\CTU@type@bachelor
+      \def\@course{BAKAL\'{A}\v{R}SK\'{A} PR\'{A}CE}%
+    \else\ifx\CTU@thesistype\CTU@type@doctoral
+      \def\@course{DISERTA\v{C}N\'{I} PR\'{A}CE}%
+    \else
+      \def\@course{DIPLOMOV\'{A} PR\'{A}CE}%
+    \fi\fi
   \fi
 \fi
 % \CTUsoftwarename: chapter heading for the list of software — localised.
