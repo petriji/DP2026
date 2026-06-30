@@ -9,10 +9,8 @@ HOW IT WORKS
     the only place you need to touch when adding a new analysis script.
 
 2.  The script scans ``latex/main.tex`` recursively (following every
-    ``\input{…}`` and ``\include{…}``) to collect every referenced
-    Python-generated figure stem, including:
-    - ``\input{texparts/python/STEM}``
-    - ``\inputpgffigure{STEM}``
+    ``\input{…}`` and ``\include{…}``) to collect every
+    ``\input{texparts/python/STEM}`` reference currently in the project.
 
 3.  A registry entry is *active* if at least one of its texpart patterns
     matches at least one referenced stem.  Inactive entries are never run,
@@ -38,9 +36,7 @@ ADDING A NEW ANALYSIS SCRIPT
 1.  Create ``analyses/my_new_script.py`` that outputs into
     ``LATEX_PICS_DIR`` / ``LATEX_TEXPARTS_DIR`` (both from config.py).
 2.  Add a section to ``registry.toml``.
-3.  Reference the output stem in LaTeX using either:
-    - ``\input{texparts/python/my_texpart}``, or
-    - ``\inputpgffigure{my_texpart}``.
+3.  Add ``\input{texparts/python/my_texpart}`` to the .tex file.
 4.  Run ``python python_analytics.py`` once — it will detect the new missing
     output and run the script automatically.
 """
@@ -49,24 +45,17 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
-import json
-import os
 import re
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
-from config import LATEX_PICS_DIR
-
 PYTHON_DIR  = Path(__file__).parent.resolve()
 DP_DIR      = PYTHON_DIR.parent
 LATEX_DIR   = DP_DIR / "latex"
-PICS_DIR    = Path(LATEX_PICS_DIR)
+PICS_DIR    = DP_DIR / "pics" / "python"
 TEX_DIR     = LATEX_DIR / "texparts" / "python"
-FIG_TEX_DIR = LATEX_DIR / "texparts" / "figures"
-REVIEW_DIR  = DP_DIR / "review"
-FIG_EXTS    = (".pgf", ".pdf", ".png", ".svg")
 
 # ── Registry ──────────────────────────────────────────────────────────────────
 # Loaded from registry.toml (same directory as this script).
@@ -78,15 +67,10 @@ with open(PYTHON_DIR / "analytics_registry.toml", "rb") as _f:
 # ── LaTeX project scanner ─────────────────────────────────────────────────────
 
 _INPUT_RE   = re.compile(r'\\(?:input|include)\{([^}]+)\}')
-_PGF_RE     = re.compile(r'\\inputpgffigure\{([^}]+)\}')
 _COMMENT_RE = re.compile(r'%.*')
-_CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{(.+?)\}', re.DOTALL)
-_DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{(.+?)\}\s*%?', re.DOTALL)
-_DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{(.+?)\}\s*%?', re.DOTALL)
-_YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
-    """Recursively collect Python-generated figure stems from *tex_file*.
+    """Recursively collect ``texparts/python/STEM`` stems from *tex_file*.
 
     Follows every ``\\input{…}`` / ``\\include{…}`` call, skipping files
     already visited (cycle guard) and files that don't exist.
@@ -103,11 +87,6 @@ def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
 
     for raw_line in tex_file.read_text(encoding="utf-8", errors="replace").splitlines():
         line = _COMMENT_RE.sub("", raw_line)           # strip TeX comments
-
-        # Capture PGF figure macro usage directly from commentary/main files.
-        for stem in _PGF_RE.findall(line):
-            stems.add(stem.strip().removesuffix(".tex"))
-
         for arg in _INPUT_RE.findall(line):
             arg = arg.strip()
             # Capture python-generated texparts
@@ -118,16 +97,10 @@ def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
                     stems.add(stem)
                     break
             else:
-                # Recurse into other \input{} calls.
-                # Try both file-relative and latex-root-relative resolution because
-                # this project commonly uses \input{texparts/...} from nested files.
-                arg_with_ext = arg if arg.endswith(".tex") else f"{arg}.tex"
-                candidates = [base / arg_with_ext]
-                if arg.startswith(("texparts/", "texparts\\")):
-                    candidates.append(LATEX_DIR / arg_with_ext)
-
-                for candidate in candidates:
-                    stems |= _tex_stems(candidate, visited)
+                # Recurse into other \input{} calls
+                candidate = (base / arg).with_suffix(".tex") if not arg.endswith(".tex") \
+                            else base / arg
+                stems |= _tex_stems(candidate, visited)
 
     return stems
 
@@ -153,15 +126,18 @@ def _any_missing(entry: dict, referenced: set[str]) -> bool:
                 if not (TEX_DIR / f"{pattern}.tex").exists():
                     return True
 
-    # Check figure files in configured output dir.
-    # Some analyses produce .pgf, others .pdf/.png/.svg.
+    # Check pic PDF files
     for pattern in entry.get("pics", []):
+        matching = [s for s in referenced
+                    if fnmatch.fnmatch(s, pattern.replace("_map_*", "_map_*"))]
+        # For pic patterns derived from texpart stems:
+        # re-resolve against referenced stems
         matched_stems = [s for s in referenced if fnmatch.fnmatch(s, pattern)]
         for stem in matched_stems:
-            if not any((PICS_DIR / f"{stem}{ext}").exists() for ext in FIG_EXTS):
+            if not (PICS_DIR / f"{stem}.pdf").exists():
                 return True
         if not matched_stems and "*" not in pattern and pattern in referenced:
-            if not any((PICS_DIR / f"{pattern}{ext}").exists() for ext in FIG_EXTS):
+            if not (PICS_DIR / f"{pattern}.pdf").exists():
                 return True
 
     return False
@@ -169,231 +145,16 @@ def _any_missing(entry: dict, referenced: set[str]) -> bool:
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def _run(key: str, entry: dict, *, target_year: int) -> None:
+def _run(key: str, entry: dict) -> None:
     script = entry["script"]
     print(f"[stats_analytics] running: {script}", flush=True)
-    env = os.environ.copy()
-    env["DP_TARGET_YEAR"] = str(target_year)
-    result = subprocess.run([sys.executable, script], cwd=PYTHON_DIR, env=env)
+    result = subprocess.run([sys.executable, script], cwd=PYTHON_DIR)
     if result.returncode != 0:
         print(
             f"[stats_analytics] ERROR: {script} exited with code {result.returncode}",
             flush=True,
         )
         sys.exit(result.returncode)
-
-
-def _covered_stems(referenced: set[str]) -> set[str]:
-    """Return referenced stems covered by at least one registry texpart pattern."""
-    covered: set[str] = set()
-    for entry in REGISTRY.values():
-        for pattern in entry["texparts"]:
-            for stem in referenced:
-                if fnmatch.fnmatch(stem, pattern):
-                    covered.add(stem)
-    return covered
-
-
-def _run_fallback_for_uncovered(referenced: set[str], *, target_year: int) -> None:
-    """Run analyses/<stem>.py for referenced stems missing from registry.
-
-    This makes "Clean + Analytics + Build all" robust for freshly-added
-    analyses before registry.toml is updated.
-    """
-    uncovered = sorted(referenced - _covered_stems(referenced))
-    if not uncovered:
-        return
-
-    for stem in uncovered:
-        texpart = TEX_DIR / f"{stem}.tex"
-        if texpart.exists():
-            continue
-
-        candidate = PYTHON_DIR / "analyses" / f"{stem}.py"
-        if not candidate.exists():
-            continue
-
-        print(
-            f"[stats_analytics] fallback: running unregistered analysis {candidate.name}",
-            flush=True,
-        )
-        env = os.environ.copy()
-        env["DP_TARGET_YEAR"] = str(target_year)
-        result = subprocess.run([sys.executable, str(candidate)], cwd=PYTHON_DIR, env=env)
-        if result.returncode != 0:
-            print(
-                f"[stats_analytics] ERROR: fallback {candidate.name} exited with code {result.returncode}",
-                flush=True,
-            )
-            sys.exit(result.returncode)
-
-    still_missing = [s for s in uncovered if not (TEX_DIR / f"{s}.tex").exists()]
-    if still_missing:
-        print(
-            "[stats_analytics] ERROR: referenced python texparts are not covered by analytics_registry.toml "
-            "and no fallback script produced them:",
-            flush=True,
-        )
-        for stem in still_missing:
-            print(f"  - {stem}", flush=True)
-        print(
-            "[stats_analytics] Add/update entries in python/analytics_registry.toml.",
-            flush=True,
-        )
-        sys.exit(2)
-
-
-def _collect_caption_texts(stem: str) -> list[str]:
-    """Collect caption-like texts associated with one generated stem."""
-    texts: list[str] = []
-    candidates = [
-        TEX_DIR / f"{stem}.tex",
-        FIG_TEX_DIR / f"{stem}.tex",
-    ]
-    for path in candidates:
-        if not path.exists():
-            continue
-        body = path.read_text(encoding="utf-8", errors="replace")
-        texts.extend(_CAPTION_RE.findall(body))
-        texts.extend(_DEF_CAPTION_RE.findall(body))
-    return [t.strip() for t in texts if t.strip()]
-
-
-def _collect_wrapper_string_defs(stem: str) -> list[tuple[str, str]]:
-    """Collect all wrapper string macro definitions from the editable figure tex."""
-    path = FIG_TEX_DIR / f"{stem}.tex"
-    if not path.exists():
-        return []
-    body = path.read_text(encoding="utf-8", errors="replace")
-    return [(macro, value.strip()) for macro, value in _DEF_STR_RE.findall(body) if value.strip()]
-
-
-def _extract_years(text: str) -> list[int]:
-    return [int(y) for y in _YEAR_RE.findall(text)]
-
-
-def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
-    """Warn for referenced outputs that don't clearly use target data year."""
-    rows: list[dict] = []
-
-    for stem in sorted(referenced):
-        captions = _collect_caption_texts(stem)
-        wrapper_defs = _collect_wrapper_string_defs(stem)
-        years: list[int] = []
-        for cap in captions:
-            years.extend(_extract_years(cap))
-        years_sorted = sorted(set(years))
-
-        wrapper_years: list[int] = []
-        wrapper_macro_hits: list[str] = []
-        for macro, value in wrapper_defs:
-            vals = _extract_years(value)
-            if not vals:
-                continue
-            wrapper_years.extend(vals)
-            if target_year not in vals:
-                wrapper_macro_hits.append(macro)
-
-        status = "ok"
-        msg = ""
-        if not captions:
-            status = "warning"
-            msg = "no caption text found for year audit"
-            print(
-                f"[data-quality][WARNING][missing_caption] {stem}: {msg}",
-                flush=True,
-            )
-        elif not years_sorted:
-            status = "warning"
-            msg = "caption found but no year token detected"
-            print(
-                f"[data-quality][WARNING][missing_year] {stem}: {msg}",
-                flush=True,
-            )
-        elif target_year not in years_sorted:
-            status = "warning"
-            msg = f"caption years {years_sorted} do not include target year {target_year}"
-            print(
-                f"[data-quality][WARNING][year_mismatch] {stem}: {msg}",
-                flush=True,
-            )
-        elif wrapper_macro_hits:
-            status = "warning"
-            msg = (
-                f"wrapper string macros {wrapper_macro_hits} do not include target year {target_year}"
-            )
-            print(
-                f"[data-quality][WARNING][year_mismatch] {stem}: {msg}",
-                flush=True,
-            )
-
-        rows.append(
-            {
-                "stem": stem,
-                "status": status,
-                "target_year": target_year,
-                "years": years_sorted,
-                "wrapper_years": sorted(set(wrapper_years)),
-                "message": msg,
-            }
-        )
-
-    # Persist report for transparent citation in prose/review workflow.
-    REVIEW_DIR.mkdir(parents=True, exist_ok=True)
-    json_path = REVIEW_DIR / "data_quality_report.json"
-    md_path = REVIEW_DIR / "data_quality_report.md"
-    json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    ok_count = sum(1 for r in rows if r["status"] == "ok")
-    warn_count = len(rows) - ok_count
-    lines = [
-        "# Data Quality Report",
-        "",
-        f"Target year: {target_year}",
-        f"Referenced stems audited: {len(rows)}",
-        f"OK: {ok_count}",
-        f"Warnings: {warn_count}",
-        "",
-        "| Stem | Status | Years | Message |",
-        "|---|---|---|---|",
-    ]
-    for row in rows:
-        years_txt = ", ".join(str(y) for y in row["years"]) if row["years"] else "-"
-        msg = row["message"] or "-"
-        lines.append(f"| {row['stem']} | {row['status']} | {years_txt} | {msg} |")
-    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-    print(
-        f"[data-quality] target-year audit complete: {ok_count} ok, {warn_count} warning(s). "
-        f"Report: {md_path.relative_to(DP_DIR)}",
-        flush=True,
-    )
-
-
-def _sync_strings_from_tex(referenced: set[str]) -> None:
-    """Sync editable figure-wrapper strings back into matching Python analyses."""
-    from tools.sync_strings_from_tex import sync_script
-
-    fig_stems = sorted(stem for stem in referenced if (FIG_TEX_DIR / f"{stem}.tex").exists())
-    if not fig_stems:
-        return
-
-    changed: list[str] = []
-    for stem in fig_stems:
-        tex_file = FIG_TEX_DIR / f"{stem}.tex"
-        lines = sync_script(tex_file, dry_run=False)
-        if any(line.startswith("  CHANGED ") for line in lines):
-            changed.append(stem)
-        for line in lines:
-            print(f"[tex-sync] {line}", flush=True)
-
-    if changed:
-        print(
-            f"[tex-sync] synced {len(changed)} wrapper(s) back into Python: {', '.join(changed)}",
-            flush=True,
-        )
-    else:
-        print("[tex-sync] no Python source changes needed from editable figure wrappers.", flush=True)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -403,12 +164,6 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(
         description="Generate Python-produced figures/texparts referenced in the LaTeX project.",
-    )
-    parser.add_argument(
-        "--target-year",
-        type=int,
-        default=int(os.environ.get("DP_TARGET_YEAR", "2025")),
-        help="Target year for data-quality checks (default: 2025).",
     )
     parser.add_argument(
         "--force",
@@ -428,8 +183,6 @@ def main() -> None:
     # Discover which python texparts are referenced in the .tex project
     main_tex   = LATEX_DIR / "main.tex"
     referenced = _tex_stems(main_tex)
-
-    _run_fallback_for_uncovered(referenced, target_year=args.target_year)
 
     if args.list:
         print("Referenced texparts/python/ stems:")
@@ -458,14 +211,11 @@ def main() -> None:
             continue
 
         if key in forced or _any_missing(entry, referenced):
-            _run(key, entry, target_year=args.target_year)
+            _run(key, entry)
             ran_any = True
 
     if not ran_any:
         print("[stats_analytics] all outputs present — nothing to do.", flush=True)
-
-    _sync_strings_from_tex(referenced)
-    _audit_target_year(referenced, target_year=args.target_year)
 
 
 if __name__ == "__main__":
