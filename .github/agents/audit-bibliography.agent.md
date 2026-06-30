@@ -1,11 +1,16 @@
 ---
-description: 'Use when: auditing socialnidialog.bib for ČSN ISO 690:2022 compliance, checking URL liveness, finding duplicate/mergeable bib entries, fixing missing urldate / [online] tags / publisher / edition fields, migrating @misc → @online / @dataset / @report, normalising author casing (kapitálky), title casing, sjednocení formátu „Dostupné z:" / [cit. YYYY-MM-DD]. Use for: cite audit, bib lint, bibliography health, ISO 690 compliance, broken links, dead URLs, merge cite keys. Do NOT use for: writing new commentary (use Komentuj analýzu), routine \cite{} insertion (use Citace a zkratky / Formatuj LaTeX).'
-argumentHint: 'Optional: subset of bib keys / category to audit (e.g. "all", "eurostat_*", "zakon_*"). Default = all.'
+name: "audit-bibliography"
+description: "Use when: auditing latex/socialnidialog.bib for ČSN ISO 690:2022 compliance, URL liveness, duplicate/mergeable bib entries, missing urldate/online markers/publisher fields, type migration proposals, corporate author casing, or broken links. Use for: DP bibliography audit, bib lint, ISO 690, merge cite keys. Do NOT use for: routine citation insertion (use Citace a zkratky), prose formatting (use Formatuj LaTeX), source scraping (use Scrape Sources), or generic build triage."
+tools: [read, search, edit, run_in_terminal]
+agents: ["Citace a zkratky"]
+argument-hint: "Optional subset of bib keys/category, e.g. all, eurostat_*, zakon_*"
 ---
 
 # Audit bibliografie — ČSN ISO 690:2022
 
-Read-only-first audit subagent for `latex/socialnidialog.bib`. Produces a structured report; applies only **safe, mechanical** fixes automatically. All structural changes (merges, type migrations, author re-casing) are listed as proposals for user review.
+DP-specific audit subagent for `latex/socialnidialog.bib`. Produces a structured report; applies only safe, mechanical fixes automatically. All structural changes (merges, type migrations, author re-casing) are listed as proposals for user review.
+
+This agent owns bibliography health. It does not write prose and does not decide whether a claim belongs in the thesis.
 
 ## Inputs
 
@@ -53,7 +58,8 @@ Hard rules (each violation = report line):
 - `urldate` mandatory for every entry with `url`. Format `YYYY-MM-DD`.
 - `year` mandatory; for legislation use the original year of issue (e.g. zákon č. 262/2006 Sb. → `year = 2006`), put effective dates and amendments in `note`.
 - `title` in original language and case as on title page; sub-title in `subtitle` (book) or after colon. Do **not** ALL-CAPS titles.
-- For e-resources include the marker **„Online"** — in this project encoded via `howpublished = {... [online]}` (acceptable equivalent).
+- For `@online` entries in this project, enforce `howpublished = {online}` exactly (no brackets, no extra text).
+- If a database/dataset identifier is available (e.g. `\texttt{ilc\_di12}`, `\texttt{LMPEXP}`), keep it in `title`, not in `howpublished`.
 
 **3c. Identifiers (priority order)**
 
@@ -112,6 +118,7 @@ The following are applied automatically without confirmation. Each fix is report
 | `?utm_*` / `?_ga=*` query params | strip |
 | missing `urldate` but entry has `url` | add today's date `YYYY-MM-DD` |
 | corporate author in single braces (`author = {Eurostat}`) | wrap in `{{Eurostat}}` |
+| `@online` entry with non-standard `howpublished` | normalise to `howpublished = {online}` and move dataset/database key into `title` |
 | `month = {2}` numeric | leave as is (biblatex tolerant); flag only if inconsistent within file |
 
 ## Proposals (NOT auto-applied)
