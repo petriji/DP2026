@@ -152,6 +152,7 @@ def _plot_osvc_lines(
 
 def plot_pension_comparison(
     income_max: int = 250_000,
+    income_min: int = MIN_WAGE_TOTAL_COST,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
     """Vykreslí srovnání výše starobního důchodu v závislosti na celkových nákladech.
@@ -164,6 +165,8 @@ def plot_pension_comparison(
     ----------
     income_max:
         Horní mez osy x [Kč/měsíc] (= max celkové náklady zaměstnavatele / příjmy OSVČ).
+    income_min:
+        Spodní mez osy x [Kč/měsíc] (= min celkové náklady zaměstnavatele / příjmy OSVČ).
     years:
         Předpokládaná pojistná doba [roky] pro výpočet procentní výměry.
 
@@ -171,7 +174,7 @@ def plot_pension_comparison(
     -------
     matplotlib Figure objekt.
     """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
+    x = np.linspace(income_min, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
 
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     p_emp     = pension_employee(gross_emp, years)
@@ -237,25 +240,25 @@ def plot_pension_comparison(
 
     # Referenční svislé čáry
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
-    if EMP_RH1_X <= income_max:
+    if EMP_RH1_X >= income_min:
         _add_vertical_ref(ax, EMP_RH1_X / 1_000,
-                          f"1.\u00a0RH\u00a0\n({_fmt_czk(EMP_RH1_X)})",
+                          f"1.\u00a0RH\u00a0\n{_fmt_czk(EMP_RH1_X)}",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
     if EMP_RH2_X <= income_max:
         _add_vertical_ref(ax, EMP_RH2_X / 1_000,
-                          f"2.\u00a0RH\u00a0\n({_fmt_czk(EMP_RH2_X)})",
+                          f"2.\u00a0RH\u00a0\n{_fmt_czk(EMP_RH2_X)}",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
@@ -314,6 +317,7 @@ def plot_pension_comparison(
 
 def plot_pension_solidarity(
     income_max: int = 250_000,
+    income_min: int = MIN_WAGE_TOTAL_COST,
     income_min_rr: int = OSVC_MIN_MONTHLY_BASE * 2,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
@@ -330,6 +334,8 @@ def plot_pension_solidarity(
     ----------
     income_max:
         Horní mez osy x [Kč/měsíc].
+    income_min:
+        Spodní mez osy x [Kč/měsíc].
     income_min_rr:
         Spodní mez x pro dolní panel [Kč/měsíc].
         Výchozí = OSVC_MIN_MONTHLY_BASE × 2: pod touto hodnotou tvoří zákonný
@@ -417,25 +423,25 @@ def plot_pension_solidarity(
 
     # Referenční svislé čáry
     _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax_top, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax_top, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax_top, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
-    if EMP_RH1_X <= income_max:
+    if EMP_RH1_X >= income_min:
         _add_vertical_ref(ax_top, EMP_RH1_X / 1_000,
-                          f"1.\u00a0RH\u00a0\n({_fmt_czk(EMP_RH1_X)})",
+                          f"1.\u00a0RH\u00a0\n{_fmt_czk(EMP_RH1_X)}",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
     if EMP_RH2_X <= income_max:
         _add_vertical_ref(ax_top, EMP_RH2_X / 1_000,
-                          f"2.\u00a0RH\u00a0\n({_fmt_czk(EMP_RH2_X)})",
+                          f"2.\u00a0RH\u00a0\n{_fmt_czk(EMP_RH2_X)}",
                           color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
 
     ax_top.set_ylabel("starobní důchod [tis.\u00a0Kč/měsíc]")
@@ -646,23 +652,23 @@ def plot_tax_wedge_vs_income(
 
     # Referenční svislé čáry
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("daňový klín [%]")
     ax.set_title(
-        "Daňový klín v závislosti na ceně práce\n"
+        "Daňový klín v závislosti na nákladech práce\n"
         "(parametry\u00a02026)",
         loc="center",
     )
@@ -733,23 +739,23 @@ def plot_net_income_vs_income(
 
     # Referenční svislé čáry
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax.set_ylabel("čistý příjem [tis.\u00a0Kč/měsíc]")
     ax.set_title(
-        "Čistý příjem pracovníka v závislosti na ceně práce\n"
+        "Čistý příjem pracovníka v závislosti na nákladech práce\n"
         "(parametry\u00a02026; OSVČ s výdajovým paušálem: po odečtení paušálních výdajů)",
         loc="center",
     )
@@ -825,17 +831,17 @@ def plot_sp_vs_income(
     )
 
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
@@ -954,17 +960,17 @@ def plot_pension_sp_ratio_vs_income(
     )
 
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
+                      f"min.\u00a0mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
                       color="#cc6600", linestyle=(0, (4, 3)))
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"medián\u00a0\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
+                      f"medián\u00a0\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
                       color="#888888")
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
-                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n({_fmt_czk(IT_MEDIAN_TOTAL_COST)})",
+                      f"medián\u00a0ICT\u00a0(ISCO\u00a025)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
                       color="#1a7abf")
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
-                          f"práh\u00a0DPH\n({_fmt_czk(DPH_THRESHOLD_MONTHLY)})",
+                          f"práh\u00a0DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
                           color="#cc0000", linestyle=(0, (5, 3)))
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
