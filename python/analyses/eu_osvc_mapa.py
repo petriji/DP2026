@@ -82,7 +82,7 @@ _vmin = min(_values.values())
 _vmax = max(_values.values())
 
 COUNTRIES = ["CZ", "DK", "AT", "DE", "PL", "SK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 
 STRINGS = {
     "title": f"Podíl \\acs{{OSVČ}} na zaměstnanosti ({ds.latest_year})",

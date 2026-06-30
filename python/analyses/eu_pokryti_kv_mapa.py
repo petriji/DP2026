@@ -51,7 +51,7 @@ _values = (
 _vmax = max(_values.values())
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 
 STRINGS = {
     "title": f"Pokrytí kolektivními smlouvami ({ds.latest_year})",

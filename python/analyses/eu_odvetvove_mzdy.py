@@ -59,6 +59,7 @@ from statout.map_europe import choropleth
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 COUNTRIES_EU = COUNTRIES + ["EU27_2020"]
 GEO_6 = "+".join(COUNTRIES)
 GEO_WITH_EU = GEO_6 + "+EU27_2020"
@@ -385,7 +386,7 @@ fig_maps._subplots_adjust_kwargs = {"left": 0.02, "right": 0.98,
                                     "top": 0.92, "bottom": 0.04,
                                     "wspace": 0.14, "hspace": 0.10}
 
-savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP)
+savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_odvetvove_mzdy_mapa",
     caption=(
@@ -395,6 +396,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
     strings=STRINGS_MAP,
+    nudge_labels=NUDGE_LABELS,
 )
 print("Combined choropleth (2×2) saved.")
 

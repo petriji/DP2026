@@ -84,7 +84,7 @@ _values = (
 _vmin = min(_values.values())
 _vmax = max(_values.values())
 
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 
 STRINGS = {
     "title": f"Index cenové hladiny \\acs{{HDP}} ({ds.latest_year})",

@@ -101,7 +101,7 @@ for _child in ax.get_children():
 # ── 4. Save figure ────────────────────────────────────────────────────────────
 # Nudge knobs: end-of-line country labels. Override LaTeX-side via
 # \renewcommand\NudgeEuGiniPrijemCZ{-3pt} in latex/texparts/figures/eu_gini_prijem.tex
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 savefig_pgf(fig, "eu_gini_prijem", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ───────────────────────────────────────────────────────────

@@ -54,6 +54,8 @@ STRINGS = {
     "title": f"Výdaje na \\acs{{APZ}} ({ds.latest_year})",
     "colorbar_label": r"výdaje na \acs{APZ} [\% \acs{HDP}]",
 }
+COUNTRIES = ["CZ", "DK", "AT", "DE", "PL", "SK"]
+NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
 fig = choropleth(
@@ -71,7 +73,7 @@ fig = choropleth(
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.2f}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_apz_mapa", strings=STRINGS)
+savefig_pgf(fig, "eu_apz_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -81,6 +83,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys="oecd_lmpexp",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

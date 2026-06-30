@@ -138,6 +138,7 @@ STRINGS = {
     "title": f"Podíl top 1\\,\\% domácností na čistém jmění (WID, do {display_year})",
     "colorbar_label": r"podíl top 1\,\% na čistém jmění [\%]",
 }
+NUDGE_LABELS = [(c, c) for c in ["CZ", "DK", "AT", "DE", "PL", "SK"]]
 
 fig = choropleth(
     ds,
@@ -149,13 +150,13 @@ fig = choropleth(
     vmax=_vmax,
     label_countries=True,
     fill_latest=True,
-    highlight_colorbar=["CZ"],
+    highlight_colorbar=["CZ", "DK", "AT", "DE", "PL", "SK"],
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_bohatstvi_top1_wid", strings=STRINGS)
+savefig_pgf(fig, "eu_bohatstvi_top1_wid", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -165,6 +166,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="wid_world_shweal",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("\nDone: eu_bohatstvi_top1_wid")
