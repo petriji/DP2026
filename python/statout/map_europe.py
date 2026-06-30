@@ -216,8 +216,11 @@ def choropleth(
 
     # Title centred over the full figure (axes + colourbar)
     # top=0.85 leaves ~5 pt more space between map and title than default.
+    # _subplots_adjust_kwargs is read by savefig() to re-apply this after
+    # tight_layout() (which would otherwise clobber the top margin).
     if title:
         fig.subplots_adjust(top=0.85)
+        fig._subplots_adjust_kwargs = {"top": 0.85}
         fig.suptitle(title, fontsize=plt.rcParams.get("axes.titlesize", 9),
                      y=0.95, ha="center")
 
