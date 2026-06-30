@@ -38,6 +38,15 @@ Before formatting, consult these files when context is needed:
 - Do not start compilation automatically, even for validation.
 - If permission is granted, run one compilation job at a time and report that compile was user-approved.
 
+### 0b. Build-stability guardrails — MANDATORY
+
+- Never run concurrent TeX jobs on the same target (`main.tex`): no parallel `pdflatex`/`latexmk` processes.
+- Prefer `latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build main.tex` for convergence checks.
+- If running manual passes, use strict sequence only: `pdflatex -> biber -> pdflatex -> pdflatex`.
+- If `pdfTeX warning (dest): name{...} has been referenced but does not exist` appears for acronym IDs, treat it as an acro-linking issue (template/link-target mismatch), not as a bibliography failure.
+- Before touching bibliography for build failures, first check for csquotes/quote corruption and unresolved acro destinations.
+- If logs indicate missing `main.bbl` or many undefined citations right after cleanup, run biber and continue passes before diagnosing source text.
+
 ### 1. Acronyms — `acro` macros
 
 | Situation | Macro | Notes |
@@ -80,6 +89,7 @@ Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `
 - Do NOT introduce new compatibility wrappers in text or class files (e.g. ad-hoc `\aclong`, `\aclshort`, `\aclen`) unless explicitly requested by the user for backward compatibility.
 - If legacy wrappers already exist in prose, replace them with canonical commands during formatting edits.
 - Capitalized force-first genitive form in prose should be `\Acfgen{KEY}`; do not invent alternative naming.
+- Do not add fallback `\hypertarget` blocks with hardcoded acronym IDs. Fix the acro template/linking behavior instead.
 
 **Czech declension**: When an acronym appears in an oblique case, use the appropriate
 declension command (`\acgen{}`, `\acdat{}`, etc.) instead of writing the declined long form by hand.
@@ -162,14 +172,14 @@ After editing, use the new ID in the formatted text immediately.
 ### 2. Bibliography — `\cite{}`
 
 - **Always** `\cite{key}` — **never** `\parencite{}` (not loaded).
-- Place citations at the **end of a logical block** (typically end of paragraph), before terminal punctuation: `…shrnutí argumentu~\cite{key}.`
+- Place citations at the **end of a logical block** (typically end of paragraph), after the terminal punctuation: `…shrnutí argumentu.~\cite{key}`.
 - Avoid inline citations in the middle of running prose; attach one cite-block to the closing claim of the block.
 - If the citation key is unknown, write `\cite{TODO}` with a `% TODO: doplnit klíč` comment.
-- Multiple consecutive citations: `\cite{key1}\cite{key2}` (no space between).
+- Multiple consecutive citations must be separated by a non-breaking space: `\cite{key1}~\cite{key2}`.
 
 **Citation density discipline (MANDATORY):**
 
-- **Sparse, not dense.** A typical paragraph carries at most **one** `\cite{}` block (which may chain `\cite{a}\cite{b}` if multiple sources back the same logical block).
+- **Sparse, not dense.** A typical paragraph carries at most **one** `\cite{}` block (which may chain `\cite{a}~\cite{b}` if multiple sources back the same logical block).
 - **At the end of a logical block, never mid-paragraph.** Place the citation at the end of the paragraph or at the boundary of a logical sub-block — not after individual sentences inside flowing argumentation.
 - **Do not repeat the same key across consecutive paragraphs.** Once a source has been cited at the end of a paragraph, it can be assumed to back the surrounding discussion; cite it again only when introducing a clearly distinct claim from the same source much later in the text.
 - **Generic / textbook claims may go uncited.** Definitional sentences ("tripartita zahrnuje vládu, zaměstnavatele a~zaměstnance") and well-known facts ("MOP byla založena v~roce 1919") do not need citation if the supporting source is cited elsewhere in the section.
@@ -182,6 +192,10 @@ After editing, use the new ID in the formatted text immediately.
 - **Only `socialnidialog.bib` entries are permitted.** No external URLs, footnote-only attributions, or bare author-year strings may substitute for `\cite{}` in the final text.
 - **Every data point or statistic must be backed by a bib entry.** Data from databases (Eurostat, OECD, MPSV, ISPV, ETUI, etc.) is only allowed if a corresponding `@misc`/`@dataset` entry exists in `socialnidialog.bib`. If a required entry is missing, invoke `Citace a zkratky` to add it before inserting the data or claim.
 - Do NOT insert `\cite{TODO}` as a permanent placeholder — it must be resolved before the text is committed.
+
+**Build-failure triage (before editing citations):**
+- If log contains `Unbalanced groups` or `\end occurred inside a group`, scan Czech quotes in `.tex` and `.bib` first.
+- If log contains hundreds of undefined citations immediately after a clean build, complete biber/pdflatex convergence before source edits.
 
 ### 3. Cross-references — `\label` and `\ref`
 
@@ -218,7 +232,28 @@ Example: `v~\hyperref[p:teorie]{teoretické části}` — renders "v teoretické
 - With `\SI{}{}` from siunitx — no tilde needed, siunitx handles spacing
 - Between first and last name, titles: `Ing.~Novák`
 
-### 5. Paragraph endings — `\par`
+### 5. Paragraph headings — `\paragraph{}`
+
+`\paragraph{Title}` introduces a titled paragraph. The title acts as an **inline run-in heading**: the body text must start **on the same line** (or immediately on the next line with no blank line in between). A blank line between `\paragraph{}` and the text inserts unwanted vertical space.
+
+**Correct:**
+```latex
+\paragraph{Dánský model flexicurity}\label{par:dk_model}
+Zlatý trojúhelník flexicurity…
+```
+or (single-line form, prefferable):
+```latex
+\paragraph{Dánský model flexicurity} je v~evropském srovnání…
+```
+
+**Wrong (blank line causes extra spacing):**
+```latex
+\paragraph{Dánský model flexicurity}\label{par:dk_model}
+
+Zlatý trojúhelník flexicurity…
+```
+
+### 7. Paragraph endings — `\par`
 
 End each standalone paragraph with `\par` (consistent with project style):
 ```latex
@@ -226,7 +261,7 @@ Věta ukončující odstavec.\par
 ```
 Inside `enumerate`/`itemize` items, do **not** add `\par`.
 
-### 6. Figures
+### 8. Figures
 
 **Standard (PDF) figure:**
 ```latex
@@ -249,7 +284,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 - `texparts/figures/figure_name.tex` is git-tracked and hand-editable — change caption, annotations there.
 - Do NOT use `\begin{figure}` manually for PGF figures — the strings file already contains it.
 
-### 7. Tables
+### 9. Tables
 
 ```latex
 \begin{table}[htbp]
@@ -270,7 +305,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 - Rules: `\toprule`, `\midrule`, `\bottomrule` (from `booktabs`).
 - Caption and label go **before** the `tabularx` environment.
 
-### 8. Equations
+### 10. Equations
 
 ```latex
 \begin{equation}\label{eqn:name}
@@ -281,7 +316,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 - Variable symbols in text that correspond to `vel`-tagged acro entries: use `\acs{var-xxx}` or `\acuse{var-xxx}` to register usage.
 - Index symbols in equations and prose are always paired with a variable: `\acs{var-N}_{\acs{idx-z},\acs{idx-M}}` → `N_{z,M}`. `\acs{idx-X}` standalone is reserved for math/equations only — never as a free word in prose. Accents (`\bar`, `\tilde`, `\hat`) on a variable use the helper macros `\acidxbar{...}`, `\acidxtilde{...}`, `\acidxhat{...}` which auto-register the corresponding `idx-*` entry.
 
-### 9. Units — `siunitx`
+### 11. Units — `siunitx`
 
 Always use `\SI{value}{unit}` for physical quantities with units:
 - `\SI{75}{\percent}`, `\SI{40}{\degreeCelsius}`, `\SI{5}{\kelvin\per\metre}`
@@ -298,68 +333,51 @@ Always use `\SI{value}{unit}` for physical quantities with units:
 | `\week` | týd. | `\SI{40}{\week}` |
 | `\month` | měs. | `\SI{6}{\month}` |
 | `\person` | os. | `\SI{500}{\person}` |
+| `\rok` | rok | `\SI{2024}{\rok}` |
 
-**Compound units** — combine with siunitx `\per` and built-in units (`\hour`, `\year`, `\metre`, etc.):
+> **⚠ Use `\rok` for years, never LaTeX's built-in `\year`.**  
+> `\year` is a TeX primitive (current year as an integer register) and causes build errors when used as a siunitx unit argument.
+
+**Compound units** — combine with siunitx `\per` and the custom units above (`\rok`, `\month`, `\week`, `\hour` is fine as a standard siunitx unit):
 
 | Pattern | LaTeX | Renders as |
 |---------|-------|------------|
 | PPS per hour | `\SI{12{,}5}{\pps\per\hour}` | `12,5 PPS/h` |
 | € per hour | `\SI{18}{\eur\per\hour}` | `18 €/h` |
 | Kč per month | `\SI{45000}{\czk\per\month}` | `45 000 Kč/měs.` |
-| persons per year | `\SI{200}{\person\per\year}` | `200 os./rok` |
+| persons per year | `\SI{200}{\person\per\rok}` | `200 os./rok` |
 
 Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_variables.tex`.
 
 - Never use bare `€`, `Kč`, `EUR`, `PPS` as units next to numbers — always wrap with `\SI{}{}` using the custom command.
 - `\eur` not `\EUR` — the project defines lowercase.
 
-### 10. Typography & csquotes
+### 12. Typography & csquotes
 
-#### Czech quotation marks — detection and fixing
+#### Czech quotation marks — preferred style
 
-The project uses the `csquotes` package with Czech locale. The **most common error** is using ASCII `"` (U+0022) or left double quote `"` (U+201C) to close Czech quotations opened with `„` (U+201E), which causes the compilation error: `Unbalanced groups in csquotes`.
+`CTUthesis.cls` loads `csquotes` and activates `\MakeOuterQuote{"}`. This means **bare ASCII `"word"` is the preferred quotation form** — it auto-translates to correct Czech guillemets `„word"` in the compiled PDF.
 
-**Correct Unicode pairing:**
+| Form | Input | Output | Verdict |
+|------|-------|--------|---------|
+| **Preferred** | `"word"` (ASCII U+0022 both sides) | `„word"` | ✅ Use this |
+| Also correct | `\enquote{word}` | `„word"` | ✅ Fine |
+| Also correct | `„word"` (U+201E + U+201D) | `„word"` | ✅ Works but verbose |
+| **Error** | `„word"` (U+201E + ASCII) | — | ❌ `Unbalanced groups` |
+| **Error** | `„word"` (U+201E + U+201C) | — | ❌ `Unbalanced groups` |
 
-| Position | Character | Unicode | Name |
-|----------|-----------|---------|------|
-| Opening  | „         | U+201E  | double low-9 quotation mark |
-| Closing  | "         | U+201D  | right double quotation mark |
+**When writing new content:** use `"word"` or fallback to `\enquote{word}`.
 
-**Detection pattern — check for these violations in pasted text:**
+**Violations to detect and fix** — only mismatched Unicode pairs:
 
 ```regex
-„[^"„"]*"     # Opening „ followed by content, then ASCII/wrong-quote closing
-„[^"„"]*"     # Opening „ followed by content, then left-double-quote U+201C closing
+„[^"„"]*"     # U+201E open + ASCII close  → convert to "word" or fix closing to U+201D
+„[^"„"]*"     # U+201E open + U+201C close → same
 ```
 
-**When you encounter** `„...ASCII"` or `„..."` (U+201C), apply these fixes:
+**Fix approach:** replace `„text"` (wrong close) with `"text"` (preferred ASCII form), or fix only the closing to U+201D.
 
-1. **Automatic fix via regex** (if editing directly):
-   ```regex
-   Replace: „([^"„"]+)"       with: „$1"
-   Replace: „([^"„"]+)"      with: „$1"
-   ```
-
-2. **Manual fix:** Replace the closing quote character in the editor:
-   - Find `„` (U+201E) in the text
-   - Look for the closing quote immediately after the quoted text
-   - If it's `"` (straight/ASCII) or `"` (U+201C), replace with `"` (U+201D)
-
-3. **Prevention:** Use `\enquote{text}` macro — csquotes automatically inserts correct locale quotes:
-   ```latex
-   % Instead of:  „text"  or  „text" or  „text"
-   % Write:
-   \enquote{text}  % → csquotes auto-inserts correct Czech quotes
-   ```
-
-**Preferred approach:** When pasting Czech text with quotations, wrap it with `\enquote{...}` rather than manually typing quotes.
-
-| Approach | Input | Output | Issues |
-|----------|-------|--------|--------|
-| Manual Czech quotes | `„text"` | Correct IF closing is U+201D | Error-prone; easy to paste wrong quote character |
-| Manual Czech quotes (wrong) | `„text"` or `„text"` | ✗ **Unbalanced groups error** | Compilation fails |
-| `\enquote{}` macro | `\enquote{text}` | Correct: `„text"` | Safe; always correct; recommended |
+**Also check `socialnidialog.bib`** — `note` and `abstract` fields can contain Czech quoted text with the same mis-pairing.
 
 #### Other typography rules
 
@@ -369,7 +387,7 @@ The project uses the `csquotes` package with Czech locale. The **most common err
 
 ---
 
-### 11. Float placement & captions (commentary-embedded figures)
+### 13. Float placement & captions (commentary-embedded figures)
 
 **Default placement** for inline figures embedded by commentary: `\begin{figure}[H]` (requires `float` package — already loaded by `CTUthesis.cls`). This keeps the figure close to the prose that introduces it.
 Use `[htbp]` only when the figure is genuinely a top/bottom float that may drift far from text (rare in this thesis).
