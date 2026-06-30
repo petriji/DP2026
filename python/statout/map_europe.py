@@ -35,8 +35,9 @@ _WORLD: "gpd.GeoDataFrame | None" = None
 _LAEA = "EPSG:3035"
 
 # Default bounding box in EPSG:3035 metres — mainland Europe
-_EU_XLIM = (2_500_000, 7_100_000)
-_EU_YLIM_DEFAULT = (1_400_000, 5_500_000)
+# East and north cropped ~10 % to remove excess Russia/Scandinavia whitespace.
+_EU_XLIM = (2_500_000, 6_640_000)
+_EU_YLIM_DEFAULT = (1_400_000, 5_090_000)
 
 
 def _get_world() -> gpd.GeoDataFrame:
