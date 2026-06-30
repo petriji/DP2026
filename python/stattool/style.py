@@ -955,7 +955,7 @@ def _cite_provider(key: str) -> str:
 
 
 def _build_cite_source(keys: list) -> str:
-    """Return grouped 'Provider~\\cite{k1}\\cite{k2}, …' string."""
+    """Return grouped 'Provider~\\cite{k1}~\\cite{k2}, …' string."""
     from collections import OrderedDict
     groups: "OrderedDict[str, list]" = OrderedDict()
     for k in keys:
@@ -965,8 +965,8 @@ def _build_cite_source(keys: list) -> str:
         groups[lbl].append(k)
     parts = []
     for lbl, ks in groups.items():
-        cites = "".join(f"\\cite{{{k}}}" for k in ks)
-        parts.append(f"{lbl}~{cites}" if lbl else cites)
+        cites = "~".join(f"\\cite{{{k}}}" for k in ks)
+        parts.append(f"{lbl}.~{cites}" if lbl else cites)
     return ", ".join(parts)
 
 
@@ -1027,7 +1027,7 @@ def save_figure_tex(
     title = re.sub(r"(?<!\\)%", r"\%", title)
     if keys:
         source = _build_cite_source(keys)
-        caption_full = f"{title}. Zdroj dat: {source}."
+        caption_full = f"{title}. Zdroj dat: {source}"
     else:
         caption_full = title
 
@@ -1094,7 +1094,7 @@ def save_figure_tex_pgf(
     title = re.sub(r"(?<!\\)%", r"\%", title)
     if keys:
         source = _build_cite_source(keys)
-        caption_full = f"{title}. Zdroj dat: {source}."
+        caption_full = f"{title}. Zdroj dat: {source}"
     else:
         caption_full = title
 

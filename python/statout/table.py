@@ -84,7 +84,9 @@ def to_latex(
         The ``position`` and ``fontsize`` parameters are ignored.
     """
     if cite_keys:
-        caption = caption + " " + "".join(f"\\cite{{{k}}}" for k in cite_keys)
+        cap_base = caption.rstrip(". \t\n")
+        cap_cites = "~".join(f"\\cite{{{k}}}" for k in cite_keys)
+        caption = f"{cap_base}.~{cap_cites}"
 
     cols = list(df.columns)
     n_cols = 1 + len(cols)  # index column + data columns
