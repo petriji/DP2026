@@ -25,12 +25,18 @@ FIGURES_DIR = PYTHON_DIR / "figures"
 LATEX_PICS_DIR = FIGURES_DIR
 # Generated .tex snippets (figure/table environments) land here
 LATEX_TEXPARTS_DIR = PYTHON_DIR.parent / "latex" / "texparts" / "python"
+# Hand-editable PGF figure definitions (written once, never overwritten)
+LATEX_FIGURES_TEX_DIR = PYTHON_DIR.parent / "latex" / "texparts" / "figures"
+# Shared binary assets referenced by PGF files (deduplicated colorbars / rasters)
+PGF_SHARED_ASSETS_DIR = FIGURES_DIR / "_shared"
 
 # Create dirs on import so scripts never have to think about it
 DATA_DIR.mkdir(exist_ok=True)
 FIGURES_DIR.mkdir(exist_ok=True)
 # LATEX_PICS_DIR == FIGURES_DIR, no extra mkdir needed
 LATEX_TEXPARTS_DIR.mkdir(parents=True, exist_ok=True)
+LATEX_FIGURES_TEX_DIR.mkdir(parents=True, exist_ok=True)
+PGF_SHARED_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Figure output format ─────────────────────────────────────────────────────
 # "pdf"  – vector, best for pdflatex / lualatex  (\includegraphics{fig.pdf})
@@ -39,6 +45,15 @@ LATEX_TEXPARTS_DIR.mkdir(parents=True, exist_ok=True)
 # "png"  – raster fallback (set DPI below)
 FIGURE_FORMAT: str = "pdf"
 FIGURE_DPI: int = 300          # used only for raster formats
+
+# ── PGF asset optimization ───────────────────────────────────────────────────
+# PGF exports may emit companion rasters (typically <name>-img0.png colorbars).
+# When many figures share identical rasters, deduplicating to a shared store
+# substantially reduces repository size and LaTeX cache churn.
+PGF_OPTIMIZE_ASSETS: bool = True
+PGF_DEDUP_COMPANION_IMAGES: bool = True
+# Reserved for future image recompression/transcoding pipeline.
+PGF_RECOMPRESS_COMPANION_IMAGES: bool = False
 
 # ── Matplotlib style defaults ────────────────────────────────────────────────
 # CTUthesis textwidth: 210mm − 35mm (left) − 25mm (right) = 150mm

@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR, FONT_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, apply_geo_labels_pgf
 from statout.timeline import timeline
 from statout.map_europe import choropleth
 
@@ -42,8 +42,19 @@ HIGHLIGHT = ["CZ"]
 # Replacement-level fertility
 REPLACEMENT = 2.1
 
+# ── Editable figure strings (also emitted as \def macros in wrapper .tex) ────
+STRINGS_TIMELINE = {
+    "title": r"\ac{TFR} -- úhrnná plodnost",
+    "ylabel": "živě narozených na ženu",
+    "annot_replacement": f"hladina prosté reprodukce (\\SI{{{REPLACEMENT}}}{{}})",
+}
+STRINGS_MAP = {
+    "title_tpl": r"\ac{{TFR}} v~zemích \ac{{EU}} ({year})",
+    "colorbar_label": "živě narozených na ženu",
+}
+
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # demo_find dimensions: freq · indic_de · geo
@@ -75,8 +86,8 @@ for yr in [1974, 1999, 2021, 2024]:
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Úhrnná plodnost",
-    ylabel="živě narozených na ženu",
+    title=STRINGS_TIMELINE["title"],
+    ylabel=STRINGS_TIMELINE["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
@@ -92,6 +103,23 @@ fig = timeline(
 ax = fig.axes[0]
 ax.set_xlim(START_YEAR, ds.years[-1])
 
+# Replace bare country codes with \acs{geo-XX} in annotations and legend
+for child in ax.get_children():
+    if hasattr(child, "get_text"):
+        txt = child.get_text()
+        if txt in COUNTRIES:
+            child.set_text(f"\\acs{{geo-{txt}}}")
+        elif txt == "EU27":
+            child.set_text(r"\acs{geo-EU}")
+legend = ax.get_legend()
+if legend:
+    for txt in legend.get_texts():
+        code = txt.get_text()
+        if code in COUNTRIES:
+            txt.set_text(f"\\acs{{geo-{code}}}")
+        elif code == "EU27":
+            txt.set_text(r"\acs{geo-EU}")
+
 # Replacement-level reference line
 ax.axhline(
     REPLACEMENT,
@@ -102,7 +130,7 @@ ax.axhline(
     zorder=1,
 )
 ax.annotate(
-    f"hladina prosté reprodukce ({REPLACEMENT})",
+    STRINGS_TIMELINE["annot_replacement"],
     xy=(ds.years[-1], REPLACEMENT),
     xytext=(-120, 5),
     textcoords="offset points",
@@ -115,7 +143,7 @@ ax.annotate(
 cz_min_yr = int(cz.idxmin())
 cz_min_val = cz.min()
 ax.annotate(
-    f"CZ\u00a0{cz_min_yr}: {cz_min_val:.2f}",
+    f"\\acs{{geo-CZ}}\u00a0{cz_min_yr}: {cz_min_val:.2f}",
     xy=(cz_min_yr, cz_min_val),
     xytext=(10, -18),
     textcoords="offset points",
@@ -124,39 +152,51 @@ ax.annotate(
 )
 
 # ── 4. Save figure A ──────────────────────────────────────────────────────────
-savefig(fig, "vyhled_porodnost_vyvoj", out_dir=LATEX_PICS_DIR)
+savefig_pgf(fig, "vyhled_porodnost_vyvoj", out_dir=LATEX_PICS_DIR,
+            strings=STRINGS_TIMELINE)
 
-save_figure_tex(
+save_figure_tex_pgf(
     "vyhled_porodnost_vyvoj",
     caption=f"Úhrnná plodnost (TFR) ve vybraných zemích EU, {ds.years[0]}--{ds.years[-1]}.",
     label="fig:vyhled_porodnost_vyvoj",
-    width=r"0.95\linewidth",
+    resizebox_width=r"0.95\linewidth",
     cite_keys="eurostat_demo_find",
+    strings=STRINGS_TIMELINE,
 )
 
 print("Figure A done.")
 
 # ── 5. Choropleth map ─────────────────────────────────────────────────────────
+map_title = STRINGS_MAP["title_tpl"].format(year=ds.latest_year)
+map_strings = {
+    "title": map_title,
+    "colorbar_label": STRINGS_MAP["colorbar_label"],
+}
 fig_map = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Úhrnná plodnost v EU ({ds.latest_year})",
-    colorbar_label="živě narozených na ženu",
+    title=map_title,
+    colorbar_label=STRINGS_MAP["colorbar_label"],
     cmap="RdYlGn",
     vmin=1.0,
     vmax=2.1,
     label_countries=True,
 )
 
-# ── 6. Save figure B ──────────────────────────────────────────────────────────
-savefig(fig_map, "vyhled_porodnost_mapa", out_dir=LATEX_PICS_DIR)
+# Replace bare ISO-2 codes with \acs{geo-XX} and add white contour halo.
+apply_geo_labels_pgf(fig_map.axes[0], halo=True)
 
-save_figure_tex(
+# ── 6. Save figure B ──────────────────────────────────────────────────────────
+savefig_pgf(fig_map, "vyhled_porodnost_mapa", out_dir=LATEX_PICS_DIR,
+            strings=map_strings)
+
+save_figure_tex_pgf(
     "vyhled_porodnost_mapa",
     caption=f"Úhrnná plodnost (TFR), evropské země, {ds.latest_year}.",
     label="fig:vyhled_porodnost_mapa",
-    width=r"0.85\linewidth",
+    resizebox_width=r"0.85\linewidth",
     cite_keys="eurostat_demo_find",
+    strings=map_strings,
 )
 
 print("Figure B done.")

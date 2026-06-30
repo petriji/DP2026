@@ -12,6 +12,7 @@ Typical usage
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Optional, Union
 
@@ -29,6 +30,10 @@ from config import (
     FIGURES_DIR,
     FONT_SIZE,
     PALETTE,
+    PGF_DEDUP_COMPANION_IMAGES,
+    PGF_OPTIMIZE_ASSETS,
+    PGF_RECOMPRESS_COMPANION_IMAGES,
+    PGF_SHARED_ASSETS_DIR,
 )
 
 # ── Unit conversion ───────────────────────────────────────────────────────────
@@ -101,6 +106,143 @@ def apply_style() -> None:
     )
     # Register the discrete colour cycle as a named cyclic colourmap helper
     mpl.rcParams["axes.prop_cycle"] = mpl.cycler("color", PALETTE)
+
+
+# ── PGF backend support ──────────────────────────────────────────────────────
+
+# Minimal preamble for the PGF backend.  When the .pgf file is \input{} into
+# main.tex the *document's* preamble supplies all packages (acro, hyperref,
+# siunitx with custom units, …).  This preamble is only used when matplotlib
+# itself invokes pdflatex for font metrics / text sizing.
+PGF_PREAMBLE = r"""
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{siunitx}
+\DeclareSIUnit\pps{PPS}
+\DeclareSIUnit\eur{€}
+\DeclareSIUnit\czk{Kč}
+\DeclareSIUnit\rok{rok}
+\DeclareSIUnit\person{os.}
+\sisetup{output-decimal-marker={,}, per-mode=symbol}
+\usepackage[pdftex]{contour}
+\contourlength{0.6pt}
+% Stub \contour for the metrics pass (real one comes from CTUthesis.cls).
+\providecommand{\contour}[2]{#2}
+% Stub acro commands so PGF text-metric pass can measure them.
+% The real acro package resolves them when \input{} into main.tex.
+\providecommand{\ac}[1]{#1}
+\providecommand{\acs}[1]{#1}
+\providecommand{\acp}[1]{#1}
+\providecommand{\acl}[1]{#1}
+\providecommand{\acgen}[1]{#1}
+\providecommand{\acdat}[1]{#1}
+\providecommand{\acacc}[1]{#1}
+\providecommand{\acloc}[1]{#1}
+\providecommand{\acins}[1]{#1}
+"""
+
+# ── Geo-label helpers ─────────────────────────────────────────────────────────
+
+# All ISO 3166-1 alpha-2 codes with a \DeclareAcronym{geo-XX} entry in acro.tex.
+# EU-27 + GR alias + EEA/non-EU countries that appear in Eurostat data.
+GEO_ACRO: frozenset[str] = frozenset({
+    # EU-27
+    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
+    "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV",
+    "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
+    # Non-EU European countries declared in acro.tex
+    "IS", "NO", "CH", "UK",
+})
+
+
+def apply_geo_labels_pgf(
+    ax: "plt.Axes",
+    *,
+    halo: bool = True,
+    geo_set: "frozenset[str] | None" = None,
+) -> None:
+    r"""Replace bare ISO-2 country codes on a PGF axes with ``\acs{geo-XX}``.
+
+    For codes in *geo_set* (default: :data:`GEO_ACRO`):
+
+    * Replaces the text with ``\acs{geo-XX}`` so acro resolves it in LaTeX.
+    * Clears matplotlib ``path_effects`` (mandatory: PGF renders stroked text
+      as outlines, which strips embedded LaTeX commands).
+    * If *halo* is ``True`` (default), wraps in ``\contour{white}{...}`` for
+      readability on coloured map backgrounds.  Requires the ``contour``
+      package in ``CTUthesis.cls``.
+
+    Call this function *after* all plotting is done, *before* ``savefig_pgf()``.
+    """
+    codes = geo_set if geo_set is not None else GEO_ACRO
+    for child in ax.get_children():
+        if not hasattr(child, "get_text"):
+            continue
+        txt = child.get_text().strip()
+        if txt not in codes:
+            continue
+        label = rf"\acs{{geo-{txt}}}"
+        if halo:
+            label = rf"\contour{{white}}{{{label}}}"
+        child.set_text(label)
+        child.set_path_effects([])
+
+
+def apply_style_pgf() -> None:
+    """Switch to the PGF backend and apply consistent style.
+
+    Must be called **before** any ``plt.subplots()`` call.  Produces ``.pgf``
+    files that are compiled inside the host LaTeX document, so all document
+    macros (``\\ac{}``, ``\\SI{}{}``, ``\\cite{}``) are available in axis
+    labels, titles, and annotations.
+    """
+    mpl.use("pgf")
+
+    mpl.rcParams.update(
+        {
+            # --- PGF-specific ---
+            "pgf.rcfonts": False,           # don't override document fonts
+            "pgf.preamble": PGF_PREAMBLE,
+            # --- Typography (must match document) ---
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Latin Modern Sans", "CMU Sans Serif", "DejaVu Sans"],
+            "font.size": FONT_SIZE,
+            "axes.titlesize": FONT_SIZE + 2,
+            "axes.labelsize": FONT_SIZE,
+            "xtick.labelsize": FONT_SIZE,
+            "ytick.labelsize": FONT_SIZE,
+            "legend.fontsize": FONT_SIZE,
+            "figure.titlesize": FONT_SIZE + 2,
+            "axes.titlepad": 6,
+            # --- Lines & ticks ---
+            "axes.linewidth": 0.6,
+            "xtick.major.width": 0.6,
+            "ytick.major.width": 0.6,
+            "xtick.minor.width": 0.4,
+            "ytick.minor.width": 0.4,
+            "lines.linewidth": 1.5,
+            "lines.markersize": 4,
+            # --- Grid ---
+            "axes.grid": True,
+            "axes.grid.which": "major",
+            "grid.linewidth": 0.5,
+            "grid.alpha": 0.45,
+            "grid.color": "#CCCCCC",
+            "xtick.minor.visible": True,
+            "ytick.minor.visible": True,
+            # --- Spines ---
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            # --- Colours ---
+            "axes.prop_cycle": mpl.cycler("color", PALETTE),
+            "image.cmap": CMAP_SEQUENTIAL,
+            # --- Figure ---
+            "figure.dpi": 150,
+            "savefig.dpi": FIGURE_DPI,
+            "savefig.bbox": "tight",
+            "savefig.pad_inches": 0.02,
+        }
+    )
 
 
 # ── Centering helper ──────────────────────────────────────────────────────────
@@ -214,6 +356,185 @@ def savefig(
     fig.savefig(out)
     plt.close(fig)
     print(f"Saved: {out}")
+    return out
+
+
+def _macro_prefix(name: str) -> str:
+    """Convert ``'vyhled_porodnost_vyvoj'`` → ``'VyhledPorodnostVyvoj'``."""
+    return "".join(part.capitalize() for part in name.split("_"))
+
+
+def _macro_name(prefix: str, key: str) -> str:
+    r"""Build a LaTeX macro name like ``\strVyhledPorodnostVyvojTitle``."""
+    suffix = "".join(part.capitalize() for part in key.split("_"))
+    return rf"\str{prefix}{suffix}"
+
+
+def _replace_pgf_strings(
+    pgf_path: Path,
+    name: str,
+    strings: dict[str, str],
+) -> int:
+    r"""Replace literal string values in a ``.pgf`` file with ``\strXxx`` macros.
+
+    Returns the total number of replacements made.
+    """
+    prefix = _macro_prefix(name)
+    content = pgf_path.read_text(encoding="utf-8")
+    total = 0
+    # Replace longest strings first to avoid partial matches.
+    for key, value in sorted(strings.items(), key=lambda kv: -len(kv[1])):
+        macro = _macro_name(prefix, key)
+        count = content.count(value)
+        if count:
+            content = content.replace(value, macro)
+            total += count
+    if total:
+        pgf_path.write_text(content, encoding="utf-8")
+    return total
+
+
+def _sha256_file(path: Path) -> str:
+    """Return sha256 hex digest for *path* (streaming, memory-safe)."""
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _dedup_pgf_companion_images(
+    pgf_path: Path,
+    *,
+    shared_dir: Path,
+) -> int:
+    r"""Deduplicate PGF companion rasters to ``shared_dir`` and rewrite references.
+
+    Matplotlib PGF export can produce files like ``<name>-img0.png``
+    (typically colourbar/image tiles).  This helper:
+
+    1. Finds references to local ``.png`` companions in *pgf_path*.
+    2. Moves image payloads into ``shared_dir`` under content-hash names.
+    3. Rewrites PGF references to ``_shared/<hash>.png``.
+    4. Removes redundant local companion files.
+
+    Returns number of PGF reference rewrites performed.
+    """
+    content = pgf_path.read_text(encoding="utf-8")
+    lines = content.splitlines(keepends=True)
+    rewritten = 0
+
+    # Match arguments of \pgfimage[...]...{...png} including nested dirs.
+    import re
+    png_re = re.compile(r"\{([^{}]+\.png)\}")
+
+    companion_map: dict[str, str] = {}
+    for line in lines:
+        for m in png_re.finditer(line):
+            ref = m.group(1)
+            # Absolute paths are left untouched; we only manage local companions.
+            if ref.startswith("/") or ref.startswith("../") or ref.startswith("./"):
+                continue
+            companion_map[ref] = ref
+
+    if not companion_map:
+        return 0
+
+    shared_dir.mkdir(parents=True, exist_ok=True)
+    base_dir = pgf_path.parent
+
+    replace_map: dict[str, str] = {}
+    for ref in companion_map:
+        src = base_dir / ref
+        if not src.exists() or not src.is_file():
+            continue
+        digest = _sha256_file(src)
+        target_name = f"img-{digest[:20]}.png"
+        target = shared_dir / target_name
+        if not target.exists():
+            src.replace(target)
+        else:
+            # Duplicate payload already stored.
+            src.unlink(missing_ok=True)
+        replace_map[ref] = f"_shared/{target_name}"
+
+    if not replace_map:
+        return 0
+
+    # Replace longer keys first to avoid accidental partial substitutions.
+    for old, new in sorted(replace_map.items(), key=lambda kv: -len(kv[0])):
+        count = content.count("{" + old + "}")
+        if count:
+            content = content.replace("{" + old + "}", "{" + new + "}")
+            rewritten += count
+
+    if rewritten:
+        pgf_path.write_text(content, encoding="utf-8")
+    return rewritten
+
+
+def _optimize_pgf_assets(pgf_path: Path) -> list[str]:
+    """Run enabled PGF post-export optimizations and return status messages."""
+    notes: list[str] = []
+    if not PGF_OPTIMIZE_ASSETS:
+        return notes
+
+    if PGF_DEDUP_COMPANION_IMAGES:
+        n = _dedup_pgf_companion_images(pgf_path, shared_dir=PGF_SHARED_ASSETS_DIR)
+        if n:
+            notes.append(f"{n} companion image reference(s) deduplicated to _shared/")
+
+    if PGF_RECOMPRESS_COMPANION_IMAGES:
+        # Placeholder switch: kept for future pngquant/zopfli pipeline.
+        notes.append("recompression switch enabled (no-op placeholder)")
+
+    return notes
+
+
+def savefig_pgf(
+    fig: plt.Figure,
+    name: str,
+    *,
+    out_dir: Optional[Union[str, Path]] = None,
+    tight: bool = True,
+    strings: Optional[dict[str, str]] = None,
+) -> Path:
+    r"""Save *fig* as a ``.pgf`` file for inclusion via ``\input{}`` in LaTeX.
+
+    The PGF backend must be active (call ``apply_style_pgf()`` first).
+    Unlike ``savefig()``, this does **not** produce a standalone PDF —
+    the ``.pgf`` file is compiled inside the host document.
+
+    If *strings* is given (``{key: literal_value}``), the saved ``.pgf`` is
+    post-processed: every *literal_value* is replaced with a ``\strXxx``
+    macro reference.  The matching ``\def`` lines are emitted by
+    ``save_figure_tex_pgf(strings=...)``.
+    """
+    if tight:
+        _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
+        try:
+            fig.tight_layout(**_tl_kwargs)
+        except Exception:
+            pass
+        _spa = getattr(fig, '_subplots_adjust_kwargs', None)
+        if _spa:
+            fig.subplots_adjust(**_spa)
+        _recenter_on_visual(fig)
+
+    directory = Path(out_dir) if out_dir else FIGURES_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+    out = directory / f"{name}.pgf"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"Saved PGF: {out}")
+
+    for note in _optimize_pgf_assets(out):
+        print(f"  ↳ {note}")
+
+    if strings:
+        n = _replace_pgf_strings(out, name, strings)
+        print(f"  ↳ {n} string→macro replacement(s) in PGF")
+
     return out
 
 
@@ -335,6 +656,112 @@ def save_figure_tex(
     out = directory / f"{name}.tex"
     out.write_text(tex, encoding="utf-8")
     print(f"Saved TeX: {out}")
+    return out
+
+
+def save_figure_tex_pgf(
+    name: str,
+    caption: str,
+    label: str,
+    *,
+    out_dir: Optional[Union[str, Path]] = None,
+    include_path: Optional[str] = None,
+    cite_keys: Optional[Union[str, list]] = None,
+    cite_key: Optional[str] = None,
+    footnote: Optional[str] = None,
+    resizebox_width: str = r"\linewidth",
+    strings: Optional[dict[str, str]] = None,
+) -> Path:
+    r"""Write a LaTeX ``figure`` environment that ``\input``s a PGF file.
+
+    Unlike ``save_figure_tex()`` which uses ``\includegraphics``, this uses::
+
+        \resizebox{<width>}{!}{\input{<path>.pgf}}
+
+    The PGF file is compiled *inside* the host document, so all document
+    macros (\ac{}, \SI{}{}, \cite{}, hyperref links) are available.
+    """
+    import re
+    from config import LATEX_TEXPARTS_DIR
+
+    directory = Path(out_dir) if out_dir else LATEX_TEXPARTS_DIR
+    include_path = include_path or f"../python/figures/{name}.pgf"
+
+    raw = cite_keys if cite_keys is not None else cite_key
+    keys: list = []
+    if raw is not None:
+        if isinstance(raw, str):
+            keys = [k.strip() for k in raw.split(",") if k.strip()]
+        else:
+            keys = [k.strip() for k in raw if k.strip()]
+
+    title = caption.rstrip(". \t\n")
+    title = re.sub(r"(?<!\\)%", r"\%", title)
+    if keys:
+        source = _build_cite_source(keys)
+        caption_full = f"{title}. Zdroj dat: {source}."
+    else:
+        caption_full = title
+
+    if footnote:
+        caption_str = f"\\centering {caption_full}\\protect\\footnotemark"
+        footnote_line = f"\\footnotetext{{{footnote}}}\n"
+    else:
+        caption_str = f"\\centering {caption_full}"
+        footnote_line = ""
+
+    # ── Editable figure tex file (written once, never overwritten) ────────
+    if strings:
+        from config import LATEX_FIGURES_TEX_DIR
+        prefix = _macro_prefix(name)
+        strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
+        strings_input_path = f"texparts/figures/{name}"
+        if not strings_file.exists():
+            caption_macro = _macro_name(prefix, "caption")
+            lines = [
+                f"% Editable figure definition for {name}",
+                f"% Edit freely — Python will NOT overwrite this file.",
+                f"% To regenerate defaults, delete this file and re-run the script.",
+            ]
+            for key, value in strings.items():
+                macro = _macro_name(prefix, key)
+                lines.append(f"\\def{macro}{{{value}}}%")
+            lines.append(f"\\def{caption_macro}{{{caption_str}}}%")
+            lines.append(f"%")
+            lines.append(f"\\begin{{figure}}[htbp]")
+            lines.append(f"  \\centering")
+            lines.append(
+                f"  \\resizebox{{{resizebox_width}}}{{!}}"
+                f"{{\\input{{{include_path}}}}}"
+            )
+            lines.append(f"  \\caption{{{caption_macro}}}")
+            lines.append(f"  \\label{{{label}}}")
+            lines.append(f"\\end{{figure}}")
+            if footnote_line:
+                lines.append(footnote_line.rstrip("\n"))
+            strings_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            print(f"  Created figure tex: {strings_file}")
+        else:
+            print(f"  Figure tex exists (kept): {strings_file}")
+
+        # Wrapper is a one-line macro call — always regenerated, no user content.
+        # Commentary files that haven't migrated to \inputpgffigure{} yet
+        # can still use \input{texparts/python/name}.
+        tex = f"\\inputpgffigure{{{name}}}\n"
+    else:
+        tex = (
+            f"\\begin{{figure}}[htbp]\n"
+            f"  \\centering\n"
+            f"  \\resizebox{{{resizebox_width}}}{{!}}{{\\input{{{include_path}}}}}\n"
+            f"  \\caption{{{caption_str}}}\n"
+            f"  \\label{{{label}}}\n"
+            f"\\end{{figure}}\n"
+            f"{footnote_line}"
+        )
+
+    out = directory / f"{name}.tex"
+    out.write_text(tex, encoding="utf-8")
+    print(f"Saved TeX (PGF): {out}")
     return out
 
 

@@ -2,11 +2,38 @@
 
 *Jiří Petříček 2026 · Built with Claude Sonnet 4.6, April 2026*
 
-Generates PDF figures and LaTeX snippets for the CTU thesis.
+Generates figures and LaTeX snippets for the CTU thesis.
 Sources include Eurostat data (SDMX API) and Czech statutory models
 (pension, tax wedge, DPH).
-All outputs land in `pics/python/` (PDF figures) and `latex/texparts/python/` (.tex
-environments) — both gitignored, both auto-created on first run.
+
+Two rendering backends:
+- **PDF** (default): outputs a `.pdf` figure + a `texparts/python/<name>.tex` wrapper with `\begin{figure}`
+- **PGF** (LaTeX-native): outputs a `.pgf` TeX fragment where figure text is rendered by LaTeX, supporting `\ac{}`, `\SI{}{}`, and `\acs{geo-XX}` directly in annotations. Produces a `texparts/figures/<name>.tex` file (git-tracked, hand-editable) and a one-line `texparts/python/<name>.tex` wrapper.
+
+PGF export now includes companion-asset optimization:
+- Companion rasters (typically `<name>-img0.png` colourbars) are deduplicated by content hash.
+- Shared payloads are stored once in `python/figures/_shared/`.
+- Generated `.pgf` files are rewritten to reference `_shared/img-<hash>.png`.
+- Controlled in `python/config.py`:
+  - `PGF_OPTIMIZE_ASSETS`
+  - `PGF_DEDUP_COMPANION_IMAGES`
+  - `PGF_RECOMPRESS_COMPANION_IMAGES` (reserved switch, currently no-op)
+
+All generated outputs (`texparts/python/`, `figures/`) are gitignored and auto-created on first run.
+`texparts/figures/` is **git-tracked** — do not delete it.
+
+## PGF space-saving concepts (roadmap)
+
+Implemented:
+- Hash-based deduplication of PGF companion PNGs (`_shared/`).
+
+Prepared switches (for next step):
+- Companion PNG recompression/transcoding pipeline (`PGF_RECOMPRESS_COMPANION_IMAGES`).
+
+Recommended future concepts:
+- Force vector colourbars where possible (avoid rasterized gradient strips).
+- Canonicalize colormap/limits/tick styling so colourbar rasters become identical more often.
+- Optional post-build PDF object compression check (`qpdf --stream-data=compress`) in CI.
 
 ## Setup
 
@@ -106,6 +133,7 @@ python/
 
 ## Adding a new figure
 
+**PDF backend:**
 ```
  you                      latexmkrc / LaTeX Workshop
   │                                │
@@ -113,7 +141,8 @@ python/
   ├─ add [my_key] to               │
   │    analytics_registry.toml     │
   ├─ \input{texparts/python/…}     │
-  │    in main.tex                 │
+  │    or \inputpgffigure{…}       │
+  │    in commentary / main.tex    │
   │                          build triggered
   │                                │
   │                        stats_analytics.py
