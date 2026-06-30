@@ -34,10 +34,10 @@ Pension formula (§ 33–34 ZPDS):
 PCT_PER_YEAR = 1,495 % for 2026 (gradual reduction from 1,5 % to 1,45 % by 2035,
                zákon č. 270/2023 Sb., § 34 odst. 1).
 
-Reduction (§ 15 ZPDS):
+Reduction (§ 15 ZPDS, zákon č. 270/2023 Sb.):
     ROVZ = min(OVZ, RH1) × 0.99
          + max(min(OVZ, RH2) − RH1, 0) × 0.26
-         + max(OVZ − RH2, 0) × 0.22
+         + max(OVZ − RH2, 0) × 0.00   # nad RH2 se nezapočítává
 
 Figures
 -------
@@ -116,7 +116,7 @@ def _rovz(ovz: np.ndarray | float) -> np.ndarray | float:
     return (
         np.minimum(ovz, RH1) * 0.99
         + np.maximum(np.minimum(ovz, RH2) - RH1, 0) * 0.26
-        + np.maximum(ovz - RH2, 0) * 0.22
+        # nad RH2 se nezapočítává
     )
 
 
