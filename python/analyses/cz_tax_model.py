@@ -757,13 +757,17 @@ def plot_tax_wedge_comparison(
     ax.plot(tw_emp, rr_emp,
             color=c_emp, linewidth=2.0, zorder=3)
 
+    _RR_CAP = 250.0  # clip extreme ratios near the low-income start of OSVČ series
     for expense_rate, label, color in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
         ni_osvc = net_income_osvc_vydajovy(x, expense_rate)
-        # Mask points where net income ≤ 0 (OSVČ 80 % at low income has
-        # negative net income due to minimum SP/ZP bases exceeding profit).
-        valid   = ni_osvc > 0
-        rr_osvc = np.where(valid, pension_osvc_vydajovy(x, expense_rate, years) / np.maximum(ni_osvc, 1.0) * 100, np.nan)
+        # Mask points where net income ≤ 0 or replacement rate exceeds display cap
+        # (OSVČ 80 % at low income has negative/tiny net income that creates
+        # extreme spikes near the minimum wage).
+        rr_raw  = np.where(ni_osvc > 0,
+                           pension_osvc_vydajovy(x, expense_rate, years) / np.maximum(ni_osvc, 1.0) * 100,
+                           np.nan)
+        rr_osvc = np.where(rr_raw <= _RR_CAP, rr_raw, np.nan)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         mask_below = x <= cap
         mask_above = ~mask_below
@@ -806,9 +810,13 @@ def plot_tax_wedge_comparison(
                         textcoords="offset points",
                         fontsize=FONT_SIZE - 2, color=col)
             for expense_rate_ref, _label, color_ref in OSVC_TYPES:
+                ni_o = float(net_income_osvc_vydajovy(float(x_ref), expense_rate_ref))
+                if ni_o <= 0:
+                    continue
                 tw_o = float(tax_wedge_osvc_vydajovy(float(x_ref), expense_rate_ref))
-                rr_o = float(pension_osvc_vydajovy(float(x_ref), expense_rate_ref, years)) / max(float(net_income_osvc_vydajovy(float(x_ref), expense_rate_ref)), 1.0) * 100
-                ax.plot(tw_o, rr_o, "o", color=col, markersize=5, zorder=5)
+                rr_o = float(pension_osvc_vydajovy(float(x_ref), expense_rate_ref, years)) / max(ni_o, 1.0) * 100
+                if rr_o <= _RR_CAP:
+                    ax.plot(tw_o, rr_o, "o", color=col, markersize=5, zorder=5)
 
     ax.set_xlabel("Daňový klín\u00a0[%]")
     ax.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0čistý\u00a0příjem)\u00a0[%]")
@@ -818,7 +826,7 @@ def plot_tax_wedge_comparison(
         loc="center",
     )
     ax.set_xlim(left=0)
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(0, _RR_CAP)
 
     # Inline popisky kurvek – zkratky v barvě u nejnižší hodnoty náhradového poměru
     # (tj. na konci křivky při nejvyšším příjmu income_max).

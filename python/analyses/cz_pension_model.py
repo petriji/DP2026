@@ -209,8 +209,8 @@ OSVC_RH2_X: int = int(RH2 / OSVC_BASE_RATIO)           # ≈ 356 124 Kč (mimo s
 # Formát: (výdajový_paušál, popisek, barva)
 # výdajový_paušál: podíl příjmů uznaný jako výdaje → zisk = příjmy × (1 − sazba)
 OSVC_TYPES: list[tuple[float, str, str]] = [
-    (0.60, "OSVČ 60\u202f%\u00a0výdajů (ost.\u00a0živnosti)",       PALETTE[1]),
     (0.80, "OSVČ 80\u202f%\u00a0výdajů (řemeslná živnost)",          PALETTE[4]),
+    (0.60, "OSVČ 60\u202f%\u00a0výdajů (ost.\u00a0živnosti)",       PALETTE[1]),
     (0.40, "OSVČ 40\u202f%\u00a0výdajů (svobodná\u00a0povolání)",   PALETTE[5]),
 ]
 
@@ -677,14 +677,17 @@ def plot_pension_solidarity(
     rr_emp = p_emp_rr / _net_income_emp(x_rr) * 100
     ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
 
+    _RR_CAP = 250.0  # clip extreme ratios at the start of each OSVČ series
     for expense_rate, label, color in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
         ni_osvc   = _net_income_osvc_vydajovy(x_rr, expense_rate)
-        # Mask points where net income ≤ 0 to avoid division artifacts
-        # (e.g. OSVČ 80 % has negative net income at low income levels where
-        # mandatory minimum SP/ZP bases exceed the 20 % profit margin).
-        valid = ni_osvc > 0
-        rr_osvc = np.where(valid, p_osvc_rr / np.maximum(ni_osvc, 1.0) * 100, np.nan)
+        # Mask points where net income ≤ 0 or ratio would exceed display cap
+        # (e.g. OSVČ 80 % has negative/tiny net income near min wage causing
+        # extreme replacement-rate spikes that distort the y-axis scale).
+        rr_raw  = np.where(ni_osvc > 0,
+                           p_osvc_rr / np.maximum(ni_osvc, 1.0) * 100,
+                           np.nan)
+        rr_osvc = np.where(rr_raw <= _RR_CAP, rr_raw, np.nan)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x_rr, cap, side='right'))
         if idx > 0:
@@ -731,7 +734,7 @@ def plot_pension_solidarity(
     ax_bot.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
     ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0čistý\u00a0příjem)\u00a0[%]")
     ax_bot.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
-    ax_bot.set_ylim(bottom=0)
+    ax_bot.set_ylim(0, _RR_CAP)
 
     # Legenda mimo osy – dole pod figúrou; sdílena oběma panely
     legend_handles = [
