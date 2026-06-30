@@ -291,10 +291,11 @@ def save_figure_tex(
     cite_key:
         Deprecated alias for *cite_keys* (kept for backward compatibility).
     """
+    import re
     from config import LATEX_TEXPARTS_DIR
 
     directory = Path(out_dir) if out_dir else LATEX_TEXPARTS_DIR
-    include_path = include_path or f"../pics/python/{name}"
+    include_path = include_path or f"../python/figures/{name}"
 
     # Resolve cite keys — cite_keys takes priority over deprecated cite_key
     raw = cite_keys if cite_keys is not None else cite_key
@@ -305,7 +306,10 @@ def save_figure_tex(
         else:
             keys = [k.strip() for k in raw if k.strip()]
 
+    # Escape special LaTeX characters in caption (but not already-escaped ones)
     title = caption.rstrip(". \t\n")
+    # Escape % that are not already escaped
+    title = re.sub(r"(?<!\\)%", r"\%", title)
     if keys:
         source = _build_cite_source(keys)
         caption_full = f"{title}. Zdroj dat: {source}."
