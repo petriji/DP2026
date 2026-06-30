@@ -70,12 +70,17 @@ ds_gini = Dataset.from_sdmx_csv(
 
 # ── 3. Scatter plot ───────────────────────────────────────────────────────────
 # scatter_xy uses the latest common year by default
+STRINGS = {
+    "title": r"Korelace: hustota odborů a Giniho koeficient (\acs{geo-EU}27)",
+    "xlabel": r"hustota odborů [\%]",
+    "ylabel": "Giniho koeficient [0–100]",
+}
 fig = scatter_xy(
     ds_tud,
     ds_gini,
-    title="Korelace: hustota odborů a Giniho koeficient (EU27)",
-    xlabel="hustota odborů [%]",
-    ylabel="Giniho koeficient [0\u2013100]",
+    title=STRINGS["title"],
+    xlabel=STRINGS["xlabel"],
+    ylabel=STRINGS["ylabel"],
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
@@ -98,7 +103,7 @@ for _child in fig.axes[0].get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "korelace_hustota_gini")
+savefig_pgf(fig, "korelace_hustota_gini", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 # Determine the year actually plotted
@@ -109,9 +114,9 @@ save_figure_tex_pgf(
     "korelace_hustota_gini",
     caption=f"Hustota odborů a~příjmová nerovnost, \\acs{{EU}}, {display_year}.",
     label="fig:korelace_hustota_gini",
-    resizebox_width=r"0.85\linewidth",
+    resizebox_width=r"\linewidth",
     cite_keys=["oecd_aias_ictwss_TUD_pct", "eurostat_ilc_di12_Gini"],
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

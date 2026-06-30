@@ -85,7 +85,7 @@ save_figure_tex_pgf(
         f"Hustota zaměstnavatelských organizací, EU mapa, "
         f"{ds.latest_year}."),
     label="fig:stav_zamestnavatele_hustota_mapa",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS_MAP,
 )

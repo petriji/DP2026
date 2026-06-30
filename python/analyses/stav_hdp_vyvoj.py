@@ -71,11 +71,15 @@ ds.df = ds.df[~ds.df["geo"].isin({"LU", "IE"})].copy()
 print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
+STRINGS = {
+    "title": r"\acs{HDP} na obyvatele",
+    "ylabel": r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
+}
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="HDP na obyvatele",
-    ylabel="HDP na obyvatele [PPS, EU27 = 100]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     show_eu_avg=False,    background_eu=True,
@@ -127,7 +131,7 @@ NUDGE_LABELS = [
     (geo, rf"\acs{{geo-{geo}}}") for geo in COUNTRIES
 ] + [("EU27ref", "EU27 = 100")]
 
-savefig_pgf(fig, "stav_hdp_vyvoj", nudge_labels=NUDGE_LABELS)
+savefig_pgf(fig, "stav_hdp_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -139,7 +143,7 @@ save_figure_tex_pgf(
     label="fig:stav_hdp_vyvoj",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
-    strings={},
+    strings=STRINGS,
     nudge_labels=NUDGE_LABELS,
 )
 

@@ -108,7 +108,7 @@ save_figure_tex_pgf(
     caption=(
         f"Index cenové hladiny \\acs{{HDP}}, EU mapa, {ds.latest_year}."),
     label="fig:eu_cenova_hladina",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_prc_ppp_ind_PLI_GDP",
     strings=STRINGS,
 )

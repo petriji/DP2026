@@ -51,11 +51,15 @@ ds.name = "Pokrytí kolektivním vyjednáváním"
 print(f"Merged: {ds.df['geo'].nunique()} countries, years {ds.years[0]}--{ds.years[-1]}")
 
 # ── 4. Long-run figure (1993--latest, xlim up to 2025) ────────────────────────
+STRINGS = {
+    "title": r"Pokrytí \acs{KV}",
+    "ylabel": r"pokrytí \acs{KV} [\%]",
+}
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Pokrytí KV",
-    ylabel="pokrytí KV [%]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     show_eu_avg=False,
@@ -83,7 +87,7 @@ for _child in _ax1.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig, "eu_pokryti_kv_vyvoj")
+savefig_pgf(fig, "eu_pokryti_kv_vyvoj", strings=STRINGS)
 
 latest_yr = ds.years[-1]
 save_figure_tex_pgf(
@@ -97,19 +101,23 @@ save_figure_tex_pgf(
         r"ERB \(\neq\) AdjCov). Chybějící hodnoty = mezery v datech."
     ),
     label="fig:eu_pokryti_kv_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
-    strings={},
+    strings=STRINGS,
 )
 
-# ── 5. Cropped figure (2004--latest, xlim up to 2025) ─────────────────────────
+# ── 5. Cropped figure (2004--latest, xlim up to 2025) ───────────────────────
 YEAR_START2 = 2004
 
+STRINGS_2004 = {
+    "title": rf"Pokrytí \acs{{KV}} ({YEAR_START2}--{latest_yr})",
+    "ylabel": r"pokrytí \acs{KV} [\%]",
+}
 fig2 = timeline(
     ds,
     countries=COUNTRIES,
-    title=f"Pokrytí KV ({YEAR_START2}--{latest_yr})",
-    ylabel="pokrytí KV [%]",
+    title=STRINGS_2004["title"],
+    ylabel=STRINGS_2004["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets={"PL": (4, -10)},
@@ -137,7 +145,7 @@ for _child in _ax2.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig2, "eu_pokryti_kv_vyvoj_2004")
+savefig_pgf(fig2, "eu_pokryti_kv_vyvoj_2004", strings=STRINGS_2004)
 
 save_figure_tex_pgf(
     "eu_pokryti_kv_vyvoj_2004",
@@ -151,7 +159,7 @@ save_figure_tex_pgf(
         r"(ERB \(\neq\) AdjCov, viz text). Chybějící hodnoty = mezery v datech."
     ),
     label="fig:eu_pokryti_kv_vyvoj_2004",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
     strings={},
 )

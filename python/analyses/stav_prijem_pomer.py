@@ -114,11 +114,15 @@ print(f"Ratio data: {len(ds_ratio.countries)} countries, "
       f"{ds_ratio.years[0] if ds_ratio.years else '?'}--{ds_ratio.years[-1] if ds_ratio.years else '?'}")
 
 # ── 5. Plot ───────────────────────────────────────────────────────────────────
+STRINGS = {
+    "title": r"Čistý příjem jako podíl \acs{HDP} na obyvatele",
+    "ylabel": r"čistý příjem / \acs{HDP} na obyvatele [\acs{geo-EU}27 = 100]",
+}
 fig = timeline(
     ds_ratio,
     countries=COUNTRIES,
-    title="Čistý příjem jako podíl HDP na obyvatele",
-    ylabel="čistý příjem / HDP na obyvatele [EU27 = 100]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     background_eu=True,
     annotate_last=True,
 )
@@ -142,7 +146,7 @@ for _child in fig.axes[0].get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 # ── 6. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_prijem_pomer")
+savefig_pgf(fig, "stav_prijem_pomer", strings=STRINGS)
 
 # ── 7. LaTeX snippet ──────────────────────────────────────────────────────────
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
@@ -152,7 +156,7 @@ save_figure_tex_pgf(
     label="fig:stav_prijem_pomer",
     resizebox_width=r"\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

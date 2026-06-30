@@ -97,7 +97,7 @@ save_figure_tex_pgf(
         f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, "
         f"\\acs{{EU}}, {ds.latest_year}."),
     label="fig:vyhled_digit_dovednosti_mapa",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS,
 )

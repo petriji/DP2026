@@ -65,11 +65,15 @@ ds_all = load_lmp_active(start_period=START_YEAR)
 print(f"All countries: {len(ds_all.countries)}  |  Years: {ds_all.years[0]}--{ds_all.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
+STRINGS = {
+    "title": r"Výdaje na \acs{APZ}",
+    "ylabel": r"výdaje na \acs{APZ} [\% \acs{HDP}]",
+}
 fig = timeline(
     ds_all,
     countries=COUNTRIES,
-    title="Výdaje na APZ",
-    ylabel="výdaje na APZ [% HDP]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets=LABEL_OFFSETS,
@@ -110,7 +114,7 @@ for _child in _ax.get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_apz_vydaje", nudge_labels=NUDGE_LABELS)
+savefig_pgf(fig, "eu_apz_vydaje", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -120,20 +124,24 @@ save_figure_tex_pgf(
         f"{START_YEAR}--{ds_all.years[-1]}."
     ),
     label="fig:eu_apz_vydaje",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",
-    strings={},
+    strings=STRINGS,
     nudge_labels=NUDGE_LABELS,
 )
 
 # ── 6. Second variant: 2004--latest (cropped x-axis) ──────────────────────────
 YEAR_2004 = 2004
+STRINGS_2004 = {
+    "title": rf"Výdaje na \acs{{APZ}} ({YEAR_2004}--{ds_all.years[-1]})",
+    "ylabel": r"výdaje na \acs{APZ} [\% \acs{HDP}]",
+}
 
 fig2 = timeline(
     ds_all,
     countries=COUNTRIES,
-    title=f"V\u00fddaje na APZ ({YEAR_2004}--{ds_all.years[-1]})",
-    ylabel="výdaje na APZ [% HDP]",
+    title=STRINGS_2004["title"],
+    ylabel=STRINGS_2004["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     label_offsets=LABEL_OFFSETS,
@@ -168,7 +176,7 @@ for _child in _ax2.get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig2, "eu_apz_vydaje_2004", nudge_labels=NUDGE_LABELS)
+savefig_pgf(fig2, "eu_apz_vydaje_2004", strings=STRINGS_2004, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_apz_vydaje_2004",
     caption=(
@@ -176,9 +184,9 @@ save_figure_tex_pgf(
         f"2004--{ds_all.years[-1]}."
     ),
     label="fig:eu_apz_vydaje_2004",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_lmpexp_PC_GDP",
-    strings={},
+    strings=STRINGS_2004,
     nudge_labels=NUDGE_LABELS,
 )
 

@@ -99,7 +99,7 @@ save_figure_tex_pgf(
     caption=(
         f"Koeficient ekonomického zatížení seniory, evropské země, {ds.latest_year}."),
     label="fig:vyhled_zavislost_mapa",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_demo_pjanind",
     strings=STRINGS,
 )

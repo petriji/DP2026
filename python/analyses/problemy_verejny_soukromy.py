@@ -319,10 +319,16 @@ ax_a.set_yticklabels(
 ax_a.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
 )
-ax_a.set_xlabel("hrubá měsíční mzda/plat -- medián [tis.\u00a0Kč]", fontsize=FONT_SIZE)
+STRINGS_A = {
+    "title": (
+        rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR})\\"
+        r"Chybové úsečky = mezikvartilový rozsah P25--P75"
+    ),
+    "xlabel": r"hrubá měsíční mzda/plat -- medián [tis.\,\acs{czk}]",
+}
+ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE)
 ax_a.set_title(
-    f"ČR: mediánová mzda/plat podle odvětví CZ-NACE ({ISPV_YEAR})\n"
-    "Chybové úsečky = mezikvartilový rozsah P25--P75",
+    STRINGS_A["title"],
     fontsize=FONT_SIZE,
 )
 
@@ -334,7 +340,7 @@ ax_a.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.set_axisbelow(True)
 
 fig_a.tight_layout()
-savefig_pgf(fig_a, "problemy_verejny_soukromy")
+savefig_pgf(fig_a, "problemy_verejny_soukromy", strings=STRINGS_A)
 save_figure_tex_pgf(
     "problemy_verejny_soukromy",
     caption=(
@@ -343,9 +349,9 @@ save_figure_tex_pgf(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="mpsv_ispv",
-    strings={},
+    strings=STRINGS_A,
 )
 print("  Figure A done.")
 
@@ -450,12 +456,16 @@ ax_b.annotate(
 
 ax_b.set_xticks(x_pos)
 ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FONT_SIZE - 0.5)
-ax_b.set_ylabel("hrubá měsíční mzda/plat [tis.\u00a0Kč]", fontsize=FONT_SIZE)
+STRINGS_B = {
+    "title": rf"\acs{{geo-CZ}}: rozložení mezd a platů -- soukromý vs. veřejný sektor ({ISPV_YEAR})",
+    "ylabel": r"hrubá měsíční mzda/plat [tis.\,\acs{czk}]",
+}
+ax_b.set_ylabel(STRINGS_B["ylabel"], fontsize=FONT_SIZE)
 ax_b.yaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.\u00a0Kč")
+    ticker.FuncFormatter(lambda y, _: f"{y:.0f} tis. Kč")
 )
 ax_b.set_title(
-    f"ČR: rozložení mezd a platů -- soukromý vs. veřejný sektor ({ISPV_YEAR})",
+    STRINGS_B["title"],
     fontsize=FONT_SIZE,
 )
 ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="upper left")
@@ -463,7 +473,7 @@ ax_b.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_b.set_axisbelow(True)
 
 fig_b.tight_layout()
-savefig_pgf(fig_b, "problemy_verejny_soukromy_dist")
+savefig_pgf(fig_b, "problemy_verejny_soukromy_dist", strings=STRINGS_B)
 save_figure_tex_pgf(
     "problemy_verejny_soukromy_dist",
     caption=(
@@ -471,9 +481,9 @@ save_figure_tex_pgf(
     ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy_dist",
-    resizebox_width=r"0.85\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="mpsv_ispv",
-    strings={},
+    strings=STRINGS_B,
 )
 print("  Figure B done.")
 

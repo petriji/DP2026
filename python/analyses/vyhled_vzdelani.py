@@ -59,11 +59,15 @@ ds = Dataset.from_sdmx_csv(
 print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}--{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
+STRINGS = {
+    "title": "Podíl obyvatel s terciárním vzděláním (25--64 let)",
+    "ylabel": r"podíl s ISCED 5--8 [\%]",
+}
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Podíl obyvatel s terciárním vzděláním (25--64 let)",
-    ylabel="podíl s ISCED 5--8 [%]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
@@ -89,7 +93,7 @@ for _child in fig.axes[0].get_children():
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_vzdelani_vyvoj")
+savefig_pgf(fig, "vyhled_vzdelani_vyvoj", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -99,9 +103,9 @@ save_figure_tex_pgf(
         f"vybrané země \\acs{{EU}}, {ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:vyhled_vzdelani_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

@@ -101,7 +101,7 @@ save_figure_tex_pgf(
         f"\\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU}}27\\,=\\,100), EU mapa, {ds.latest_year}."
     ),
     label="fig:eu_prijem_pps",
-    resizebox_width=r"0.92\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
     strings=STRINGS,
 )

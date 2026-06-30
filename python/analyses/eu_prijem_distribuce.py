@@ -199,12 +199,17 @@ for country in COUNTRIES:
             f"{country} {latest[country]} {d} (p={p:.1f}): {q:,.0f} PPS",
         )
 
+STRINGS = {
+    "title": rf"Modelové rozložení čistého disponibilního příjmu domácností ({ref_year})",
+    "xlabel": r"ekvivalizovaný čistý disponibilní příjem [tis.\,\acs{PPS}/rok]",
+    "ylabel": r"podíl domácností v\,intervalu \SI{1000}{\pps} [\%]",
+}
 ax.set_xlabel(
-    "ekvivalizovaný čistý disponibilní příjem [tis.\\,PPS/rok]",
+    STRINGS["xlabel"],
     fontsize=FONT_SIZE,
 )
 ax.set_ylabel(
-    "podíl domácností v\\,intervalu \\SI{1000}{\\pps} [\\%]",
+    STRINGS["ylabel"],
     fontsize=FONT_SIZE,
 )
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
@@ -214,7 +219,7 @@ ax.yaxis.set_major_formatter(
 ax.set_xlim(X_MIN / 1_000.0, X_MAX / 1_000.0)
 ax.set_ylim(bottom=0)
 ax.set_title(
-    f"Modelové rozložení čistého disponibilního příjmu domácností ({ref_year})",
+    STRINGS["title"],
     fontsize=FONT_SIZE,
 )
 
@@ -238,7 +243,7 @@ median_str = "; ".join(
     for c in COUNTRIES if c in medians
 )
 
-savefig_pgf(fig, "eu_prijem_distribuce")
+savefig_pgf(fig, "eu_prijem_distribuce", strings=STRINGS)
 save_figure_tex_pgf(
     "eu_prijem_distribuce",
     caption=(
@@ -247,10 +252,8 @@ save_figure_tex_pgf(
     ),
     cite_keys="eurostat_ilc_di01",
     label="fig:eu_prijem_distribuce",
-    resizebox_width=r"0.95\linewidth",
-    strings={
-        "mediany": median_str,
-    },
+    resizebox_width=r"\linewidth",
+    strings={**STRINGS, "mediany": median_str},
 )
 
 print("Done.")

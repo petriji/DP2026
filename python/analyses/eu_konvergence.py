@@ -184,11 +184,14 @@ ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
         fontsize=FONT_SIZE - 1, color="#555555", alpha=0.8, va="bottom")
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
-ax.set_xlabel("rok")
-ax.set_ylabel("index [EU27 = 100]")
-ax.set_title(
-    "Konvergence produktivity práce a čistého příjmu (PPS, EU27 = 100)"
-)
+STRINGS = {
+    "title": r"Konvergence produktivity práce a čistého příjmu (\acs{PPS}, \acs{geo-EU}27 = 100)",
+    "xlabel": "rok",
+    "ylabel": r"index [\acs{geo-EU}27 = 100]",
+}
+ax.set_xlabel(STRINGS["xlabel"])
+ax.set_ylabel(STRINGS["ylabel"])
+ax.set_title(STRINGS["title"])
 ax.set_xlim(START_YEAR, max(lp_years[-1], 2025))
 
 # Integer major ticks + minor grid
@@ -200,17 +203,17 @@ ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
 ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
 
 # ── 7. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_konvergence")
+savefig_pgf(fig, "eu_konvergence", strings=STRINGS)
 
-# ── 8. Write LaTeX snippet ────────────────────────────────────────────────────
+# ── 8. Write LaTeX snippet ───────────────────────────────────────────────────────────
 last_year = lp_years[-1]
 save_figure_tex_pgf(
     "eu_konvergence",
-    caption=f"Konvergence produktivity práce a~čistého příjmu k~EU27, vybrané země EU, {START_YEAR}--{last_year}.",
+    caption=f"Konvergence produktivity práce a~čistého příjmu k~\\acs{{geo-EU}}27, vybrané země EU, {START_YEAR}--{last_year}.",
     cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:eu_konvergence",
-    resizebox_width=r"0.95\linewidth",
-    strings={},
+    resizebox_width=r"\linewidth",
+    strings=STRINGS,
 )
 
 print("Done.")

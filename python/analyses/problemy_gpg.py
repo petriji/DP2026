@@ -161,7 +161,7 @@ save_figure_tex_pgf(
     ),
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="eurostat_gpg",
     strings=STRINGS_GPG_MAP,
 )
@@ -275,11 +275,16 @@ if not ses_ok:
 ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
 ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
-ax_b.set_xlabel("percentil mzdové distribuce", fontsize=FONT_SIZE - 1)
-ax_b.set_ylabel("hodinová mzda [PPS/h]", fontsize=FONT_SIZE - 1)
+STRINGS_STRAT = {
+    "title": rf"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
+    "xlabel": "percentil mzdové distribuce",
+    "ylabel": r"hodinová mzda [\si{\pps\per\hour}]",
+}
+ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE - 1)
+ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE - 1)
 ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax_b.set_title(
-    f"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
+    STRINGS_STRAT["title"],
     fontsize=FONT_SIZE,
 )
 
@@ -299,7 +304,7 @@ ax_b.legend(handles=country_handles + style_handles,
             loc="lower center", bbox_to_anchor=(0.5, -0.18),
             frameon=False, fontsize=FONT_SIZE - 1)
 
-savefig_pgf(fig_b, "problemy_gpg_stratifikace")
+savefig_pgf(fig_b, "problemy_gpg_stratifikace", strings=STRINGS_STRAT)
 save_figure_tex_pgf(
     "problemy_gpg_stratifikace",
     caption=(
@@ -309,7 +314,7 @@ save_figure_tex_pgf(
     label="fig:problemy_gpg_stratifikace",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_ses_hourly",
-    strings={},
+    strings=STRINGS_STRAT,
 )
 
 print("Done.")

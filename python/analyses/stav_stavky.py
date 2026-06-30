@@ -256,11 +256,15 @@ if missing:
 # ── 4. Plot ───────────────────────────────────────────────────────────────────
 latest_yr = ds.years[-1]
 
+STRINGS = {
+    "title": "Ztracená pracovní doba vlivem pracovních konfliktů",
+    "ylabel": r"ztracená pracovní doba [\%]",
+}
 fig = timeline(
     ds,
     countries=countries_present,
-    title="Ztracená pracovní doba vlivem pracovních konfliktů",
-    ylabel="ztracená pracovní doba [%]",
+    title=STRINGS["title"],
+    ylabel=STRINGS["ylabel"],
     highlight=highlight_present,
     annotate_last=True,
     background_eu=True,
@@ -287,7 +291,7 @@ for _child in fig.axes[0].get_children():
         if _txt in countries_present:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig, "stav_stavky")
+savefig_pgf(fig, "stav_stavky", strings=STRINGS)
 
 save_figure_tex_pgf(
     "stav_stavky",

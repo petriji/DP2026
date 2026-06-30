@@ -106,15 +106,20 @@ for country in COUNTRIES:
         fontsize=FONT_SIZE, color=color, va="center",
     )
 
-ax.set_xlabel("rok (HFCS vlna)")
-ax.set_ylabel("podíl top 10 % domácností na čistém jmění [%]")
-ax.set_title("Podíl top 10 % domácností na čistém jmění")
+STRINGS = {
+    "title": r"Podíl top 10\,\% domácností na čistém jmění",
+    "xlabel": r"rok (\acs{HFCS} vlna)",
+    "ylabel": r"podíl top 10\,\% domácností na čistém jmění [\%]",
+}
+ax.set_xlabel(STRINGS["xlabel"])
+ax.set_ylabel(STRINGS["ylabel"])
+ax.set_title(STRINGS["title"])
 ax.set_ylim(25, 80)
 if ds_all.years:
     ax.set_xlim(ds_all.years[0] - 1, max(ds_all.years[-1], 2025))
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_bohatstvi_vyvoj")
+savefig_pgf(fig, "eu_bohatstvi_vyvoj", strings=STRINGS)
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -125,9 +130,9 @@ save_figure_tex_pgf(
         "Šedé linie = ostatní země v~datové sadě."
     ),
     label="fig:eu_bohatstvi_vyvoj",
-    resizebox_width=r"0.95\linewidth",
+    resizebox_width=r"\linewidth",
     cite_key="oecd_hfcs_wealth_top10_PC",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

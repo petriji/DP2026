@@ -127,12 +127,16 @@ fig, (ax_top, ax_bot) = plt.subplots(
     nrows=2, ncols=1, sharex=True, figsize=cm2in(15, 14),
 )
 
+STRINGS = {
+    "ylabel_top": r"míra \acs{AROPE} [\%]",
+    "ylabel_bot": r"D3 (\acs{PPS}, \acs{geo-EU}\,=\,100)",
+}
 # --- Top panel: AROPE -------------------------------------------------------
 timeline(
     ds_arope,
     countries=COUNTRIES,
     title="",
-    ylabel="míra AROPE [%]",
+    ylabel=STRINGS["ylabel_top"],
     xlabel="",
     highlight=HIGHLIGHT,
     background_eu=True,
@@ -144,7 +148,7 @@ timeline(
     ds_d3,
     countries=COUNTRIES,
     title="",
-    ylabel=r"D3 (PPS, EU\,=\,100)",
+    ylabel=STRINGS["ylabel_bot"],
     xlabel="rok",
     highlight=HIGHLIGHT,
     background_eu=True,
@@ -188,7 +192,7 @@ _decorate(ax_bot, ds_d3, "{:.1f}")
 fig.subplots_adjust(hspace=0.08)
 
 # ── 5. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "stav_arope_dual")
+savefig_pgf(fig, "stav_arope_dual", strings=STRINGS)
 
 save_figure_tex_pgf(
     "stav_arope_dual",
@@ -202,7 +206,7 @@ save_figure_tex_pgf(
         "eurostat_ilc_peps01n_PC_pop",
         "eurostat_ilc_di01_D3_PPS",
     ],
-    strings={},
+    strings=STRINGS,
 )
 
 print(f"\nDone. Output in {LATEX_PICS_DIR} / texparts.")
