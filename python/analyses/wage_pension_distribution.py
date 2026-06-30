@@ -116,18 +116,21 @@ _X_MIN   =  5_000
 _X_MAX   = 90_000
 _X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
 
-# Reference constants (2026 / latest available)
-MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.405/2025 Sb.)
+# Reference constants (2025)
+MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.289/2024 Sb.)
 # Minimum pension = zákonná základní výměra + minimum procentní výměra
-# zákon č.155/1995 Sb. §29; 2026 values per NV č.365/2025 Sb.
-MIN_PENSION    =  5_340   # Kč/měsíc  (4 570 + 770 Kč)  zákon č.155/1995 Sb.
+# zákon č.155/1995 Sb. §29; 2025 values per NV č.364/2024 Sb.
+MIN_PENSION    =  5_170   # Kč/měsíc  (4 400 + 770 Kč)  zákon č.155/1995 Sb.
 
-# 2026 CZ employee statutory deductions (for gross-to-net conversion)
-_SP_EMPLOYEE_RATE = 0.065   # sociální pojistění zaměstnanec
-_ZP_EMPLOYEE_RATE = 0.045   # zdravotní pojistění zaměstnanec
-_DPFO_RATE        = 0.15    # sazba DPFO (platí do 131 901 Kč/měsíc)
-_SLEVA_POPLATNIK  = 2_570   # Kč/měsíc (sleva na poplatníka = 30 840 Kč/rok)
-EMPLOYER_INS_RATE = 0.338   # SP + ZP zaměstnavatele (24,8 % + 9 %)
+# 2025 CZ employee statutory deductions (for gross-to-net conversion)
+_SP_EMPLOYEE_RATE   = 0.065        # sociální pojistění zaměstnanec
+_ZP_EMPLOYEE_RATE   = 0.045        # zdravotní pojistění zaměstnanec
+_DPFO_RATE_LOW      = 0.15         # sazba DPFO – 1. pásmo (do 1 676 052 Kč/rok)
+_DPFO_RATE_HIGH     = 0.23         # sazba DPFO – 2. pásmo (nad 1 676 052 Kč/rok)
+_DPFO_THRESHOLD_YR  = 1_676_052    # Kč/rok (§ 16 ZDP, platné pro rok 2025)
+_DPFO_THRESHOLD_MO  = _DPFO_THRESHOLD_YR / 12  # ≈ 139 671 Kč/měsíc
+_SLEVA_POPLATNIK    = 2_570        # Kč/měsíc (sleva na poplatníka = 30 840 Kč/rok)
+EMPLOYER_INS_RATE   = 0.338        # SP + ZP zaměstnavatele (24,8 % + 9 %)
 
 # Colour assignments
 _COLOR_WAGE    = PALETTE[0]   # deep blue
@@ -242,17 +245,24 @@ def fit_lognormal(quantile_dict: dict[float, float]) -> tuple[float, float]:
 def gross_to_net_wage(gross: float | np.ndarray) -> float | np.ndarray:
     """Čistá měsíční mzda po odečtení zaměstnaneckých odvodů a DPFO.
 
-    CZ 2026: SP = 6,5 %, ZP = 4,5 %, DPFO 15 %,
-    sleva na poplatníka = 2 570 Kč/měsíc.
-    Platí pro hrubou mzdu ≤ 131 901 Kč/měsíc (pásmo 15 %).
+    CZ 2025: SP = 6,5 %, ZP = 4,5 %, DPFO 15 % do 139 671 Kč/měsíc
+    (= 1 676 052 Kč/rok), 23 % nad tuto hranici; sleva na poplatníka
+    = 2 570 Kč/měsíc.
 
     Základ daně DPFO je hrubá mzda (od 1. 1. 2021 bylo zrušeno
     zdanění ze „superhrubé mzdy"; zákon č. 586/1992 Sb., §6 odst. 12).
     """
     g = np.asarray(gross, dtype=float)
-    # Tax base = gross wage (since 2021 abolition of superhrubá mzda)
-    dpfo = np.maximum(_DPFO_RATE * g - _SLEVA_POPLATNIK, 0.0)
-    return g * (1.0 - _SP_EMPLOYEE_RATE - _ZP_EMPLOYEE_RATE) - dpfo
+    sp = _SP_EMPLOYEE_RATE * g
+    zp = _ZP_EMPLOYEE_RATE * g
+    # Two-bracket DPFO (§ 16 ZDP):
+    #   15 % up to _DPFO_THRESHOLD_MO, 23 % on the excess
+    dpfo_before_sleva = (
+        np.minimum(g, _DPFO_THRESHOLD_MO) * _DPFO_RATE_LOW
+        + np.maximum(g - _DPFO_THRESHOLD_MO, 0.0) * _DPFO_RATE_HIGH
+    )
+    dpfo = np.maximum(dpfo_before_sleva - _SLEVA_POPLATNIK, 0.0)
+    return g - sp - zp - dpfo
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -606,7 +616,8 @@ save_figure_tex(
         f"N\\,=\\,{N_PENSION // 1_000:,}\\,tis.\\ příjemců). "
         "Čistá mzda je hrubá mzda po odečtení SP (6{{,}}5\\,\\%), "
         "ZP (4{{,}}5\\,\\%) a daně z příjmů fyzických osob "
-        "(DPFO\\,=\\,15\\,\\%\\,$\\times$\\,hrubá\\,$-$\\,2\\,570\\,Kč/měsíc); "
+        "(DPFO\\,=\\,15\\,\\%\\,$\\times$\\,hrubá\\,$-$\\,2\\,570\\,Kč/měsíc "
+        "do 1\\,676\\,052\\,Kč/rok; 23\\,\\% nad tuto hranici, §\\,16 ZDP 2025); "
         "celkové mzdové náklady zaměstnavatele "
         "odpovídají násobku 1{{,}}338 hrubé mzdy "
         f"(medián: {med_wage_total_cost:,.0f}\\,Kč). "
@@ -615,7 +626,7 @@ save_figure_tex(
         "log-normální rozdělení: mzdová distribuce je zkrácena na "
         f"minimální čistou mzdu ({min_wage_net:,.0f}\\,Kč, hrubá {MIN_WAGE:,}\\,Kč), "
         f"penzijní distribuce na minimální důchod ({MIN_PENSION:,}\\,Kč; "
-        "zákon č.\\,155/1995\\,Sb.\\ §\\,29). "
+        "zákon č.\\,155/1995\\,Sb.\\ §\\,29, NV č.\\,364/2024\\,Sb.). "
         "Parametry log-normálního rozdělení jsou fitovány metodou "
         "nejmenších čtverců na percentilové profily (P10\\,--\\,P90). "
         "Osa y udává počet osob v intervalu šíře 1\\,tis.\\,Kč. "
