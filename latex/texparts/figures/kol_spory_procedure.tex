@@ -23,7 +23,7 @@
     lbl/.style         ={font=\sffamily\DPKolSporyBaseSize, fill=white, inner sep=1.5pt},
   ]
     \node[decision] (smir) at (0,0) {Smírčí jednání stran\\Kolektivní vyjednávání};
-    \node[decision] (med) at (0,-2.5) {Řízení před zprostředkovatelem\\\textit{návrh na řešení sporu}};
+    \node[decision] (med) at (0,-2.5) {Řízení před\\zprostředkovatelem\\\textit{návrh na řešení sporu}};
     \node[stage] (arb) at (-5.0,-4.6) {Řízení před rozhodcem\\\textit{závazné rozhodnutí}\\\textit{hrazeno \acs{MPSV}}};
     \node[final] (pressure) at (5.0,-4.6) {Krajní nátlakové prostředky:\\stávka (\acs{OO})\\výluka (zaměstnavatel)};
     \node[stage] (court) at (0,-6.5) {Krajský soud\\\textit{změna rozhodnutí}};
@@ -31,7 +31,7 @@
     \path ($(pressure.north)+(0,2.1)$) coordinate (solidarity);
     \draw[altArrow] (solidarity) -- node[lbl, above] {solidární stávka\\\textit{hospodářsky návazná}} (pressure.north);
 
-    \draw[arrow] (smir) -- node[lbl, right] {pokračování sporu} (med);
+    \draw[arrow] (smir) -- node[lbl, right] { vznik kolektivního sporu} (med);
     \draw[arrow] (med) -- node[lbl, above left] {neúspěch řízení} (arb);
     \draw[altArrow] (med) -- node[lbl, above right, fill=white] {jen pro spor o~uzavření} (pressure);
       %\node[lbl, right] at (2.6,-3.0) {alternativa jen pro spor o~uzavření};
