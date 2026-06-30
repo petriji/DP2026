@@ -6,6 +6,24 @@ Re-download with `force=True` in `fetch_*()` calls.
 
 ---
 
+## OECD Stats — SDMX API (`fetch_oecd`)
+
+### `CTS_CIT` — Corporate Tax Statistics (statutory CIT rates)
+
+Primary B2 source in the ternary model.
+
+| Dimension | Code | Meaning |
+|-----------|------|---------|
+| `CORP_TAX` | `COMB_CIT_RATE` | Combined statutory corporate income tax rate |
+| `UNIT_MEASURE` | `PC` | Percent |
+| Frequency | annual | OECD annual panel |
+
+| Script | Filter | Period |
+|--------|--------|--------|
+| `stav_korporatni_dan.py` | `CORP_TAX=COMB_CIT_RATE`, `UNIT_MEASURE=PC` | `2000`– |
+
+---
+
 ## Eurostat — SDMX 2.1 API (`fetch_eurostat`)
 
 Eurostat datasets use dot-separated SDMX dimension filters.

@@ -104,6 +104,7 @@ python/
 │   └── table.py            – LaTeX table from DataFrame
 └── analyses/               – one script per figure group
   ├── stav_socialni_mir_data.py – shared B4 source for ternary + social-peace maps
+    ├── stav_korporatni_dan.py – B2 source diagnostics (OECD CTS_CIT map + timeline)
     ├── cz_tax_model.py     – CZ tax/levy: pure calculation module (no matplotlib, no external imports)
     ├── problemy_cz_duchod.py – CZ pension: pure calculation module (imports levy constants from cz_tax_model)
     ├── cz_calculator.py    – Individual pension calculator (VVZ/PK history, earnings history, early/late/children)

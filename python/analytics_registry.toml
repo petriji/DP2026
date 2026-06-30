@@ -272,6 +272,11 @@ script   = "analyses/stav_socialni_mir_mapa.py"
 texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
 pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
 
+[stav_korporatni_dan]
+script   = "analyses/stav_korporatni_dan.py"
+texparts = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+pics     = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+
 [stav_volna_mista_vyvoj]
 script   = "analyses/stav_volna_mista_vyvoj.py"
 texparts = ["stav_volna_mista_vyvoj"]
