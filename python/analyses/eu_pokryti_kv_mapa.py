@@ -54,8 +54,8 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Pokrytí \\acs{{KS}} ({ds.latest_year})",
-    "colorbar_label": r"pokrytí \acs{KV} [\% zaměstnanců]",
+    "title": f"Pokrytí kolektivními smlouvami ({ds.latest_year})",
+    "colorbar_label": r"pokrytí \acs{KS} [\% zaměstnanců]",
 }
 
 fig = choropleth(
