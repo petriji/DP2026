@@ -108,8 +108,14 @@ regardless of prior usage. Most common in Czech prose: `\acaccf{KEY}` (accusativ
 - `\acs{geo-XX}` is reserved for **figure and table content only** (axis labels, legends,
   cells, captions). Never write it in prose.
 - For Czech Republic in prose, use `\ac{ČR}` (separate acronym, with full declension).
-- For other countries in prose, write the plain Czech name (`Německo`, `Polsko`) or
-  `\acl{geo-XX}` for the formal long form.
+- For other countries **in prose, use the long-only declined form** (no parenthetical short form):
+  - genitive: `\aclgen{AT}` = `Rakouska`, `\aclgen{DE}` = `Německa`, `\aclgen{DK}` = `Dánska`,
+    `\aclgen{PL}` = `Polska`, `\aclgen{SK}` = `Slovenska`
+  - other cases: `\aclacc{AT}`, `\aclloc{DK}`, `\acldat{DE}`, `\aclins{SK}` etc.
+- **Never use** `\acgen{AT}` / `\ac{AT}` etc. in prose — these expand to `Rakouska (AT)` on first
+  use and bare `AT` subsequently, both of which are short-form country codes in prose (forbidden).
+- For countries without declared declension forms, write the plain Czech name directly
+  (`Francie`, `Itálie`, `Belgie`, `Lucembursko`).
 
 **Country codes**: Use `\acs{geo-XX}` for ISO country codes (tag `geo`, hidden from lists).
 All EU-27 codes are declared. Example: `\acs{geo-CZ}` → "CZ".

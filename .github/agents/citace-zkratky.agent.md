@@ -165,12 +165,15 @@ Usage:
 - `\acgen{ČR}` → `České republiky`, `\acacc{ČR}` → `Českému republiku`, etc.
 - `ČR` is tagged `geo` so it does not appear in the printed acronym list.
 
-For other countries in prose, write the plain Czech name (`Německo`, `Polsko`, `Itálie`)
-or `\acl{geo-XX}` for the long form. **Never use `\acs{geo-XX}` in prose.**
-
-If a non-CZ country needs a Czech short form (`alt=`), add it explicitly when requested
-(e.g. `\DeclareAcronym{geo-DE}{short=DE, long=Německo, alt=Něm., tag=geo}`).
-All EU-27 + EL/GR are already declared; add non-EU codes only when needed.
+**For other countries in prose, use the long-only declined form (no parenthetical short form):**
+- genitive: `\aclgen{AT}` = `Rakouska`, `\aclgen{DE}` = `Německa`, `\aclgen{DK}` = `Dánska`,
+  `\aclgen{PL}` = `Polska`, `\aclgen{SK}` = `Slovenska`
+- other cases: `\aclacc{AT}`, `\aclloc{DK}`, `\acldat{DE}`, `\aclins{SK}` etc.
+- **Never use** `\acgen{AT}` / `\ac{AT}` etc. in prose — these expand to
+  `Rakouska (AT)` on first use and bare `AT` subsequently (short forms in prose: forbidden).
+- For countries without declared declension forms, write the plain Czech name directly
+  (`Francie`, `Itálie`, `Belgie`, `Lucembursko`, `Španělsko`).
+- All EU-27 + EL/GR are already declared; add non-EU codes only when needed.
 
 ### 6. Add a new bib entry
 If asked to add a missing citation, ask the user for: author(s), year, title, journal/publisher, DOI/URL. Then add to `socialnidialog.bib` following existing entry format.
