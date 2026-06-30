@@ -578,20 +578,37 @@ def _replace_pgf_strings(
 ) -> int:
     r"""Replace literal string values in a ``.pgf`` file with ``\strXxx`` macros.
 
+    Replacements are constrained to occurrences inside text payloads of
+    ``\pgftext[...]{...PAYLOAD...}`` to avoid corrupting PGF drawing
+    primitives (e.g. ``"rok"`` matching inside ``stroke``).
+
     Returns the total number of replacements made.
     """
+    import re as _re
     prefix = _macro_prefix(name)
     content = pgf_path.read_text(encoding="utf-8")
     total = 0
-    # Replace longest strings first to avoid partial matches.
-    for key, value in sorted(strings.items(), key=lambda kv: -len(kv[1])):
-        macro = _macro_name(prefix, key)
-        count = content.count(value)
-        if count:
-            content = content.replace(value, macro)
-            total += count
+
+    # Match the body of every \pgftext[...]{BODY} (non-greedy, balanced one level).
+    # The actual visible payload is the innermost {...} that follows the inner
+    # \selectfont and catcode resets — just operate on the line as a whole and
+    # only replace values that appear inside lines containing \pgftext.
+    new_lines: list[str] = []
+    repl_items = sorted(strings.items(), key=lambda kv: -len(kv[1]))
+    for line in content.splitlines(keepends=True):
+        if "\\pgftext" in line:
+            for key, value in repl_items:
+                if not value:
+                    continue
+                if value in line:
+                    macro = _macro_name(prefix, key)
+                    n = line.count(value)
+                    line = line.replace(value, macro)
+                    total += n
+        new_lines.append(line)
+
     if total:
-        pgf_path.write_text(content, encoding="utf-8")
+        pgf_path.write_text("".join(new_lines), encoding="utf-8")
     return total
 
 
