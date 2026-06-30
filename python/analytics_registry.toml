@@ -292,3 +292,8 @@ script   = "analyses/stav_volna_mista_vyvoj.py"
 texparts = ["stav_volna_mista_vyvoj"]
 pics     = ["stav_volna_mista_vyvoj"]
 
+[stav_struktura_prac_sily]
+script   = "analyses/stav_struktura_prac_sily.py"
+texparts = ["stav_struktura_prac_sily"]
+pics     = []
+
