@@ -169,6 +169,7 @@
 
 \RequirePackage{csquotes}
 \RequirePackage{qrcode}
+\RequirePackage{adjustbox}
 
 % Two-column body
 \RequirePackage{multicol}
@@ -352,6 +353,7 @@
 \newcommand{\postersubtitle}   [1]{\gdef\CTUP@subtitle   {#1}}
 \newcommand{\posterauthor}     [1]{\gdef\CTUP@author     {#1}}
 \newcommand{\posteraffiliation}[1]{\gdef\CTUP@affil      {#1}}
+\newcommand{\posterthesistype} [1]{\gdef\CTUP@thesistype {#1}}  % e.g. {diplomová práce}
 \newcommand{\postersupervisor} [1]{\gdef\CTUP@supervisor {#1}}
 \newcommand{\posteryear}       [1]{\gdef\CTUP@year       {#1}}
 \newcommand{\posteremail}      [1]{\gdef\CTUP@emailx     {#1}}
@@ -366,6 +368,7 @@
 \gdef\CTUP@phone{}                                  % phone is optional
 \gdef\CTUP@author{\@author}                         % default = git user.name
 \gdef\CTUP@emailx{\@email}                          % default = git user.email
+\gdef\CTUP@thesistype{}                             % default = empty (omitted)
 \gdef\CTUP@repo{\@CTUgitrepo}                       % default = git remote URL
 \gdef\CTUP@repotag{\@CTUgittag}                     % default = latest git tag
 
@@ -404,7 +407,11 @@
         \CTUP@subtitle\par}%
     \fi
     \vspace{8mm}%
-    {\sffamily\fontsize{26}{30}\selectfont \CTUP@author\par}%
+    {\sffamily\fontsize{26}{30}\selectfont \CTUP@author
+      \ifx\CTUP@thesistype\@empty\else
+        \space\textbar\space {\color{CTUgrey}\CTUP@thesistype}%
+      \fi
+    \par}%
     \ifx\CTUP@affil\@empty\else
       \vspace{2mm}%
       {\sffamily\color{CTUgrey}\fontsize{20}{24}\selectfont
@@ -424,8 +431,18 @@
 %   \begin{posterbody} ... \end{posterbody}
 % Inside: standard text, \section{...}, figures via \captionof{figure}{...}
 %   (use [H] floats sparingly — multicol does not support standard floats).
+%
+% Font size for all body text.  Override in the poster preamble via
+%   \posterbodyfont{<size>}{<leading>}
+% to tune content height without editing the class.  Default: 15.5/18.2.
+\newcommand{\CTUP@bodyfontsize}{15.5}
+\newcommand{\CTUP@bodyleading}{18.2}
+\newcommand{\posterbodyfont}[2]{%
+  \renewcommand{\CTUP@bodyfontsize}{#1}%
+  \renewcommand{\CTUP@bodyleading}{#2}%
+}
 \newenvironment{posterbody}
-  {\begin{multicols*}{2}\fontsize{15.5}{18.2}\selectfont}
+  {\begin{multicols*}{2}\fontsize{\CTUP@bodyfontsize}{\CTUP@bodyleading}\selectfont}
   {\end{multicols*}}
 
 % ----------------------------------------------------------------------------
@@ -462,7 +479,7 @@
 \newcommand{\postersummary}[1]{%
   \par\vspace{6mm}%
   {\color{CTUblue}\hrule height 0.4mm}\vspace{4mm}%
-  {\sffamily\bfseries\color{CTUblue}\large \CTUP@lbl@summary\par}%
+  {\sffamily\bfseries\color{CTUblue}\fontsize{24}{28}\selectfont \CTUP@lbl@summary\par}%
   \vspace{2mm}%
   \begingroup\small #1\par\endgroup
 }
@@ -490,20 +507,20 @@
       \edef\CTUP@tmpurl{\CTU@posterurl}%
       \ifx\CTUP@tmpurl\@empty
         \textbf{\CTUP@lbl@contact:}\\
-        \CTUP@author
-        \ifx\CTUP@emailx\@empty\else
-          \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
-        \fi
-        \ifx\CTUP@phone\@empty\else
-          \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
-        \fi
-        \par
-        \ifx\CTUP@supervisor\@empty\else
-          \medskip\textit{\CTUP@supervisor}\par
-        \fi
-        \ifx\CTUP@year\@empty\else
-          \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
-        \fi
+            \CTUP@author
+            \ifx\CTUP@emailx\@empty\else
+              \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
+            \fi
+            \ifx\CTUP@phone\@empty\else
+              \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
+            \fi
+            \par
+            \ifx\CTUP@supervisor\@empty\else
+              \medskip\textit{\CTUP@supervisor}\par
+            \fi
+            \ifx\CTUP@year\@empty\else
+              \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
+            \fi
       \else
         \sbox{\CTUP@contacttextbox}{%
           \begin{minipage}[t]{0.68\linewidth}
@@ -624,12 +641,18 @@
 \newcommand{\posterbibliographymaxheight}[1]{%
   \setlength{\CTUP@posterbibmaxheight}{#1}%
 }
+% Entry font for the printed poster bibliography. Larger = more readable but
+% taller; tune with \posterbibliographyfont{} so the poster still fits one page.
+\newcommand{\CTUP@posterbibfont}{\scriptsize}
+\newcommand{\posterbibliographyfont}[1]{%
+  \renewcommand{\CTUP@posterbibfont}{#1}%
+}
 \newcommand{\CTUP@posterbibcontent}[1]{%
   {\sffamily\bfseries\color{CTUblue}\fontsize{24}{28}\selectfont
     \CTUP@lbl@references\par}%
-  \vspace{1mm}%
-  \renewcommand*{\bibfont}{\scriptsize}%
-  \setlength{\bibitemsep}{0.15\baselineskip}%
+  \vspace{0.8mm}%
+  \renewcommand*{\bibfont}{\CTUP@posterbibfont}%
+  \setlength{\bibitemsep}{0.12\baselineskip}%
   \setlength{\bibhang}{1.2em}%
   % Encourage URL/token wrapping so entries stay inside the column width.
   \setcounter{biburlnumpenalty}{1}%
@@ -644,9 +667,16 @@
   \raggedright
   \sloppy
   \selectlanguage{\CTUP@biblang}%
-  \begin{NoHyper}%
-    \printbibliography[heading=none,#1]%
-  \end{NoHyper}%
+  % Render the bibliography at full \linewidth so every entry spans the whole
+  % column width at true proportions (no geometric scaling).
+  \sbox{\CTUP@bibbox}{%
+    \begin{minipage}{\linewidth}%
+    \begin{NoHyper}%
+      \printbibliography[heading=none,#1]%
+    \end{NoHyper}%
+    \end{minipage}%
+  }%
+  \usebox{\CTUP@bibbox}%
 }
 \newcommand{\posterbibliography}[1][]{%
   \par\vspace{2mm}%
@@ -701,17 +731,37 @@
 % ----------------------------------------------------------------------------
 % Compact PGF figure helpers for poster composition
 % ----------------------------------------------------------------------------
-% Configure two-level PGF font remapping used by \posterpgfinput:
-% - source font sizes <= threshold map to "small" target size
-% - source font sizes  > threshold map to "large" target size
-% Defaults are tuned for A1 poster readability when ingesting thesis PGF files.
+% Configure four-level PGF font remapping used by \posterpgfinput:
+% - source font sizes <= ultra threshold  map to "ultra" target size
+% - source font sizes <= xsmall threshold map to "xsmall" target size
+% - source font sizes <= threshold        map to "small" target size
+% - source font sizes  > threshold        map to "large" target size
+% Four tiers keep clear visual separation between ternary corner labels (~7pt),
+% compact country/inline labels (~9pt), axis labels (~11pt) and titles in
+% poster-rendered matplotlib PGFs (which are additionally width-normalised).
+\gdef\CTUP@pgfultrathreshold{7.5}
+\gdef\CTUP@pgfxsmallthreshold{9.5}
 \gdef\CTUP@pgfthreshold{11.5}
-\gdef\CTUP@pgfsmallsize{16.6}
-\gdef\CTUP@pgfsmalllead{19.2}
-\gdef\CTUP@pgflargesize{17.8}
-\gdef\CTUP@pgflargelead{20.8}
+\gdef\CTUP@pgfultrasize{12.0}
+\gdef\CTUP@pgfultralead{14.0}
+\gdef\CTUP@pgfxsmallsize{13.0}
+\gdef\CTUP@pgfxsmalllead{15.2}
+\gdef\CTUP@pgfsmallsize{16.0}
+\gdef\CTUP@pgfsmalllead{18.4}
+\gdef\CTUP@pgflargesize{17.5}
+\gdef\CTUP@pgflargelead{20.4}
 
+\newcommand{\posterpgfultrathreshold}[1]{\gdef\CTUP@pgfultrathreshold{#1}}
+\newcommand{\posterpgfxsmallthreshold}[1]{\gdef\CTUP@pgfxsmallthreshold{#1}}
 \newcommand{\posterpgfthreshold}[1]{\gdef\CTUP@pgfthreshold{#1}}
+\newcommand{\posterpgfultrafont}[2]{%
+  \gdef\CTUP@pgfultrasize{#1}%
+  \gdef\CTUP@pgfultralead{#2}%
+}
+\newcommand{\posterpgfxsmallfont}[2]{%
+  \gdef\CTUP@pgfxsmallsize{#1}%
+  \gdef\CTUP@pgfxsmalllead{#2}%
+}
 \newcommand{\posterpgfsmallfont}[2]{%
   \gdef\CTUP@pgfsmallsize{#1}%
   \gdef\CTUP@pgfsmalllead{#2}%
@@ -728,7 +778,15 @@
     \ifdim##1pt>\CTUP@pgfthreshold pt
       \CTUP@origfontsize{\CTUP@pgflargesize}{\CTUP@pgflargelead}%
     \else
-      \CTUP@origfontsize{\CTUP@pgfsmallsize}{\CTUP@pgfsmalllead}%
+      \ifdim##1pt>\CTUP@pgfxsmallthreshold pt
+        \CTUP@origfontsize{\CTUP@pgfsmallsize}{\CTUP@pgfsmalllead}%
+      \else
+        \ifdim##1pt>\CTUP@pgfultrathreshold pt
+          \CTUP@origfontsize{\CTUP@pgfxsmallsize}{\CTUP@pgfxsmalllead}%
+        \else
+          \CTUP@origfontsize{\CTUP@pgfultrasize}{\CTUP@pgfultralead}%
+        \fi
+      \fi
     \fi
   }%
   \input{../python/figures/#1.pgf}%

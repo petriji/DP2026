@@ -366,8 +366,8 @@
   title        = {Collective bargaining coverage -- ERB measure
                   (employees covered by collective agreements, \%; \texttt{ICTWSS})},
   year         = {2025},
-  url          = {https://www.oecd.org/en/data/datasets/oecdaias-ictwss-database.html},
-  note         = {Dataset \texttt{CBC} (ERB measure). Data via OECD/AIAS ICTWSS database; starý SDMX endpoint \texttt{stats.oecd.org/SDMX-JSON/data/CBC} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_TUD_CBC%40DF_CBC&df%5Bag%5D=OECD.ELS.SAE&df%5Bvs%5D=1.0&pd=1993%2C&dq=..&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.ELS.SAE:DSD\_TUD\_CBC@DF\_CBC}; skripty stahují dataset \texttt{CBC} přes \texttt{fetch\_oecd(CBC)} a kombinují jej s \texttt{AdjCov} z CSV \texttt{ICTWSS\_v2}.},
   urldate      = {2026-06-22},
 }
 
@@ -376,8 +376,8 @@
   title        = {Trade union density -- share of employees who are union
                   members (\%; \texttt{ICTWSS})},
   year         = {2025},
-  url          = {https://www.oecd.org/en/data/datasets/oecdaias-ictwss-database.html},
-  note         = {Dataset \texttt{TUD}. Data via OECD/AIAS ICTWSS database; starý SDMX endpoint \texttt{stats.oecd.org/SDMX-JSON/data/TUD} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_TUD_CBC%40DF_TUD&df%5Bag%5D=OECD.ELS.SAE&df%5Bvs%5D=1.0&pd=1993%2C&dq=..&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.ELS.SAE:DSD\_TUD\_CBC@DF\_TUD}; skripty stahují dataset \texttt{TUD} přes \texttt{fetch\_oecd(TUD)} a filtrují ukazatel \texttt{TUD}.},
   urldate      = {2026-06-22},
 }
 
@@ -386,8 +386,8 @@
   title        = {Employer organisation density -- share of employees in firms
                   that are members of an employer organisation~(\%; \texttt{ICTWSS})},
   year         = {2025},
-  url          = {https://www.oecd.org/en/data/datasets/oecdaias-ictwss-database.html},
-  note         = {Dataset \texttt{EOD}. Data via OECD/AIAS ICTWSS database; starý SDMX endpoint \texttt{stats.oecd.org/SDMX-JSON/data/EOD} zrušen 2024.},
+  url          = {https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv},
+  note         = {Přímý CSV soubor \texttt{ICTWSS\_v2}; skripty filtrují proměnnou \texttt{ED} (employer organisation density).},
   urldate      = {2026-06-22},
 }
 
@@ -396,8 +396,8 @@
   title        = {Public expenditure on active labour market programmes
                   (\% of GDP; \texttt{LMPEXP})},
   year         = {2025},
-  url          = {https://data-explorer.oecd.org/},
-  note         = {Dataset \texttt{LMPEXP} v OECD Data Explorer (\texttt{data-explorer.oecd.org}); starý endpoint \texttt{stats.oecd.org/SDMX-JSON/data/LMPEXP} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_LMP%40DF_LMP&df%5Bag%5D=OECD.ELS.JAI&df%5Bvs%5D=1.0&pd=1998%2C&dq=...&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.ELS.JAI:DSD\_LMP@DF\_LMP}; skripty stahují dataset \texttt{LMPEXP} přes \texttt{fetch\_oecd(LMPEXP)} a filtrují \texttt{MEASURE=EXP}, \texttt{PROGRAMME=LMP\_20T70}, \texttt{UNIT\_MEASURE=PT\_B1GQ}.},
   urldate      = {2026-06-22},
 }
 
@@ -406,8 +406,8 @@
   title        = {Public expenditure on labour market programmes
                   (\% of GDP; \texttt{LMPEXP})},
   year         = {2025},
-  url          = {https://data-explorer.oecd.org/},
-  note         = {Dataset \texttt{LMPEXP} v OECD Data Explorer (\texttt{data-explorer.oecd.org}); starý endpoint \texttt{stats.oecd.org/SDMX-JSON/data/LMPEXP} (HTML landing \texttt{stats.oecd.org/Index.aspx}) zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_LMP%40DF_LMP&df%5Bag%5D=OECD.ELS.JAI&df%5Bvs%5D=1.0&pd=1998%2C&dq=...&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.ELS.JAI:DSD\_LMP@DF\_LMP}; skripty stahují dataset \texttt{LMPEXP} přes \texttt{fetch\_oecd(LMPEXP)}.},
   urldate      = {2026-06-22},
 }
 
@@ -416,8 +416,8 @@
   title        = {Corporate Tax Statistics: Combined statutory corporate income tax rate
                   (\%; \texttt{CTS\_CIT})},
   year         = {2025},
-  url          = {https://www.oecd.org/en/data/datasets/corporate-income-tax-rates-database.html},
-  note         = {Corporate Tax Statistics, dataset \texttt{CTS\_CIT}; starý endpoint \texttt{stats.oecd.org/SDMX-JSON/data/CTS\_CIT} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DF_CTS_CIT&df%5Bag%5D=OECD&df%5Bvs%5D=1.0&pd=2000%2C&dq=..&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=COU&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD:DF\_CTS\_CIT}; skripty stahují dataset \texttt{CTS\_CIT} přes \texttt{fetch\_oecd(CTS\_CIT)} a filtrují \texttt{CORP\_TAX=COMB\_CIT\_RATE}, \texttt{UNIT\_MEASURE=PC}.},
   urldate      = {2026-06-22},
 }
 
@@ -427,8 +427,8 @@
                   share of net wealth held by richest 10\,\% of households
                   (\%; \texttt{WEALTH})},
   year         = {2023},
-  url          = {https://data-explorer.oecd.org/},
-  note         = {Wealth Distribution Database, dataset \texttt{WEALTH} v OECD Data Explorer (\texttt{data-explorer.oecd.org}); starý endpoint \texttt{stats.oecd.org/SDMX-JSON/data/WEALTH} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_WEALTH%40DF_WEALTH&df%5Bag%5D=OECD.WISE.INE&df%5Bvs%5D=1.0&pd=2008%2C&dq=....&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.WISE.INE:DSD\_WEALTH@DF\_WEALTH}; skripty stahují dataset \texttt{WEALTH} přes \texttt{fetch\_oecd(WEALTH)} a filtrují \texttt{MEASURE=SH\_TOP10}.},
   urldate      = {2026-06-22},
 }
 
@@ -437,8 +437,8 @@
   title        = {Wealth Distribution Database: Share of top 5\,\% in
                   net household wealth (\texttt{WEALTH})},
   year         = {2023},
-  url          = {https://data-explorer.oecd.org/},
-  note         = {Wealth Distribution Database, dataset \texttt{WEALTH} v OECD Data Explorer (\texttt{data-explorer.oecd.org}); starý SDMX endpoint zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_WEALTH%40DF_WEALTH&df%5Bag%5D=OECD.WISE.INE&df%5Bvs%5D=1.0&pd=2008%2C&dq=....&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.WISE.INE:DSD\_WEALTH@DF\_WEALTH}; skripty stahují dataset \texttt{WEALTH} přes \texttt{fetch\_oecd(WEALTH)} a filtrují \texttt{MEASURE=SH\_TOP5}.},
   urldate      = {2026-06-22},
 }
 
@@ -510,13 +510,12 @@
   number       = {EF25044},
   address      = {Dublin},
   year         = {2026},
-  date         = {2026-01-15},
   url          = {https://www.eurofound.europa.eu/en/publications/all/collective-bargaining-as-a-mechanism-to-advance-gender-pay-equity},
   urldate      = {2026-05-25},
   note         = {Schéma horizontálního a vertikálního vlivu kolektivních
                   smluv na mzdovou rovnost, ref. \texttt{EF25044}.},
   langid       = {english},
-}
+} %  date         = {2026-01-15},
 
 % --------------------------------------------------
 %  MONOGRAFIE A ODBORNÉ KNIHY
@@ -753,6 +752,7 @@
 % --------------------------------------------------
 
 @misc{KS_CeskaPosta_2025,
+  options  = {maxbibnames=99},
   author   = {{Česká pošta, s.p.} and {{P KOV ČP}} and {{PV ZO OSD ČP}}
                and {{OHZ ČP}} and {{SOS-21}} and {{NOS ČP}}
                and {{ZO OS státních orgánů, KŘP JM}} and {OSPEA}
@@ -767,19 +767,20 @@
 }
 
 @misc{KSVS_OSPZV_ASO_2026,
+  options      = {maxbibnames=99},
   author       = {{Zemědělský svaz České republiky} and
                   {Českomoravský svaz zemědělských podnikatelů} and
                   {Odborový svaz pracovníků zemědělství a výživy -- Asociace svobodných odborů České republiky}},
   title        = {Kolektivní smlouva vyššího stupně na rok 2026},
-  howpublished = {Uložena MPSV dle § 9 ZKV},
   date         = {2025-12-19},
   note         = {Uložení oznámeno Sdělením č. 17/2026 Sb. (položka č. 5);
                   závaznost rozšířena na CZ-NACE 01.1--01.6 Sdělením č. 47/2026 Sb.},
   url          = {https://cmszp.cz/content/uploads/2025/12/Kolektivn%C3%AD-smlouva-vy%C5%A1%C5%A1%C3%ADho-stupn%C4%9B-2026.pdf},
   urldate      = {2026-04-07},
-}
+} %  howpublished = {Uložena MPSV dle § 9 ZKV},
 
 @misc{KSVS_OSPPP_2026,
+  options  = {maxbibnames=99},
   author   = {{Svaz bank a pojišťoven} and {{Odborový svaz pracovníků
                peněžnictví a pojišťovnictví}}},
   title    = {Kolektivní smlouva vyššího stupně 2026--2027 pro odvětví
@@ -787,11 +788,12 @@
   date     = {2025-12-16},
   note     = {Podepsána 16.\,12.\,2025. Účinná 1.\,1.\,2026--31.\,12.\,2027.},
   url      = {https://www.osppp.cz/images/dokumenty/ksvs-2026---2027-final-bez-podpisu-16-12-2025-.pdf},
-  urldate  = {2026-06-22},
+  urldate  = {2026-04-07},
   langid   = {czech},
 }
 
 @misc{PennyMarket_KS2026,
+  options      = {maxbibnames=99},
   author       = {{Penny Market, s.r.o.} and
                   {Odborový svaz pracovníků zemědělství a výživy -- ASO ČR} and
                   {ZO OSPO Plus-discount, spol. s r.o.} and
@@ -800,22 +802,25 @@
                   {ZO UZO Penny Market Petřvald}},
   title        = {Podniková kolektivní smlouva {Penny Market, s.r.o.} na
                   období od 1.~1.~2026 do 31.~12.~2026},
-  howpublished = {Interní dokument; podpis v Radonicích},
   date         = {2026-02-20},
   note         = {Uzavřena dle zák. č. 262/2006~Sb. (zákoník práce) a
-                  zák. č. 2/1991~Sb. (o kolektivním vyjednávání)},
+                  zák. č. 2/1991~Sb. (o kolektivním vyjednávání). Zveřejněno
+                  24.\,3.\,2026; příloha: KS Penny Market na rok 2026.docx},
+  url          = {https://www.ospzv-aso.cz/obsah/82/kolektivni-smlouva-s-penny-market-sro-na-rok-2026/337434},
+  urldate      = {2026-04-20},
+  langid       = {czech},
 }
+%  howpublished = {Příloha článku na webu \emph{OSPZV-ASO ČR} [online]},
 
 @online{penny_top_employer_2026,
   author      = {{Penny Market, s.r.o.}},
   title       = {{PENNY} získalo certifikaci {Top Employer} 2026},
   year        = {2026},
-  date        = {2026-01-15},
   url         = {https://www.penny.cz/penny-ziskalo-certifikaci-top-employer-2026},
   urldate     = {2026-04-23},
   langid      = {czech},
   organization= {{Penny Market, s.r.o.}},
-}
+} %  date        = {2026-01-15},
 
 % --------------------------------------------------
 %  PRÁVNÍ PŘEDPISY
@@ -931,7 +936,7 @@
                   Fenyk (zpravodaj), Jirsa. Elektronická verze není autentickým zněním.},
   langid       = {czech},
 } %; reprodukce: Zákony pro lidi (AION CS)}, 
-  date         = {2021-08-31},
+  % date         = {2021-08-31},
 
 @misc{zakon_zz_2004,
   author       = {{Česko}},
@@ -1193,8 +1198,8 @@
                   programmes (\texttt{LMPEXP})},
   organization = {Organisation for Economic Co-operation and Development},
   year         = {2025},
-  url          = {https://data-explorer.oecd.org/},
-  note         = {Dataset \texttt{LMPEXP} v OECD Data Explorer (\texttt{data-explorer.oecd.org}); starý endpoint \texttt{stats.oecd.org/SDMX-JSON/data/} zrušen 2024.},
+  url          = {https://data-explorer.oecd.org/vis?df%5Bds%5D=dsDisseminateFinalDMZ&df%5Bid%5D=DSD_LMP%40DF_LMP&df%5Bag%5D=OECD.ELS.JAI&df%5Bvs%5D=1.0&pd=1998%2C&dq=...&ly%5Bcl%5D=TIME_PERIOD&ly%5Brs%5D=REF_AREA&to%5BTIME_PERIOD%5D=false},
+  note         = {Dataflow \texttt{OECD.ELS.JAI:DSD\_LMP@DF\_LMP}; skripty stahují dataset \texttt{LMPEXP} přes \texttt{fetch\_oecd(LMPEXP)}.},
   urldate      = {2026-06-22},
 }
 @report{OECD_PolicyEconomicWelfare_2023,
@@ -1261,12 +1266,12 @@
   title        = {Communication from the Commission -- Guidelines on the
                   application of {Union} competition law to collective agreements
                   regarding the working conditions of solo self-employed persons},
-  date         = {2022-09-30},
+  year         = {2022},
   url          = {https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52022XC0930(02)},
   urldate      = {2026-04-22},
   note         = {Pokyny EK k~uplatnění čl.~101 SFEU -- KS pro solo OSVČ
                   "srovnatelné s~pracovníky" nebo se "slabší vyjednávací pozicí".},
-}
+} %   date         = {2022-09-30},
 % src: sources/scrape/Doplnky_APZ_FAUB_Mobilita_V4_Bydleni_2026.md
 @misc{EC_WhitePaper_FutureOfEurope_2017,
   author       = {{European Commission}},
@@ -1424,7 +1429,6 @@
   author       = {{Ministerstvo práce a sociálních věcí ČR}},
   title        = {Akční plán na podporu kolektivního vyjednávání},
   year         = {2025},
-  month        = {5},
   institution  = {Ministerstvo práce a sociálních věcí ČR},
   type         = {Akční plán},
   number       = {Materiál č. III; usnesení vlády ČR č. 599 ze dne 20.~8.~2025},
@@ -1439,7 +1443,7 @@
   url          = {https://mpsv.gov.cz/akcni-plan-na-podporu-kolektivniho-vyjednavani},
   urldate      = {2026-04-22},
   langid       = {czech},
-}
+} %  month        = {5},
 % src: sources/scrape/InovacniDoporuceni_ZahraniceKV.md
 @report{InovacniDoporuceni_ZahraniceKV,
   author       = {{Českomoravská konfederace odborových svazů}},
@@ -1467,7 +1471,6 @@
   title        = {Návrh Koncepce dalšího vzdělávání z pohledu
                   sociálních partnerů v České republice},
   year         = {2021},
-  month        = {9},
   institution  = {ČMKOS, SPČR},
   type         = {Návrh koncepce},
   address      = {Praha},
@@ -1482,7 +1485,7 @@
   url          = {https://www.cmkos.cz/hotothur/2024/04/Navrh-Koncepce-dalsiho-vzdelavani.pdf},
   urldate      = {2026-04-22},
   langid       = {czech},
-}
+} %  month        = {9},
 % src: sources/scrape/PlatformaMDM_TZ2025.md
 @misc{PlatformaMDM_TZ2025,
   author       = {{Platforma pro Minimální důstojnou mzdu}},
@@ -1651,7 +1654,7 @@
   title        = {Paušály i~čtyřikrát vyšší než skutečné náklady. Reforma
                   danění {OSVČ} by omezila švarcsystém a~ulevila nízkopříjmovým},
   organization = {PAQ Research a~RILSA},
-  date         = {2025-06-11},
+  year         = {2025},
   url          = {https://www.paqresearch.cz/post/pausaly-i-ctyrikrat-vyssi-nez-naklady-reforma-daneni-osvc/},
   urldate      = {2026-04-22},
   note         = {Reprezentativní šetření 1\,361 OSVČ a~mikrosimulační model
@@ -1659,7 +1662,7 @@
                   100--175\,tis. hlavních OSVČ (~12~\%) ve švarcsystému dle
                   znaků závislé práce. Plné PDF: \url{https://www.paqresearch.cz/content/files/2025/07/PAQ_OSVC_Studie-3.pdf}.},
   langid       = {czech},
-}
+} %  date         = {2025-06-11},
 
 @online{StatisticsExplained_SNA,
   author       = {Eurostat},
@@ -1706,12 +1709,11 @@
   langid       = {czech},
 }
 
-@dataset{CSSZ_OtevrenaDataOSVC,
+@online{CSSZ_OtevrenaDataOSVC,
   author       = {{Česká správa sociálního zabezpečení}},
   shortauthor  = {ČSSZ},
   title        = {Přehled o~celkovém počtu {OSVČ} v~{ČR}},
-  institution  = {Česká správa sociálního zabezpečení},
-  address      = {Praha},
+  organization = {Česká správa sociálního zabezpečení},
   year         = {2026},
   url          = {https://data.cssz.cz/dump/prehled-o-celkovem-poctu-osvc-v-cr.csv},
   urldate      = {2026-06-22},
@@ -1942,7 +1944,7 @@
   shortauthor  = {MPSV},
   title        = {Jednotné měsíční hlášení zaměstnavatelů ({JMHZ})},
   organization = {MPSV~ČR},
-  date         = {2026-04-01},
+  year         = {2026},
   url          = {https://mpsv.gov.cz/jednotne-mesicni-hlaseni-zamestnavatelu-jmhz},
   urldate      = {2026-04-22},
   note         = {Společný digitalizační projekt MPSV, ČSSZ, ÚP~ČR, MF, FS
@@ -1951,7 +1953,7 @@
                   "Typ kolektivní smlouvy a~dohody" pro datovou infrastrukturu
                   pokrytí KV. Specializovaný portál: \url{https://jmhz.mpsv.cz/}.},
   langid       = {czech},
-}
+} %  date         = {2026-04-01},
 % src: sources/scrape/Consilium_PayTransparency_2023_970.md
 @online{Consilium_PayTransparency_2023,
   author       = {{Rada Evropské unie}},
@@ -2008,7 +2010,7 @@
   title        = {Evropsky srovnatelnou příjmovou chudobou trpí
                   pětina Čechů},
   organization = {PAQ Research},
-  date         = {2025-08-28},
+  year         = {2025},
   url          = {https://www.paqresearch.cz/post/chudoba-cesko-eu/},
   urldate      = {2026-04-22},
   note         = {Review: Martina~Mysíková (Sociologický ústav AV~ČR).
@@ -2018,7 +2020,7 @@
                   mediánu, PPS) je ČR průměr EU, nikoli premiant.
                   Datový základ: EU-SILC~2023.},
   langid       = {czech},
-}
+} %  date         = {2025-08-28},
 
 % === Jde to pružně — případové studie (jdetopruzne.cz, 2019) ===
 
@@ -2054,26 +2056,27 @@
   author       = {{Národní ekonomická rada vlády}},
   shortauthor  = {NERV},
   title        = {Návrhy NERV k vyššímu dlouhodobě udržitelnému ekonomickému růstu},
-  subtitle     = {37 opatření},
   howpublished = {Pracovní materiál PS NERV -- Prorůstová opatření},
   organization = {Úřad vlády ČR},
   address      = {Praha},
   year         = {2023},
+  url          = {https://vlada.gov.cz/assets/ppov/NERV/aktuality/navrhy-NERV.pdf},
+  urldate      = {2026-04-22},
   note         = {Pracovní skupina NERV (PS Prorůstová opatření).
                   Datace odvozena z interních odkazů (NERV ze 14.~4.~2023,
                   1.~2.~2023, "shoda z května 2023") a z reakce ČMKOS
                   (Stanovisko z ledna 2024).},
   langid       = {czech},
-}
+} %  subtitle     = {37 opatření},
 
 @online{Denmark_LabourMarket,
+  options      = {maxbibnames=99},
   author       = {{Confederation of Danish Employers (DA)} and
                   {Danish Trade Union Confederation (FH)} and
                   {Ministry of Employment (Beskæftigelsesministeriet)}},
   title        = {The Labour Market in Denmark},
   year         = {2021},
-  month        = {10},
-  url          = {https://www.bm.dk/},
+  url          = {https://bm.dk/media/19251/the-labour-market-in-denmark.pdf},
   urldate      = {2026-04-22},
   note         = {Distributed by DA (www.da.dk), FH (www.fho.dk) and
                   Ministry of Employment (www.bm.dk), October 2021.
@@ -2081,27 +2084,25 @@
                   collective bargaining structure, conflict resolution and
                   the flexicurity "golden triangle".},
   langid       = {english},
-}
+} %  month        = {10},
 
 @online{EC_EconomicForecast_Poland_2026,
   author       = {{Evropská komise, GŘ ECFIN}},
   title        = {Economic forecast for Poland},
   year         = {2026},
-  month        = {5},
   url          = {https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages-including-country-reports/poland/economic-forecast-poland_en},
   urldate      = {2026-06-08},
   note         = {Jarní hospodářská prognóza 2026: reálný růst HDP 3,6~\% v~roce 2025 tažený
                   především soukromou spotřebou; růst nominální náhrady na zaměstnance zpomaluje
                   z~8,0~\% (2025) k~cca 6~\% (2027); napjatý trh práce, nezaměstnanost kolem 3~\%.},
   langid       = {english},
-}
+} %  month        = {5},
 
 @report{Massenkoff_LaborMarketAI_2026,
   author       = {Massenkoff, Maxim and McCrory, Patrick},
   title        = {Labor market impacts of {AI}: A new measure and early evidence},
   institution  = {Anthropic},
   year         = {2026},
-  month        = {3},
   url          = {https://www.anthropic.com/research/labor-market-impacts},
   urldate      = {2026-04-22},
   note         = {Využívá Anthropic Economic Index kombinovaný s CPS, O*NET a BLS.
@@ -2110,7 +2111,7 @@
                   Geografický rozsah: USA; použít jako srovnávací benchmark pro EU/CZ diskusi
                   dopadu AI v §~3.4.},
   langid       = {english},
-}
+} %  month        = {3},
 
 % src: sources/scrape/EC_Petit_AIEmploymentImpact_2026.md
 @report{Petit_AIEmploymentImpact_EU_2026,

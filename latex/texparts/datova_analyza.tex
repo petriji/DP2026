@@ -21,22 +21,24 @@ parametry kolektivních smluv vycházejí z~\acs{IPP}.\par
 nízká dostupnost dat nebo skutečnost, že zdroj nepokrývá všechny země
 stejně. Zvláštní pozornost vyžadují databáze \acgen{OECD}, které jsou vymezeny
 členstvím v~\acloc{OECD}, nikoli členstvím v~\acloc{EU}. Proto se v~datech
-\acs{ICTWSS} a~\acs{LMP} objevují i~země mimo \aclacc{EU}, zatímco některé
-členské státy \aclgen{EU} mají neúplné datové řady. Eurostatové datové sady
-naopak zpravidla pokrývají všech 27 členských států \aclgen{EU}.\par
-U~zemí s~datovou mezerou mohla být použita starší data, i~tato odchylka se uvádí 
+\acs{ICTWSS} a~\acs{LMP} objevují i~země mimo \acacc{EU}, zatímco některé
+členské státy mají neúplné datové řady. Datové sady Eurostatu
+většinou pokrývají všech 27 členských států \acgen{EU}, pokud státy data vykazují.\par
+Některé použité datové sady jsou sestavovány méně než posledních 10~let, dostupnost
+dat pro analýzy trhu práce se ale výrazně zlepšila, a~lze v~nich zachytit důležité trendy.
+U~zemí s~datovou mezerou mohla být v~průřezových analýzách použita starší data, i~tato odchylka se uvádí 
 u~těch výstupů, které jsou dotčeny.\par
 
 \paragraph{Přepočet kupní síly}\label{par:pps_metodika} je pro mezistátní srovnání příjmů, nákladů práce a~produktivity nutný, protože 
 nominální hodnota nezohledňuje rozdíly v~cenové hladině mezi zeměmi. Eurostat k~tomu publikuje 
 \acf{PPP} a~odvozený agregát \acf{PPS}. Převod nominální hodnoty vyjádřené
-v~národní měně na~hodnotu podle kupní srovnatelnosti (\acs{PPS}) probíhá dělením
+v~národní měně na~hodnotu podle kupní síly (\acs{PPS}) probíhá dělením
 příslušnou paritou kupní síly \(\acs{PPP}_{\acs{idx-i}}\):
 \begin{equation}
   \acs{var-x}^{\acs{PPS}}_{\acs{idx-i}} = \frac{\acs{var-x}_{\acs{idx-i}}}{\acs{PPP}_{\acs{idx-i}}}.
   \label{eq:pps_konverze}
 \end{equation}
-Pakliže jsou hodnoty vyjádřeny v~eurech, používá se konzistentní převod přes
+Pakliže jsou hodnoty v~databázi dostupné pouze v~eurech, používá se konzistentní převod přes
 index srovnatelné cenové hladiny \(\acs{PLI}_{\acs{idx-i}}\) (Price Level Index) z~datasetu \texttt{prc\_ppp\_ind}:
 \begin{equation}
   \acs{var-x}^{\acs{PPS}}_{\acs{idx-i}} = \frac{\acs{var-x}^{\acs{EUR}}_{\acs{idx-i}}}{\acs{PLI}_{\acs{idx-i}}/100},
@@ -48,7 +50,7 @@ Pokud poslední rok nákladových dat ještě nemá publikovaný index cenové h
 je jednotně použit napříč celou prací tam, kde se porovnávají paritně očištěné mzdové nebo nákladové ukazatele mezi zeměmi.\par
 
 \paragraph{Odvozené hodinové ukazatele}\label{par:hodinove_ukazatele} vstupují do~korelační a~komparativní části jako hodinový čistý příjem v~\aclloc{PPS},
-protože roční čistý příjem samotný nepostihuje rozdíly v~délce skutečné pracovní
+protože roční čistý příjem samotný nepostihuje rozdíly v~délce skutečné odpracované
 doby. Roční čistý příjem standardizované osoby \acs{idx-AW100} se dělí
 odhadovaným ročním pracovním fondem, který vzniká násobením skutečné týdenní
 odpracované doby průměrným počtem týdnů v~roce:
@@ -65,7 +67,7 @@ absolutní nominální úroveň. U~\aclgen{HDP} na obyvatele, produktivity prác
 cenové hladiny a~některých příjmových ukazatelů je referenční hodnotou průměr
 \aclgen{EU} nastavený na~100. Stabilní srovnávací šestici tvoří \ac{ČR}, Rakousko, Německo, Dánsko,
 Polsko a~Slovensko; mapy a~korelační analýzy pracují podle dostupnosti dat se
-širším evropským panelem. U~kompozitních modelů (včetně ternární analýzy)
+širším evropským panelem. U~kompozitního modelu (ternární analýzy)
 jsou dílčí proměnné převáděny metodou min-max na společnou škálu \SIrange{0}{100}{}:
 \begin{equation}
   \acs{var-z}^{\ast}_{\acs{idx-i},\acs{idx-k}}
@@ -108,7 +110,7 @@ Výsledky odpovídají základnímu pracovníkovi bez slev na \acloc{DPFO} mimo 
 poplatníka. U~zaměstnance je osobní vyměřovací základ odvozen z~hrubé mzdy,
 zatímco vodorovná osa modelů pracuje s~celkovým nákladem zaměstnavatele. U~\acs{OSVČ}
 jsou rozlišeny standardní režim a~paušální daň, protože obě konstrukce odlišně
-převádějí stejný příjmový prostor do~odvodů, čistého příjmu a~budoucího starobního
+převádějí stejné prostředky do~odvodů, čistého příjmu a~budoucího starobního
 důchodu.\par
 
 Důchodové modely předpokládají pojistnou dobu 40~let a~počítají základní

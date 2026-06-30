@@ -1,9 +1,9 @@
 # Data Quality Report
 
 Target year: 2025
-Referenced stems audited: 47
+Referenced stems audited: 46
 OK: 27
-Warnings: 20
+Warnings: 19
 
 | Stem | Status | Years | Message |
 |---|---|---|---|
@@ -12,7 +12,6 @@ Warnings: 20
 | eu_cenova_hladina | warning | 2024 | caption years [2024] do not include target year 2025 |
 | eu_danovy_klin | ok | 2025 | - |
 | eu_gini_prijem | ok | 2003, 2025 | - |
-| eu_hustota_mapa | warning | 2024 | caption years [2024] do not include target year 2025 |
 | eu_ict_gender | ok | 2025 | - |
 | eu_mne_mapa | warning | 2024 | caption years [2024] do not include target year 2025 |
 | eu_odvetvove_mzdy_bar | ok | 2025 | - |

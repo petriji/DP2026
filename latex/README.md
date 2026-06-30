@@ -213,6 +213,19 @@ force-regeneration variant).
 
 ---
 
+## List of Software (`list_software` / `Seznam použitého softwaru`)
+
+The thesis features a mandatory declaration section listing the software libraries, compilers, operating systems, and packages used to compile the text and analyze datasets.
+
+- **File location**: `texparts/references/list_software.tex`.
+- **Inclusion**: Handled by the class template `CTUthesis.cls` during compilation (suppress via document class option `nosoftware`).
+- **Structure**:
+  - Organizes tools into categories: Editor & Project Management, TeX Live (engines, compilers, and packages), Bibliography Management, Operating Environment, and Python Core Data Stack.
+  - Custom command `\swsubitems{...}` formats nested packages with tight styling, suitable for the strict page budget.
+- **Maintenance**: Update `list_software.tex` immediately when adding new dependencies to `python/requirements.txt` or formatting macros in `CTUthesis.cls`.
+
+---
+
 ## Fonts and PDF embedding
 
 ### Fonts in use

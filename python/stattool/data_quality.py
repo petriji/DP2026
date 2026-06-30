@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import inspect
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,10 +36,30 @@ class QualityWarning:
     expected_year: int | None = None
     hardcoded: bool = False
     fallback: bool = False
+    line: int | None = None
     timestamp_utc: str = ""
 
 
 _WARNINGS: list[QualityWarning] = []
+
+
+def _external_caller_line() -> int | None:
+    """Return first callsite line outside this module (best effort)."""
+    this_file = Path(__file__).resolve()
+    frame = inspect.currentframe()
+    if frame is None:
+        return None
+    try:
+        f = frame.f_back
+        while f is not None:
+            code = f.f_code
+            filename = Path(code.co_filename).resolve()
+            if filename != this_file:
+                return int(f.f_lineno)
+            f = f.f_back
+    finally:
+        del frame
+    return None
 
 
 def _script_name() -> str:
@@ -68,6 +89,7 @@ def warn(kind: str, message: str, *, source: str | None = None, year: int | None
         expected_year=expected_year,
         hardcoded=hardcoded,
         fallback=fallback,
+        line=_external_caller_line(),
         timestamp_utc=_now_utc(),
     )
     _WARNINGS.append(rec)
@@ -86,6 +108,8 @@ def warn(kind: str, message: str, *, source: str | None = None, year: int | None
         parts.append("hardcoded=yes")
     if fallback:
         parts.append("fallback=yes")
+    if rec.line is not None:
+        parts.append(f"line={rec.line}")
     print(" | ".join(parts), flush=True)
 
 

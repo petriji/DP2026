@@ -257,7 +257,10 @@ ax.set_ylim(bottom=0)
 ax.set_title(
     STRINGS["title"],
     fontsize=FIGURE_TEXT_SIZE,
+    pad=4,
 )
+fig._tight_layout_kwargs = {"pad": 0.15}
+fig._pgf_trim_vertical = True
 
 # Minor grid
 ax.minorticks_on()

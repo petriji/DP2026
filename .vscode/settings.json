@@ -75,6 +75,7 @@
                 "-synctex=1",
                 "-interaction=nonstopmode",
                 "-file-line-error",
+                "-cnf-line=main_memory=8000000",
                 // "-shell-escape",  // needed only when tikzextern option is active
                 "-output-directory=%DIR%/build",
                 "%DOC%"

@@ -22,6 +22,20 @@ PGF export now includes companion-asset optimization:
 All generated outputs (`texparts/python/`, `figures/`) are gitignored and auto-created on first run.
 `texparts/figures/` is **git-tracked** — do not delete it.
 
+## Dependencies
+
+Core Python library requirements are specified in `python/requirements.txt`:
+- **pandas** (`>=2.0`) — tabular data transformation and modeling
+- **geopandas** (`>=0.14`) & **geodatasets** — geospatial maps and choropleths (from Natural Earth data)
+- **matplotlib** (`>=3.8`) & **matplotlib-scalebar** — high-quality vector/PGF plotting
+- **scipy** — statistical distribution matching and mathematical operations
+- **requests** — secure HTTP downloads for Eurostat JSON/SDMX data
+- **tqdm** — terminal execution feedback
+- **openpyxl** & **xlrd** (`>=2.0.1`) — reading spreadsheet sheets (`.xlsx` and legacy `.xls` formats)
+
+Optional reviewer comment parsing and importing utility dependencies are in `python/requirements-review.txt`:
+- **PyMuPDF** (`>=1.24`) — PDF comment/highlight extraction and triage report compilation
+
 ## PGF space-saving concepts (roadmap)
 
 Implemented:
@@ -75,6 +89,40 @@ Analysis scripts can emit standardised warnings via `stattool.data_quality`:
 - `warn_fallback(...)` for secondary/hardcoded/expert fallback paths
 - `warn_non_target_year(...)` for non-2025 data use
 
+## Optional MCP data server
+
+The repository includes an optional MCP server for agents that need structured
+access to the existing data layer.  It is a thin wrapper around `stattool.fetch`
+and `stattool.dataset`; the normal thesis build still calls those Python APIs
+directly and does not require an MCP server to be running.
+
+Run it from the repository root with the project virtual environment:
+
+```bash
+bash python/run.sh -m mcp_servers.dp_data_server
+```
+
+Typical VS Code MCP configuration:
+
+```json
+{
+  "servers": {
+    "dp-data": {
+      "command": "bash",
+      "args": ["${workspaceFolder}/python/run.sh", "-m", "mcp_servers.dp_data_server"]
+    }
+  }
+}
+```
+
+Exposed tools are intentionally data-oriented and bounded in size:
+- `eurostat_fetch`, `oecd_fetch`, `ilostat_fetch` fetch provider data into
+  `python/data` and return coverage metadata.
+- `dataset_coverage` and `dataset_preview` inspect cached files without sending
+  whole datasets through MCP.
+- `data_cache_list`, `analytics_registry_list`, and `data_quality_report` expose
+  pipeline context for agents.
+
 ## Optional review tooling
 
 Acrobat PDF review ingestion lives under `tools/` and is intentionally separate
@@ -102,6 +150,53 @@ force-regeneration variant).
 
 Both hooks are no-ops when all outputs already exist.
 
+## A1 Poster figures
+
+Poster figures use smaller font sizes than the thesis equivalents (one step
+down) and are saved as `python/figures/*_poster.pgf` so they never overwrite
+the thesis PGFs.  The poster variant is controlled by `DP_POSTER_RUN=1`.
+
+### Full poster build recipe
+
+```bash
+# 1. Generate poster-optimised PGF figures
+cd python
+bash run_poster_figures.sh
+
+# 2. Build the poster PDF (biber + two pdflatex passes for bibliography)
+cd ../latex
+pdflatex -interaction=nonstopmode -cnf-line=extra_mem_bot=15000000 \
+         -cnf-line=extra_mem_top=15000000 -output-directory=build poster.tex
+biber --input-directory=. --output-directory=build build/poster
+pdflatex -interaction=nonstopmode -cnf-line=extra_mem_bot=15000000 \
+         -cnf-line=extra_mem_top=15000000 -output-directory=build poster.tex
+```
+
+Output: `latex/build/poster.pdf`
+
+### What `run_poster_figures.sh` does
+
+Sets `DP_POSTER_RUN=1` and runs the six analysis scripts that produce poster
+figures.  Each script detects the env var and:
+
+- calls `poster_stem("stem")` → returns `"stem_poster"` so `savefig_pgf` writes
+  `figures/stem_poster.pgf` without overwriting the thesis `figures/stem.pgf`
+- applies poster-specific sizes (via `IS_POSTER_RUN`) inside shared helpers
+  (`scatter.py`, `ternary.py`, `map_europe.py`)
+- skips `save_figure_tex_pgf()` (thesis `.tex` wrappers are not needed for the poster)
+
+Scripts run: `eu_pokryti_kv_mapa`, `eu_hustota_mapa`, `eu_apz_vydaje`,
+`problemy_cz_model`, `korelace_analyza`, `practical_ternary_social_dialog`.
+
+### Poster-specific size constants (`config.py`)
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `IS_POSTER_RUN` | `DP_POSTER_RUN == "1"` | gate poster-only code paths |
+| `POSTER_FIGURE_LABEL_SIZE` | `FIGURE_LABEL_SIZE - 1` | axis/tick labels |
+| `POSTER_FIGURE_COMPACT_LABEL_SIZE` | `FIGURE_COMPACT_LABEL_SIZE - 1` | y-labels in scatter 2×2 |
+| `poster_stem(s)` | `s + "_poster"` or `s` | output filename selector |
+
 ## Layout
 
 ```
@@ -110,6 +205,7 @@ python/
 ├── analytics_registry.toml – maps keys → scripts + texpart patterns
 ├── stats_analytics.py      – orchestrator (called by latexmkrc pre-build)
 ├── requirements.txt        – pip dependencies
+├── mcp_servers/            – optional MCP servers for agent-facing data tools
 ├── stattool/               – data layer
 │   ├── fetch.py            – Eurostat SDMX download + cache
 │   ├── dataset.py          – Dataset wrapper (pivot, filter, normalise)
@@ -130,6 +226,7 @@ python/
     ├── eu_danovy_klin.py    – OECD tax wedge choropleth
     ├── stav_arope.py    – At-risk-of-poverty maps + timeline
     ├── prakticka_srovnani.py – Flexicurity indicator table
+    ├── stav_struktura_prac_sily.py – CZ workforce-structure table (ISPV + CSSZ + PAQ interval)
     ├── stav_hustota_vyvoj.py – Trade union density over time
     ├── eu_apz_vydaje.py  – Labour market policy expenditure
     ├── eu_konvergence.py – Wage–GDP convergence scatter

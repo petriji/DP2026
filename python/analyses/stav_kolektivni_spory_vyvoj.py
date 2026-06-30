@@ -96,10 +96,12 @@ STRINGS = {
     "title": r"Kolektivní spory, stávkové pohotovosti a stávky, \acs{geo-CZ}",
     "ylabel": "počet případů",
 }
-ax.set_title(STRINGS["title"])
+ax.set_title(STRINGS["title"], pad=4)
 ax.set_ylabel(STRINGS["ylabel"])
 ax.set_xlabel("rok")
 ax.legend(frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="upper right")
+fig._tight_layout_kwargs = {"pad": 0.15}
+fig._pgf_trim_vertical = True
 
 savefig_pgf(fig, "stav_kolektivni_spory_vyvoj", strings=STRINGS)
 

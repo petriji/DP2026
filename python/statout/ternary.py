@@ -142,6 +142,12 @@ def _draw_grid_and_ticks(ax: plt.Axes) -> None:
     # Tick numeral offset in pt — scale-independent, same visual distance in all variants
     _TN_AC = 14.0   # A- and C-axis tick numeral offset (pt)
     _TN_B  = 12.0   # B-axis tick numeral offset (pt)
+    if IS_POSTER_RUN:
+        # Poster: shift tick numerals further inward toward the triangle.
+        # A (zamestnanci): right, C (vlada): left by +1pt more,
+        # B (firmy): up by +2pt more.
+        _TN_AC -= 2.0
+        _TN_B -= 3.0
 
     for k in major_levels:
         pct = int(round(k * 100))
@@ -498,6 +504,7 @@ def ternary_diagram(
     fig, ax = plt.subplots(figsize=figsize)
     # Tight-layout kwargs are consumed by savefig_pgf's internal call.
     fig._tight_layout_kwargs = {"pad": 0.03}
+    fig._pgf_trim_vertical = True
 
     # ── RGB heatmap background ────────────────────────────────────────────
     ax.imshow(
@@ -554,8 +561,8 @@ def ternary_diagram(
         # Extra title pad for corners-on so title clears the A corner label that overflows above axes.
         # Poster: smaller pad so the (LaTeX-inflated) title stays inside the
         # canvas top instead of being shaved.
-        _title_pad = (12 if IS_POSTER_RUN else 20) if show_corner_labels else 2
-        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE - 1 if IS_POSTER_RUN else FIGURE_TITLE_SIZE, pad=_title_pad)
+        _title_pad = (12 if IS_POSTER_RUN else 20) if show_corner_labels else 4
+        ax.set_title(title, fontsize=FIGURE_TITLE_SIZE, pad=_title_pad)
     # Identical limits for both variants → identical data/inch scale → identical visual appearance.
     # Corner labels that fall outside this range render via clip_on=False / annotation_clip=False.
     ax.set_xlim(-0.15, 1.15)

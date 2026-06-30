@@ -196,13 +196,15 @@ ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
 ax.yaxis.set_minor_locator(ticker.MultipleLocator(5))
-ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax.set_axisbelow(True)
 ax.grid(which="major", axis="both", linestyle="-", linewidth=0.5, alpha=0.20)
 ax.grid(which="minor", axis="both", linestyle="-", linewidth=0.35, alpha=0.12)
 
 STRINGS = {"title": r"Obsah \acs{KS} (\acs{geo-CZ})"}
-ax.set_title(STRINGS["title"])
+ax.set_title(STRINGS["title"], pad=4)
+fig._tight_layout_kwargs = {"pad": 0.15}
+fig._pgf_trim_vertical = True
 
 # ── 4. Tooltips ───────────────────────────────────────────────────────────────
 _pivot = pd.DataFrame({

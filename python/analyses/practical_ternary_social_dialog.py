@@ -262,7 +262,7 @@ def main() -> None:
     values = ds_strength.for_year(ds_strength.latest_year).set_index("geo")["value"].to_dict()
     strings_strength = {
         "title": r"Souhrnné skóre sociálních partner\r{u}",
-        "colorbar_label": "skóre [1]",
+        "colorbar_label": "skóre [\\%]",
     }
 
     _vmin = min(values.values())
@@ -303,7 +303,7 @@ def main() -> None:
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption=f"Ternární model -- průměr modelových os (souhrnné skóre sociálního dialogu), \\acs{{EU}}",
+        caption=f"Ternární model -- průměr modelových os (souhrnné skóre sociálního dialogu), \\acs{{geo-EU27}}",
         cite_keys=_TERNARY_MODEL_CITE_KEYS,
         label="fig:practical_ternary_strength_map",
         resizebox_width=r"\linewidth",

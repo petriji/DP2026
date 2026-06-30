@@ -165,13 +165,15 @@ ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}\\,\\%"))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax.set_axisbelow(True)
 ax.grid(which="major", axis="y", linewidth=0.5, alpha=0.28)
 ax.grid(which="minor", axis="y", linewidth=0.4, alpha=0.14)
 
 STRINGS = {"title": r"Sjednaný vs.~skutečný mzdový nárůst v~\acs{geo-CZ}"}
-ax.set_title(STRINGS["title"])
+ax.set_title(STRINGS["title"], pad=4)
+fig._tight_layout_kwargs = {"pad": 0.15}
+fig._pgf_trim_vertical = True
 
 # ── 4. PGF tooltips (highlighted countries + IPP only — cloud lines stay clean) ──
 _pivot_fg = (

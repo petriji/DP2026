@@ -72,10 +72,11 @@ latex/texparts/python/
 *.gdoc
 
 -- review --
-/review/*.pdf
-/review/.cache/
-!/review/
-!/review/*.md
+/review
+
+-- scratch --
+/scratch
+/latex/scratch
 
 Petricek_DP2026_*.pdf
 latex/socialnidialog.bib.bak*
