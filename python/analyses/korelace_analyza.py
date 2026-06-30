@@ -50,6 +50,7 @@ from config import (
     FIGURE_COMPACT_TEXT_SIZE,
     LATEX_PICS_DIR,
 )
+from statout.table import save_table_tex
 from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
@@ -431,45 +432,39 @@ _years = [row["year"] for row in rows if row["year"]]
 from collections import Counter as _Counter
 _year_label = max(_Counter(_years), key=lambda y: (_Counter(_years)[y], y)) if _years else "akt."
 
-lines = [
-    r"\begin{table}[htbp]",
-    r"\centering",
-    r"\caption{Korelace pokrytí \acs{KV} (hustoty odborů) s~vybranými veličinami "
-    rf"pracovního trhu v~letech {START_YEAR}--{_year_label} a průřezovém roce "
-    rf"{_year_label}. "
-    r"Zdroj dat: Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}"
-    r"\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}"
-    r"\cite{eurostat_ilc_di12}; \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}"
-    r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}.}",
-    r"\label{tab:korelace_tabulka}",
-    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4cm}"
-    r"*{6}{>{\centering\arraybackslash}m{1.40cm}}@{}}",
-    r"\toprule",
-    rf"\bfseries Ukazatel & \bfseries $n_{{\text{{panel}}}}$ "
-    rf"& \bfseries $n_{{\text{{geo}}}}$ & \bfseries $r$ & "
-    rf"\bfseries $\rho$ & \bfseries $n_{{\text{{{_year_label}}}}}$ "
-    rf"& \bfseries $r_{{\text{{{_year_label}}}}}$ \\",
-    r"\midrule",
+table_rows = [
+    {
+        r"\bfseries $n_{\text{panel}}$": str(row["n_panel"]),
+        r"\bfseries $n_{\text{geo}}$": str(row["n_geo"]),
+        r"\bfseries $r$": _fmt_r(row["r_pearson"]),
+        r"\bfseries $\rho$": _fmt_r(row["r_spearman"]),
+        rf"\bfseries $n_{{\text{{{_year_label}}}}}$": str(row["n_akt"]),
+        rf"\bfseries $r_{{\text{{{_year_label}}}}}$": _fmt_r(row["r_year"]),
+    }
+    for row in rows
 ]
-for row in rows:
-    lines.append(
-        f"{row['label']} & {row['n_panel']} & {row['n_geo']} & "
-        f"{_fmt_r(row['r_pearson'])} & "
-        f"{_fmt_r(row['r_spearman'])} & "
-        f"{row['n_akt']} & {_fmt_r(row['r_year'])} \\\\"
-    )
-lines += [
-    r"\bottomrule",
-    r"\end{xltabular}",
-    rf"\par\vspace{{2pt}}\footnotesize {_EXCL_NOTE_TAB}",
-    r"\end{table}",
-]
-
-tex_dir = Path(LATEX_TEXPARTS_DIR)
-tex_dir.mkdir(parents=True, exist_ok=True)
-table_path = tex_dir / "korelace_tabulka.tex"
-table_path.write_text("\n".join(lines), encoding="utf-8")
-print(f"Correlation table written to {table_path}")
+table_df = pd.DataFrame(table_rows, index=[row["label"] for row in rows])
+save_table_tex(
+    table_df,
+    "korelace_tabulka",
+    caption=(
+        r"Korelace pokrytí \acs{KV} (hustoty odborů) s~vybranými veličinami "
+        rf"pracovního trhu v~letech {START_YEAR}--{_year_label} a průřezovém roce "
+        rf"{_year_label}. "
+        r"Zdroj dat: Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}"
+        r"\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}"
+        r"\cite{eurostat_ilc_di12}; \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}"
+        r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}."
+    ),
+    label="tab:korelace_tabulka",
+    note=_EXCL_NOTE_TAB,
+    position="H",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{4cm}*{6}{>{\centering\arraybackslash}m{1.40cm}}@{}",
+    index_name=r"\bfseries Ukazatel",
+    bold_header=False,
+    fontsize="normalsize",
+)
+print("Correlation table written to korelace_tabulka.tex")
 
 # ── 6. Prediction table: CZ at 80 % coverage ──────────────────────────────────
 print("Generating prediction table for CZ …")
@@ -578,41 +573,38 @@ _delta_x_str = f"{_delta_x:.1f}".replace(".", "{,}")
 _target_str = f"{TARGET_COVERAGE:.0f}"
 _max_year = max(r["y0_year"] for r in pred_rows)
 
-pred_lines = [
-    r"\begin{table}[htbp]",
-    r"\centering",
-    rf"\caption{{Lineární predikce: predikovaná změna ukazatelů trhu práce "
-    rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KV}} ze "
-    rf"\SI{{{_cz_cov_str}}}{{\percent}} na~\SI{{{_target_str}}}{{\percent}}.}}",
-    r"\label{tab:model_cz}",
-    r"\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.5cm}"
-    r"*{4}{>{\centering\arraybackslash}m{1.40cm}}@{}}",
-    r"\toprule",
-    rf"\bfseries Ukazatel & \bfseries $y_{{{_max_year}}}$ "
-    r"& \bfseries $\hat{\beta}$ (na \SI{}{\pp}) "
-    r"& \bfseries $\Delta\hat{y}_{\acs{geo-CZ}}$ "
-    r"& \bfseries $\hat{y}$ \\",
-    r"\midrule",
+pred_table_rows = [
+    {
+        rf"\bfseries $y_{{{_max_year}}}$": _fmt_pred(r["y0"]),
+        r"\bfseries $\hat{\beta}$ (na \SI{}{\pp})": _fmt_pred_beta(r["beta"]),
+        r"\bfseries $\Delta\hat{y}_{\acs{geo-CZ}}$": _fmt_pred(r["delta_y"], sign=True),
+        r"\bfseries $\hat{y}$": rf"\bfseries {_fmt_pred(r['y1'])}",
+    }
+    for r in pred_rows
 ]
-for r in pred_rows:
-    pred_lines.append(
-        f"{r['label']} [{r['unit']}] & "
-        f"{_fmt_pred(r['y0'])} & "
-        f"{_fmt_pred_beta(r['beta'])} & "
-        f"{_fmt_pred(r['delta_y'], sign=True)} & "
-        f"\\bfseries {_fmt_pred(r['y1'])} \\\\"
-    )
-pred_lines += [
-    r"\bottomrule",
-    r"\end{xltabular}",
-    r"\par\vspace{2pt}\footnotesize "
-    r"Predikce je horním odhadem korelovatelné části efektu --- "
-    r"nezachycuje zpětné vazby ani náklady přechodu.",
-    r"\end{table}",
-]
-
-pred_path = tex_dir / "korelace_model_cz.tex"
-pred_path.write_text("\n".join(pred_lines), encoding="utf-8")
-print(f"Prediction table written to {pred_path}")
+pred_df = pd.DataFrame(
+    pred_table_rows,
+    index=[f"{r['label']} [{r['unit']}]" for r in pred_rows],
+)
+save_table_tex(
+    pred_df,
+    "korelace_model_cz",
+    caption=(
+        rf"Lineární predikce: predikovaná změna ukazatelů trhu práce "
+        rf"\aca{{geo-CZ}} při nárůstu pokrytí \ac{{KV}} ze "
+        rf"\SI{{{_cz_cov_str}}}{{\percent}} na~\SI{{{_target_str}}}{{\percent}}."
+    ),
+    label="tab:model_cz",
+    note=(
+        r"Predikce je horním odhadem korelovatelné části efektu --- "
+        r"nezachycuje zpětné vazby ani náklady přechodu."
+    ),
+    position="H",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{7.5cm}*{4}{>{\centering\arraybackslash}m{1.40cm}}@{}",
+    index_name=r"\bfseries Ukazatel",
+    bold_header=False,
+    fontsize="normalsize",
+)
+print("Prediction table written to korelace_model_cz.tex")
 
 print("Done.")
