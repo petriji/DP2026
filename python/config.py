@@ -60,6 +60,10 @@ PGF_RECOMPRESS_COMPANION_IMAGES: bool = False
 FIGURE_WIDTH_CM: float = 15.0
 FIGURE_HEIGHT_CM: float = 9.0
 
+# PGF export target width. Figures are normalized to this width at save time
+# so LaTeX can include them without any resize/fitting step.
+PGF_TARGET_WIDTH_CM: float = FIGURE_WIDTH_CM
+
 # Typography source of truth from LaTeX (CTUthesis 12pt base):
 #   \normalsize  = 12pt
 #   \small       = 11pt

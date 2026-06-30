@@ -462,8 +462,8 @@ def ternary_diagram(
         Matplotlib figure size in inches.  The default (6.4, 5.4) is sized
         for the typical content extent (≈ 1.52 × 1.29 data units) so that
         ``tight_layout(pad=0.15)`` leaves only minimal whitespace.
-        LaTeX's ``\\resizebox{\\linewidth}`` in the figure wrapper will scale
-        the result to the exact column width.
+        PGF export normalizes figure width to the LaTeX column width, so
+        wrappers can include the PGF directly without any resizing.
     resolution:
         Pixel resolution of the background heatmap (width = height).
         500 is a good default; 700 gives a smoother gradient at +50 % PNG size.

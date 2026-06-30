@@ -41,6 +41,7 @@ from config import (
     PGF_OPTIMIZE_ASSETS,
     PGF_RECOMPRESS_COMPANION_IMAGES,
     PGF_SHARED_ASSETS_DIR,
+    PGF_TARGET_WIDTH_CM,
 )
 
 # ── Unit conversion ───────────────────────────────────────────────────────────
@@ -449,8 +450,10 @@ def apply_style_pgf() -> None:
             # --- Figure ---
             "figure.dpi": 150,
             "savefig.dpi": FIGURE_DPI,
-            "savefig.bbox": "tight",
-            "savefig.pad_inches": 0.02,
+            # Keep the exported PGF canvas dimensions stable; tight cropping
+            # would change effective width and force LaTeX-side resizing.
+            "savefig.bbox": None,
+            "savefig.pad_inches": 0.0,
         }
     )
 
@@ -1015,6 +1018,13 @@ def savefig_pgf(
     macro reference.  The matching ``\def`` lines are emitted by
     ``save_figure_tex_pgf(strings=...)``.
     """
+    # Normalize every PGF figure to the target LaTeX column width so wrappers
+    # can include it directly without resizebox/fitting macros.
+    width_in = PGF_TARGET_WIDTH_CM / 2.54
+    cur_w, cur_h = fig.get_size_inches()
+    if cur_w > 0:
+        fig.set_size_inches(width_in, cur_h * (width_in / cur_w), forward=True)
+
     if tight:
         _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
         _safe_tight_layout(fig, _tl_kwargs)
@@ -1026,7 +1036,7 @@ def savefig_pgf(
     directory = Path(out_dir) if out_dir else FIGURES_DIR
     directory.mkdir(parents=True, exist_ok=True)
     out = directory / f"{name}.pgf"
-    fig.savefig(out)
+    fig.savefig(out, bbox_inches=None, pad_inches=0.0)
     plt.close(fig)
     print(f"Saved PGF: {out}")
 
@@ -1189,7 +1199,7 @@ def save_figure_tex_pgf(
 
     Unlike ``save_figure_tex()`` which uses ``\includegraphics``, this uses::
 
-        \resizebox{<width>}{!}{\input{<path>.pgf}}
+        \input{<path>.pgf}
 
     The PGF file is compiled *inside* the host document, so all document
     macros (\ac{}, \SI{}{}, \cite{}, hyperref links) are available.
@@ -1276,10 +1286,7 @@ def save_figure_tex_pgf(
             lines.append(f"%")
             lines.append(f"\\begin{{figure}}[H]")
             lines.append(f"  \\centering")
-            lines.append(
-                f"  \\resizebox{{{resizebox_width}}}{{!}}"
-                f"{{\\input{{{include_path}}}}}"
-            )
+            lines.append(f"  \\input{{{include_path}}}")
             lines.append(f"  \\caption{{{caption_macro}}}")
             lines.append(f"  \\label{{{label}}}")
             lines.append(f"\\end{{figure}}")
@@ -1347,7 +1354,7 @@ def save_figure_tex_pgf(
         tex = (
             f"\\begin{{figure}}[H]\n"
             f"  \\centering\n"
-            f"  \\resizebox{{{resizebox_width}}}{{!}}{{\\input{{{include_path}}}}}\n"
+            f"  \\input{{{include_path}}}\n"
             f"  \\caption{{{caption_str}}}\n"
             f"  \\label{{{label}}}\n"
             f"\\end{{figure}}\n"
