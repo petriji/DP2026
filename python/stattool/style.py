@@ -244,7 +244,12 @@ def apply_geo_labels_pgf(
 
     Call this function *after* all plotting is done, *before* ``savefig_pgf()``.
     """
-    codes = geo_set if geo_set is not None else GEO_ACRO
+    if geo_set is not None:
+        codes = geo_set
+    elif values is not None:
+        codes = frozenset(values.keys())
+    else:
+        codes = GEO_ACRO
     for child in ax.get_children():
         if not hasattr(child, "get_text"):
             continue
@@ -1170,41 +1175,31 @@ def save_figure_tex_pgf(
             strings_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
             print(f"  Created figure tex: {strings_file}")
         else:
-            # File exists: do NOT overwrite, but ensure any newly-introduced
-            # wrapper string/nudge macros have defaults so the build does not
-            # break when the .pgf references them. Existing differing values
-            # are preserved as user customizations.
+            # File exists: do NOT overwrite the wrapper. Keep user-authored
+            # string macros intact and only warn if Python defaults drift.
+            # Nudge defaults may still be added because they are additive.
             existing = strings_file.read_text(encoding="utf-8")
             stale_macros: list[str] = []
             expected_macros = {caption_macro: caption_str}
-            missing_macro_defs: list[str] = []
             for key, value in (strings or {}).items():
                 expected_macros[_macro_name(prefix, key)] = str(value)
             for macro, expected in expected_macros.items():
                 actual = _extract_figure_tex_macro_value(existing, macro)
                 expected_esc = re.sub(r"(?<!\\)%", r"\\%", expected)
                 if actual is None:
-                    missing_macro_defs.append(f"\\def{macro}{{{expected_esc}}}%")
+                    stale_macros.append(f"{macro}=missing")
                     continue
                 if actual != expected_esc:
                     stale_macros.append(macro)
-            add_blocks: list[str] = []
-            if missing_macro_defs:
-                add_blocks.extend([
-                    "",
-                    "% --- Auto-added string macros from current Python defaults",
-                    *missing_macro_defs,
-                ])
             missing_nudges: list[str] = []
             if nudge_macros:
                 missing_nudges = [m for m in nudge_macros if m not in existing]
                 if missing_nudges:
-                    add_blocks.extend([
+                    add_blocks = [
                         "",
                         "% --- Auto-added nudge knobs (override with \\renewcommand)",
                         *(f"\\providecommand{m}{{0pt}}%" for m in missing_nudges),
-                    ])
-            if add_blocks:
+                    ]
                 # Insert before the \begin{figure} line so defaults are in
                 # scope when \input{...pgf} expands.
                 marker = "\\begin{figure}"
@@ -1215,12 +1210,7 @@ def save_figure_tex_pgf(
                 else:
                     existing = existing + "\n".join(add_blocks) + "\n"
                 strings_file.write_text(existing, encoding="utf-8")
-                if missing_macro_defs:
-                    print(
-                        f"  Added {len(missing_macro_defs)} missing string macro default(s) to: {strings_file}"
-                    )
-                if missing_nudges:
-                    print(f"  Added {len(missing_nudges)} nudge default(s) to: {strings_file}")
+                print(f"  Added {len(missing_nudges)} nudge default(s) to: {strings_file}")
             if stale_macros:
                 preview = ", ".join(stale_macros[:4])
                 extra = "" if len(stale_macros) <= 4 else f" (+{len(stale_macros) - 4} more)"
