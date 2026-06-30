@@ -191,6 +191,33 @@ SVARC_LINESTYLE           = (0, (6, 1))
 apply_style_pgf()
 
 
+def _x_grid_with_refs(*, income_min: int, income_max: int) -> np.ndarray:
+    """Whole-thousand grid (30–250k) plus key vertical-reference anchors."""
+    lo_base = 30_000
+    hi_base = min(250_000, int(income_max))
+    base = np.arange(lo_base, ((hi_base // 1_000) + 1) * 1_000 + 1, 1_000)
+    refs = np.array([
+        MIN_WAGE_TOTAL_COST,
+        MEDIAN_EMP_TOTAL_COST,
+        IT_MEDIAN_TOTAL_COST,
+        DPH_THRESHOLD_MONTHLY,
+        EMP_RH1_X,
+    ], dtype=int)
+    refs = refs[(refs >= int(income_min)) & (refs <= int(income_max))]
+    out = np.unique(np.concatenate([base, refs]).astype(float))
+    return out[(out >= int(income_min)) & (out <= int(income_max))]
+
+
+def _segment_from_grid(grid: np.ndarray, x_start: float, x_end: float) -> np.ndarray:
+    """Slice monotonic grid to a closed segment and retain exact endpoints."""
+    seg = grid[(grid >= x_start) & (grid <= x_end)]
+    if seg.size == 0 or seg[0] > x_start:
+        seg = np.insert(seg, 0, x_start)
+    if seg[-1] < x_end:
+        seg = np.append(seg, x_end)
+    return seg
+
+
 def _plot_osvc_lines(
     ax: plt.Axes,
     x: np.ndarray,
@@ -222,7 +249,7 @@ def _plot_osvc_lines(
             x_end   = min(x_e, income_max)
             if x_start >= x_end:
                 continue
-            x_band = np.linspace(x_start, x_end, 300)
+            x_band = _segment_from_grid(x, float(x_start), float(x_end))
             y_band = fn_pausalni(x_band, total_pay, p_idx)
             ax.plot(x_band / 1_000, y_band,
                     color=color, linewidth=2.0, linestyle=":", zorder=2)
@@ -273,7 +300,7 @@ def plot_pension_comparison(
     -------
     matplotlib Figure objekt.
     """
-    x = np.linspace(income_min, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
+    x = _x_grid_with_refs(income_min=income_min, income_max=income_max)
 
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     p_emp     = pension_employee(gross_emp, years)
@@ -457,9 +484,8 @@ def plot_pension_solidarity(
     matplotlib Figure objekt (dva panely sdílející osu x).
     """
     # ── Datové vektory ─────────────────────────────────────────────────────────
-    # Hrubý grid (100 bodů) — křivky jsou hladké, jemnější síť zbytečně nafukuje PGF.
-    x    = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 100)
-    x_rr = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 100)
+    x    = _x_grid_with_refs(income_min=income_min, income_max=income_max)
+    x_rr = _x_grid_with_refs(income_min=income_min, income_max=income_max)
 
     gross_emp    = x    / (1 + EMPLOYER_INS_RATE)
     gross_emp_rr = x_rr / (1 + EMPLOYER_INS_RATE)
@@ -564,6 +590,7 @@ def plot_pension_solidarity(
         f"Výše starobního důchodu v závislosti na nákladech na práci\n"
         f"(pojistná doba~{years}~let, parametry~2026)",
         loc="center",
+        fontsize=FIGURE_TEXT_SIZE,
     )
     ax_top.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax_top.set_ylim(bottom=0)
@@ -652,7 +679,7 @@ def plot_pension_solidarity(
             x_end   = min(x_e, income_max)
             if x_start >= x_end:
                 continue
-            x_band  = np.linspace(x_start, x_end, 300)
+            x_band  = _segment_from_grid(x_rr, float(x_start), float(x_end))
             rr_band = p_val / np.maximum(x_band - total_pay_band, 1) * 100
             ax_bot.plot(x_band / 1_000, rr_band,
                         color=color, linewidth=2.0, linestyle=":")
@@ -756,7 +783,7 @@ def plot_tax_wedge_vs_income(
     Pro OSVČ s výdajovým paušálem SP a ZP nejsou odečitatelné od ZD DPFO
     (ZDP § 7 odst. 7). Sleva na poplatníka 2 570 Kč/měs. uplatněna.
     """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    x = _x_grid_with_refs(income_min=MIN_WAGE_TOTAL_COST, income_max=income_max)
     c_emp = PALETTE[0]
     tw_emp = tax_wedge_employee(x)
 
@@ -853,7 +880,7 @@ def plot_net_income_vs_income(
     OSVČ paušální daň: čistý = příjmy − celková pevná platba
         (skutečné výdaje nejsou modelovány).
     """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    x = _x_grid_with_refs(income_min=MIN_WAGE_TOTAL_COST, income_max=income_max)
     c_emp = PALETTE[0]
     ni_emp = net_income_employee(x)
 
@@ -956,7 +983,7 @@ def plot_sp_vs_income(
     OSVČ: SP = 29,2 % × max(55 % × ZD, min. základ).
     Paušální daň: SP = 29,2 % × pevný vyměřovací základ pásma.
     """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    x = _x_grid_with_refs(income_min=MIN_WAGE_TOTAL_COST, income_max=income_max)
     c_emp = PALETTE[0]
     sp_emp = sp_employee(x) / 1_000
 
@@ -1047,7 +1074,7 @@ def plot_pension_sp_ratio_vs_income(
     Ukazuje, kolik Kč měsíčního důchodu připadá na každou Kč měsíčně odváděnou na SP.
     Vyšší hodnota = vyšší návratnost (rentabilita) odvodů na SP.
     """
-    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
+    x = _x_grid_with_refs(income_min=MIN_WAGE_TOTAL_COST, income_max=income_max)
     c_emp = PALETTE[0]
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     breakeven_years_emp = INSURANCE_YEARS / (pension_employee(gross_emp, years) / sp_employee(x))
@@ -1076,7 +1103,7 @@ def plot_pension_sp_ratio_vs_income(
             x_end   = min(x_e, income_max)
             if x_start >= x_end:
                 continue
-            x_band = np.linspace(x_start, x_end, 300)
+            x_band = _segment_from_grid(x, float(x_start), float(x_end))
             pen_band = _pension(monthly_base, years)
             sp_band = OSVC_SOCIAL_RATE * monthly_base
             breakeven_years_band = np.full_like(x_band, INSURANCE_YEARS / (pen_band / sp_band))
@@ -1199,7 +1226,7 @@ def plot_tax_wedge_comparison(
     Každá křivka je parametrizována příjmem (celkové náklady zaměstnavatele /
     příjmy OSVČ) v rozsahu [income_min, income_max].
     """
-    x = np.linspace(income_min, income_max, 2_000)
+    x = _x_grid_with_refs(income_min=income_min, income_max=income_max)
 
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     tw_emp    = tax_wedge_employee(x)
@@ -1239,7 +1266,7 @@ def plot_tax_wedge_comparison(
             x_end_s = min(x_e, income_max)
             if x_start >= x_end_s:
                 continue
-            x_band  = np.linspace(x_start, x_end_s, 300)
+            x_band  = _segment_from_grid(x, float(x_start), float(x_end_s))
             tw_band = total_pay / x_band * 100
             p_val   = _pension(monthly_base, years)  # fixed VZ per pásmo
             net_band = np.maximum(x_band - float(total_pay), 1.0)
