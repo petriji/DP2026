@@ -169,6 +169,15 @@ MIN_WAGE: int = 20_800  # CZK/měsíc (hrubá mzda, zaměstnanec)
 # Celkové náklady zaměstnavatele při minimální mzdě (osa x ekvivalent):
 MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830 Kč
 
+# ── Mediánová mzda zaměstnance ────────────────────────────────────────────────
+# Zdroj: ISPV (Informační systém o průměrném výdělku), ČSÚ/MPSV, rok 2024.
+# Medián hrubé měsíční mzdy zaměstnanců v podnikatelské sféře: 40 709 Kč.
+# ISPV se vztahuje pouze na zaměstnance v podnicích; pro OSVČ srovnatelná
+# statistika mediánu zisku není zveřejňována (viz komentář ve funkci
+# plot_tax_wedge_comparison()).
+MEDIAN_EMP_WAGE: int = 40_709   # CZK/měsíc hrubé mzdy (ISPV 2024)
+MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 54 469 Kč
+
 # ── Polohy zlomů (kinks) na ose x (celkové náklady / zisk) pro RH1/RH2 ───────
 # Redukční hranice RH1 a RH2 jsou prahové hodnoty OVZ, nikoliv osy x.
 # Na ose x = celkové náklady zaměstnavatele / zisk OSVČ se zlomy nacházejí:
@@ -699,10 +708,15 @@ def plot_tax_wedge_comparison(
         prev_max = max_inc_t
 
     # ── Anotace referenčních příjmových hladin ──────────────────────────────────
-    avg_total_cost = int(AVG_WAGE * (1 + EMPLOYER_INS_RATE))
+    # Pro zaměstnance se používá medián hrubé mzdy ze šetření ISPV 2024
+    # (ČSÚ/MPSV): 40 709 Kč → celkové náklady ≈ 54 469 Kč.
+    # Pro OSVČ srovnatelná statistika mediánu zisku není zveřejňována
+    # (ISPV pokrývá jen zaměstnance v podnicích; EU-SILC a statistiky FS ČR
+    # uvádějí průměry, nikoliv mediány zisku OSVČ). Pro srovnání při totožném
+    # rozpočtu je proto stejný bod celkových nákladů zobrazen i na křivce OSVČ.
     ref_points = [
-        (MIN_WAGE_TOTAL_COST, "Min.\u00a0mzda", "#cc6600"),
-        (avg_total_cost,      "Prům.\u00a0mzda", "#888888"),
+        (MIN_WAGE_TOTAL_COST,   "Min.\u00a0mzda", "#cc6600"),
+        (MEDIAN_EMP_TOTAL_COST, "Medián\u00a0(zam., ISPV\u00a02024)", "#888888"),
     ]
     for x_ref, lbl, col in ref_points:
         if income_min <= x_ref <= income_max:
@@ -727,7 +741,7 @@ def plot_tax_wedge_comparison(
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
     ax.legend(frameon=False, fontsize=FONT_SIZE - 1,
-              loc="upper right", borderaxespad=0.5)
+              loc="upper left", borderaxespad=0.5)
 
     return fig
 
