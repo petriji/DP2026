@@ -46,7 +46,7 @@ apply_style()
 # Dimensions: freq · unit · sex · age · geo
 path = fetch_eurostat(
     "lfsi_emp_a",
-    f"A.EMP_LFS.T.Y20-64.PC_POP.{GEO}",
+    "A.EMP_LFS.T.Y20-64.PC_POP.",
     start_period=START_YEAR,
 )
 
