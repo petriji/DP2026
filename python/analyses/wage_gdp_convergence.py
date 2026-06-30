@@ -84,7 +84,7 @@ raw_net["time"] = raw_net["time"].astype(int)
 ds_net_raw = Dataset(
     raw_net,
     name="Čistý příjem (PPS)",
-    unit="EUR PPS/rok",
+    unit="PPS/rok",
     source_url="Eurostat/earn_nt_net",
 )
 
@@ -117,7 +117,16 @@ def _to_eu100(ds: Dataset, eu_geo: str = "EU27_2020") -> Dataset:
     )
 
 
-ds_lp_idx = _to_eu100(ds_lp_raw)
+# LP is already in EU27=100 (unit PC_EU27_2020_MPPS_CP) — skip normalization;
+# only remove EU27 aggregate row itself and set unit label.
+_lp_df = ds_lp_raw.df.copy()
+_lp_df = _lp_df[_lp_df[ds_lp_raw.geo_col] != "EU27_2020"]
+ds_lp_idx = Dataset(
+    _lp_df,
+    name=ds_lp_raw.name, unit="EU27=100",
+    geo_col=ds_lp_raw.geo_col, time_col=ds_lp_raw.time_col,
+    value_col=ds_lp_raw.value_col, source_url=ds_lp_raw.source_url,
+)
 ds_net_idx = _to_eu100(ds_net_raw)
 
 # Remove outliers
