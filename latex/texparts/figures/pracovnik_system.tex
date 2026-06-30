@@ -1,14 +1,18 @@
 % Hand-drawn TikZ figure — pracovník jako uzel mezi firmou, státem a agregátní poptávkou.
 % Edit freely — není generován Pythonem.
 \def\strPracovnikSystemCaption{Práce jako uzel mezi zaměstnavatelem, státem a~agregátní poptávkou}%
+% Poster override (before \input this file):
+%   \renewcommand\DPPosterWorkBaseSize{\normalsize}
+\providecommand\DPFigureLabelSize{\small}
+\providecommand\DPWorkBaseSize{\DPFigureLabelSize}
 %
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
-    font=\sffamily\fontsize{10}{11.5}\selectfont,
+    font=\sffamily\DPWorkBaseSize,
     every node/.style={align=center, inner sep=2pt,
-      font=\sffamily\fontsize{10}{11.5}\selectfont,
+      font=\sffamily\DPWorkBaseSize,
       execute at begin node=\linespread{0.9}\selectfont},
     coreBox/.style       ={draw=black!85, fill=black!18, rounded corners=3pt,
                            text width=2.8cm, minimum height=2.0cm, line width=0.8pt},
@@ -20,8 +24,8 @@
     branch/.style        ={->, line width=1.0pt, draw=black!85, >=Stealth},
     branchDashed/.style  ={->, dashed, line width=1.0pt, draw=black!85, >=Stealth},
     branchPlain/.style   ={line width=1.0pt, draw=black!85},
-    lblA/.style          ={midway, above=1pt, font=\sffamily\fontsize{10}{11.5}\selectfont},
-    lblB/.style          ={midway, below=1pt, font=\sffamily\fontsize{10}{11.5}\selectfont},
+    lblA/.style          ={midway, above=1pt, font=\sffamily\DPWorkBaseSize},
+    lblB/.style          ={midway, below=1pt, font=\sffamily\DPWorkBaseSize},
   ]
     % --- Centrální uzel ---
     \node[coreBox] (W) at (0,0) {\textbf{Pracovník /\\ domácnost}};
@@ -44,8 +48,8 @@
     % --- Sociální dialog (shora, obousměrný) ---
     \draw[flowDual]
       (W.north |- 0,2.4) -- (W.north)
-      node[at start, above=10pt, font=\sffamily\fontsize{10}{11.5}\selectfont]
-      {Sociální dialog (legislativa, \acs{KSVS}, \acs{KS}, odbory)};
+      node[at start, above=10pt, font=\sffamily\DPWorkBaseSize]
+      {Sociální dialog (legislativa, kolektivní vyjednávání)};
 
     % --- Výstupy (vpravo, sloupec sedmi větví) ---
     \def\xT{3.0}             % x-pozice svislého trunku
@@ -65,14 +69,14 @@
     \draw[trunkV] (\xT,\yA) -- (\xT,\yG);
 
     % Větve: terminální větve mají šipku; spotřeba pokračuje dál do DPH (bez šipky)
-    \draw[branchDashed] (\xT,\yA) -- (\xR,\yA) node[lblA] {zdanění práce};
-    \draw[branchDashed] (\xT,\yB) -- (\xR,\yB) node[lblA] {odvody na~\acs{SP} a~\acs{ZDRP}};
+    \draw[branchDashed] (\xT,\yA) -- (\xR,\yA) node[lblA] {daň z~příjmu};
+    \draw[branchDashed] (\xT,\yB) -- (\xR,\yB) node[lblA] {odvody na~\acs{SZ} a~\acs{ZdrP}};
     \draw[branchPlain]  (\xT,\yC) -- (\xR,\yC) node[lblA] {spotřeba};
     \draw[branchDashed] (\xR,\yC) -- (\xRD,\yC) node[lblA] {\acs{DPH}};
-    \draw[branch]       (\xT,\yD) -- (\xR,\yD) node[lblA] {úspory};
-    \draw[branch]       (\xT,\yE) -- (\xR,\yE) node[lblA] {investice};
-    \draw[branch]       (\xT,\yF) -- (\xR,\yF) node[lblA] {reprodukce a~péče o~rodinu};
-    \draw[branch]       (\xT,\yG) -- (\xR,\yG) node[lblA] {vývoz};
+    \draw[branch]       (\xT,\yD) -- (\xR,\yD) node[lblA] {vývoz};
+    \draw[branch]       (\xT,\yE) -- (\xR,\yE) node[lblA] {investice (vzdělávání)};
+    \draw[branch]       (\xT,\yF) -- (\xR,\yF) node[lblA] {reprodukce};
+    \draw[branch]       (\xT,\yG) -- (\xR,\yG) node[lblA] {zvyšování blahobytu};
   \end{tikzpicture}}
   \caption{\strPracovnikSystemCaption}
   \label{fig:pracovnik_system}
