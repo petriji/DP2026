@@ -146,9 +146,9 @@ _COLOR_PENSION = PALETTE[4]   # vermillion
 
 # ── PGF string substitutions ──────────────────────────────────────────────────
 STRINGS = {
-    "title": r"Rozložení čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}",
+    "title": r"Distribuce čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}",
     "xlabel": r"čistá mzda / výše důchodu [tis.~Kč/měsíc]",
-    "ylabel": r"počet osob na 1\,tis.\,Kč [tis.]",
+    "ylabel": r"podíl osob v~intervalu \SI{1}{tis.~Kč} [\si{\percent}]",
 }
 
 # ── CSSZ pension data URLs ────────────────────────────────────────────────────
@@ -555,14 +555,11 @@ print(f"Pension fit:       μ={mu_p:.4f}, σ={sig_p:.4f}  "
 pdf_wage    = truncated_lognormal_pdf(_X_GRID, mu_w, sig_w, min_wage_net)
 pdf_pension = truncated_lognormal_pdf(_X_GRID, mu_p, sig_p, MIN_PENSION)
 
-# Convert probability-density to absolute frequency density:
-#   freq(x) = N × pdf(x)      [osob / Kč]
-# When plotted with x in tis. Kč and y divided by 1 000 the y-axis shows
-# thousands of persons per 1-tis.-Kč bin, i.e. the number of people that
-# would fall into each 1 000 Kč-wide bracket:
-#   y_display = N × pdf(x) × 1 000 / 1 000  =  N × pdf(x)
-freq_wage    = N_WAGE    * pdf_wage     # tis. osob  per  tis. Kč bracket
-freq_pension = N_PENSION * pdf_pension  # tis. osob  per  tis. Kč bracket
+# Convert density [1/Kč] to percent share per 1,000 Kč bin (like EU distributions):
+#   y_display = pdf(x) × 1_000 × 100
+_Y_SCALE = 100_000.0
+freq_wage    = pdf_wage * _Y_SCALE
+freq_pension = pdf_pension * _Y_SCALE
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure -- combined frequency plot
@@ -599,8 +596,9 @@ ax.plot(
 )
 
 # ── Tooltips: medians + quantiles ────────────────────────────────────────────
-peak_wage = float(N_WAGE * lognormal_pdf(
+peak_wage = float(lognormal_pdf(
     np.array([med_wage_net]), mu_w, sig_w)[0])
+peak_wage *= _Y_SCALE
 _tooltip(
     ax, med_wage_net / 1_000, peak_wage,
     f"Čistá mzda {wage_year}: medián {med_wage_net:,.0f} Kč"
@@ -609,21 +607,22 @@ _tooltip(
 )
 for p, q_gross in wage_q.items():
     q_net = wage_q_net[p]
-    y_q = float(N_WAGE * lognormal_pdf(np.array([q_net]), mu_w, sig_w)[0])
+    y_q = float(lognormal_pdf(np.array([q_net]), mu_w, sig_w)[0]) * _Y_SCALE
     _tooltip(
         ax, q_net / 1_000, y_q,
         f"Čistá mzda {wage_year} P{int(p * 100)}: {q_net:,.0f} Kč"
         f" (hrubá {q_gross:,.0f} Kč)",
     )
 
-peak_pension = float(N_PENSION * lognormal_pdf(
+peak_pension = float(lognormal_pdf(
     np.array([med_pension]), mu_p, sig_p)[0])
+peak_pension *= _Y_SCALE
 _tooltip(
     ax, med_pension / 1_000, peak_pension,
     f"Starobní důchody {pension_year}: medián {med_pension:,.0f} Kč",
 )
 for p, q in pension_q.items():
-    y_q = float(N_PENSION * lognormal_pdf(np.array([q]), mu_p, sig_p)[0])
+    y_q = float(lognormal_pdf(np.array([q]), mu_p, sig_p)[0]) * _Y_SCALE
     _tooltip(
         ax, q / 1_000, y_q,
         f"Starobní důchody {pension_year} P{int(p * 100)}: {q:,.0f} Kč",
@@ -637,7 +636,7 @@ _add_vertical_ref(
 )
 _add_vertical_ref(
     ax, med_wage_net / 1_000,
-    f"medián~čisté~mzdy\n{_fmt_czk(int(round(med_wage_net)))}",
+    "",
     color=_COLOR_WAGE, alpha=0.8, linestyle=(0, (4, 3)),
 )
 _add_vertical_ref(
@@ -647,17 +646,46 @@ _add_vertical_ref(
 )
 _add_vertical_ref(
     ax, med_pension / 1_000,
-    f"medián~důchodu\n{_fmt_czk(int(round(med_pension)))}",
+    "",
     color=_COLOR_PENSION, alpha=0.8, linestyle=(0, (4, 3)),
 )
+
+# Median labels are intentionally shifted to fixed x-positions for readability.
+_ann_w = ax.annotate(
+    f"medián~čisté~mzdy\n{_fmt_czk(int(round(med_wage_net)))}",
+    xy=(42.0, 1),
+    xycoords=("data", "axes fraction"),
+    xytext=(0, 8),
+    textcoords="offset points",
+    fontsize=FONT_SIZE - 2,
+    color=_COLOR_WAGE,
+    va="bottom",
+    ha="center",
+)
+_ann_w.set_clip_on(False)
+
+_ann_p = ax.annotate(
+    f"medián~důchodu\n{_fmt_czk(int(round(med_pension)))}",
+    xy=(32.0, 1),
+    xycoords=("data", "axes fraction"),
+    xytext=(0, 8),
+    textcoords="offset points",
+    fontsize=FONT_SIZE - 2,
+    color=_COLOR_PENSION,
+    va="bottom",
+    ha="center",
+)
+_ann_p.set_clip_on(False)
 
 # ── Inline curve labels (left-aligned, above the line) ───────────────────────
 _pension_label_x = 25_000.0
 _wage_label_x    = 40_000.0
-y_pension_at = float(N_PENSION * lognormal_pdf(
+y_pension_at = float(lognormal_pdf(
     np.array([_pension_label_x]), mu_p, sig_p)[0])
-y_wage_at = float(N_WAGE * lognormal_pdf(
+y_wage_at = float(lognormal_pdf(
     np.array([_wage_label_x]), mu_w, sig_w)[0])
+y_pension_at *= _Y_SCALE
+y_wage_at *= _Y_SCALE
 ax.annotate(
     "starobní důchody",
     xy=(_pension_label_x / 1_000, y_pension_at),
@@ -681,7 +709,7 @@ ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.tick_params(axis="both", labelsize=FONT_SIZE - 1)
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
-ax.set_title(STRINGS["title"], fontsize=FONT_SIZE)
+ax.set_title(STRINGS["title"], fontsize=FONT_SIZE, pad=30)
 
 # Minor grid
 ax.minorticks_on()
