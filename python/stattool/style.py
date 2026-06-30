@@ -524,6 +524,24 @@ def _recenter_on_visual(fig: plt.Figure) -> None:
 
 # ── Save helper ───────────────────────────────────────────────────────────────
 
+def _safe_tight_layout(fig: plt.Figure, kwargs: dict) -> None:
+    """Apply tight_layout while ignoring the known incompatible-axes warning."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "error",
+            message=(
+                r"This figure includes Axes that are not compatible with "
+                r"tight_layout.*"
+            ),
+            category=UserWarning,
+        )
+        try:
+            fig.tight_layout(**kwargs)
+        except UserWarning:
+            # Some artists (e.g. colorbar/axes-grid constructs) are not
+            # tight_layout-compatible; keep export flow stable.
+            return
+
 def savefig(
     fig: plt.Figure,
     name: str,
@@ -549,10 +567,7 @@ def savefig(
     """
     if tight:
         _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
-        try:
-            fig.tight_layout(**_tl_kwargs)
-        except Exception:
-            pass  # some constrained-layout figures raise here --- safe to ignore
+        _safe_tight_layout(fig, _tl_kwargs)
         # Re-apply any subplots_adjust overrides (tight_layout may clobber hspace etc.)
         _spa = getattr(fig, '_subplots_adjust_kwargs', None)
         if _spa:
@@ -1002,10 +1017,7 @@ def savefig_pgf(
     """
     if tight:
         _tl_kwargs = getattr(fig, '_tight_layout_kwargs', {})
-        try:
-            fig.tight_layout(**_tl_kwargs)
-        except Exception:
-            pass
+        _safe_tight_layout(fig, _tl_kwargs)
         _spa = getattr(fig, '_subplots_adjust_kwargs', None)
         if _spa:
             fig.subplots_adjust(**_spa)
