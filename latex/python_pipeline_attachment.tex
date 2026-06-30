@@ -109,14 +109,18 @@ v \texttt{latex/texparts/python/}.
   \node[pipebox,right=of data] (analysis) {\texttt{analyses/*.py}\\clean + compute};
   \node[pipebox,right=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
   \node[storebox,right=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
-  \node[pipebox,right=of outputs] (latex) {\texttt{main.tex}\\commentary};
+  \node[pipebox,right=of outputs] (quality) {\texttt{stats\_analytics.py}\\data-quality audit};
+  \node[storebox,right=of quality] (reports) {\texttt{review/data\_quality\_report.*}};
+  \node[pipebox,below=of quality] (latex) {\texttt{main.tex}\\commentary};
 
   \draw[flow] (sources) -- (fetch);
   \draw[flow] (fetch) -- (data);
   \draw[flow] (data) -- (analysis);
   \draw[flow] (analysis) -- (style);
   \draw[flow] (style) -- (outputs);
-  \draw[flow] (outputs) -- (latex);
+  \draw[flow] (outputs) -- (quality);
+  \draw[flow] (quality) -- (reports);
+  \draw[weakflow] (quality) -- (latex);
 \end{tikzpicture}}
 \end{center}
 
@@ -132,7 +136,10 @@ Zachytává jen výstupy vložené jako \texttt{texparts/python/STEM} nebo
 \texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené kořeny \textit{(stems)}
 s registrem \texttt{python/analytics\_registry.toml}; spustí pouze ty skupiny,
 které jsou v textu skutečně použité a kterým chybí očekávaný výstup, případně
-ty, které byly vynuceny volbou \texttt{--force}.
+ty, které byly vynuceny volbou \texttt{--force}. Po dokončení generování navíc
+provede audit datové kvality: zkontroluje explicitnost roku v popiscích,
+vypíše varování pro fallback cesty a upozorní na použití jiného roku než je
+cílový rok dat.
 
 \begin{center}
 \resizebox{0.92\linewidth}{!}{%
@@ -141,11 +148,15 @@ ty, které byly vynuceny volbou \texttt{--force}.
   \node[pipebox,text width=34mm,right=of scan] (stems) {aktivní stemmy\\\texttt{texparts/python}};
   \node[pipebox,text width=34mm,right=of stems] (registry) {match v\\\texttt{analytics\_registry.toml}};
   \node[pipebox,text width=34mm,right=of registry] (run) {spustit skript\\jen když chybí výstup};
+  \node[pipebox,text width=34mm,below=of run] (audit) {audit roku dat\\a fallback varování};
   \node[storebox,text width=34mm,below=of registry] (skip) {neaktivní nebo kompletní\\skupiny se přeskočí};
+  \node[storebox,text width=34mm,left=of audit] (report) {\texttt{review/data\_quality\_report.*}};
 
   \draw[flow] (scan) -- (stems);
   \draw[flow] (stems) -- (registry);
   \draw[flow] (registry) -- (run);
+  \draw[flow] (run) -- (audit);
+  \draw[flow] (audit) -- (report);
   \draw[weakflow] (registry) -- (skip);
 \end{tikzpicture}}
 \end{center}
@@ -155,7 +166,24 @@ cd python
 bash run.sh stats_analytics.py              # doplni chybejici aktivni vystupy
 bash run.sh stats_analytics.py --list       # vypise stemmy nalezene v LaTeXu
 bash run.sh stats_analytics.py --force all  # pregeneruje vsechny aktivni skupiny
+bash run.sh stats_analytics.py --target-year 2025  # explicitni audit proti cili 2025
 \end{pipelinecode}
+
+Datová kvalita je od května 2026 součástí stejného kroku, nikoli samostatná
+ruční kontrola. Výchozí cílový rok je 2025; lze jej změnit volbou
+\texttt{--target-year} nebo proměnnou prostředí \texttt{DP\_TARGET\_YEAR}.
+Analytické skripty mají používat helpery \texttt{warn\_fallback(...)} a
+\texttt{warn\_non\_target\_year(...)} z modulu \texttt{stattool.data\_quality},
+takže se do logu promítne každý sekundární zdroj, hardcoded hodnota, expertní
+odhad i použití jiného roku než 2025.
+
+Výstupem tohoto kroku nejsou jen varovné řádky v terminálu, ale i dva soubory
+pro transparentní deklaraci v popiscích a komentářích:
+
+\begin{itemize}
+  \item \texttt{review/data\_quality\_report.json}: strojově čitelný přehled auditovaných stemmů.
+  \item \texttt{review/data\_quality\_report.md}: stručný report pro lidskou revizi.
+\end{itemize}
 
 \section*{Smlouva mezi Pythonem a LaTeXem}
 Registr je jediným místem, kde se analytický skript mapuje na výstupy. Klíč
@@ -232,6 +260,13 @@ cd latex
 RUN_PYTHON_ANALYTICS=1 latexmk -pdf -interaction=nonstopmode -file-line-error -outdir=build main.tex
 pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=build python_pipeline_attachment.tex
 \end{pipelinecode}
+
+Je-li recept spuštěn z VS Code, analytics log se současně ukládá do
+\texttt{latex/build/stats-analytics.log} (případně
+\texttt{stats-analytics-force.log}). To je důležité právě pro datovou kvalitu:
+fallback varování a upozornění na použití jiného roku než 2025 jsou dohledatelná
+jak v terminálovém výstupu, tak ve stálém logu a v reportech v adresáři
+\texttt{review/}.
 
 Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
 \texttt{texparts/python} výstup se řeší během Pythonu, chyba v citaci nebo makru
