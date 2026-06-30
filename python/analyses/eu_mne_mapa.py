@@ -1,15 +1,16 @@
 r"""
-Employment share in foreign-controlled multinational enterprises -- EU choropleth.
+Employment in enterprise groups -- EU choropleth map.
 
-Shows the percentage of employment in enterprises controlled by foreign parents
-(inward FATS) as a share of total employment.  Used in the labour-market-context
-section to document CZ's high attractiveness to multinational employers, which
-coexists with below-average wage levels and reinforces the structural wage argument.
+Shows the share of employment in multinational enterprises as a percentage
+of total employment. A high share signals a labour market dominated by
+large corporate structures.
+Used in the labour-market-context section to document that CZ has a large
+share of employment in corporate group structures, a situation associated
+with stronger resistance to sector-level collective bargaining.
 
-Data source: Eurostat ``egr_emp`` (Foreign Affiliates Statistics, inward)
-  Enterprise group type: FOR_C (foreign-controlled)
-  Scope: all NACE activities (TOTAL), all size classes (TOTAL)
-  Unit: PC_EMP_TOT (% of total employment)
+Data source: Eurostat ``egr_emp``
+  Dimensions: freq · size_emp · unit · geo
+  Filter: unit=PC_EMP (% of total employment), size_emp=TOTAL (all sizes)
 
 Output
 ------
@@ -48,92 +49,28 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# egr_emp: Employment in enterprise groups (inward FATS)
-# Download without dimension filter — the dimension names and values are
-# printed below on first run so the filter dict can be verified/adjusted.
 path = fetch_eurostat("egr_emp", start_period=2015)
 
 # ── 2. Parse & filter ─────────────────────────────────────────────────────────
 raw = pd.read_csv(path, na_values=["", ":", ": "])
+raw = raw.rename(columns={"TIME_PERIOD": "time", "OBS_VALUE": "value"})
+raw["geo"] = raw["geo"].replace({"EL": "GR", "UK": "GB"})
 
-# Debug: inspect available dimension values on first run.
-# Adjust FILTERS below if column names differ from what is printed.
-_meta_cols = {"DATAFLOW", "LAST UPDATE", "OBS_VALUE", "OBS_FLAG",
-              "CONF_STATUS", "TIME_PERIOD"}
-print("=== egr_emp: available columns ===")
-for col in raw.columns:
-    if col not in _meta_cols:
-        uniq = sorted(raw[col].dropna().unique())[:12]
-        print(f"  {col}: {uniq}")
-
-# ── Filter for foreign-controlled enterprises, total NACE, total size class,
-#    % of total employment.  Adjust these values if the debug output above
-#    shows different codes (e.g. 'egr_grp' instead of 'ent_grp').
-FILTERS = {
-    "unit": "PC_EMP_TOT",   # % of total employment
-    "nace_r2": "TOTAL",     # all NACE activities
-    "sizecls": "TOTAL",     # all size classes
-}
-# The enterprise-group-type column selects foreign-controlled enterprises.
-# Try common Eurostat names in order of likelihood:
-_type_col = None
-for _candidate in ("ent_grp", "egr_grp", "egr_ent", "entity", "ctrl_grp"):
-    if _candidate in raw.columns:
-        _type_col = _candidate
-        break
-
-if _type_col is None:
-    raise RuntimeError(
-        "Cannot find the enterprise-group-type column in egr_emp.\n"
-        "Available columns: " + ", ".join(raw.columns.tolist()) + "\n"
-        "Add the correct column name to the _candidate list above."
-    )
-
-print(f"\nUsing enterprise-type column: '{_type_col}'")
-print(f"Available {_type_col} values: {sorted(raw[_type_col].dropna().unique())}")
-
-# Foreign-controlled: try common value codes in order of likelihood:
-_for_c_value = None
-for _v in ("FOR_C", "FOR_CTRL", "FOREIGN", "INWARD", "FC"):
-    if _v in raw[_type_col].values:
-        _for_c_value = _v
-        break
-
-if _for_c_value is None:
-    raise RuntimeError(
-        f"Cannot find the foreign-controlled enterprise value in column '{_type_col}'.\n"
-        f"Available values: {sorted(raw[_type_col].dropna().unique())}\n"
-        "Add the correct value to the _for_c_value list above."
-    )
-
-print(f"Using enterprise-type value: '{_for_c_value}'")
-
-# Apply filters
-FILTERS[_type_col] = _for_c_value
-
-df = raw.rename(columns={"TIME_PERIOD": "time", "OBS_VALUE": "value"})
-df["geo"] = df["geo"].replace({"EL": "GR", "UK": "GB"})
-
-for col, val in FILTERS.items():
-    if col in df.columns:
-        df = df[df[col] == val]
-
+# Filter: % of total employment in enterprise groups (all sizes)
+df = raw[(raw["unit"] == "PC_EMP") & (raw["size_emp"] == "TOTAL")].copy()
 df = df[["geo", "time", "value"]].dropna(subset=["value"])
 
 if df.empty:
-    raise RuntimeError(
-        "Filtered DataFrame is empty — check FILTERS dict above against the "
-        "debug output and verify the dataset downloaded correctly."
-    )
+    raise RuntimeError("Filtered DataFrame is empty — check egr_emp download.")
 
 ds = Dataset(
     df,
-    name="Podíl zaměstnanosti v zahraničních podnicích",
-    unit="% z celkové zaměstnanosti",
+    name="Podíl zaměstnanosti v podnikových skupinách",
+    unit="% celkové zaměstnanosti",
     source_url="Eurostat/egr_emp",
 )
 
-print(f"\nCountries: {len(ds.countries)}  |  Years: {ds.years}")
+print(f"Countries: {len(ds.countries)}  |  Years: {ds.years}")
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
@@ -146,8 +83,8 @@ _vmax = max(_values.values())
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Zaměstnanost v zahraničních podnicích ({ds.latest_year})",
-    "colorbar_label": r"podíl zaměstnanosti [\%]",
+    "title": f"Zaměstnanost v podnikových skupinách ({ds.latest_year})",
+    "colorbar_label": r"podíl zaměstnanosti v podnik. skupinách [\%]",
 }
 
 fig = choropleth(
@@ -172,15 +109,14 @@ savefig_pgf(fig, "eu_mne_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "eu_mne_mapa",
     caption=(
-        r"Podíl zaměstnanosti v~podnicích se zahraniční kontrolou na~celkové "
-        r"zaměstnanosti, mapa Evropy, "
-        f"{ds.latest_year}."
+        r"Podíl zaměstnanosti v~nadnárodních korporacích na~celkové zaměstnanosti, "
+        r"mapa Evropy, "
+        f"{ds.latest_year}. Zdroj dat: Eurostat~\\cite{{{CITE_KEY}}}."
     ),
     label="fig:eu_mne_mapa",
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
-print("Done.")
+print("\nDone: eu_mne_mapa")
