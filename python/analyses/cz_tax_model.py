@@ -80,6 +80,7 @@ from cz_pension_model import (
     PAUSALNI_DAN_TOTAL,
     MIN_WAGE_TOTAL_COST,
     MEDIAN_EMP_TOTAL_COST,
+    POVERTY_THRESHOLD,
     OSVC_TYPES,
     PASMO_COLORS,
     _add_vertical_ref,
@@ -489,8 +490,8 @@ def plot_tax_wedge_vs_income(
 
     for expense_rate, _label, color, _max_pasmo in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
-        short = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
-        ax.annotate(short, (x_end / 1_000, tw_end_o),
+        osvc_label = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
+        ax.annotate(osvc_label, (x_end / 1_000, tw_end_o),
                     xytext=(4, 0), textcoords="offset points",
                     fontsize=FONT_SIZE - 2, color=color, va="center")
 
@@ -554,14 +555,14 @@ def plot_net_income_vs_income(
     ax.set_ylim(bottom=0)
 
     # Hranice chudoby
-    poverty_kczk = 18.6  # 18 600 Kč (2025)
-    ax.axhline(poverty_kczk, color="#555555", linewidth=0.8,
-               linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
+    poverty_kczk = POVERTY_THRESHOLD / 1_000
+    ax.axhline(poverty_kczk, color="#aa0000", linewidth=0.8,
+               linestyle=(0, (3, 4)), alpha=0.7, zorder=1)
     ax.annotate(
-        "Hranice chudoby (18\u202f600\u00a0Kč, 2025)",
+        f"Hranice chudoby ({_fmt_czk(POVERTY_THRESHOLD)}, 2025)",
         xy=(MIN_WAGE_TOTAL_COST / 1_000, poverty_kczk),
         xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
+        fontsize=FONT_SIZE - 2, color="#aa0000", va="bottom",
     )
 
     _bottom_legend(fig, c_emp)
