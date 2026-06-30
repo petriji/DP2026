@@ -399,8 +399,11 @@
   \ifCTUenglish List of Abbreviations\else
     Seznam pou\v{z}it\'ych zkratek\fi}
 \newcommand\CTUvelname{%
-  \ifCTUenglish List of Variables and Indices\else
-    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych a\nobreakspace{}index\r{u}\fi}
+  \ifCTUenglish List of Variables\else
+    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych\fi}
+\newcommand\CTUidxname{%
+  \ifCTUenglish List of Indices\else
+    Seznam pou\v{z}it\'ych index\r{u}\fi}
 \newcommand\CTUbibname{%
   \ifCTUenglish Bibliography\else
     Seznam pou\v{z}it\'e literatury\fi}
@@ -1848,6 +1851,14 @@
     }
   \NewDocumentCommand{\CTUifVariableListNonemptyTF}{mm}
     {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
+  \cs_new_protected:Npn \CTU_if_index_list_nonempty:TF #1#2
+    {
+      \group_begin:
+        \keys_set:nn {acro/list} { include = idx , display = used }
+        \acronymsmapTF {} { \group_end: #1 } { \group_end: #2 }
+    }
+  \NewDocumentCommand{\CTUifIndexListNonemptyTF}{mm}
+    {\CTU_if_index_list_nonempty:TF {#1}{#2}}
   \ExplSyntaxOff
   % --------------------------------------------------------------------------
   % Index property
