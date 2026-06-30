@@ -1,18 +1,33 @@
+use File::Find qw(find);
+
 $out_dir = 'build';
 
+# Resolve current latexmk root jobname (without path / extension).
+# Falls back to 'main' when latexmk has not initialised $root_filename yet.
+sub ctu_jobname {
+    my $job = $root_filename // 'main';
+    $job =~ s{\\}{/}g;
+    $job =~ s{.*/}{};
+    $job =~ s{\.tex\z}{};
+    $job = 'main' if !defined($job) || $job eq '';
+    return $job;
+}
+
+sub ctu_roottex {
+    return ctu_jobname() . '.tex';
+}
+
 # ── Auto-generate figures before LaTeX build ──────────────────────────────────
-# Calls python/stats_analytics.py which is a fast no-op when all PDFs and .tex
-# snippets already exist (e.g. after a git clone).  Only runs Python scripts
-# when a file is missing or --force is used.
+# Calls python/stats_analytics.py to regenerate figure PDFs and .tex snippets.
+# Skipped by default — run only when RUN_PYTHON_ANALYTICS=1 is set.
+# Use the "Analytics + latexmk" VS Code recipe to trigger this automatically.
 #
 # The venv is resolved in order:
 #   1. python/.venv   (created by python/setup_venv.sh, preferred)
 #   2. ~/.venvs/dp_thesis  (legacy location)
 #   3. plain python3  (system Python, if deps are installed globally)
-#
-# To skip this step entirely, set SKIP_PYTHON_ANALYTICS=1 in the environment.
 {
-    unless ($ENV{SKIP_PYTHON_ANALYTICS}) {
+    if ($ENV{RUN_PYTHON_ANALYTICS}) {
         my $proj   = $ENV{PWD};   # latex/ directory when latexmk is run there
         my $script = "$proj/../python/stats_analytics.py";
 
@@ -32,11 +47,32 @@ $out_dir = 'build';
 }
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
+$biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source dir, not build/
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
 # The -shell-escape flag is needed only when the tikzextern option is active;
 # uncomment the second line below and comment the first when required.
-$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S';
+$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -cnf-line=extra_mem_bot=8000000 -cnf-line=extra_mem_top=8000000 %O %S';
 # $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -shell-escape %O %S';
+
+# Write generated TeX inputs only when their byte content changes.  latexmk
+# tracks these .tmp files after TeX reads them; rewriting identical content on
+# every pass creates a false rerun loop and can exhaust latexmk's pass limit.
+sub ctu_write_if_changed {
+    my ($target, $content) = @_;
+    mkdir $out_dir unless -d $out_dir;
+    if (-f $target && open my $in, '<', $target) {
+        binmode $in;
+        local $/;
+        my $old = <$in>;
+        close $in;
+        return 0 if defined $old && $old eq $content;
+    }
+    open my $out, '>', $target or die "Cannot write $target: $!\n";
+    binmode $out;
+    print $out $content;
+    close $out;
+    return 1;
+}
 
 # Generate git author/email metadata files before each compilation.
 # CTUthesis.cls reads these via \InputIfFileExists after inputenc is loaded.
@@ -48,13 +84,9 @@ $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S
     chomp $author;  chomp $email;
     $author ||= 'Name Surname';
     $email  ||= 'address@e-mail.xy';
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $fh, '>', "$out_dir/main-gitauthor.tmp") {
-        print $fh '\gdef\@author{' . $author . "}\n";
-    }
-    if (open my $fh2, '>', "$out_dir/main-gitemail.tmp") {
-        print $fh2 '\gdef\@email{' . $email . "}\n";
-    }
+    my $job = ctu_jobname();
+    ctu_write_if_changed("$out_dir/$job-gitauthor.tmp", '\gdef\@author{' . $author . "}\n");
+    ctu_write_if_changed("$out_dir/$job-gitemail.tmp",  '\gdef\@email{'  . $email  . "}\n");
 }
 
 # ---------------------------------------------------------------------------
@@ -70,27 +102,69 @@ sub ctu_needs_update {
     return 0;
 }
 
+sub ctu_all_tex_sources {
+    my @sources = (ctu_roottex());
+    if (-d 'texparts') {
+        find(
+            sub {
+                return unless -f $_;
+                return unless /\.tex\z/;
+                push @sources, $File::Find::name;
+            },
+            'texparts'
+        );
+    }
+    return @sources;
+}
+
+sub ctu_prepare_normostrana_main {
+    my ($source, $target) = @_;
+    open my $in, '<', $source or die "Cannot read $source: $!\n";
+    open my $out, '>', $target or die "Cannot write $target: $!\n";
+
+    my $in_preamble = 1;
+    while (my $line = <$in>) {
+        if ($in_preamble && $line =~ /^\s*\\begin\{document\}/) {
+            $in_preamble = 0;
+        }
+        if ($in_preamble && $line =~ /^\s*\\input\{texparts\/references\/acro(?:_variables)?\.tex\}\s*$/) {
+            print {$out} "% $line";
+            next;
+        }
+        print {$out} $line;
+    }
+
+    close $out;
+    close $in;
+}
+
 # Auto-compute normostrana (Czech standard pages = 1800 chars) using texcount.
 # The result is written to build/main-normostrana.tmp and loaded by CTUthesis.cls
 # at \AtBeginDocument only when \normostrana{} has NOT been set manually.
 #
 # Only body text chars are counted (N from "N+M+P" = text, no headers/captions),
-# and only within regions NOT wrapped in %TC:ignore...%TC:endignore in main.tex
-# (so front matter, TOC, and acronym lists are excluded from the count).
+# and only within regions NOT wrapped in %TC:ignore...%TC:endignore in main.tex.
+# texcount still counts preamble \input files with -inc, so the temporary copy
+# used here comments out the acronym declaration inputs before counting.
 # This matches the Czech normostrana standard (body text only, ČSN ISO 5966).
 #
 # texcount is skipped when no .tex file is newer than the cached tmp — this
 # avoids running it on every incremental recompile that touches only .bib or
 # other non-.tex files.
 {
-    my $tmp = "$out_dir/main-normostrana.tmp";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-normostrana.tmp";
+    my @sources = ctu_all_tex_sources();
     mkdir $out_dir unless -d $out_dir;
-    if (ctu_needs_update($tmp, 'main.tex', glob('texparts/*.tex'))) {
-        my $tc = `texcount -brief -char -inc main.tex 2>/dev/null`;
+    if (ctu_needs_update($tmp, @sources)) {
+        my $root_tex = ctu_roottex();
+        my $texcount_main = "$job.normostrana.texcount.tmp";
+        ctu_prepare_normostrana_main($root_tex, $texcount_main);
+        my $tc = `texcount -brief -char -inc "$texcount_main" 2>/dev/null`;
+        unlink $texcount_main;
         # texcount outputs one "N+M+P (…) File: …" line per file and a final
         # "N+M+P … File(s) total:" summary.  Grab the LAST N+M+P match so we
-        # always use the grand total (sum across all -inc'd files) and %TC:ignore
-        # regions are already excluded by texcount before the sum is printed.
+        # always use the grand total (sum across all -inc'd files).
         # Use body chars only (first number N = text, excludes headers / captions).
         my $total = 0;
         while ($tc =~ /(\d+)\+\d+\+\d+/g) { $total = $1; }
@@ -98,9 +172,7 @@ sub ctu_needs_update {
             # Round to nearest normostrana (round half-up).
             my $normo = int(($total + 900) / 1800);
             $normo = 1 if $normo < 1;
-            if (open my $fh, '>', $tmp) {
-                print $fh '\normostrana{' . $normo . "}\n";
-            }
+            ctu_write_if_changed($tmp, '\normostrana{' . $normo . "}\n");
         }
     }
 }
@@ -118,7 +190,8 @@ sub ctu_needs_update {
         return $1 if $tc =~ /(\d+)\+\d+\+\d+/;
         return -1;
     }
-    my $tmp = "$out_dir/main-textchecks.tmp";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-textchecks.tmp";
     mkdir $out_dir unless -d $out_dir;
     my @srcs = ('texparts/mandatory/abstract.tex', 'texparts/mandatory/abstract_en.tex',
                 'texparts/mandatory/keywords.tex', 'texparts/mandatory/keywords_en.tex');
@@ -127,14 +200,13 @@ sub ctu_needs_update {
         my $nae = ctu_texcount_chars('texparts/mandatory/abstract_en.tex');
         my $nk  = ctu_texcount_chars('texparts/mandatory/keywords.tex');
         my $nke = ctu_texcount_chars('texparts/mandatory/keywords_en.tex');
-        if (open my $fh, '>', $tmp) {
-            print $fh "\\makeatletter\n";
-            print $fh '\gdef\@CTUabstractchars{'   . $na  . "}\n";
-            print $fh '\gdef\@CTUabstractenchars{' . $nae . "}\n";
-            print $fh '\gdef\@CTUkeywordschars{'   . $nk  . "}\n";
-            print $fh '\gdef\@CTUkeywordsenchars{' . $nke . "}\n";
-            print $fh "\\makeatother\n";
-        }
+        my $content = "\\makeatletter\n"
+                    . '\gdef\@CTUabstractchars{'   . $na  . "}\n"
+                    . '\gdef\@CTUabstractenchars{' . $nae . "}\n"
+                    . '\gdef\@CTUkeywordschars{'   . $nk  . "}\n"
+                    . '\gdef\@CTUkeywordsenchars{' . $nke . "}\n"
+                    . "\\makeatother\n";
+        ctu_write_if_changed($tmp, $content);
     }
 }
 
@@ -148,20 +220,19 @@ sub ctu_needs_update {
 # of the current build.  The mtime guard ensures the file is only rewritten
 # when the .bbl has actually changed.
 sub ctu_update_citcount {
-    my $bbl = "$out_dir/main.bbl";
-    my $tmp = "$out_dir/main-citcount.tmp";
+    my $job = ctu_jobname();
+    my $bbl = "$out_dir/$job.bbl";
+    my $tmp = "$out_dir/$job-citcount.tmp";
     return unless ctu_needs_update($tmp, $bbl);
     my $count = 0;
     if (-f $bbl && open my $fh, '<', $bbl) {
         while (<$fh>) { $count++ if /\\entry\{/; }
         close $fh;
     }
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $out, '>', $tmp) {
-        print $out "\\makeatletter\n";
-        print $out '\gdef\@CTUcitcount{' . $count . "}\n";
-        print $out "\\makeatother\n";
-    }
+    my $content = "\\makeatletter\n"
+                . '\gdef\@CTUcitcount{' . $count . "}\n"
+                . "\\makeatother\n";
+    ctu_write_if_changed($tmp, $content);
 }
 add_hook('before_xlatex', \&ctu_update_citcount);
 
@@ -173,6 +244,7 @@ add_hook('before_xlatex', \&ctu_update_citcount);
 # Counts:
 #   figures      — \contentsline {figure} entries in build/main.lof
 #   tables       — \contentsline {table}  entries in build/main.lot
+#                  (fallback: corresponding \@writefile entries in build/main.aux)
 #   attachments  — \item lines in texparts/references/list_attachments.tex
 #                  (simple regex; ignores commented-out lines)
 # Git:
@@ -183,22 +255,32 @@ add_hook('before_xlatex', \&ctu_update_citcount);
 #   exposed so the class can choose.  The user may override either via
 #   \posterrepo{}/\posterrepotag{} in the poster preamble.
 sub ctu_update_poster_stats {
-    my $tmp = "$out_dir/main-stats.tmp";
-    my $lof = "$out_dir/main.lof";
-    my $lot = "$out_dir/main.lot";
+    my $job = ctu_jobname();
+    my $tmp = "$out_dir/$job-stats.tmp";
+    my $lof = "$out_dir/$job.lof";
+    my $lot = "$out_dir/$job.lot";
+    my $aux = "$out_dir/$job.aux";
     my $att = 'texparts/references/list_attachments.tex';
 
     # mtime guard: rerun when any source is newer than the tmp.
-    return unless ctu_needs_update($tmp, $lof, $lot, $att);
+    return unless ctu_needs_update($tmp, $lof, $lot, $aux, $att);
 
     my $nfig = 0;
     if (-f $lof && open my $fh, '<', $lof) {
         while (<$fh>) { $nfig++ if /\\contentsline\s*\{figure\}/; }
         close $fh;
     }
+    if ($nfig == 0 && -f $aux && open my $fh, '<', $aux) {
+        while (<$fh>) { $nfig++ if /\\\@writefile\{lof\}\{\\contentsline\s*\{figure\}/; }
+        close $fh;
+    }
     my $ntab = 0;
     if (-f $lot && open my $fh, '<', $lot) {
         while (<$fh>) { $ntab++ if /\\contentsline\s*\{table\}/; }
+        close $fh;
+    }
+    if ($ntab == 0 && -f $aux && open my $fh, '<', $aux) {
+        while (<$fh>) { $ntab++ if /\\\@writefile\{lot\}\{\\contentsline\s*\{table\}/; }
         close $fh;
     }
     my $natt = 0;
@@ -228,16 +310,20 @@ sub ctu_update_poster_stats {
     my $sha = `git rev-parse --short HEAD 2>/dev/null` // '';
     chomp $sha;
 
-    mkdir $out_dir unless -d $out_dir;
-    if (open my $out, '>', $tmp) {
-        print $out "\\makeatletter\n";
-        print $out '\gdef\@CTUnfigures{'     . $nfig . "}\n";
-        print $out '\gdef\@CTUntables{'      . $ntab . "}\n";
-        print $out '\gdef\@CTUnattachments{' . $natt . "}\n";
-        print $out '\gdef\@CTUgitrepo{'      . $repo . "}\n";
-        print $out '\gdef\@CTUgittag{'       . $tag  . "}\n";
-        print $out '\gdef\@CTUgitsha{'       . $sha  . "}\n";
-        print $out "\\makeatother\n";
-    }
+    my $content = "\\makeatletter\n"
+                . '\gdef\@CTUnfigures{'     . $nfig . "}\n"
+                . '\gdef\@CTUntables{'      . $ntab . "}\n"
+                . '\gdef\@CTUnattachments{' . $natt . "}\n"
+                . '\gdef\@CTUgitrepo{'      . $repo . "}\n"
+                . '\gdef\@CTUgittag{'       . $tag  . "}\n"
+                . '\gdef\@CTUgitsha{'       . $sha  . "}\n"
+                . "\\makeatother\n";
+    ctu_write_if_changed($tmp, $content);
 }
 add_hook('before_xlatex', \&ctu_update_poster_stats);
+
+# ── Preserve main.aux for post-build tools ────────────────────────────────────
+# After every successful main.tex build, copy build/main.aux to
+# build/main_for_tools.aux so external scripts (e.g. stats_analytics.py)
+# can resolve figure numbers even when the build artifacts are cleaned.
+$success_cmd = 'cp build/main.aux build/main_for_tools.aux 2>/dev/null; true';
