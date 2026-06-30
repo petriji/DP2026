@@ -35,6 +35,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import COUNTRY_COLORS, FONT_SIZE
+from statout.timeline import EU27
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
     apply_style_pgf,
@@ -57,9 +58,14 @@ START_YEAR = 2015
 
 # X-axis evaluation grid (PPS / equivalent adult / year)
 X_MIN, X_MAX = 0.0, 80_000.0
-X_GRID = np.linspace(X_MIN, X_MAX, 2_000)
+# 100 points is plenty for a smooth log-normal — keeps PGF compile light.
+X_GRID = np.linspace(X_MIN, X_MAX, 100)
 # Bin width used to convert density → % share per bin on the y-axis
 BIN_WIDTH = 1_000.0  # PPS
+
+# Background EU27 countries (drawn as thin grey lines, no fill).
+# Eurostat uses "EL" for Greece, not "GR".
+BG_COUNTRIES = sorted((set(EU27) - set(COUNTRIES)) - {"GR"} | {"EL"})
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
@@ -83,8 +89,9 @@ def lognormal_pdf(x: np.ndarray, mu: float, sigma: float) -> np.ndarray:
     )
 
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-geo_filter = "+".join(COUNTRIES)
+# ── 1. Download (foreground + EU27 background in one fetch) ──────────────────
+ALL_GEO = sorted(set(COUNTRIES) | set(BG_COUNTRIES))
+geo_filter = "+".join(ALL_GEO)
 quant_filter = "+".join(DECILES)
 path = fetch_eurostat(
     "ilc_di01",
@@ -112,19 +119,23 @@ snap = raw[raw.apply(lambda r: r["year"] == latest.get(r["geo"], -1), axis=1)]
 # ── 3. Fit log-normal per country ─────────────────────────────────────────────
 fits: dict[str, tuple[float, float]] = {}
 medians: dict[str, float] = {}
-for country in COUNTRIES:
+decile_values: dict[str, np.ndarray] = {}
+for country in sorted(set(COUNTRIES) | set(BG_COUNTRIES)):
     sub = snap[snap["geo"] == country].set_index("quantile")["OBS_VALUE"]
     if len(sub) < len(DECILES):
-        print(f"  {country}: missing deciles, skipping")
+        if country in COUNTRIES:
+            print(f"  {country}: missing deciles, skipping")
         continue
-    vals = np.array([sub[d] for d in DECILES])
+    vals = np.array([float(sub[d]) for d in DECILES])
     mu, sigma = fit_lognormal(vals)
     fits[country] = (mu, sigma)
     medians[country] = float(np.exp(mu))
-    print(
-        f"  {country} ({latest[country]}): μ={mu:.3f}, σ={sigma:.3f}, "
-        f"medián≈{medians[country]:,.0f} PPS"
-    )
+    decile_values[country] = vals
+    if country in COUNTRIES:
+        print(
+            f"  {country} ({latest[country]}): μ={mu:.3f}, σ={sigma:.3f}, "
+            f"medián≈{medians[country]:,.0f} PPS"
+        )
 
 # ── 4. Plot ───────────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=cm2in(16, 10))
@@ -133,6 +144,27 @@ x_thousands = X_GRID / 1_000.0  # display x in thousand PPS
 # Convert density [1/PPS] to % of population per BIN_WIDTH-wide bin
 y_scale = BIN_WIDTH * 100.0
 
+# Background: other EU27 countries as thin grey lines (no fill, no markers)
+for country in BG_COUNTRIES:
+    if country not in fits:
+        continue
+    mu, sigma = fits[country]
+    pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
+    ax.plot(
+        x_thousands, pdf,
+        color="#999999", linewidth=0.5, alpha=0.45, zorder=1,
+    )
+
+
+def _tooltip(ax, x, y, text):
+    ax.text(
+        x, y,
+        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
+        fontsize=FONT_SIZE,
+        ha="center", va="center", clip_on=True, zorder=10,
+    )
+
+
 handles = []
 for country in COUNTRIES:
     if country not in fits:
@@ -140,30 +172,32 @@ for country in COUNTRIES:
     mu, sigma = fits[country]
     pdf = lognormal_pdf(X_GRID, mu, sigma) * y_scale
     color = COUNTRY_COLORS.get(country, "#888888")
-    ax.fill_between(x_thousands, pdf, alpha=0.10, color=color, zorder=1)
+    ax.fill_between(x_thousands, pdf, alpha=0.10, color=color, zorder=2)
     line, = ax.plot(
         x_thousands, pdf,
         color=color, linewidth=1.6,
         label=f"\\acs{{geo-{country}}}",
-        zorder=3,
+        zorder=4,
     )
     handles.append(line)
     # Median reference line
     ax.axvline(
         medians[country] / 1_000.0,
-        color=color, linewidth=0.8, linestyle="--", alpha=0.55, zorder=2,
+        color=color, linewidth=0.8, linestyle="--", alpha=0.55, zorder=3,
     )
     # Tooltip at the median peak
     peak_y = lognormal_pdf(np.array([medians[country]]), mu, sigma)[0] * y_scale
-    ax.text(
-        medians[country] / 1_000.0,
-        peak_y,
-        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{"
-        f"{country} {latest[country]}: median {medians[country]:,.0f} PPS"
-        r"}",
-        fontsize=FONT_SIZE,
-        ha="center", va="center", clip_on=True, zorder=10,
+    _tooltip(
+        ax, medians[country] / 1_000.0, peak_y,
+        f"{country} {latest[country]}: median {medians[country]:,.0f} PPS",
     )
+    # Tooltips at each decile cut-off (D1..D9) — invisible markers carrying data
+    for d, p, q in zip(DECILES, PROBS, decile_values[country]):
+        y_q = lognormal_pdf(np.array([q]), mu, sigma)[0] * y_scale
+        _tooltip(
+            ax, q / 1_000.0, y_q,
+            f"{country} {latest[country]} {d} (p={p:.1f}): {q:,.0f} PPS",
+        )
 
 ax.set_xlabel(
     "ekvivalizovaný čistý disponibilní příjem [tis.\\,PPS/rok]",
@@ -214,6 +248,7 @@ save_figure_tex_pgf(
         "odstraněn vliv cenových hladin. Křivky jsou log-normální fit "
         "metodou nejmenších čtverců na~devíti decilových hranicích "
         "(D1\\,--\\,D9, ukazatel TC). "
+        "Šedé křivky v~pozadí: ostatní státy \\ac{EU}\\,27. "
         "Osa~y udává podíl domácností v~intervalu šíře \\SI{1000}{\\pps}; "
         "přerušované svislé čáry označují mediány. "
         "Mediány: \\strEuPrijemDistribuceMediany"
