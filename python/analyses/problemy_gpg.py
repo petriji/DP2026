@@ -155,7 +155,7 @@ fig_a = choropleth(
 )
 apply_geo_labels_pgf(fig_a.axes[0], halo=True, values=_values_gpg, tooltip_fmt="{:.1f}")
 
-savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP)
+savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "problemy_gpg_mapa",
     caption=(
@@ -166,6 +166,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_gpg",
     strings=STRINGS_GPG_MAP,
+    nudge_labels=NUDGE_LABELS,
 )
 
 # ==============================================================================
@@ -263,16 +264,16 @@ for country in COUNTRIES:
     common = sub_f.index.intersection(sub_m.index)
     if len(common) == 0:
         continue
-    gap = ((sub_m.loc[common] - sub_f.loc[common]) / sub_m.loc[common] * 100.0).sort_index()
+    gap = (sub_m.loc[common] - sub_f.loc[common]).sort_index()
     ax_b.plot(gap.index, gap.values, color=color, linewidth=1.8, zorder=3)
-    # Line-end country label (nudgeable via \Nudge…{} macros in TeX).
+    # Line-end country label (nudgeable via \Nudge… macros in TeX).
     last_rank = gap.index.max()
     ax_b.annotate(
         rf"\acs{{geo-{country}}}",
         xy=(last_rank, gap.loc[last_rank]),
         xytext=(4, 0),
         textcoords="offset points",
-        fontsize=FONT_SIZE - 1,
+        fontsize=FONT_SIZE,
         ha="left",
         va="center",
         color=color,
@@ -288,21 +289,22 @@ if not ses_ok or not _gap_pivot_cols:
 
 ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
-ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
+ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE)
 # Extend x-range slightly to accommodate line-end country labels.
 ax_b.set_xlim(min(ranks) - 5, max(ranks) + 10)
 ax_b.axhline(0, color="grey", linewidth=0.6, linestyle="--", alpha=0.7, zorder=1)
 ax_b.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax_b.grid(which="minor", axis="y", linewidth=0.3, alpha=0.4)
 ax_b.grid(which="major", axis="y", linewidth=0.6, alpha=0.7)
+ax_b.tick_params(axis="both", labelsize=FONT_SIZE)
 STRINGS_STRAT = {
     "title": rf"Mzdový rozdíl mužů nad ženami podle percentilu ({ses_year})",
     "xlabel": "percentil mzdové distribuce",
-    "ylabel": r"rozdíl \((M-F)/M\) [\%]",
+    "ylabel": r"rozdíl \((M-F)\) [\si{\pps\per\hour}]",
 }
-ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE - 1)
-ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE - 1)
-ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
+ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FONT_SIZE)
+ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FONT_SIZE)
+ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.1f}"))
 ax_b.set_title(
     STRINGS_STRAT["title"],
     fontsize=FONT_SIZE,
@@ -311,13 +313,13 @@ ax_b.set_title(
 # Invisible hover tooltips at every (rank, gap) point.
 if _gap_pivot_cols:
     _gap_pivot = pd.DataFrame(_gap_pivot_cols).sort_index()
-    add_pgf_tooltips(ax_b, _gap_pivot, fmt="{:.1f}")
+    add_pgf_tooltips(ax_b, _gap_pivot, fmt="{:.2f}")
 
 savefig_pgf(fig_b, "problemy_gpg_stratifikace", strings=STRINGS_STRAT, nudge_labels=NUDGE_LABELS)
 save_figure_tex_pgf(
     "problemy_gpg_stratifikace",
     caption=(
-        f"Mzdový rozdíl mužů nad ženami \\((M-F)/M\\) podle percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
+        f"Mzdový rozdíl mužů nad ženami \\((M-F)\\) v~\\si{{\\pps\\per\\hour}} podle percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",
