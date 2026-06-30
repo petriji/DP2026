@@ -1800,6 +1800,13 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% pdfcomment: provides \pdftooltip{content}{tooltip text} — used in the acro
+%   long-short template so hovering over a repeated abbreviation shows its long
+%   form.  Loaded only when acro is active (tooltip support is only needed when
+%   the acro list is active).  Must be after hyperref.
+\ifCTUacro
+  \RequirePackage[final]{pdfcomment}%  'final' shows tooltips even in draft mode
+\fi
 \pdfstringdefDisableCommands{%
   \def\textit#1{#1}%
   \def\emph#1{#1}%
