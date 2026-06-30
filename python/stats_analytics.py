@@ -82,6 +82,7 @@ _PGF_RE     = re.compile(r'\\inputpgffigure\{([^}]+)\}')
 _COMMENT_RE = re.compile(r'%.*')
 _CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{(.+?)\}', re.DOTALL)
 _DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{(.+?)\}\s*%?', re.DOTALL)
+_DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{(.+?)\}\s*%?', re.DOTALL)
 _YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
@@ -258,6 +259,15 @@ def _collect_caption_texts(stem: str) -> list[str]:
     return [t.strip() for t in texts if t.strip()]
 
 
+def _collect_wrapper_string_defs(stem: str) -> list[tuple[str, str]]:
+    """Collect all wrapper string macro definitions from the editable figure tex."""
+    path = FIG_TEX_DIR / f"{stem}.tex"
+    if not path.exists():
+        return []
+    body = path.read_text(encoding="utf-8", errors="replace")
+    return [(macro, value.strip()) for macro, value in _DEF_STR_RE.findall(body) if value.strip()]
+
+
 def _extract_years(text: str) -> list[int]:
     return [int(y) for y in _YEAR_RE.findall(text)]
 
@@ -268,10 +278,21 @@ def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
 
     for stem in sorted(referenced):
         captions = _collect_caption_texts(stem)
+        wrapper_defs = _collect_wrapper_string_defs(stem)
         years: list[int] = []
         for cap in captions:
             years.extend(_extract_years(cap))
         years_sorted = sorted(set(years))
+
+        wrapper_years: list[int] = []
+        wrapper_macro_hits: list[str] = []
+        for macro, value in wrapper_defs:
+            vals = _extract_years(value)
+            if not vals:
+                continue
+            wrapper_years.extend(vals)
+            if target_year not in vals:
+                wrapper_macro_hits.append(macro)
 
         status = "ok"
         msg = ""
@@ -296,6 +317,15 @@ def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
                 f"[data-quality][WARNING][year_mismatch] {stem}: {msg}",
                 flush=True,
             )
+        elif wrapper_macro_hits:
+            status = "warning"
+            msg = (
+                f"wrapper string macros {wrapper_macro_hits} do not include target year {target_year}"
+            )
+            print(
+                f"[data-quality][WARNING][year_mismatch] {stem}: {msg}",
+                flush=True,
+            )
 
         rows.append(
             {
@@ -303,6 +333,7 @@ def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
                 "status": status,
                 "target_year": target_year,
                 "years": years_sorted,
+                "wrapper_years": sorted(set(wrapper_years)),
                 "message": msg,
             }
         )
@@ -337,6 +368,32 @@ def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
         f"Report: {md_path.relative_to(DP_DIR)}",
         flush=True,
     )
+
+
+def _sync_strings_from_tex(referenced: set[str]) -> None:
+    """Sync editable figure-wrapper strings back into matching Python analyses."""
+    from tools.sync_strings_from_tex import sync_script
+
+    fig_stems = sorted(stem for stem in referenced if (FIG_TEX_DIR / f"{stem}.tex").exists())
+    if not fig_stems:
+        return
+
+    changed: list[str] = []
+    for stem in fig_stems:
+        tex_file = FIG_TEX_DIR / f"{stem}.tex"
+        lines = sync_script(tex_file, dry_run=False)
+        if any(line.startswith("  CHANGED ") for line in lines):
+            changed.append(stem)
+        for line in lines:
+            print(f"[tex-sync] {line}", flush=True)
+
+    if changed:
+        print(
+            f"[tex-sync] synced {len(changed)} wrapper(s) back into Python: {', '.join(changed)}",
+            flush=True,
+        )
+    else:
+        print("[tex-sync] no Python source changes needed from editable figure wrappers.", flush=True)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -407,6 +464,7 @@ def main() -> None:
     if not ran_any:
         print("[stats_analytics] all outputs present — nothing to do.", flush=True)
 
+    _sync_strings_from_tex(referenced)
     _audit_target_year(referenced, target_year=args.target_year)
 
 
