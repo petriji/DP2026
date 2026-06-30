@@ -56,8 +56,8 @@ latest_yr = ds.years[-1]
 
 # ── 3. Plot ───────────────────────────────────────────────────────────────────
 STRINGS = {
-    "title": r"Vývoj daňového klínu (\SI{67}{\percent} průměrné mzdy)",
-    "ylabel": r"daňový klín (na mzdové náklady)[\si{\percent}]",
+    "title": r"Vývoj daňového klínu (67\,\% průměrné mzdy)",
+    "ylabel": r"daňový klín [\% mzdových nákladů]",
 }
 
 fig = timeline(
@@ -70,8 +70,7 @@ fig = timeline(
     show_eu_avg=False,
     background_eu=True,
 )
-fig.axes[0].set_xlim(2004, max(2025, latest_yr))
-fig.axes[0].set_ylim(20, 55)
+fig.axes[0].set_xlim(START_YEAR - 1, latest_yr + 2)
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
 _ax = fig.axes[0]
@@ -98,9 +97,11 @@ savefig_pgf(fig, "eu_danovy_klin_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LAB
 save_figure_tex_pgf(
     "eu_danovy_klin_vyvoj",
     caption=(
-        r"Vývoj daňového klínu v~\acs{EU} (\SI{67}{\percent} průměrné mzdy, "
-        r"jednotlivec bez dětí), "
-        f"\acs{{EU}}, {START_YEAR}--{latest_yr}."
+        r"Vývoj daňového klínu (\SI{67}{\percent} průměrné mzdy, "
+        r"jednotlivec bez dětí, \% mzdových nákladů), "
+        f"EU\\,27, {START_YEAR}--{latest_yr}. "
+        r"Šedé linie = ostatní země EU\,27. "
+        r"Zdroj dat: Eurostat~\cite{eurostat_earn_nt_taxwedge}."
     ),
     label="fig:eu_danovy_klin_vyvoj",
     resizebox_width=r"\linewidth",
