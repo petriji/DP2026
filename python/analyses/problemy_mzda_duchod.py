@@ -56,7 +56,14 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    _add_vertical_ref,
+    _fmt_czk,
+    apply_style_pgf,
+    cm2in,
+    save_figure_tex_pgf,
+    savefig_pgf,
+)
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -562,81 +569,124 @@ freq_pension = N_PENSION * pdf_pension  # tis. osob  per  tis. Kč bracket
 # ════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=cm2in(16, 10))
 
+
+def _tooltip(ax, x, y, text):
+    ax.text(
+        x, y,
+        r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
+        fontsize=FONT_SIZE,
+        ha="center", va="center", clip_on=True, zorder=10,
+    )
+
+
+# ── Curves ────────────────────────────────────────────────────────────────────
 ax.fill_between(
     _X_GRID / 1_000, freq_wage,
-    alpha=0.18, color=_COLOR_WAGE,
+    alpha=0.10, color=_COLOR_WAGE, zorder=2,
 )
 ax.plot(
     _X_GRID / 1_000, freq_wage,
-    color=_COLOR_WAGE, linewidth=2.0,
-    label=f"Čistá mzda zaměstnanců (ISPV {wage_year}/H1, podnikat. sféra)",
+    color=_COLOR_WAGE, linewidth=1.6, zorder=4,
 )
 
 ax.fill_between(
     _X_GRID / 1_000, freq_pension,
-    alpha=0.18, color=_COLOR_PENSION,
+    alpha=0.10, color=_COLOR_PENSION, zorder=2,
 )
 ax.plot(
     _X_GRID / 1_000, freq_pension,
-    color=_COLOR_PENSION, linewidth=2.0,
-    label=f"Starobní důchody (CSSZ {pension_year})",
+    color=_COLOR_PENSION, linewidth=1.6, zorder=4,
 )
 
-# Median reference lines
-ax.axvline(
-    med_wage_net / 1_000,
-    color=_COLOR_WAGE, linewidth=1.0, linestyle="--", alpha=0.8,
-    label=(
-        f"Medián čisté mzdy {med_wage_net:,.0f} Kč"
-        f" (hrubá {med_wage_gross:,.0f} Kč,"
-        f" nákl. {med_wage_total_cost:,.0f} Kč)"
-    ),
+# ── Tooltips: medians + quantiles ────────────────────────────────────────────
+peak_wage = float(N_WAGE * lognormal_pdf(
+    np.array([med_wage_net]), mu_w, sig_w)[0])
+_tooltip(
+    ax, med_wage_net / 1_000, peak_wage,
+    f"Čistá mzda {wage_year}: medián {med_wage_net:,.0f} Kč"
+    f" (hrubá {med_wage_gross:,.0f} Kč,"
+    f" nákl. zam. {med_wage_total_cost:,.0f} Kč)",
 )
-ax.axvline(
-    med_pension / 1_000,
-    color=_COLOR_PENSION, linewidth=1.0, linestyle="--", alpha=0.8,
-    label=f"Medián důchodu {med_pension:,.0f} Kč",
+for p, q_gross in wage_q.items():
+    q_net = wage_q_net[p]
+    y_q = float(N_WAGE * lognormal_pdf(np.array([q_net]), mu_w, sig_w)[0])
+    _tooltip(
+        ax, q_net / 1_000, y_q,
+        f"Čistá mzda {wage_year} P{int(p * 100)}: {q_net:,.0f} Kč"
+        f" (hrubá {q_gross:,.0f} Kč)",
+    )
+
+peak_pension = float(N_PENSION * lognormal_pdf(
+    np.array([med_pension]), mu_p, sig_p)[0])
+_tooltip(
+    ax, med_pension / 1_000, peak_pension,
+    f"Starobní důchody {pension_year}: medián {med_pension:,.0f} Kč",
+)
+for p, q in pension_q.items():
+    y_q = float(N_PENSION * lognormal_pdf(np.array([q]), mu_p, sig_p)[0])
+    _tooltip(
+        ax, q / 1_000, y_q,
+        f"Starobní důchody {pension_year} P{int(p * 100)}: {q:,.0f} Kč",
+    )
+
+# ── Vertical reference lines (labels above axis, tax/pension-model style) ────
+_add_vertical_ref(
+    ax, min_wage_net / 1_000,
+    f"min.~čistá~mzda\n{_fmt_czk(int(round(min_wage_net)))}",
+    color=_COLOR_WAGE, alpha=0.55, linestyle=(0, (1, 3)),
+)
+_add_vertical_ref(
+    ax, med_wage_net / 1_000,
+    f"medián~čisté~mzdy\n{_fmt_czk(int(round(med_wage_net)))}",
+    color=_COLOR_WAGE, alpha=0.8, linestyle=(0, (4, 3)),
+)
+_add_vertical_ref(
+    ax, MIN_PENSION / 1_000,
+    f"min.~důchod\n{_fmt_czk(MIN_PENSION)}",
+    color=_COLOR_PENSION, alpha=0.55, linestyle=(0, (1, 3)),
+)
+_add_vertical_ref(
+    ax, med_pension / 1_000,
+    f"medián~důchodu\n{_fmt_czk(int(round(med_pension)))}",
+    color=_COLOR_PENSION, alpha=0.8, linestyle=(0, (4, 3)),
 )
 
-# Minimum wage reference (net) and minimum pension reference
-ax.axvline(
-    min_wage_net / 1_000,
-    color=_COLOR_WAGE, linewidth=0.9, linestyle=":", alpha=0.65,
-    label=f"Minimální čistá mzda {min_wage_net:,.0f} Kč"
-          f" (hrubá {MIN_WAGE:,} Kč)",
+# ── Inline curve labels (left-aligned, above the line) ───────────────────────
+_pension_label_x = 25_000.0
+_wage_label_x    = 40_000.0
+y_pension_at = float(N_PENSION * lognormal_pdf(
+    np.array([_pension_label_x]), mu_p, sig_p)[0])
+y_wage_at = float(N_WAGE * lognormal_pdf(
+    np.array([_wage_label_x]), mu_w, sig_w)[0])
+ax.annotate(
+    "starobní důchody",
+    xy=(_pension_label_x / 1_000, y_pension_at),
+    xytext=(2, 4), textcoords="offset points",
+    fontsize=FONT_SIZE - 1, color=_COLOR_PENSION,
+    ha="left", va="bottom", zorder=5,
 )
-ax.axvline(
-    MIN_PENSION / 1_000,
-    color=_COLOR_PENSION, linewidth=0.9, linestyle=":", alpha=0.65,
-    label=f"Minimální důchod {MIN_PENSION:,} Kč",
+ax.annotate(
+    "čistá mzda (podnikatelská sféra)",
+    xy=(_wage_label_x / 1_000, y_wage_at),
+    xytext=(2, 4), textcoords="offset points",
+    fontsize=FONT_SIZE - 1, color=_COLOR_WAGE,
+    ha="left", va="bottom", zorder=5,
 )
 
+# ── Axis styling ──────────────────────────────────────────────────────────────
 ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
-ax.set_ylabel(
-    STRINGS["ylabel"],
-    fontsize=FONT_SIZE,
-)
-ax.xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda v, _: f"{v:.0f}")
-)
-ax.yaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda v, _: f"{v:.0f}")
-)
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE)
+ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
+ax.tick_params(axis="both", labelsize=FONT_SIZE - 1)
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
-STRINGS = {
-    "title": r"Rozložení čisté mzdy zaměstnanců a starobních důchodů -- \acs{geo-CZ}",
-}
-ax.set_title(
-    STRINGS["title"],
-    fontsize=FONT_SIZE,
-)
-ax.legend(
-    frameon=False,
-    fontsize=FONT_SIZE - 1,
-    loc="upper right",
-    handlelength=1.8,
-)
+ax.set_title(STRINGS["title"], fontsize=FONT_SIZE)
+
+# Minor grid
+ax.minorticks_on()
+ax.grid(which="major", axis="both", linestyle=":", linewidth=0.5, alpha=0.6)
+ax.grid(which="minor", axis="both", linestyle=":", linewidth=0.3, alpha=0.3)
 
 savefig_pgf(fig, "problemy_mzda_duchod", strings=STRINGS)
 save_figure_tex_pgf(
@@ -645,7 +695,7 @@ save_figure_tex_pgf(
         f"Distribuce čistých mezd a~starobních důchodů, \\acs{{geo-CZ}}, "
         f"{min(wage_year, pension_year)}--{max(wage_year, pension_year)}"
     ),
-    cite_keys="mpsv_ispv",
+    cite_keys=["mpsv_ispv", "cssz_rocenka_duchod"],
     label="fig:problemy_mzda_duchod",
     resizebox_width=r"\linewidth",
     strings=STRINGS,
