@@ -745,34 +745,41 @@ try:
         dtype=float,
     )
 
+    # Data-driven colour scale; keep symmetry around 100 for readability.
+    _wmin = float(wage_series.min())
+    _wmax = float(wage_series.max())
+    _delta = max(100 - _wmin, _wmax - 100)
+    STRINGS_D = {
+        "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1) --- index (medián \acs{geo-CZ}~=~100)",
+        "colorbar_label": r"index (medián \acs{geo-CZ} = 100)",
+    }
     fig_d = choropleth_cz(
         wage_series,
         nuts_level_cz=3,
-        title="ČR: mediánová mzda podle kraje (ISPV 2025/H1) --- index (medián ČR\u00a0=\u00a0100)",
+        title=STRINGS_D["title"],
         cmap="RdYlGn",
-        vmin=70,
-        vmax=150,
-        colorbar_label="Index (medián ČR = 100)",
+        vmin=100 - _delta,
+        vmax=100 + _delta,
+        colorbar_label=STRINGS_D["colorbar_label"],
         label_fmt="{:.0f}",
     )
 
-    savefig_pgf(fig_d, "problemy_regiony_mapa")
+    savefig_pgf(fig_d, "problemy_regiony_mapa", strings=STRINGS_D)
     save_figure_tex_pgf(
         "problemy_regiony_mapa",
         caption=(
-            "ČR: mediánová hrubá mzda podle kraje (NUTS3) (ISPV 2025/H1, "
-            "MPSV/TREXIMA), normovaná na národní medián\u00a0=\u00a0100. "
-            "Sousední regiony (AT, DE, PL, SK) zobrazeny šedě. "
-            "Praha (CZ010) a přilehlý Středočeský kraj (CZ020) dosahují "
+            r"\acs{geo-CZ}: mediánová hrubá mzda podle kraje (NUTS3) (\acs{ISPV} 2025/H1, "
+            r"\acs{MPSV}/TREXIMA), normovaná na národní medián~=~100. "
+            r"Sousední regiony (\acs{geo-AT}, \acs{geo-DE}, \acs{geo-PL}, \acs{geo-SK}) zobrazeny šedě. "
+            r"Praha (CZ010) a přilehlý Středočeský kraj (CZ020) dosahují "
             "výrazně vyšších mezd než periferní regiony, "
-            "což zesiluje emigrační tlak a ztěžuje praktický dopad "
-            "celostátních kolektivních smluv."
+            r"což zesiluje emigrační tlak a ztěžuje praktický dopad "
+            r"celostátních kolektivních smluv."
         ),
-        cite_keys="mpsv_ispv",
-    label="fig:problemy_regiony_mapa",
+        label="fig:problemy_regiony_mapa",
         resizebox_width=r"\linewidth",
         cite_key="mpsv_ispv",
-        strings={},
+        strings=STRINGS_D,
     )
     print("  Figure D done.")
 

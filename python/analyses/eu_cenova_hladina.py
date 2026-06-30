@@ -31,7 +31,12 @@ import pandas as pd
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -68,20 +73,34 @@ print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmin = min(_values.values())
+_vmax = max(_values.values())
+
+STRINGS = {
+    "title": f"Index cenové hladiny \\acs{{HDP}} ({ds.latest_year})",
+    "colorbar_label": r"\acs{PLI} [\acs{geo-EU}27 = 100]",
+}
+
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Index cenové hladiny HDP ({ds.latest_year})",
-    colorbar_label="PLI [EU27 = 100]",
+    title=STRINGS["title"],
+    colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn_r",   # red = expensive, green = cheap
-    vmin=40,
-    vmax=160,
+    vmin=_vmin,
+    vmax=_vmax,
     diverging=False,
     label_countries=True,
+    highlight_colorbar=["CZ"],
 )
 
-# ── 4. Save figure ─────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_cenova_hladina")
+apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
+
+savefig_pgf(fig, "eu_cenova_hladina", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ─────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -91,7 +110,7 @@ save_figure_tex_pgf(
     label="fig:eu_cenova_hladina",
     resizebox_width=r"0.92\linewidth",
     cite_key="eurostat_prc_ppp_ind_PLI_GDP",
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

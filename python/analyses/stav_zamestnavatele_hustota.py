@@ -23,7 +23,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    add_pgf_tooltips,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 from statout.timeline import timeline, EU27 as _EU27
 from analyses._shared_data import load_employer_density
@@ -46,18 +52,32 @@ print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 2. Choropleth map ────────────────────────────────────────────────────────
+_values_map = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmax_map = max(_values_map.values())
+
+STRINGS_MAP = {
+    "title": f"Hustota zaměstnavatelských organizací ({ds.latest_year})",
+    "colorbar_label": r"hustota [\% zaměstnanců]",
+}
+
 fig_map = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Hustota zaměstnavatelských organizací ({ds.latest_year})",
-    colorbar_label="hustota [% zaměstnanců]",
+    title=STRINGS_MAP["title"],
+    colorbar_label=STRINGS_MAP["colorbar_label"],
     cmap="RdYlGn",
     vmin=0,
-    vmax=100,
+    vmax=_vmax_map,
     label_countries=True,
+    highlight_colorbar=HIGHLIGHT,
 )
 
-savefig_pgf(fig_map, "stav_zamestnavatele_hustota_mapa")
+apply_geo_labels_pgf(fig_map.axes[0], halo=True, values=_values_map, tooltip_fmt="{:.1f}")
+
+savefig_pgf(fig_map, "stav_zamestnavatele_hustota_mapa", strings=STRINGS_MAP)
 
 save_figure_tex_pgf(
     "stav_zamestnavatele_hustota_mapa",
@@ -67,15 +87,20 @@ save_figure_tex_pgf(
     label="fig:stav_zamestnavatele_hustota_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_key=CITE_KEY,
-    strings={},
+    strings=STRINGS_MAP,
 )
 
 # ── 3. Timeline figure ───────────────────────────────────────────────────────
+STRINGS_TL = {
+    "title": "Hustota zaměstnavatelských organizací",
+    "ylabel": r"hustota zaměstnavatelských org. [\%]",
+}
+
 fig_tl = timeline(
     ds,
     countries=COUNTRIES,
-    title="Hustota zaměstnavatelských organizací",
-    ylabel="hustota zaměstnavatelských org. [%]",
+    title=STRINGS_TL["title"],
+    ylabel=STRINGS_TL["ylabel"],
     highlight=HIGHLIGHT,
     annotate_last=True,
     markers=True,
@@ -103,7 +128,7 @@ for _child in fig_tl.axes[0].get_children():
         if _txt in COUNTRIES:
             _child.set_text(f"\\acs{{geo-{_txt}}}")
 
-savefig_pgf(fig_tl, "stav_zamestnavatele_hustota_vyvoj")
+savefig_pgf(fig_tl, "stav_zamestnavatele_hustota_vyvoj", strings=STRINGS_TL)
 
 save_figure_tex_pgf(
     "stav_zamestnavatele_hustota_vyvoj",
@@ -113,7 +138,7 @@ save_figure_tex_pgf(
     label="fig:stav_zamestnavatele_hustota_vyvoj",
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
-    strings={},
+    strings=STRINGS_TL,
 )
 
 print("Done.")

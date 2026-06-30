@@ -50,7 +50,12 @@ import pandas as pd
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -106,8 +111,11 @@ def _make_choropleth(
     vmax: float | None = None,
 ) -> None:
     """Render a Europe choropleth via statout.map_europe."""
+    _values = snap.set_index("geo")["value"].to_dict()
     if vmax is None:
-        vmax = float(snap["value"].quantile(0.95))
+        vmax = float(max(_values.values()))
+
+    strings = {"title": title, "colorbar_label": cbar_label}
 
     ds = Dataset(snap, name=cbar_label, unit="")
     fig = choropleth(
@@ -117,16 +125,18 @@ def _make_choropleth(
         vmin=vmin,
         vmax=vmax,
         colorbar_label=cbar_label,
-        label_countries=False,
+        label_countries=True,
+        highlight_colorbar=["CZ"],
     )
-    savefig_pgf(fig, stem)
+    apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
+    savefig_pgf(fig, stem, strings=strings)
     save_figure_tex_pgf(
         stem,
         caption=caption,
         label=label,
         resizebox_width=r"0.85\linewidth",
         cite_key="eurostat_edat_aes",
-        strings={},
+        strings=strings,
     )
     print(f"  {stem} done ({year}).")
 
@@ -178,10 +188,9 @@ try:
     _make_choropleth(
         snap_l21,
         title=(
-            f"Znalost alespoň 2 cizích jazyků --- populace 25--64 let ({latest_l21})\n"
-            "% osob s\u00a02+ cizími jazyky"
+            f"Znalost alespoň 2 cizích jazyků, populace 25--64 let ({latest_l21})"
         ),
-        cbar_label="% populace 25--64",
+        cbar_label=r"\% populace 25--64",
         stem="problemy_jazyky_celkem",
         caption=(
             f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
@@ -246,10 +255,9 @@ try:
     _make_choropleth(
         snap_l22,
         title=(
-            f"Znalost $\\geq$\\,2 cizích jazyků --- věková skupina 25--64 let ({latest_l22})\n"
-            "% věkové skupiny s~2+ cizími jazyky"
+            f"Znalost ${{\\ge}}$\\,2 cizích jazyků, věková skupina 25--64 let ({latest_l22})"
         ),
-        cbar_label="% věkové skupiny 25--64",
+        cbar_label=r"\% věkové skupiny 25--64",
         stem="problemy_jazyky_vek",
         caption=(
             f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
@@ -319,10 +327,9 @@ try:
     _make_choropleth(
         snap_l23,
         title=(
-            f"Znalost $\\geq$\\,2 cizích jazyků --- vysokoškolsky vzdělaní ({latest_l23})\n"
-            "% osob s~ISCED~5--8 znajících 2+ cizí jazyky"
+            f"Znalost ${{\\ge}}$\\,2 cizích jazyků, vysokoškolsky vzdělaní ({latest_l23})"
         ),
-        cbar_label="% terciárně vzdělané populace",
+        cbar_label=r"\% terciárně vzdělané populace",
         stem="problemy_jazyky_isced",
         caption=(
             f"Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) "

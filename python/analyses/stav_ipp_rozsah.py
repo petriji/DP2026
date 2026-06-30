@@ -64,12 +64,12 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_ipp
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, cm2in, savefig_pgf, save_figure_tex_pgf
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 START_YEAR = 2007
@@ -231,36 +231,37 @@ for yr, (label, va) in _EVENTS.items():
                 color="grey", va="bottom", rotation=0)
 
 ax.set_xlabel("rok")
-ax.set_ylabel("podíl \acs{KS} [%]")
+ax.set_ylabel(r"podíl \acs{KS} [\%]")
 ax.set_xlim(START_YEAR, END_YEAR)
 ax.set_ylim(0, 100)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
 ax.legend(loc="center left", fontsize=FONT_SIZE - 1, frameon=False)
-ax.set_title(
-    "Institucionální obsah kolektivních smluv (ČR)",
-    fontsize=FONT_SIZE,
-)
+STRINGS = {
+    "title": r"Institucionální obsah kolektivních smluv (\acs{geo-CZ})",
+}
+ax.set_title(STRINGS["title"], fontsize=FONT_SIZE)
 
 fig.tight_layout()
 
-out_pdf = savefig(fig, "stav_ipp_rozsah", out_dir=LATEX_PICS_DIR)
-out_tex = save_figure_tex(
+out_pdf = savefig_pgf(fig, "stav_ipp_rozsah", strings=STRINGS)
+out_tex = save_figure_tex_pgf(
     "stav_ipp_rozsah",
     caption=(
-        r"Institucionální obsah kolektivních smluv, ČR, 2007--2025. "
-        r"\emph{Mzdová stupnice} (plná čára) -- podíl KS "
+        r"Institucionální obsah kolektivních smluv, \acs{geo-CZ}, 2007--2025. "
+        r"\emph{Mzdová stupnice} (plná čára) -- podíl \acs{KS} "
         r"se sjednanou hierarchickou mzdovou stupnicí (12ti-stupňový nebo jiný "
-        r"tarifní systém); zdroj: IPP Mzdový tarify A1a. "
+        r"tarifní systém); zdroj: \acs{IPP} Mzdový tarify A1a. "
         r"\emph{Konkretizované podmínky činnosti odborové organizace} "
-        r"(přerušovaná čára) -- podíl KS s explicitně vymezenými pravidly "
+        r"(přerušovaná čára) -- podíl \acs{KS} s explicitně vymezenými pravidly "
         r"pro výkon odborové činnosti. "
-        r"\emph{Uvolnění odborového zástupce} (tečkovaná čára) -- podíl KS "
+        r"\emph{Uvolnění odborového zástupce} (tečkovaná čára) -- podíl \acs{KS} "
         r"se sjednaným časovým rozsahem uvolnění pro odborovou práci; "
-        r"zdroj: IPP Spolupráce smluvních stran A19a."
+        r"zdroj: \acs{IPP} Spolupráce smluvních stran A19a."
     ),
     cite_keys="mpsv_ipp",
     label="fig:stav_ipp_rozsah",
+    strings=STRINGS,
 )
 print(f"\nSaved: {out_pdf}")
 print(f"Saved TeX: {out_tex}")

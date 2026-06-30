@@ -25,7 +25,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+)
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -56,20 +61,34 @@ print(f"Countries: {len(ds.countries)}  |  Years: {ds.years}")
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 3. Choropleth map ────────────────────────────────────────────────────────
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time").groupby("geo")["value"].last().to_dict()
+)
+_vmax = max(_values.values())
+
+STRINGS = {
+    "title": f"Digitální dovednosti nad základní úrovní ({ds.latest_year})",
+    "colorbar_label": r"podíl jednotlivců [\%]",
+}
+
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=f"Digitální dovednosti nad základní úrovní ({ds.latest_year})",
-    colorbar_label="podíl jednotlivců [%]",
+    title=STRINGS["title"],
+    colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn",
     vmin=0,
-    vmax=70,
+    vmax=_vmax,
     label_countries=True,
     fill_latest=True,
+    highlight_colorbar=["CZ"],
 )
 
-# ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_digit_dovednosti_mapa")
+apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
+
+# ── 4. Save figure ───────────────────────────────────────────────────────────────
+savefig_pgf(fig, "vyhled_digit_dovednosti_mapa", strings=STRINGS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -80,7 +99,7 @@ save_figure_tex_pgf(
     label="fig:vyhled_digit_dovednosti_mapa",
     resizebox_width=r"0.92\linewidth",
     cite_key=CITE_KEY,
-    strings={},
+    strings=STRINGS,
 )
 
 print("Done.")

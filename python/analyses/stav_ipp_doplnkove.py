@@ -58,13 +58,13 @@ import pandas as pd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from stattool.style import apply_style_pgf, cm2in, savefig_pgf, save_figure_tex_pgf
 from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style()
+apply_style_pgf()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -206,21 +206,22 @@ if years_bc:
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
     ax_b.set_ylabel("index [HICP = 100]", fontsize=FONT_SIZE)
-    ax_b.set_title(
-        "Kumulativní mzdový nárůst (HICP = 100), ČR",
-        fontsize=FONT_SIZE,
-    )
+    STRINGS_B = {
+        "title": r"Kumulativní mzdový nárůst (HICP = 100), \acs{geo-CZ}",
+    }
+    ax_b.set_title(STRINGS_B["title"], fontsize=FONT_SIZE)
     ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
     ax_b.set_xlim(START_YEAR, END_YEAR)
 
-    savefig(fig_b, "stav_ipp_kumulativ", out_dir=LATEX_PICS_DIR)
+    savefig_pgf(fig_b, "stav_ipp_kumulativ", strings=STRINGS_B)
     yr0, yr1 = years_bc[0], years_bc[-1]
-    save_figure_tex(
+    save_figure_tex_pgf(
         "stav_ipp_kumulativ",
-        caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), ČR, {yr0}\u2013{yr1}.",
+        caption=f"Kumulativní mzdový nárůst normovaný na~HICP (HICP = 100), \\acs{{geo-CZ}}, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_kumulativ",
-        width=r"\linewidth",
+        resizebox_width=r"\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci", "eurostat_hicp"],
+        strings=STRINGS_B,
     )
 else:
     print("Figure B skipped -- insufficient overlapping data.")
@@ -253,35 +254,36 @@ if years_c:
         )
 
     ax_c.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, _: f"{y:+.0f}\u00a0p.p.")
+        ticker.FuncFormatter(lambda y, _: f"\\SI{{{y:+.0f}}}{{\\pp}}")
     )
     ax_c.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
     ax_c.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_c.set_ylabel("skutečný − sjednaný nárůst [p.b.]", fontsize=FONT_SIZE)
-    ax_c.set_title(
-        "Rozdíl skutečného a sjednaného mzdového nárůstu, ČR",
-        fontsize=FONT_SIZE,
-    )
+    ax_c.set_ylabel(r"skutečný − sjednaný nárůst [\si{\pp}]", fontsize=FONT_SIZE)
+    STRINGS_C = {
+        "title": r"Rozdíl skutečného a~sjednaného mzdového nárůstu, \acs{geo-CZ}",
+    }
+    ax_c.set_title(STRINGS_C["title"], fontsize=FONT_SIZE)
 
     green_patch = mpatches.Patch(
         color="#2CA02C", alpha=0.75,
-        label="Trh platí více, než bylo sjednáno v KS",
+        label=r"Trh platí více, než bylo sjednáno v \acs{KS}",
     )
     red_patch = mpatches.Patch(
         color="#D62728", alpha=0.75,
-        label="Sjednáno více, než skutečný nárůst trhu",
+        label=r"Sjednáno více, než skutečný nárůst trhu",
     )
     ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FONT_SIZE - 1)
     ax_c.set_xlim(years_c[0] - 0.5, years_c[-1] + 0.5)
 
-    savefig(fig_c, "stav_ipp_mezera", out_dir=LATEX_PICS_DIR)
+    savefig_pgf(fig_c, "stav_ipp_mezera", strings=STRINGS_C)
     yr0, yr1 = years_c[0], years_c[-1]
-    save_figure_tex(
+    save_figure_tex_pgf(
         "stav_ipp_mezera",
-        caption=f"Rozdíl LCI a~sjednaného nárůstu v~KS, ČR, {yr0}\u2013{yr1}.",
+        caption=f"Rozdíl LCI a~sjednaného nárůstu v~\\acs{{KS}}, \\acs{{geo-CZ}}, {yr0}\u2013{yr1}.",
         label="fig:stav_ipp_mezera",
-        width=r"\linewidth",
+        resizebox_width=r"\linewidth",
         cite_keys=["mpsv_ipp", "eurostat_lci"],
+        strings=STRINGS_C,
     )
 else:
     print("Figure C skipped -- no overlapping IPP + LCI years.")
