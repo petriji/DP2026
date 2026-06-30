@@ -40,6 +40,7 @@ from statout.timeline import EU27
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
+    GEO_LONG_NAMES,
     apply_style_pgf,
     add_pgf_tooltips_scatter,
     cm2in,

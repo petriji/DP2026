@@ -713,6 +713,7 @@ if pct_df is not None and "p50" in pct_df.columns:
         ax_c.barh(
             y_pos, widths, left=pct_df["p25"].values,
             color="#4393C3", alpha=0.55, height=0.6, label="P25--P75 (IQR)",
+            zorder=1,
         )
 
     # P50 tick mark
@@ -733,6 +734,9 @@ if pct_df is not None and "p50" in pct_df.columns:
 
     ax_c.set_yticks(y_pos)
     ax_c.set_yticklabels(labels, fontsize=max(FIGURE_LABEL_SIZE, 10))
+    for _lbl in ax_c.get_yticklabels():
+        _lbl.set_zorder(10)
+        _lbl.set_bbox({"facecolor": "white", "edgecolor": "none", "alpha": 0.6, "pad": 1.2})
     ax_c.tick_params(axis="x", labelsize=max(FIGURE_LABEL_SIZE, 10))
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")

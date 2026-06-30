@@ -204,7 +204,7 @@ savefig_pgf(fig, "stav_volna_mista_vyvoj", strings=STRINGS, nudge_labels=NUDGE_L
 
 save_figure_tex_pgf(
     "stav_volna_mista_vyvoj",
-    caption=f"Vývoj míry volných pracovních míst, vybrané země \\acs{{EU}}, {START_YEAR}--{ds.latest_year}. Přerušovaně: 5letý klouzavý průměr pro \\acs{{geo-CZ}}",
+    caption=f"Vývoj míry volných pracovních míst, vybrané země \\acs{{EU}}, {START_YEAR}--{ds.latest_year}",
     label="fig:stav_volna_mista_vyvoj",
     resizebox_width=r"\linewidth",
     cite_keys=["eurostat_jvs_a_r21"],

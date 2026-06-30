@@ -4,8 +4,20 @@
 \def\strEuProduktivitaPrijemTrajektorieTitle{Produktivita práce a čistý hodinový příjem}%
 \def\strEuProduktivitaPrijemTrajektorieXlabel{produktivita práce [\acs{geo-EU}27 = 100]}%
 \def\strEuProduktivitaPrijemTrajektorieYlabel{čistý hodinový příjem [\si{\pps\per\hour}]}%
-\def\strEuProduktivitaPrijemTrajektorieCaption{Trajektorie produktivity práce a~čistého hodinového příjmu, státy \acs{EU}, 2008--2025. Zdroj dat: Eurostat.~\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}~\cite{eurostat_earn_nt_net_PPS_AW100}~\cite{eurostat_lfsa_ewhan2_HR_weekly}}%
+\def\strEuProduktivitaPrijemTrajektorieCaption{Trajektorie produktivity práce a~čistého hodinového příjmu, \acs{EU}, 2008--2025. Zdroj dat: Eurostat~\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}~\cite{eurostat_earn_nt_net_PPS_AW100}~\cite{eurostat_lfsa_ewhan2_HR_weekly}.}%
 %
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeEuProduktivitaPrijemTrajektorieCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeEuProduktivitaPrijemTrajektorieCz{0pt}%
+\providecommand\NudgeEuProduktivitaPrijemTrajektorieAt{15pt}%
+\providecommand\NudgeEuProduktivitaPrijemTrajektorieDe{1pt}%
+\providecommand\NudgeEuProduktivitaPrijemTrajektorieDk{0pt}%
+\providecommand\NudgeEuProduktivitaPrijemTrajektoriePl{0pt}%
+\providecommand\NudgeEuProduktivitaPrijemTrajektorieSk{0pt}%
+% --- Per-label angle nudge knobs in degrees (override with \renewcommand)
+% Example: \renewcommand\NudgeAngleEuProduktivitaPrijemTrajektorieAt{150}  % rotate label anchor around point
+\providecommand\NudgeAngleEuProduktivitaPrijemTrajektorieAt{180}%
+\providecommand\NudgeAngleEuProduktivitaPrijemTrajektorieDe{15}%
 \begin{figure}[H]
   \centering
   \input{../python/figures/eu_produktivita_prijem_trajektorie.pgf}

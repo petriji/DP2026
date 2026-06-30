@@ -226,6 +226,8 @@ timeline(
     highlight=HIGHLIGHT,
     background_eu=True,
     show_eu_avg=False,
+    annotate_last=False,
+    show_legend=False,
     ax=ax_top,
 )
 

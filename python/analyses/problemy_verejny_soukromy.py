@@ -292,7 +292,8 @@ for i, row in df_plot.iterrows():
     # MZS bar
     if pd.notna(row["m_med"]):
         ax_a.barh(y[i] + bar_h / 2, row["m_med"], height=bar_h,
-                  color=_MZS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4)
+                  color=_MZS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4,
+                  zorder=1)
         # IQR error bar
         if pd.notna(row["m_p25"]) and pd.notna(row["m_p75"]):
             ax_a.errorbar(
@@ -303,7 +304,8 @@ for i, row in df_plot.iterrows():
     # PLS bar
     if pd.notna(row["p_med"]):
         ax_a.barh(y[i] - bar_h / 2, row["p_med"], height=bar_h,
-                  color=_PLS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4)
+                  color=_PLS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4,
+                  zorder=1)
         if pd.notna(row["p_p25"]) and pd.notna(row["p_p75"]):
             ax_a.errorbar(
                 row["p_med"], y[i] - bar_h / 2,
@@ -326,14 +328,35 @@ STRINGS_A = {
     "xlabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
 ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
-ax_a.set_title(
-    STRINGS_A["title"],
-    fontsize=FIGURE_TEXT_SIZE,
-    loc="center",
-)
+fig_a.suptitle(STRINGS_A["title"], fontsize=FIGURE_TEXT_SIZE, y=0.995)
 
-patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (~3\u00a0010\u00a0tis.\u00a0osob)")
-patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (~684\u00a0tis.\u00a0osob)")
+def _fmt_tis(v: float | None) -> str:
+    if v is None:
+        return "?"
+    return f"{v:,.0f}".replace(",", "\N{NO-BREAK SPACE}")
+
+# Employee counts: prefer M0 overall row; fall back to sum of NACE-sector rows
+# (both come from the same ISPV workbook, so the sum is the natural source of
+# truth when _parse_overall cannot locate the aggregate-row count column).
+_emp_mzs_raw = overall_mzs.get("emp_tis")
+if _emp_mzs_raw is None and df_mzs is not None:
+    _emp_mzs_raw = df_mzs["emp_tis"].sum()
+_emp_pls_raw = overall_pls.get("emp_tis")
+if _emp_pls_raw is None and df_pls is not None:
+    _emp_pls_raw = df_pls["emp_tis"].sum()
+
+_emp_mzs: float | None = _emp_mzs_raw if (
+    _emp_mzs_raw is not None and not np.isnan(float(_emp_mzs_raw))
+) else None
+_emp_pls: float | None = _emp_pls_raw if (
+    _emp_pls_raw is not None and not np.isnan(float(_emp_pls_raw))
+) else None
+
+_mzs_label = f"Mzdová sféra ({_fmt_tis(_emp_mzs)}\N{NO-BREAK SPACE}tis.\N{NO-BREAK SPACE}osob)"
+_pls_label = f"Platová sféra ({_fmt_tis(_emp_pls)}\N{NO-BREAK SPACE}tis.\N{NO-BREAK SPACE}osob)"
+print(f"  Legend: {_mzs_label} | {_pls_label}")
+patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label=_mzs_label)
+patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label=_pls_label)
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
             fontsize=FIGURE_LABEL_SIZE, loc="lower right", markerfirst=False)
 ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)

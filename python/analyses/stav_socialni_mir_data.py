@@ -57,7 +57,7 @@ _ISO3_TO_ISO2: dict[str, str] = {
 B4_EXPERT_SCORE: dict[str, float] = {
     "BG": 100.0,
     "CZ": 100.0,
-    "HU": 100.0,
+    "HU": 75.0,
     "LT": 100.0,
     "LU": 100.0,
     "LV": 100.0,

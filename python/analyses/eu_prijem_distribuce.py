@@ -220,7 +220,7 @@ for i, country in enumerate(LABEL_ORDER):
     if country not in fits:
         continue
     mu, sigma = fits[country]
-    x_lab = x_start + i * x_step
+    x_lab = x_lab_tis * 1_000.0
     y_lab = lognormal_pdf(np.array([x_lab]), mu, sigma)[0] * y_scale
     color = COUNTRY_COLORS.get(country, "#888888")
     ax.annotate(

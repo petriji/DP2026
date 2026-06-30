@@ -118,7 +118,7 @@ _COLOR_PENSION = PALETTE[4]   # vermillion
 STRINGS = {
     "title": r"Distribuce čisté mzdy zaměstnanců a starobních důchodů, \acs{geo-CZ}",
     "xlabel": r"čistá mzda / výše důchodu [tis.~Kč/měsíc]",
-    "ylabel": r"podíl osob v~intervalu \SI{1}{tis.~Kč} [\si{\percent}]",
+    "ylabel": r"počet osob v~intervalu \SI{1}{tis.~Kč} [tis.~osob]",
 }
 
 # ── CSSZ pension data URLs ────────────────────────────────────────────────────

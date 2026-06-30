@@ -124,6 +124,22 @@ _LABEL_ANGLE_NUDGES: dict[str, float] = {
 }
 _LABEL_Y_NUDGES = [(geo, geo) for geo in _FEATURED_GEOS]
 
+_TERNARY_MODEL_CITE_KEYS = [
+    "eurostat_ilc_di01",
+    "eurostat_lfsa_ewhan2_HR_weekly",
+    "eurostat_gpg",
+    "eurostat_jvs_a_r21",
+    "oecd_cts_cit",
+    "eurostat_lc_lci_lev",
+    "eurostat_prc_ppp_ind_PLI_GDP",
+    "eurostat_nama_10_gdp",
+    "eurostat_nama_10_pc",
+    "eurostat_lfsi_emp_a",
+    "eurostat_ilc_di12",
+    "ilostat_STR_DAYS_ECO_RT_A",
+    "CMKOS_ZpravaKV2025",
+]
+
 # Match CTUthesis text width (~15 cm) so wrapper resizebox{\linewidth}
 # does not downscale typography (title should remain effectively 12 pt).
 _TERNARY_FIGSIZE = cm2in(15.0, 14.1)
@@ -213,20 +229,17 @@ def main() -> None:
         )
         savefig(fig_pdf, PLOT_STEM, fmt="pdf", out_dir=FIGURES_DIR)
     
-    save_figure_tex_pgf(
-        PLOT_STEM,
-        caption=strings_main["caption"],
-        cite_keys=[
-            "eurostat_jvs_a_r21",
-            "oecd_cts_cit",
-            "eurostat_lc_lci_lev",
-        ],
-        label="fig:practical_ternary_social_dialog",
-        resizebox_width=r"\linewidth",
-        strings=strings_main,
-        nudge_labels=_LABEL_Y_NUDGES,
-        angle_labels=_LABEL_ANGLE_NUDGES,
-    )
+    if not IS_POSTER_RUN:
+        save_figure_tex_pgf(
+            PLOT_STEM,
+            caption=strings_main["caption"],
+            cite_keys=_TERNARY_MODEL_CITE_KEYS,
+            label="fig:practical_ternary_social_dialog",
+            resizebox_width=r"\linewidth",
+            strings=strings_main,
+            nudge_labels=_LABEL_Y_NUDGES,
+            angle_labels=_LABEL_ANGLE_NUDGES,
+        )
     print("Output files:")
     print(f"  - {pgf_path}")
 
@@ -289,12 +302,8 @@ def main() -> None:
 
     save_figure_tex_pgf(
         STRENGTH_STEM,
-        caption=f"Průměr modelových os (A+B+C)/3 (souhrnné skóre sociálních partnerů), \\acs{{EU}}",
-        cite_keys=[
-            "eurostat_jvs_a_r21",
-            "oecd_cts_cit",
-            "eurostat_lc_lci_lev",
-        ],
+        caption=f"Ternární model -- průměr modelových os (souhrnné skóre sociálního dialogu), \\acs{{EU}}",
+        cite_keys=_TERNARY_MODEL_CITE_KEYS,
         label="fig:practical_ternary_strength_map",
         resizebox_width=r"\linewidth",
         strings=strings_strength,

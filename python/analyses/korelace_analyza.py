@@ -67,7 +67,7 @@ from analyses._shared_data import load_cb_coverage, load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK", "IT", "SE"]
+HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
 PANEL_KEYS = ["A", "B", "C", "D"]
 START_YEAR = 2004
@@ -240,12 +240,19 @@ print("Plotting combined scatter figure (2×2) …")
 _SUBCAPTIONS = ["(a)", "(b)", "(c)", "(d)"]
 
 STRINGS = {
-    "title": (
-        r"Korelace pokrytí \acs{KV}"
-        "\n"
-        r"s\,vybranými ukazateli trhu práce (2024)"
-    ),
+    "title": r"Korelace pokrytí \acs{KV} s\,vybranými ukazateli trhu práce (2024)",
 }
+# Poster: two-line title with a real newline so matplotlib reserves the correct
+# (2-line) height for the suptitle in the compact half-column layout. Without
+# the \n, matplotlib measures one line while LaTeX would draw two, dropping the
+# second line onto the panels. Plain Czech is used (not the \aclins{KS} macro)
+# because the PGF text-measurement pass compiles a minimal LaTeX doc that does
+# not define the custom declension macros. Main thesis export keeps the
+# single-line macro-based title.
+_POSTER_TITLE = (
+    "Korelace pokrytí kolektivní smlouvou\n"
+    "s\\,vybranými ukazateli trhu práce (2024)"
+)
 _scatter_angle_nudges_by_panel = {
     panel: load_angle_nudges_from_figure_tex("korelace_scatter", LABEL_ANGLE_NUDGES, scope=panel)
     for panel in PANEL_KEYS
