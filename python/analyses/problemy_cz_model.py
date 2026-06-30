@@ -60,6 +60,8 @@ STRINGS_POMER = {
     "ylabel": "vyrovnání čerpání SD s odvody na SP -- roky",
 }
 
+TOOLTIP_GRID = 60
+
 
 def _add_curve_tooltips(
     ax: plt.Axes,
@@ -81,6 +83,18 @@ def _add_curve_tooltips(
     """
     if mpl.get_backend() != "pgf":
         return
+    # ASCII-only sanitisation — pdftooltip's 2nd arg is converted to a PDF
+    # string by hyperref, and non-ASCII Czech glyphs (Kč, měs.) repeated over
+    # hundreds of tooltips overflow the HyPsd expansion buffer.
+    _ascii_map = str.maketrans({
+        "č": "c", "Č": "C", "ě": "e", "Ě": "E", "š": "s", "Š": "S",
+        "ž": "z", "Ž": "Z", "ř": "r", "Ř": "R", "ů": "u", "Ů": "U",
+        "ý": "y", "Ý": "Y", "á": "a", "Á": "A", "í": "i", "Í": "I",
+        "é": "e", "É": "E", "ú": "u", "Ú": "U", "ó": "o", "Ó": "O",
+        "ť": "t", "Ť": "T", "ď": "d", "Ď": "D", "ň": "n", "Ň": "N",
+    })
+    x_unit_a = x_unit.translate(_ascii_map)
+    y_unit_a = y_unit.translate(_ascii_map)
     for line in ax.get_lines():
         xs = np.asarray(line.get_xdata(), dtype=float)
         ys = np.asarray(line.get_ydata(), dtype=float)
@@ -95,9 +109,9 @@ def _add_curve_tooltips(
         for i in idx:
             tip = (
                 f"x={x_fmt.format(xs[i])}"
-                + (f" {x_unit}" if x_unit else "")
+                + (f" {x_unit_a}" if x_unit_a else "")
                 + f" / y={y_fmt.format(ys[i])}"
-                + (f" {y_unit}" if y_unit else "")
+                + (f" {y_unit_a}" if y_unit_a else "")
             )
             ax.text(
                 float(xs[i]), float(ys[i]),
@@ -1347,7 +1361,7 @@ if __name__ == "__main__":
     # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
     fig_cmp = plot_pension_comparison()
     _add_curve_tooltips(
-        fig_cmp.axes[0], x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+        fig_cmp.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
     )
     savefig_pgf(fig_cmp, "problemy_duchod_prijem", strings=STRINGS_DUCHOD)
     save_figure_tex_pgf(
@@ -1364,10 +1378,10 @@ if __name__ == "__main__":
     # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
     fig_sol = plot_pension_solidarity()
     _add_curve_tooltips(
-        fig_sol.axes[0], x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+        fig_sol.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
     )
     _add_curve_tooltips(
-        fig_sol.axes[1], x_unit="tis. Kč/měs.", y_unit="%",
+        fig_sol.axes[1], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="%",
     )
     savefig_pgf(fig_sol, "problemy_duchod_solidarita", strings=STRINGS_SOLIDARITA)
     save_figure_tex_pgf(
@@ -1384,7 +1398,7 @@ if __name__ == "__main__":
     # ── Obrázek 3: náhradový poměr vs. daňový klín (parametrický) ─────────────
     fig_tw = plot_tax_wedge_comparison()
     _add_curve_tooltips(
-        fig_tw.axes[0], x_unit="% klín", y_unit="% náhrada",
+        fig_tw.axes[0], n=TOOLTIP_GRID, x_unit="% klín", y_unit="% náhrada",
     )
     savefig_pgf(fig_tw, "problemy_duchod_klin", strings=STRINGS_KLIN)
     save_figure_tex_pgf(
@@ -1401,6 +1415,9 @@ if __name__ == "__main__":
 
     # ── Obrázek 4: daňový klín vs. příjmy ────────────────────────────────────
     fig_twi = plot_tax_wedge_vs_income()
+    _add_curve_tooltips(
+        fig_twi.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="%",
+    )
     savefig_pgf(fig_twi, "problemy_danovy_klin_cz", strings=STRINGS_KLIN)
     save_figure_tex_pgf(
         "problemy_danovy_klin_cz",
@@ -1415,6 +1432,9 @@ if __name__ == "__main__":
 
     # ── Obrázek 5: čistý příjem vs. příjmy ───────────────────────────────────
     fig_ni = plot_net_income_vs_income()
+    _add_curve_tooltips(
+        fig_ni.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+    )
     savefig_pgf(fig_ni, "problemy_cisty_prijem_cz", strings=STRINGS_NETINCOME)
     save_figure_tex_pgf(
         "problemy_cisty_prijem_cz",
@@ -1428,23 +1448,28 @@ if __name__ == "__main__":
     )
 
     # ── Obrázek 7: odvody na SP vs. příjmy ───────────────────────────────────
-    fig_spi = plot_sp_vs_income()
-    savefig_pgf(fig_spi, "problemy_sp_odvody_cz", strings=STRINGS_SP)
-    save_figure_tex_pgf(
-        "problemy_sp_odvody_cz",
-        caption=(
-            r"Měsíční odvody na \acs{SP}, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
-        ),
-        cite_keys=["zakon_sp_1992", "zakon_duchreforma_2023", "nv_365_2025"],
-        label="fig:problemy_sp_odvody_cz",
-        resizebox_width=r"\linewidth",
-        strings=STRINGS_SP,
-    )
+    # NOTE: generation intentionally disabled; commentary merged into
+    # neighbouring mzda/duchod commentary block.
+    # fig_spi = plot_sp_vs_income()
+    # _add_curve_tooltips(
+    #     fig_spi.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="tis. Kč/měs.",
+    # )
+    # savefig_pgf(fig_spi, "problemy_sp_odvody_cz", strings=STRINGS_SP)
+    # save_figure_tex_pgf(
+    #     "problemy_sp_odvody_cz",
+    #     caption=(
+    #         r"Měsíční odvody na \acs{SP}, zaměstnanec vs.\ \acs{OSVČ}, \acs{geo-CZ}, parametry roku~2026"
+    #     ),
+    #     cite_keys=["zakon_sp_1992", "zakon_duchreforma_2023", "nv_365_2025"],
+    #     label="fig:problemy_sp_odvody_cz",
+    #     resizebox_width=r"\linewidth",
+    #     strings=STRINGS_SP,
+    # )
 
     # ── Obrázek 8: poměr důchod/SP vs. příjmy ────────────────────────────────
     fig_rsr = plot_pension_sp_ratio_vs_income()
     _add_curve_tooltips(
-        fig_rsr.axes[0], x_unit="tis. Kč/měs.", y_unit="let",
+        fig_rsr.axes[0], n=TOOLTIP_GRID, x_unit="tis. Kč/měs.", y_unit="let",
     )
     savefig_pgf(fig_rsr, "problemy_duchod_sp_pomer", strings=STRINGS_POMER)
     save_figure_tex_pgf(
