@@ -44,11 +44,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, LATEX_TEXPARTS_DIR
-from stattool.fetch import fetch_oecd, fetch_eurostat
+from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
+from analyses._shared_data import load_cb_coverage, load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -79,9 +80,6 @@ apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading data …")
-
-# CB coverage – all OECD countries
-path_cbc = fetch_oecd("CBC", start_period=START_YEAR)
 
 # Avg weekly hours worked
 path_hours = fetch_eurostat(
@@ -118,70 +116,13 @@ path_prod = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# Union density – all OECD countries (for union_gini correlation table row)
-path_tud = fetch_oecd("TUD", start_period=START_YEAR)
-
 print("Download complete.")
 
 # ── 2. Parse ──────────────────────────────────────────────────────────────────
 
-# CB coverage: AdjCov from ICTWSS CSV (all EU27 exc. DE and SK)
-#              + ERB from OECD CBC (DE and SK — AdjCov stalls before 2015/1990)
-import csv as _csv, urllib.request as _urllib_req
-from io import StringIO as _StringIO
-_ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
-_ISO3_TO_ISO2_COR: dict[str, str] = {
-    "AUT": "AT", "BEL": "BE", "BGR": "BG", "HRV": "HR", "CYP": "CY",
-    "CZE": "CZ", "DNK": "DK", "EST": "EE", "FIN": "FI", "FRA": "FR",
-    "DEU": "DE", "GRC": "GR", "HUN": "HU", "IRL": "IE", "ITA": "IT",
-    "LVA": "LV", "LTU": "LT", "LUX": "LU", "MLT": "MT", "NLD": "NL",
-    "POL": "PL", "PRT": "PT", "ROU": "RO", "SVK": "SK", "SVN": "SI",
-    "ESP": "ES", "SWE": "SE",
-}
-_EU27_ISO3_COR = set(_ISO3_TO_ISO2_COR.keys())
-
-print("Downloading ICTWSS v2 CSV (AdjCov) …")
-_adjcov_rows: list[dict] = []
-try:
-    with _urllib_req.urlopen(_ICTWSS_URL, timeout=60) as _resp:
-        _reader = _csv.DictReader(_StringIO(_resp.read().decode("utf-8-sig")))
-        for _r in _reader:
-            _iso3 = _r.get("iso3", "").strip().upper()
-            _iso2 = _ISO3_TO_ISO2_COR.get(_iso3)
-            if not _iso2 or _iso2 in ("DE", "SK"):
-                continue
-            _val = _r.get("AdjCov", "").strip()
-            _yr  = _r.get("year", "").strip()
-            if _val and _yr:
-                _adjcov_rows.append({"geo": _iso2, "time": int(_yr), "value": float(_val)})
-except Exception as _e:
-    print(f"  WARNING: ICTWSS AdjCov unavailable ({_e}) — CBC ERB used for all countries")
-
-_df_adjcov = pd.DataFrame(_adjcov_rows) if _adjcov_rows else pd.DataFrame(columns=["geo","time","value"])
-if not _df_adjcov.empty:
-    _df_adjcov = _df_adjcov[_df_adjcov["time"] >= START_YEAR]
-print(f"  AdjCov: {_df_adjcov['geo'].nunique()} EU27 countries (exc. DE, SK), "
-      f"years {_df_adjcov['time'].min() if not _df_adjcov.empty else '?'}–"
-      f"{_df_adjcov['time'].max() if not _df_adjcov.empty else '?'}")
-
-# ERB from OECD CBC for DE and SK
-ds_cbc_erb = Dataset.from_oecd_csv(
-    path_cbc,
-    name="Pokrytí KV (ERB)",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / CBC",
-    filters={"MEASURE": "ERB"},
-)
-_df_erb = ds_cbc_erb.df[ds_cbc_erb.df["geo"].isin(["DE", "SK"])][["geo", "time", "value"]].copy()
-print(f"  CBC ERB/DE+SK: years {_df_erb['time'].min() if not _df_erb.empty else '?'}–"
-      f"{_df_erb['time'].max() if not _df_erb.empty else '?'}")
-
-ds_cbc = Dataset(
-    pd.concat([_df_adjcov, _df_erb], ignore_index=True),
-    name="Pokrytí KV",
-    unit="%",
-    source_url="ICTWSS AdjCov + OECD CBC ERB (DE, SK)",
-)
+# CB coverage (shared helper: ICTWSS AdjCov + OECD CBC ERB for DE, SK)
+print("Loading CB coverage …")
+ds_cbc = load_cb_coverage(start_period=START_YEAR)
 
 ds_hours = Dataset.from_sdmx_csv(
     path_hours,
@@ -201,13 +142,7 @@ raw_net = pd.read_csv(path_net)[["geo", "TIME_PERIOD", "OBS_VALUE"]].dropna(subs
 raw_net.columns = ["geo", "time", "net_pps"]
 raw_net["time"] = raw_net["time"].astype(int)
 
-ds_tud = Dataset.from_oecd_csv(
-    path_tud,
-    name="Hustota odborů",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / TUD",
-    filters={"INDICATOR": "TUD"},
-)
+ds_tud = load_union_density(start_period=START_YEAR)
 
 # GDP per capita index (EU27=100) as a standalone dataset for scatter
 ds_gdp_idx = Dataset.from_sdmx_csv(

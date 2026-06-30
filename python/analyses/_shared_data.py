@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import logging
+import urllib.request
 from io import StringIO
 from pathlib import Path
 from typing import Optional
@@ -15,7 +16,7 @@ from typing import Optional
 import pandas as pd
 
 from stattool.dataset import Dataset, _OECD_ISO3_TO_ISO2
-from stattool.fetch import fetch, fetch_eurostat, fetch_ipp, fetch_oecd
+from stattool.fetch import fetch_eurostat, fetch_ipp, fetch_oecd
 
 log = logging.getLogger(__name__)
 
@@ -34,20 +35,20 @@ _ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 1. Collective-bargaining coverage (ICTWSS AdjCov + OECD CBC ERB for DE, SK, SI)
+# 1. Collective-bargaining coverage (ICTWSS AdjCov + OECD CBC ERB for DE, SK)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
-    """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK, SI) + OECD CBC ERB."""
+    """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK) + OECD CBC ERB."""
     # ── ICTWSS AdjCov ─────────────────────────────────────────────────────────
-    ictwss_path = fetch(_ICTWSS_URL, suffix=".csv")
-    raw_csv = ictwss_path.read_text(encoding="utf-8-sig")
+    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
+        raw_csv = resp.read().decode("utf-8-sig")
 
     reader = csv.DictReader(StringIO(raw_csv))
     adjcov_records: list[dict] = []
     for row in reader:
         iso3 = row.get("iso3", "").strip().upper()
-        if iso3 not in _EU27_ISO3 or iso3 in ("DEU", "SVK", "SVN"):
+        if iso3 not in _EU27_ISO3 or iso3 in ("DEU", "SVK"):
             continue
         val = row.get("AdjCov", "").strip()
         year = row.get("year", "").strip()
@@ -60,7 +61,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         })
     df_adjcov = pd.DataFrame(adjcov_records)
 
-    # ── OECD CBC ERB (DE, SK, SI) ─────────────────────────────────────────────
+    # ── OECD CBC ERB (DE, SK) ─────────────────────────────────────────────────
     path_cbc = fetch_oecd("CBC", start_period=start_period)
     ds_cbc = Dataset.from_oecd_csv(
         path_cbc,
@@ -69,7 +70,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         source_url="OECD AIAS ICTWSS / CBC (ERB)",
         filters={"MEASURE": "ERB"},
     )
-    df_erb = ds_cbc.df[ds_cbc.df["geo"].isin(["DE", "SK", "SI"])][
+    df_erb = ds_cbc.df[ds_cbc.df["geo"].isin(["DE", "SK"])][
         ["geo", "time", "value"]
     ].copy()
 
@@ -81,7 +82,7 @@ def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
         df,
         name="Pokrytí KV",
         unit="%",
-        source_url="ICTWSS AdjCov; OECD CBC ERB (DE, SK, SI)",
+        source_url="ICTWSS AdjCov; OECD CBC ERB (DE, SK)",
     )
 
 
@@ -94,7 +95,7 @@ def load_union_density(*, start_period: int = 1990) -> Dataset:
     path = fetch_oecd("TUD", start_period=start_period)
     ds = Dataset.from_oecd_csv(
         path,
-        name="Odborová organizovanost",
+        name="Hustota odborů",
         unit="%",
         source_url="OECD AIAS ICTWSS / TUD",
         filters={"INDICATOR": "TUD"},
@@ -128,11 +129,11 @@ def load_pli(*, start_period: int = 2005) -> Dataset:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 4. Active LMP expenditure (OECD LMPEXP, categories 2--7, % GDP)
+# 4. Active LMP expenditure (OECD LMPEXP, categories 2–7, % GDP)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_lmp_active(*, start_period: int = 1998) -> Dataset:
-    """Load active LMP expenditure (cat. 2--7) as % GDP."""
+    """Load active LMP expenditure (cat. 2–7) as % GDP."""
     path = fetch_oecd("LMPEXP", start_period=start_period)
     raw = pd.read_csv(path)
     raw = raw[
@@ -156,47 +157,7 @@ def load_lmp_active(*, start_period: int = 1998) -> Dataset:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 5. Employer organisation density (ICTWSS ED)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def load_employer_density(*, start_period: int = 1990) -> Dataset:
-    """Load employer organisation density (ED) from ICTWSS v2 CSV.
-
-    ED = share of employees working in firms that belong to an employer
-    organisation (%).  Data are sparse for most EU-27 countries.
-    """
-    ictwss_path = fetch(_ICTWSS_URL, suffix=".csv")
-    raw_csv = ictwss_path.read_text(encoding="utf-8-sig")
-
-    reader = csv.DictReader(StringIO(raw_csv))
-    records: list[dict] = []
-    for row in reader:
-        iso3 = row.get("iso3", "").strip().upper()
-        if iso3 not in _EU27_ISO3:
-            continue
-        val = row.get("ED", "").strip()
-        year = row.get("year", "").strip()
-        if not val or not year:
-            continue
-        records.append({
-            "geo": _ISO3_TO_ISO2[iso3],
-            "time": int(year),
-            "value": float(val),
-        })
-
-    df = pd.DataFrame(records)
-    df = df[df["time"] >= start_period]
-
-    return Dataset(
-        df,
-        name="Hustota zaměstnavatelských organizací",
-        unit="%",
-        source_url="OECD/AIAS ICTWSS v2 (ED)",
-    )
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 6. IPP negotiated wage increase (MPSV odmenovani, sheet A15a)
+# 5. IPP negotiated wage increase (MPSV odmenovani, sheet A15a)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _extract_ipp_negotiated_increase(path: Path, year: int) -> Optional[float]:

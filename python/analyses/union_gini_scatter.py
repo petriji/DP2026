@@ -26,11 +26,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import COUNTRY_COLORS, LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd, fetch_eurostat
+from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
+from analyses._shared_data import load_union_density
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -46,20 +47,8 @@ HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download union density ─────────────────────────────────────────────────
-# TUD dataset – fetch full dataset, filter EU27 in Python (country filter 404s)
-path_tud = fetch_oecd(
-    "TUD",
-    start_period=START_YEAR,
-)
-
-ds_tud = Dataset.from_oecd_csv(
-    path_tud,
-    name="Hustota odborů",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / TUD",
-    filters={"INDICATOR": "TUD"},
-)
+# ── 1. Load union density ─────────────────────────────────────────────────────
+ds_tud = load_union_density(start_period=START_YEAR)
 # Keep all countries (not just EU27) for a fuller grey cloud and better trendline
 
 # ── 2. Download Gini coefficient ──────────────────────────────────────────────

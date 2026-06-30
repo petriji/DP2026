@@ -21,29 +21,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
-from stattool.fetch import fetch_oecd
-from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
+from analyses._shared_data import load_union_density
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download ───────────────────────────────────────────────────────────────
-# Fetch full TUD dataset (no country filter — filter in Python below).
-path = fetch_oecd("TUD", start_period=2010)
-
-# ── 2. Parse ──────────────────────────────────────────────────────────────────
-ds = Dataset.from_oecd_csv(
-    path,
-    name="Hustota odborů",
-    unit="%",
-    source_url="OECD AIAS ICTWSS / TUD",
-    filters={"INDICATOR": "TUD"},
-)
-
-# Drop the OECD aggregate row
-ds.df = ds.df[ds.df["geo"] != "OECD"].copy()
+# ── 1. Load data ──────────────────────────────────────────────────────────────
+ds = load_union_density(start_period=2010)
 
 print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")

@@ -48,9 +48,10 @@ import matplotlib.ticker as ticker
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
-from stattool.fetch import fetch_ipp, fetch_eurostat
+from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from analyses._shared_data import extract_ipp_negotiated
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -65,77 +66,13 @@ END_YEAR = 2025     # most recent complete survey year
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
-# ── 1. Download IPP odmenovani for each survey year ───────────────────────────
-
-def _extract_ipp_negotiated_increase(path: Path, year: int) -> float | None:
-    """Extract the average negotiated wage increase (%) from one IPP odmenovani file.
-
-    Reads sheet A15a "Mzdový vývoj" and dynamically locates:
-    - the ``prům.%`` column (col 9 in 2007–2013 files, col 11 in 2014+ files)
-    - the "Celkem" aggregate row (col 0 in 2009+ files, col 1 in 2007-era files
-      where the first column is empty)
-
-    Returns ``None`` if the value cannot be found or is outside 0–50 %.
-    """
-    try:
-        df = pd.read_excel(path, sheet_name="A15a", header=None)
-    except Exception as exc:
-        log.warning("IPP %d: cannot read sheet A15a from %s: %s", year, path.name, exc)
-        return None
-
-    # Find the 'prům.%' column by scanning header rows (first 15 rows)
-    prumpc_col: int | None = None
-    for row_idx in range(min(15, df.shape[0])):
-        for col_idx in range(df.shape[1]):
-            if str(df.iloc[row_idx, col_idx]).strip() == "prům.%":
-                prumpc_col = col_idx
-                break
-        if prumpc_col is not None:
-            break
-
-    if prumpc_col is None:
-        log.warning("IPP %d: 'prům.%%' column not found in %s", year, path.name)
-        return None
-
-    # Find the 'Celkem' row; check col 0 and col 1 (pre-2009 files shift labels right)
-    celkem_row: int | None = None
-    for row_idx in range(df.shape[0]):
-        for label_col in range(min(2, df.shape[1])):
-            if str(df.iloc[row_idx, label_col]).strip().lower() == "celkem":
-                celkem_row = row_idx
-                break
-        if celkem_row is not None:
-            break
-
-    if celkem_row is None:
-        log.warning("IPP %d: 'Celkem' row not found in %s", year, path.name)
-        return None
-
-    val = pd.to_numeric(df.iloc[celkem_row, prumpc_col], errors="coerce")
-    if pd.notna(val) and 0 < val < 50:
-        return float(val)
-
-    log.warning("IPP %d: could not extract negotiated increase from %s", year, path.name)
-    return None
-
-
-print(f"Downloading IPP odmenovani for {START_YEAR}–{END_YEAR} …")
-
-ipp_records: list[dict] = []
-ipp_years_ok: list[int] = []
-
-for yr in range(START_YEAR, END_YEAR + 1):
-    try:
-        path_ipp = fetch_ipp(yr, "odmenovani")
-        val = _extract_ipp_negotiated_increase(path_ipp, yr)
-        if val is not None:
-            ipp_records.append({"time": yr, "value": val})
-            ipp_years_ok.append(yr)
-            print(f"  IPP {yr}: {val:.1f} %")
-        else:
-            print(f"  IPP {yr}: extraction failed (structure unrecognised – see log)")
-    except Exception as exc:
-        print(f"  IPP {yr}: skipped ({exc})")
+# ── 1. Load IPP negotiated wage increases ─────────────────────────────────────
+print(f"Loading IPP odmenovani for {START_YEAR}–{END_YEAR} …")
+ipp_dict = extract_ipp_negotiated(START_YEAR, END_YEAR)
+ipp_records = [{"time": yr, "value": val} for yr, val in sorted(ipp_dict.items())]
+ipp_years_ok = sorted(ipp_dict.keys())
+for yr, val in sorted(ipp_dict.items()):
+    print(f"  IPP {yr}: {val:.1f} %")
 
 if not ipp_records:
     print(
