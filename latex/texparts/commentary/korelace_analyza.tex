@@ -1,7 +1,5 @@
 % ── Korelační analýza: pokrytí KS a ukazatele trhu práce ─────────────────────
 
-\paragraph{Formulace problému}\label{par:korelace_uvod}
-
 Cílem této sekce je kvantifikovat asociaci mezi institucionální silou
 \acgen{KV} a~vybranými výstupními ukazateli trhu práce v~zemích \acs{EU}27.
 Vstupní (vysvětlující) proměnnou~$\acs{var-x}$ je pokrytí \acgen{KV}; výstupními (vysvětlovanými)
@@ -121,7 +119,7 @@ lineární složku vztahu.
 
 \subparagraph{Jednoduchá lineární regrese metodou nejmenších čtverců}\label{spar:ols}
 
-Jednoduchá regresní přímka odhadnutá metodou nejmenších čtverců (OLS):
+Jednoduchá regresní přímka odhadnutá metodou nejmenších čtverců (MNČ):
 \begin{equation}\label{eq:ols}
   \hat{\acs{var-y}} = \hat{\alpha} + \hat{\beta}\,\acs{var-x},
   \qquad
@@ -167,13 +165,12 @@ s~$\acs{var-n}-2$ stupni volnosti.
 Pro velikosti panelu~$\acs{var-n} \approx 250$ a~koeficienty $|\acs{var-r}| \gtrsim 0{,}15$
 by~tento test odmítl $\mathrm{H}_{0}$ na~hladině významnosti~\SI{5}{\percent}.
 
-Formální p-hodnoty ani intervaly spolehlivosti se zde však \emph{nereferují}.
+Formální p-hodnoty ani intervaly spolehlivosti se zde však nereferují.
 Důvodem je povaha datového souboru: nejde o~náhodný výběr ze~širší populace,
-ale o~\emph{plný panel} členských států~\acs{EU}27 v~čase. Klasická pravděpodobnostní
+ale o~plný panel členských států~\acs{EU}27 v~čase. Klasická pravděpodobnostní
 inference předpokládá nezávislost a~náhodný výběr; obě podmínky jsou narušeny
 (opakovaná pozorování stejné země, autokorelace ve~vnitro-zemních časových
-řadách, výběrové jednotky=celá populace zájmu). Interpretace je proto
-\emph{deskriptivní}: síla a~směr asociace se hodnotí podle Evansovy škály,
+řadách, výběrové jednotky=celá populace zájmu). Síla a~směr asociace se hodnotí podle Evansovy škály,
 robustnost podle shody Pearsonova~$\acs{var-r}$ a~Spearmanova~$\acs{var-rho}$
 a~podle stability mezi panelovým a~průřezovým koeficientem.
 
