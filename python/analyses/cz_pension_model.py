@@ -201,18 +201,47 @@ OSVC_RH1_X: int = int(RH1 / OSVC_BASE_RATIO)           # ≈ 39 175 Kč (OSVČ k
 OSVC_RH2_X: int = int(RH2 / OSVC_BASE_RATIO)           # ≈ 356 124 Kč (mimo std. rozsah)
 
 # ── OSVČ typy pro srovnání ────────────────────────────────────────────────────
-# Formát: (výdajový_paušál, popisek, barva, max_pásmo_paušální_daně)
+# Formát: (výdajový_paušál, popisek, barva)
 # výdajový_paušál: podíl příjmů uznaný jako výdaje → zisk = příjmy × (1 − sazba)
-# max_pásmo: maximální pásmo paušální daně (40 % svobodná povolání = jen pásmo 1)
-OSVC_TYPES: list[tuple[float, str, str, int]] = [
-    (0.60, "OSVČ 60\u202f%\u00a0výdajů (ost.\u00a0živnosti)",       PALETTE[1], 3),
-    (0.80, "OSVČ 80\u202f%\u00a0výdajů (řemeslná živnost)",          PALETTE[4], 3),
-    (0.40, "OSVČ 40\u202f%\u00a0výdajů (svobodná\u00a0povolání)",   PALETTE[5], 1),
+OSVC_TYPES: list[tuple[float, str, str]] = [
+    (0.60, "OSVČ 60\u202f%\u00a0výdajů (ost.\u00a0živnosti)",       PALETTE[1]),
+    (0.80, "OSVČ 80\u202f%\u00a0výdajů (řemeslná živnost)",          PALETTE[4]),
+    (0.40, "OSVČ 40\u202f%\u00a0výdajů (svobodná\u00a0povolání)",   PALETTE[5]),
 ]
 
 # Barvy paušální daně – jedna barva na pásmo (nezávisle na typu OSVČ,
 # protože VZ paušálu je pevný na pásmo a křivky různých typů OSVČ se překrývají).
 PASMO_COLORS: list[str] = [PALETTE[2], PALETTE[3], PALETTE[6]]  # pásmo 1, 2, 3
+
+# ── Paušální daň – segmenty platnosti pro každý typ OSVČ ─────────────────────
+# Dle § 2a zákona č. 586/1992 Sb. ve znění zákona č. 355/2021 Sb.:
+#   40 % výdajový paušál (svobodná povolání): 3 pásma, standardní rozsahy
+#     Pásmo 1: příjmy 0–1 000 000 Kč/rok = 0–83 333 Kč/měs.
+#     Pásmo 2: příjmy 1 000 000–1 500 000 Kč/rok = 83 333–125 000 Kč/měs.
+#     Pásmo 3: příjmy 1 500 000–2 000 000 Kč/rok = 125 000–166 667 Kč/měs.
+#   60 % výdajový paušál (obecné živnosti): 2 pásma, vyšší příjmové limity
+#     Pásmo 1: příjmy 0–1 500 000 Kč/rok = 0–125 000 Kč/měs. (viz § 2a odst. 4)
+#     Pásmo 2: příjmy 1 500 000–2 000 000 Kč/rok = 125 000–166 667 Kč/měs.
+#   80 % výdajový paušál (řemeslné živnosti): 1 pásmo po celý příjmový rozsah
+#     Pásmo 1: příjmy 0–2 000 000 Kč/rok = 0–166 667 Kč/měs. (viz § 2a odst. 5)
+#
+# Formát: {výdajový_paušál: [(x_start, x_end, pasmo_index), ...]}
+#   x_start / x_end: měsíční příjmový rozsah [Kč/měs.]; x_start=0 → MIN_WAGE_TOTAL_COST
+#   pasmo_index: index do PAUSALNI_DAN a PAUSALNI_DAN_TOTAL (0=pásmo 1, 1=pásmo 2, 2=pásmo 3)
+PAUSALNI_SEGS: dict[float, list[tuple[int, int, int]]] = {
+    0.40: [
+        (0,       83_333,  0),   # pásmo 1: příjmy 0–83 333 Kč/měs.
+        (83_333,  125_000, 1),   # pásmo 2: příjmy 83 333–125 000 Kč/měs.
+        (125_000, 166_667, 2),   # pásmo 3: příjmy 125 000–166 667 Kč/měs.
+    ],
+    0.60: [
+        (0,       125_000, 0),   # pásmo 1: příjmy 0–125 000 Kč/měs. (rozšířený limit)
+        (125_000, 166_667, 1),   # pásmo 2: příjmy 125 000–166 667 Kč/měs.
+    ],
+    0.80: [
+        (0,       166_667, 0),   # pásmo 1: příjmy 0–166 667 Kč/měs. (celý rozsah)
+    ],
+}
 
 # Limity měsíčních příjmů pro výdajový paušál (zákon č. 586/1992 Sb., § 7 odst. 7)
 # Nad těmito hranicemi výdajová sazba přestává platit – je třeba uplatnit skutečné
@@ -420,8 +449,7 @@ def plot_pension_comparison(
             color=c_emp, linewidth=2.0, zorder=3)
 
     # OSVČ typy – standardní odvody (dashed below cap, dash-dot above cap) + paušální daň
-    pasmo_plotted: set[int] = set()
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, label, color in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x, cap, side='right'))
@@ -433,18 +461,21 @@ def plot_pension_comparison(
             ax.plot(x[start:] / 1_000, p_osvc[start:] / 1_000,
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            _, monthly_base = PAUSALNI_DAN[p_idx]
             p_val  = _pension(monthly_base, years)
-            x_seg  = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
-            y_seg  = [p_val / 1_000, p_val / 1_000]
+            x_start = max(x_s, MIN_WAGE_TOTAL_COST)
+            x_end   = min(x_e, income_max)
+            if x_start >= x_end:
+                continue
+            x_seg = [x_start / 1_000, x_end / 1_000]
+            y_seg = [p_val / 1_000, p_val / 1_000]
             ax.plot(x_seg, y_seg,
                     color=color, linewidth=2.0, linestyle=":", zorder=2)
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_income / 1_000, color=color,
+            if seg_i < len(segs) - 1 and x_e <= income_max:
+                ax.axvline(x_e / 1_000, color=color,
                            linewidth=0.5, linestyle=":", alpha=0.4)
-            pasmo_plotted.add(i)
-            prev_max = max_income
 
     # Minimální výše důchodu
     min_pension_kczk = MIN_TOTAL_PENSION / 1_000
@@ -499,7 +530,7 @@ def plot_pension_comparison(
         Line2D([0], [0], color=c_emp, linewidth=2.0,
                label="Zaměstnanec (celk.\u00a0nákl.)"),
     ]
-    for _er, lbl, col, _mp in OSVC_TYPES:
+    for _er, lbl, col in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
     legend_handles.append(
@@ -571,7 +602,7 @@ def plot_pension_solidarity(
     ax_top.plot(x / 1_000, p_emp / 1_000,
                 color=c_emp, linewidth=2.0, zorder=3)
 
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, label, color in OSVC_TYPES:
         p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x, cap, side='right'))
@@ -583,17 +614,21 @@ def plot_pension_solidarity(
             ax_top.plot(x[start:] / 1_000, p_osvc[start:] / 1_000,
                         color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            _, monthly_base = PAUSALNI_DAN[p_idx]
             p_val = _pension(monthly_base, years)
-            x_seg = [max(prev_max, MIN_WAGE_TOTAL_COST) / 1_000, max_income / 1_000]
+            x_start = max(x_s, MIN_WAGE_TOTAL_COST)
+            x_end   = min(x_e, income_max)
+            if x_start >= x_end:
+                continue
+            x_seg = [x_start / 1_000, x_end / 1_000]
             y_seg = [p_val / 1_000, p_val / 1_000]
             ax_top.plot(x_seg, y_seg,
                         color=color, linewidth=2.0, linestyle=":", zorder=2)
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_top.axvline(max_income / 1_000, color=color,
+            if seg_i < len(segs) - 1 and x_e <= income_max:
+                ax_top.axvline(x_e / 1_000, color=color,
                                linewidth=0.5, linestyle=":", alpha=0.4)
-            prev_max = max_income
 
     # Minimální výše důchodu
     min_pension_kczk = MIN_TOTAL_PENSION / 1_000
@@ -637,7 +672,7 @@ def plot_pension_solidarity(
     rr_emp = p_emp_rr / _net_income_emp(x_rr) * 100
     ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
 
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, label, color in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
         ni_osvc   = _net_income_osvc_vydajovy(x_rr, expense_rate)
         # Mask points where net income ≤ 0 to avoid division artifacts
@@ -655,18 +690,22 @@ def plot_pension_solidarity(
             ax_bot.plot(x_rr[start:] / 1_000, rr_osvc[start:],
                         color=color, linewidth=1.5, linestyle="-.", alpha=0.45)
 
-        prev_max = 0
-        for i, ((max_income, monthly_base), (_, total_pay_band)) in enumerate(
-                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            p_val   = _pension(monthly_base, years)
-            x_band  = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), max_income, 300)
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            _, monthly_base = PAUSALNI_DAN[p_idx]
+            _, total_pay_band = PAUSALNI_DAN_TOTAL[p_idx]
+            p_val  = _pension(monthly_base, years)
+            x_start = max(x_s, MIN_WAGE_TOTAL_COST)
+            x_end   = min(x_e, income_max)
+            if x_start >= x_end:
+                continue
+            x_band  = np.linspace(x_start, x_end, 300)
             rr_band = p_val / np.maximum(x_band - total_pay_band, 1) * 100
             ax_bot.plot(x_band / 1_000, rr_band,
                         color=color, linewidth=2.0, linestyle=":")
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_bot.axvline(max_income / 1_000, color=color,
+            if seg_i < len(segs) - 1 and x_e <= income_max:
+                ax_bot.axvline(x_e / 1_000, color=color,
                                linewidth=0.5, linestyle=":", alpha=0.4)
-            prev_max = max_income
 
     # Referenční svislé čáry – dolní panel
     _add_vertical_ref(ax_bot, MIN_WAGE_TOTAL_COST / 1_000,
@@ -694,7 +733,7 @@ def plot_pension_solidarity(
         Line2D([0], [0], color=c_emp, linewidth=2.0,
                label="Zaměstnanec (celk.\u00a0nákl.)"),
     ]
-    for _er, lbl, col, _mp in OSVC_TYPES:
+    for _er, lbl, col in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
     legend_handles.append(

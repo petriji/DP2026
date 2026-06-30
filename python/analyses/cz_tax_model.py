@@ -78,6 +78,7 @@ from cz_pension_model import (
     OSVC_VYDAJOVY_CAP,
     PAUSALNI_DAN,
     PAUSALNI_DAN_TOTAL,
+    PAUSALNI_SEGS,
     MIN_WAGE_TOTAL_COST,
     MEDIAN_EMP_TOTAL_COST,
     POVERTY_THRESHOLD,
@@ -391,7 +392,7 @@ def _plot_osvc_lines(
     fn_osvc(x, expense_rate) → y hodnoty pro standardní odvody.
     fn_pausalni(x_band, total_pay, i) → y hodnoty pro paušální daň pásmo i.
     """
-    for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, _label, color in OSVC_TYPES:
         y_osvc = fn_osvc(x, expense_rate)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x, cap, side='right'))
@@ -403,17 +404,20 @@ def _plot_osvc_lines(
             ax.plot(x[start:] / 1_000, y_osvc[start:],
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = 0
-        for i, ((max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
-                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            x_band = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), min(max_inc_t, income_max), 300)
-            y_band = fn_pausalni(x_band, total_pay, i)
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            _, total_pay = PAUSALNI_DAN_TOTAL[p_idx]
+            x_start = max(x_s, MIN_WAGE_TOTAL_COST)
+            x_end   = min(x_e, income_max)
+            if x_start >= x_end:
+                continue
+            x_band = np.linspace(x_start, x_end, 300)
+            y_band = fn_pausalni(x_band, total_pay, p_idx)
             ax.plot(x_band / 1_000, y_band,
                     color=color, linewidth=2.0, linestyle=":", zorder=2)
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_inc_t / 1_000, color=color,
+            if seg_i < len(segs) - 1 and x_e <= income_max:
+                ax.axvline(x_e / 1_000, color=color,
                            linewidth=0.5, linestyle=":", alpha=0.4)
-            prev_max = max_inc_t
 
 
 def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
@@ -423,7 +427,7 @@ def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
         Line2D([0], [0], color=c_emp, linewidth=2.0,
                label="Zaměstnanec (celk.\u00a0nákl.)"),
     ]
-    for _er, lbl, col, _mp in OSVC_TYPES:
+    for _er, lbl, col in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
     legend_handles.append(
@@ -488,21 +492,27 @@ def plot_tax_wedge_vs_income(
                 xytext=(4, 0), textcoords="offset points",
                 fontsize=FONT_SIZE - 2, color=c_emp, va="center")
 
-    for expense_rate, _label, color, _max_pasmo in OSVC_TYPES:
+    for expense_rate, _label, color in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
         osvc_label = f"OSVČ\u00a0{int(expense_rate * 100)}\u202f%"
         ax.annotate(osvc_label, (x_end / 1_000, tw_end_o),
                     xytext=(4, 0), textcoords="offset points",
                     fontsize=FONT_SIZE - 2, color=color, va="center")
 
-    # Paušální pásmo – popisky na konci každého pásma
-    for i, ((_max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
-            zip(PAUSALNI_DAN, PAUSALNI_DAN_TOTAL)):
-        x_lab = float(min(income_max, max_inc_t))
-        tw_lab = float(total_pay) / x_lab * 100
-        ax.annotate(f"Paušál\u00a0{i + 1}", (x_lab / 1_000, tw_lab),
-                    xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color="#555555", va="center")
+    # Paušální pásmo – popisky na konci každého pásma; barva dle OSVČ typu
+    labeled_pidx2: set[int] = set()
+    for expense_rate, _label, color in OSVC_TYPES:
+        segs = PAUSALNI_SEGS[expense_rate]
+        for x_s, x_e, p_idx in segs:
+            if p_idx in labeled_pidx2:
+                continue
+            total_pay = PAUSALNI_DAN_TOTAL[p_idx][1]
+            x_lab = float(min(income_max, x_e))
+            tw_lab = float(total_pay) / x_lab * 100
+            ax.annotate(f"Paušál\u00a0{p_idx + 1}", (x_lab / 1_000, tw_lab),
+                        xytext=(4, 0), textcoords="offset points",
+                        fontsize=FONT_SIZE - 2, color=color, va="center")
+            labeled_pidx2.add(p_idx)
 
     return fig
 
@@ -663,7 +673,7 @@ def plot_pension_sp_ratio_vs_income(
     fig, ax = plt.subplots(figsize=cm2in(16, 10))
     ax.plot(x / 1_000, breakeven_years_emp, color=c_emp, linewidth=2.0, zorder=3)
 
-    for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, _label, color in OSVC_TYPES:
         pen_o = pension_osvc_vydajovy(x, expense_rate, years)
         sp_o = sp_osvc_vydajovy(x, expense_rate)
         breakeven_years_o = INSURANCE_YEARS / (pen_o / sp_o)
@@ -677,20 +687,19 @@ def plot_pension_sp_ratio_vs_income(
             ax.plot(x[start:] / 1_000, breakeven_years_o[start:],
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = int(MIN_WAGE_TOTAL_COST)
-        for i, ((max_inc_t, monthly_base), (_max_inc_t2, _total_pay)) in enumerate(
-                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            x_band = np.linspace(max(prev_max, int(MIN_WAGE_TOTAL_COST)),
-                                 min(max_inc_t, income_max), 300)
-            if len(x_band) == 0:
-                prev_max = max_inc_t
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            monthly_base = PAUSALNI_DAN[p_idx][1]
+            x_start = max(x_s, MIN_WAGE_TOTAL_COST)
+            x_end   = min(x_e, income_max)
+            if x_start >= x_end:
                 continue
+            x_band = np.linspace(x_start, x_end, 300)
             pen_band = _pension(monthly_base, years)
             sp_band = OSVC_SOCIAL_RATE * monthly_base
             breakeven_years_band = np.full_like(x_band, INSURANCE_YEARS / (pen_band / sp_band))
             ax.plot(x_band / 1_000, breakeven_years_band,
-                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
-            prev_max = max_inc_t
+                    color=color, linewidth=2.0, linestyle=":", zorder=2)
 
     ax.axhline(24.7, color="#555555", linewidth=1.0, linestyle=(0, (5, 5)), alpha=0.8, zorder=1)
     ax.annotate(
@@ -746,7 +755,7 @@ def plot_tax_wedge_comparison(
     ax.plot(tw_emp, rr_emp,
             color=c_emp, linewidth=2.0, zorder=3)
 
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, label, color in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
         ni_osvc = net_income_osvc_vydajovy(x, expense_rate)
         # Mask points where net income ≤ 0 (OSVČ 80 % at low income has
@@ -764,17 +773,21 @@ def plot_tax_wedge_comparison(
             ax.plot(tw_osvc[start:], rr_osvc[start:],
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = income_min
-        for i, ((max_inc_p, monthly_base), (max_inc_t, total_pay)) in enumerate(
-                zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            x_band  = np.linspace(max(prev_max, income_min), max_inc_t, 300)
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            monthly_base = PAUSALNI_DAN[p_idx][1]
+            total_pay    = PAUSALNI_DAN_TOTAL[p_idx][1]
+            x_start = max(x_s, income_min)
+            x_end_s = min(x_e, income_max)
+            if x_start >= x_end_s:
+                continue
+            x_band  = np.linspace(x_start, x_end_s, 300)
             tw_band = total_pay / x_band * 100
             p_val   = _pension(monthly_base, years)  # fixed VZ per pásmo
             net_band = np.maximum(x_band - float(total_pay), 1.0)
             rr_band = p_val / net_band * 100
             ax.plot(tw_band, rr_band,
                     color=color, linewidth=2.0, linestyle=":", zorder=2)
-            prev_max = max_inc_t
 
     # Referenční body na křivkách pro min. mzdu a mediánové náklady zaměstnance
     ref_points = [
@@ -790,7 +803,7 @@ def plot_tax_wedge_comparison(
             ax.annotate(lbl, (tw_e, rr_e), xytext=(4, 4),
                         textcoords="offset points",
                         fontsize=FONT_SIZE - 2, color=col)
-            for expense_rate_ref, _label, color_ref, _max_pasmo in OSVC_TYPES:
+            for expense_rate_ref, _label, color_ref in OSVC_TYPES:
                 tw_o = float(tax_wedge_osvc_vydajovy(float(x_ref), expense_rate_ref))
                 rr_o = float(pension_osvc_vydajovy(float(x_ref), expense_rate_ref, years)) / max(float(net_income_osvc_vydajovy(float(x_ref), expense_rate_ref)), 1.0) * 100
                 ax.plot(tw_o, rr_o, "o", color=col, markersize=5, zorder=5)
@@ -815,7 +828,7 @@ def plot_tax_wedge_comparison(
                 xytext=(4, 0), textcoords="offset points",
                 fontsize=FONT_SIZE - 2, color=c_emp, va="center")
 
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
+    for expense_rate, label, color in OSVC_TYPES:
         tw_end_o = float(tax_wedge_osvc_vydajovy(x_end, expense_rate))
         rr_end_o = float(pension_osvc_vydajovy(x_end, expense_rate, years)) / max(float(net_income_osvc_vydajovy(x_end, expense_rate)), 1.0) * 100
         # Short label: extract the expense-rate percentage from label string
@@ -824,17 +837,27 @@ def plot_tax_wedge_comparison(
                     xytext=(4, 0), textcoords="offset points",
                     fontsize=FONT_SIZE - 2, color=color, va="center")
 
-    for i, ((max_inc_p, monthly_base), (max_inc_t, total_pay)) in enumerate(
-            zip(PAUSALNI_DAN, PAUSALNI_DAN_TOTAL)):
-        # The paušální band ends at max_inc_t; label at high-income end of band
-        x_lab = float(min(income_max, max_inc_t))
-        tw_lab = total_pay / x_lab * 100
-        p_val  = _pension(monthly_base, years)
-        net_lab = max(float(x_lab) - float(total_pay), 1.0)
-        rr_lab = p_val / net_lab * 100
-        ax.annotate(f"Paušál {i + 1}", (tw_lab, rr_lab),
-                    xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE - 2, color=PASMO_COLORS[i], va="center")
+    # Inline labels for paušální segments: label each unique pásmo at the end of its
+    # highest-income segment, using the OSVČ type color of that type's last segment.
+    labeled_pidx: set[int] = set()
+    for expense_rate, _label, color in OSVC_TYPES:
+        segs = PAUSALNI_SEGS[expense_rate]
+        for seg_i, (x_s, x_e, p_idx) in enumerate(segs):
+            if p_idx in labeled_pidx:
+                continue
+            monthly_base = PAUSALNI_DAN[p_idx][1]
+            total_pay    = PAUSALNI_DAN_TOTAL[p_idx][1]
+            x_lab = float(min(income_max, x_e))
+            if x_lab < income_min:
+                continue
+            tw_lab  = total_pay / x_lab * 100
+            p_val   = _pension(monthly_base, years)
+            net_lab = max(float(x_lab) - float(total_pay), 1.0)
+            rr_lab  = p_val / net_lab * 100
+            ax.annotate(f"Paušál\u00a0{p_idx + 1}", (tw_lab, rr_lab),
+                        xytext=(4, 0), textcoords="offset points",
+                        fontsize=FONT_SIZE - 2, color=color, va="center")
+            labeled_pidx.add(p_idx)
 
     return fig
 
