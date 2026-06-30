@@ -1,20 +1,14 @@
-Časový vývoj Giniho koeficientu příjmové nerovnosti v~ČR a~vybraných zemích \ac{EU} dokumentuje klíčový trend: po relativně stabilním období v~dekádě 2005--2015 vykazuje ČR od roku 2016 mírný, ale konzistentní nárůst nerovnosti, zatímco DK a~FI zůstávají stabilní nebo mírně klesají.
-Tento trend nelze přičíst změnám transferového systému --- zákonná minimální mzda i~sociální dávky v~ČR rostly; příčinou je spíše polarizace tržních příjmů, tedy mezd před redistribucí.
-Polarizace tržních mezd je typickým symptomem decentralizovaného vyjednávání bez sektorového zakotvení: jednotliví zaměstnavatelé s~tržní silou mohou nabídnout výrazně nadprůměrné odměny top-pracovníkům, zatímco pracovníci bez vyjednávací síly zůstávají při spodní hranici.
-Stabilizace a~postupné snižování Giniho koeficientu vyžaduje kompresi tržních mezd prostřednictvím odvětvových tarifních smluv --- jde o~klasický „wage-setting” efekt \ac{KS}, který je v~literatuře doložen pro nordické i~kontinentální systémy (srov.~obr.~\ref{fig:korelace_scatter}).
-
-Giniho koeficient příjmové nerovnosti $\acs{var-g}_{\acs{idx-y}}$ je formálně definován jako:
+Giniho koeficient ekvivalizovaného disponibilního příjmu domácností~$\acs{var-g}_{\acs{idx-y}}$, definovaný jako
 \begin{equation}\label{eq:gini_y}
   \acs{var-g}_{\acs{idx-y}}
-    = \frac{2\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+    = \frac{2\sum_{\acs{idx-i}=1}^{\acs{var-N}}
               \acs{idx-i}\;\acs{var-y}_{\acs{idx-i}}}
-           {\acs{var-N}\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+           {\acs{var-N}\sum_{\acs{idx-i}=1}^{\acs{var-N}}
               \acs{var-y}_{\acs{idx-i}}}
     \;-\; \frac{\acs{var-N}+1}{\acs{var-N}},
 \end{equation}
-kde $\acs{var-y}_{\acs{idx-i}}$ jsou příjmy seřazené vzestupně
-($\acs{var-y}_{1} \leq \cdots \leq \acs{var-y}_{\acs{var-N}}$),
-$\acs{idx-i}$~je pořadové číslo pozorování a~$\acs{var-N}$~je celkový
-počet pozorování.
+dosahuje v~\acloc{ČR} v~roce~2024 hodnoty~\SI{24,0}{\percent} a~spolu se~Slovenskem (\SI{21,6}{\percent}) je nejnižší v~\aclloc{EU}27. Průměr \aclgen{EU}27 činí~\SI{29,6}{\percent}.
+
+Ve~vybrané šestici dosahuje Polsko~\SI{26,4}{\percent}, Rakousko~\SI{27,0}{\percent}, Dánsko~\SI{27,7}{\percent} a~Německo~\SI{29,4}{\percent}. Časová řada \aclgen{ČR} v~období 2005--2024 vykazuje růst z~\SI{26}{\percent} na~\SI{24}{\percent} se~zlomem směrem nahoru po~roce~2016; Dánsko zůstává v~pásmu \SIrange{27}{29}{\percent}, ostatní srovnávané země v~pásmu \SIrange{26}{32}{\percent}.
 
 \input{texparts/python/eu_gini_prijem}

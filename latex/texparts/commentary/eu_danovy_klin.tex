@@ -1,5 +1,4 @@
-Mapa daňového klínu na práci v~\ac{EU}27 (Eurostat, strukturální ukazatel pro svobodného bezdětného zaměstnance při \SI{67}{\percent} průměrné mzdy) ukazuje, že ČR se nachází mírně nad mediánem --- bez ohledu na to, že nominální sazby daně z~příjmu jsou relativně nízké, protože celkový klín zahrnuje zaměstnanecké i~zaměstnavatelské odvody.
-Daňový klín~$\acs{var-tau}$ je formálně definován jako podíl odvodů a~daně z~příjmu na celkových osobních nákladech zaměstnavatele:
+Daňový klín na~práci pro svobodného bezdětného zaměstnance při~\SI{67}{\percent} průměrné mzdy řadí \aclacc{ČR} v~roce~2024 nad medián \aclgen{EU}27 s~hodnotou \SI{38,9}{\percent}. Klín~$\acs{var-tau}$ se~vypočítá podle vztahu
 \begin{equation}\label{eq:tax_wedge}
   \acs{var-tau}
     = \frac{\acs{var-c}_{\acs{idx-SP},\acs{idx-z}}
@@ -7,39 +6,8 @@ Daňový klín~$\acs{var-tau}$ je formálně definován jako podíl odvodů a~da
             + \text{daň}_{\acs{idx-z}}}
            {\acs{var-w}_{\acs{idx-b}} + \acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}},
 \end{equation}
-kde čitatel zahrnuje zaměstnanecké odvody na sociální pojištění~$\acs{var-c}_{\acs{idx-SP},\acs{idx-z}}$, zaměstnavatelské odvody~$\acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}$ a~daň z~příjmu fyzické osoby; jmenovatel je hrubá mzda~$\acs{var-w}_{\acs{idx-b}}$ navýšená o~zaměstnavatelské odvody (tzv.\ superhrubá mzda).
-Tento relativně vysoký klín v~kontextu nízké mzdy vytváří specifické napětí: zaměstnavatel platí za hodinu práce relativně vysoké odvody, ale pracovník dostává relativně málo --- mezera jde na vrub odvodu, nikoli na přidanou hodnotu pro pracovníka.
-Státy s~vysokým pokrytím \ac{KS} jako AT a~DK sice vykazují srovnatelný nebo vyšší klín, ale kompenzují jej vyšší hrubou mzdou sjednanou kolektivní smlouvou: de facto funguje model „vyšší odvody za vyšší záruku mzdy a~kolektivní ochrany”.
-V~ČR je klín podobný, ale hrubá mzda nižší --- pracovník tedy nesetí výhody ani nízkého klínu (jako třeba SK), ani vysoké hrubé mzdy (jako AT, DK): argument pro reformu kolektivního vyjednávání s~cílem zvýšit hrubou mzdu a~ospravedlnit výši klínu přínosy pro pracovníka.
+kde čitatel zahrnuje zaměstnanecké odvody na~sociální pojištění~$\acs{var-c}_{\acs{idx-SP},\acs{idx-z}}$, zaměstnavatelské odvody~$\acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}$ a~daň z~příjmu fyzické osoby; jmenovatel je hrubá mzda~$\acs{var-w}_{\acs{idx-b}}$ navýšená o~zaměstnavatelské odvody.
 
-Doplňkem statického průřezu (obr.~\ref{fig:eu_danovy_klin}) je dlouhodobý
-vývoj daňového klínu v zemích, s nimiž \ac{ČR} nejčastěji srovnáváme: u
-visegrádských sousedů (\acs{geo-SK}, \acs{geo-PL}, \acs{geo-HU}) a u
-německy mluvících ekonomik (\acs{geo-DE}, \acs{geo-AT}). Indikátor je
-zveřejňován pro modelovou domácnost jednotlivce bez dětí na úrovni
-\SI{67}{\percent} průměrné mzdy a vyjadřuje souhrn daní z příjmu a
-sociálních odvodů zaměstnance i zaměstnavatele jako podíl celkových
-mzdových nákladů; jeho úroveň proto přímo odráží konstrukci daňového a
-pojistného systému, nikoliv pouze nominální výši odvodů.
-
-\Ac{ČR} se v celém sledovaném období pohybuje v horní polovině žebříčku
-\acs{EU} -- vysoký podíl pojistného na sociální a zdravotní pojištění
-hrazeného zaměstnavatelem dlouhodobě tlačí daňový klín nad průměr
-\acs{EU}. Ke snížení došlo po reformě roku 2008 a opět po zavedení
-zvýšené slevy na poplatníka v roce 2022; přesto zůstává úroveň
-srovnatelná spíše s \acs{geo-AT} a \acs{geo-DE} než s \acs{geo-PL} nebo
-\acs{geo-SK}, které se pohybují níže a v posledních letech klesají
-rychleji. \Acs{geo-HU} po reformě jednotné sazby v roce 2011 výrazně
-snížil zatížení a dnes patří mezi země s nejnižším daňovým klínem v
-regionu.
-
-Z dlouhodobého pohledu je patrné, že rozptyl mezi zeměmi \acs{EU}\,27
-(viz šedé linie na pozadí) zůstává stabilní -- konvergence v této
-oblasti není zjevná, neboť struktura odvodů odráží národní volbu mezi
-financováním sociálních systémů z pojistného a z obecných daní.
-Vysoká pozice \acs{ČR} naznačuje prostor pro daňovou diskuzi zejména v
-oblasti odvodů zaměstnavatelů, jejichž výše ovlivňuje jak nákladovou
-konkurenceschopnost, tak prostor pro kolektivní vyjednávání o čistých
-mzdách.
+V~mapě \aclgen{EU}27 leží nad \aclins{ČR} pouze Belgie, Francie, Rakousko (\SI{40,7}{\percent}) a~Německo (\SI{43,8}{\percent}); Slovensko se~pohybuje pod \aclins{ČR} na~hodnotě~\SI{36}{\percent}, Polsko na~\SI{33}{\percent} a~Maďarsko se~po~reformě roku~2011 ustálilo kolem~\SI{40}{\percent}. Časový vývoj ukazuje pokles \aclgen{ČR} po~reformě~2008 a~po~zvýšení slevy na~poplatníka v~roce~2022; rozptyl mezi zeměmi \aclgen{EU}27 zůstává po~celé sledované období v~pásmu \SIrange{30}{45}{\percent}.
 
 \input{texparts/python/eu_danovy_klin}
