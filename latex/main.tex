@@ -56,10 +56,18 @@
   \input{texparts/references/acro_variables.tex}
   % Sort the lists alphabetically by the long form instead of the short form (default).
   \CTUuseLongSortForAcronyms
+  % Re-introduce full acronym forms at the start of each new chapter (in addition
+  % to the automatic reset already done by CTUthesis.cls at \chapter{}).
+  % Uncomment if chapters are long enough that readers may forget an acronym.
+  % \AddToHook{cmd/chapter/before}{\acresetall}
 \fi
 
 % Bibliography files (BibLaTeX) — edit to match your sources.
 \addbibresource{bibliography.bib}
+% Grouped citation subindexing [N.k] restricts the sub-numbering scheme to
+% specific key prefixes only (e.g. many-dataset statistical sources); other
+% keys keep plain [N] numbering. Uncomment and adjust prefixes to use it.
+% \CTUSetCitationSubindexPrefixes{eurostat_, oecd_}
 
 % Reduce hyphenation frequency slightly (default \hyphenpenalty=50).
 \hyphenpenalty=200
@@ -97,7 +105,17 @@
 %   keywords files    — language-dependent (CZ/EN) PDF keywords metadata
 % ==============================================================================
 
+% PGF figures reference companion raster images (e.g. choropleth colorbars) by
+% bare filename. graphicspath tells LaTeX where to find them — set this if the
+% thesis includes PGF figures generated outside latex/ (e.g. by a Python
+% sub-project). Multiple search paths are allowed (each wrapped in braces).
+% \graphicspath{{../python/figures/}}
+% \graphicspath{{../python/figures/}{../pics/python/}{../assets/figures/}}
+
 \begin{document}
+% Raise the float-per-document limit if many figures/tables cause
+% "too many unprocessed floats" — default LaTeX allows only 18.
+% \extrafloats{100}
 %TC:ignore  — texcount: exclude preamble, front matter, and TOC from word/char count
 % Page numbering: roman numerals start at the title page; the title page number
 % is suppressed, but the counter still advances there.
