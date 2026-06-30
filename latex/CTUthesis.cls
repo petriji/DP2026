@@ -77,6 +77,9 @@
 \newif\ifCTUbiblio      \CTUbibliotrue
 \newif\ifCTUsoftware    \CTUsoftwaretrue
 \newif\ifCTUbackmatter  \CTUbackmattertrue
+% \ifCTUbackmattertoc: when true, back-matter lists and bibliography appear in
+%   the TOC with a dotted leader (section style).  Default: false.
+\newif\ifCTUbackmattertoc  \CTUbackmattertocfalse
 \newif\ifCTUemail       \CTUemailtrue
 % \ifCTUenglish: false by default (Czech thesis); set true via english option.
 %   Switches babel main language to English and translates all class-controlled
@@ -144,6 +147,11 @@
 %   (list of figures, list of tables, appendices).
 \DeclareOption{backmatter}{\CTUbackmattertrue}
 \DeclareOption{nobackmatter}{\CTUbackmatterfalse}
+% backmattertoc/nobackmattertoc: include or suppress back-matter entries
+%   (bibliography, software, LOF, LOT, attachments) in the TOC.
+%   When included they use a dotted leader (\l@section style), not bold chapter.
+\DeclareOption{backmattertoc}{\CTUbackmattertoctrue}
+\DeclareOption{nobackmattertoc}{\CTUbackmattertocfalse}
 % email/noemail: add a mailto: hyperlink to the author name in running headers;
 %   also display the email below the author table on the cover page (draft only).
 \DeclareOption{email}{\CTUemailtrue}
@@ -1737,6 +1745,27 @@
   autolang    = other,
   bibencoding = UTF8,
 ]{biblatex}
+
+% \CTUaddtotoc{title}: conditionally add a back-matter entry to the TOC.
+%   When \ifCTUbackmattertoc is true, writes a dotted-leader (section-style)
+%   TOC entry via \addcontentsline{toc}{section}{title}.  The section level
+%   shares \l@section's indent/numwidth but carries no number — the numwidth
+%   space is therefore effectively zero (achieved by the section format).
+%   \phantomsection is called before the \addcontentsline so that hyperref's
+%   anchor lands on the correct page.
+\newcommand\CTUaddtotoc[1]{%
+  \ifCTUbackmattertoc
+    \phantomsection
+    \addcontentsline{toc}{section}{#1}%
+  \fi}
+
+% Custom biblatex heading for back-matter TOC integration.
+%   \printbibliography[heading=CTUbib] in main.tex uses this heading, which
+%   calls \CTUaddtotoc internally so the TOC entry obeys the toggle.
+\defbibheading{CTUbib}[\CTUbibname]{%
+  \chapter*{#1}%
+  \CTUaddtotoc{#1}%
+  \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}}
 
 \endinput
 %%
