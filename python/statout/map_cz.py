@@ -234,6 +234,7 @@ def choropleth_cz(
     if title:
         fig.subplots_adjust(top=0.88)
         fig._subplots_adjust_kwargs = {"top": 0.88}
+        fig._suptitle_gap_pt = 11
         fig.suptitle(
             title,
             fontsize=plt.rcParams.get("axes.titlesize", 9),
