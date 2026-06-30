@@ -30,6 +30,7 @@ from stattool.fetch import fetch_oecd, fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style, savefig, save_figure_tex
 from statout.scatter import scatter_xy
+from statout.timeline import EU27
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,8 @@ fig = scatter_xy(
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
     x_min=0,
+    countries=sorted(EU27),
+    year_tolerance=8,
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────

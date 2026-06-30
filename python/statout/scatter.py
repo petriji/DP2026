@@ -95,10 +95,12 @@ def scatter_xy(
 
     _highlight = set(highlight or [])
 
-    # ── Year-tolerance fallback for missing highlighted countries ─────────────
-    if _highlight and year_tolerance > 0:
-        missing = _highlight - set(merged["geo"])
-        for geo in missing:
+    # ── Year-tolerance fallback for missing countries ─────────────────────────
+    # First, fill in missing highlighted countries (with log message).
+    # Then, silently fill in any other countries from the `countries` filter.
+    if year_tolerance > 0:
+        all_candidates = set(_highlight) | (set(countries) if countries else set())
+        for geo in all_candidates - set(merged["geo"]):
             for fallback_yr in range(year - 1, year - year_tolerance - 1, -1):
                 px_geo = ds_x.df[ds_x.df[ds_x.geo_col] == geo]
                 py_geo = ds_y.df[ds_y.df[ds_y.geo_col] == geo]
@@ -108,7 +110,8 @@ def scatter_xy(
                     continue
                 fb = pd.DataFrame({"geo": [geo], "x": [px_val.iloc[0]], "y": [py_val.iloc[0]]})
                 merged = pd.concat([merged, fb], ignore_index=True)
-                print(f"  scatter_xy: {geo} missing at {year}, used fallback {fallback_yr}")
+                if geo in _highlight:
+                    print(f"  scatter_xy: {geo} missing at {year}, used fallback {fallback_yr}")
                 break
 
     if ax is None:
