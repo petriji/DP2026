@@ -61,6 +61,6 @@ pics     = ["cz_pension_income", "cz_pension_solidarity"]
 [cz_tax_model]
 script   = "analyses/cz_tax_model.py"
 texparts = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_pension_vs_income", "cz_sp_vs_income", "cz_pension_sp_ratio"]
+            "cz_sp_vs_income", "cz_pension_sp_ratio"]
 pics     = ["cz_pension_wedge", "cz_tax_wedge_vs_income", "cz_net_income_vs_income",
-            "cz_pension_vs_income", "cz_sp_vs_income", "cz_pension_sp_ratio"]
+            "cz_sp_vs_income", "cz_pension_sp_ratio"]
