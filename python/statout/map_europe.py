@@ -29,7 +29,11 @@ from config import (
     FIGURE_LABEL_SIZE,
     FIGURE_TEXT_SIZE,
     FIGURE_TITLE_SIZE,
+    IS_POSTER_RUN,
     MAP_COUNTRY_LABEL_SIZE,
+    POSTER_FIGURE_COMPACT_LABEL_SIZE,
+    POSTER_FIGURE_LABEL_SIZE,
+    PGF_TARGET_WIDTH_CM,
 )
 from stattool.dataset import Dataset
 from stattool.fetch import fetch
@@ -48,6 +52,27 @@ _LAEA = "EPSG:3035"
 # East and north cropped ~10 % to remove excess Russia/Scandinavia whitespace.
 _EU_XLIM = (2_500_000, 6_640_000)
 _EU_YLIM_DEFAULT = (1_400_000, 5_090_000)
+
+# Compute the natural figure height for EU choropleth so the geographic map
+# fills the column width correctly after PGF normalisation to PGF_TARGET_WIDTH_CM.
+# Formula: axes_width_frac ≈ 0.808 (column-fit with side_margin=0.03,
+# cb_anchor=1.075, cb_width=0.08, 4pt gap); data_aspect = x_range / y_range.
+_EU_DATA_ASPECT = (
+    (_EU_XLIM[1] - _EU_XLIM[0])
+    / (_EU_YLIM_DEFAULT[1] - _EU_YLIM_DEFAULT[0])
+)  # ≈ 1.122
+_EU_AXES_WIDTH_FRAC = 0.808  # column-fit fraction at 15 cm target width
+_EU_TOP_FRAC = 0.88           # layout_kwargs["top"] when a title is present
+_EU_BOT_FRAC = 0.01           # layout_kwargs["bottom"]
+_EU_DEFAULT_HEIGHT_CM = (
+    (PGF_TARGET_WIDTH_CM * _EU_AXES_WIDTH_FRAC / _EU_DATA_ASPECT)
+    / (_EU_TOP_FRAC - _EU_BOT_FRAC)
+)  # ≈ 12.4 cm
+
+# Shared colorbar height used by all choropleth backends (map_europe, map_cz,
+# composite panels) so the rasterised colorbar strip deduplicates to the same
+# _shared/ PNG via content hash regardless of the enclosing figure height.
+CHOROPLETH_COLORBAR_HEIGHT_IN: float = _EU_DEFAULT_HEIGHT_CM / 2.54 * 0.76
 
 # Malta centroid in EPSG:3035; used when 110m Natural Earth omits MT geometry.
 _MT_FALLBACK_XY = (4_719_360, 1_442_124)
@@ -151,8 +176,9 @@ def choropleth(
     """
     year = year or ds.latest_year
     label_fs = (
-        MAP_COUNTRY_LABEL_SIZE if country_label_size is None
-        else float(country_label_size)
+        POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN and country_label_size is None
+        else (MAP_COUNTRY_LABEL_SIZE if country_label_size is None
+              else float(country_label_size))
     )
 
     if fill_latest:
@@ -186,7 +212,7 @@ def choropleth(
     europe = merged.cx[_EU_XLIM[0]:_EU_XLIM[1], eu_ylim[0]:eu_ylim[1]]
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize or cm2in(15, 11))
+        fig, ax = plt.subplots(figsize=figsize or cm2in(PGF_TARGET_WIDTH_CM, _EU_DEFAULT_HEIGHT_CM))
     else:
         fig = ax.figure  # type: ignore[assignment]
 
@@ -233,16 +259,28 @@ def choropleth(
         # Fixed-size colourbar in inches (independent of axes aspect) so the
         # rasterised strip pixel dimensions are identical to map_cz output
         # and dedups to python/figures/_shared/ via content hash.
-        # bbox_to_anchor x=1.10 leaves ~10pt extra gap between map and colorbar.
+        # Keep the colorbar close enough to the map that the label still fits
+        # inside the column width once the figure is normalized to PGF width.
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+        cb_width_ax = 0.08
+        gap_4pt_ax = (4.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
+        cb_anchor_ax = 1.045 + gap_4pt_ax
         cax = inset_axes(
-            ax, width=0.10, height=2.10,  # inches
+            ax, width=cb_width_ax, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
             loc="center left",
-            bbox_to_anchor=(1.10, 0.5),
+            bbox_to_anchor=(cb_anchor_ax, 0.5),
             bbox_transform=ax.transAxes,
             borderpad=0,
         )
         cbar = fig.colorbar(sm, cax=cax, label=cb_label)
+        if IS_POSTER_RUN:
+            # Poster: colorbar ticks and labels match poster country label size.
+            # extra labelpad so Czech descenders (p, y, j, g) are not clipped.
+            _cbar_fs = POSTER_FIGURE_LABEL_SIZE
+            cbar.ax.tick_params(labelsize=_cbar_fs)
+            cbar.ax.yaxis.label.set_fontsize(_cbar_fs)
+            cbar.ax.yaxis.label.set_rotation(90)
+            cbar.ax.yaxis.labelpad = 10
 
     if highlight_colorbar and cbar is not None:
         import matplotlib.transforms as _mtx
@@ -276,7 +314,8 @@ def choropleth(
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(
                 -0.12, val, lbl,
-                color=color, fontsize=FIGURE_LABEL_SIZE,
+                color=color,
+                fontsize=(POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FIGURE_LABEL_SIZE),
                 va="center", ha="right",
                 transform=_label_trans, clip_on=False,
             )
@@ -287,7 +326,8 @@ def choropleth(
                 cbar.ax.text(
                     -0.12, val,
                     r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + val_str + r"}",
-                    fontsize=FIGURE_LABEL_SIZE, va="center", ha="center",
+                    fontsize=(POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FIGURE_LABEL_SIZE),
+                    va="center", ha="center",
                     transform=trans, clip_on=False, zorder=7,
                 )
 
@@ -358,14 +398,29 @@ def choropleth(
     ax.set_ylim(eu_ylim)
     ax.set_axis_off()
 
-    # Title centred over the full figure (axes + colourbar)
-    # top=0.85 leaves ~5 pt more space between map and title than default.
+    # Title centred over the full figure (axes + colourbar) with compact padding.
     # _subplots_adjust_kwargs is read by savefig() to re-apply this after
-    # tight_layout() (which would otherwise clobber the top margin).
+    # tight_layout() (which would otherwise clobber the margins).
+    if show_colorbar:
+        side_margin = 0.03
+        block_factor = cb_anchor_ax + cb_width_ax
+        axes_width = (1.0 - 2.0 * side_margin) / block_factor
+        axes_left = side_margin
+        axes_right = axes_left + axes_width
+        layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": 0.01}
+    else:
+        layout_kwargs = {"left": 0.03, "right": 0.97, "bottom": 0.01}
     if title:
-        fig.subplots_adjust(top=0.85)
-        fig._subplots_adjust_kwargs = {"top": 0.85}
+        layout_kwargs["top"] = 0.88
+        fig.subplots_adjust(**layout_kwargs)
+        fig._subplots_adjust_kwargs = layout_kwargs
+        fig._tight_layout_kwargs = {"pad": 0.15}
+        fig._suptitle_gap_pt = 4
         fig.suptitle(title, fontsize=FIGURE_TITLE_SIZE,
-                     y=0.95, ha="center")
+             y=0.92, ha="center")
+    else:
+        fig.subplots_adjust(**layout_kwargs)
+        fig._subplots_adjust_kwargs = layout_kwargs
+        fig._tight_layout_kwargs = {"pad": 0.15}
 
     return fig

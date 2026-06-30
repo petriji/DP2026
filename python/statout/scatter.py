@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE
+from config import COUNTRY_COLORS, FONT_SIZE, IS_POSTER_RUN, FIGURE_LABEL_SIZE, POSTER_FIGURE_COMPACT_LABEL_SIZE, POSTER_FIGURE_LABEL_SIZE
 from stattool.dataset import Dataset
 from stattool.style import cm2in
 
@@ -180,7 +180,7 @@ def scatter_xy(
                     xy=(row["x"], row["y"]),
                     xytext=(label_radius_pts * _cos, label_radius_pts * _sin),
                     textcoords="offset points",
-                    fontsize=FONT_SIZE - 1,
+                    fontsize=POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FONT_SIZE - 1,
                     color=color,
                     fontweight="bold",
                     ha=_ha,
@@ -200,8 +200,18 @@ def scatter_xy(
         corr = np.corrcoef(merged["x"], merged["y"])[0, 1]
         r2 = corr**2
         ax.plot(x_line, y_line, color="gray", linewidth=1, linestyle="--",
-                label=f"OLS  $R^2={r2:.2f}$")
-        ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
+            label=f"$R^2={r2:.2f}$")
+        if IS_POSTER_RUN:
+            # Poster: render R^2 as right-anchored axes-fraction text instead of
+            # a legend. Anchored at the bottom-right corner (empty in all four
+            # korelace panels) with ha="right" so the LaTeX-inflated text grows
+            # leftward and never overflows the right spine or collides with the
+            # highlighted country points clustered in the upper corners.
+            ax.text(0.97, 0.04, f"$R^2={r2:.2f}$",
+                    transform=ax.transAxes, ha="right", va="bottom",
+                    fontsize=POSTER_FIGURE_LABEL_SIZE, color="#555555")
+        else:
+            ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
     ax.set_xlabel(xlabel if xlabel is not None
                   else (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
