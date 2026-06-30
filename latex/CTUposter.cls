@@ -130,7 +130,8 @@
 \RequirePackage{float}
 \RequirePackage{caption}
 \RequirePackage{subcaption}
-\captionsetup{font=small,labelfont=bf,skip=4pt}
+\DeclareCaptionFont{CTUPpostercaption}{\sffamily\fontsize{14.5}{16.8}\selectfont}
+\captionsetup{font=CTUPpostercaption,labelfont=bf,skip=3pt}
 
 \RequirePackage{amsmath,amsfonts,amssymb}
 \RequirePackage{siunitx}
@@ -239,7 +240,7 @@
       urlseen = {visited on},%
     }%
   }%
-  \ifx\CTUP@biblang\CTUP@biblang@en\CTUP@bs@english\else\CTUP@bs@czech\fi
+  \ifCTUP@english\CTUP@bs@english\else\CTUP@bs@czech\fi
 }
 \def\CTUP@biblang@en{english}
 
@@ -288,7 +289,7 @@
 % ----------------------------------------------------------------------------
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.6\baselineskip}
+\setlength{\parskip}{0.45\baselineskip}
 \renewcommand{\baselinestretch}{1.05}
 
 % Section headings — large, sans-serif, blue
@@ -296,7 +297,7 @@
 \titleformat{\section}
   {\sffamily\bfseries\color{CTUblue}\fontsize{30}{36}\selectfont}
   {}{0pt}{#1}
-\titlespacing*{\section}{0pt}{1.2\baselineskip}{0.4\baselineskip}
+\titlespacing*{\section}{0pt}{0.9\baselineskip}{0.3\baselineskip}
 
 \titleformat{\subsection}
   {\sffamily\bfseries\color{CTUgrey}\fontsize{22}{26}\selectfont}
@@ -444,13 +445,13 @@
       fonttitle   = \large\bfseries,
     ]
     \sffamily #2%
-  \end{tcolorbox}\par\vspace{4mm}%
+  \end{tcolorbox}\par%
   \endgroup
 }
 \RequirePackage[most]{tcolorbox}
 
-\newcommand{\abstractCS}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractCS}{#1}}
-\newcommand{\abstractEN}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractEN}{#1}}
+\newcommand{\abstractCS}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractCS}{#1}\vspace{0.5\baselineskip}}
+\newcommand{\abstractEN}[1]{\CTUP@abstractbox{\CTUP@lbl@abstractEN}{#1}\vspace{0.5\baselineskip}}
 
 % ----------------------------------------------------------------------------
 % English summary at the end of the body
