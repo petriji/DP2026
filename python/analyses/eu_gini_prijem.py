@@ -78,7 +78,7 @@ fig = timeline(
 )
 
 ax = fig.axes[0]
-ax.set_ylim(15, 45)
+ax.set_ylim(20, 40)
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
 _pivot = (

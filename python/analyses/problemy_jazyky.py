@@ -108,12 +108,14 @@ def _make_choropleth(
     caption: str,
     label: str,
     year: int,
-    vmin: float = 0,
+    vmin: float | None = None,
     vmax: float | None = None,
     nudge_labels: list | None = None,
 ) -> None:
     """Render a Europe choropleth via statout.map_europe."""
     _values = snap.set_index("geo")["value"].to_dict()
+    if vmin is None:
+        vmin = float(min(_values.values()))
     if vmax is None:
         vmax = float(max(_values.values()))
 

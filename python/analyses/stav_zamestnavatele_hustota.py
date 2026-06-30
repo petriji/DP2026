@@ -58,6 +58,7 @@ _values_map = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
+_vmin_map = min(_values_map.values())
 _vmax_map = max(_values_map.values())
 
 STRINGS_MAP = {
@@ -71,7 +72,7 @@ fig_map = choropleth(
     title=STRINGS_MAP["title"],
     colorbar_label=STRINGS_MAP["colorbar_label"],
     cmap="RdYlGn",
-    vmin=0,
+    vmin=_vmin_map,
     vmax=_vmax_map,
     label_countries=True,
     highlight_colorbar=HIGHLIGHT,

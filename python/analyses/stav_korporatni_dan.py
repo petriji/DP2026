@@ -125,6 +125,7 @@ def main() -> None:
 
     # ── 2) Choropleth map (OECD primary series, latest year) ───────────────
     values_map = ds.df[ds.df["time"] == ds.latest_year].set_index("geo")["value"].to_dict()
+    vmin_map = min(values_map.values()) if values_map else 0.0
     vmax_map = max(values_map.values()) if values_map else 40.0
 
     strings_map = {
@@ -137,7 +138,7 @@ def main() -> None:
         title=strings_map["title"],
         colorbar_label=strings_map["colorbar_label"],
         cmap="RdYlGn_r",
-        vmin=0,
+        vmin=vmin_map,
         vmax=vmax_map,
         label_countries=True,
         highlight_colorbar=COUNTRIES,

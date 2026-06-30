@@ -207,14 +207,16 @@ _values = (
     .last()
     .to_dict()
 )
+_vmin = min(_values.values())
+_vmax = max(_values.values())
 fig_map = choropleth(
     ds,
     year=ds.latest_year,
     title=map_title,
     colorbar_label=STRINGS_MAP["colorbar_label"],
     cmap="RdYlGn",
-    vmin=1.0,
-    vmax=2.1,
+    vmin=_vmin,
+    vmax=_vmax,
     label_countries=True,
     highlight_colorbar=COUNTRIES,
 )

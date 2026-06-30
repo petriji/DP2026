@@ -74,6 +74,7 @@ _values = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()
 )
+_vmin = min(_values.values())
 _vmax = max(_values.values())
 
 NUDGE_LABELS = [(c, c) for c in COUNTRIES]
@@ -89,7 +90,7 @@ fig = choropleth(
     title=STRINGS["title"],
     colorbar_label=STRINGS["colorbar_label"],
     cmap="RdYlGn",
-    vmin=0,
+    vmin=_vmin,
     vmax=_vmax,
     label_countries=True,
     fill_latest=True,

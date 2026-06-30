@@ -281,7 +281,7 @@ fig = timeline(
     show_eu_avg=False,
 )
 fig.axes[0].set_xlim(START_YEAR - 1, 2025)
-fig.axes[0].set_ylim(0, 1.0)   # cap at 1 %; LT 2008 outlier (~10 %) is clipped
+fig.axes[0].set_ylim(0, 0.4)   # cap at 0.4 %; LT 2008 outlier (~10 %) is clipped
 
 # ── PGF tooltips & geo labels ───────────────────────────────────────────
 _pivot_str = (
@@ -313,7 +313,7 @@ save_figure_tex_pgf(
         r"(CZ, SK a~další země s~chybějícím pokrytím nejsou zobrazeny --- "
         r"nulové hodnoty v~datové sadě \ac{ILO} neodpovídají nulové aktivitě). "
         r"DK: vlastní výpočet z~národní statistiky (Statistics Denmark, ABST1). "
-        r"Šedé linie = ostatní reportující země EU\,27; osa $y$ je zkrácena na \SI{1}{\percent} "
+        r"Šedé linie = ostatní reportující země EU\,27; osa $y$ je zkrácena na \SI{0.4}{\percent} "
         r"(LT 2008 dosahuje cca \SI{10}{\percent} --- jednorázový spor ve veřejném sektoru)."
     ),
     label="fig:stav_stavky",
