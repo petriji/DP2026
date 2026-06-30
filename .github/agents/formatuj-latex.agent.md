@@ -1,6 +1,6 @@
 ---
 name: "Formatuj LaTeX"
-description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}, \\acgen{}, \\acdat{}, \\acacc{}, \\acloc{}, \\acins{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries, Czech declension of acronyms. Do NOT use for: generating new content, writing Python, building/compiling."
+description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}, \\acgen{}, \\acdat{}, \\acacc{}, \\acloc{}, \\acins{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries, Czech declension of acronyms. Do NOT use for: generating new content, writing Python, building/compiling. NOTE: prefer \\acp{} for long-form plurals (clearer than redundant \\acsp{}); \\aclp{} is redundant — use \\acp{} instead."
 tools: [read, search, edit, agent]
 agents: ["Citace a zkratky"]
 argument-hint: "Paste raw text or a .tex fragment to format"
@@ -44,9 +44,10 @@ Before formatting, consult these files when context is needed:
 |-----------|-------|-------|
 | Auto use (first occurrence) | `\ac{ID}` | first use expands like `\acf` — "long form (SHORT)"; subsequent uses expand like `\acs` |
 | Short form only | `\acs{ID}` | always short, regardless of use count |
-| ~~Plural variant~~ | ~~`\acp{ID}` / `\acsp{ID}` / `\Acsp{ID}`~~ | **PROHIBITED** — use `\acs{ID}` / `\Acs{ID}` or expand the noun (e.g. „kolektivní smlouvy" instead of `\acp{KS}`) |
+| Long form plural | `\acp{ID}` | **PREFERRED for plurals** — renders long form in plural; clear and distinct |
 | Long form only | `\acl{ID}` | e.g. in sentences about the concept |
-| ~~Long form plural~~ | ~~`\aclp{ID}`~~ | **PROHIBITED** — expand the noun |
+| ~~Short form plural~~ | ~~`\acsp{ID}` / `\Acsp{ID}`~~ | **REDUNDANT** (renders same as `\acs{ID}` when `short-plural-form={}`) — use `\acp{ID}` instead for clarity |
+| ~~Long form plural variant~~ | ~~`\aclp{ID}`~~ | **REDUNDANT** — use `\acp{ID}` instead |
 | Forced full form | `\acf{ID}` | always "long form (SHORT)", use rarely |
 | Sentence-initial (capitalised) | `\Ac{ID}` | first word capitalised |
 | Mark as used without printing | `\acuse{ID}` | for variables used in math mode |
@@ -161,7 +162,8 @@ After editing, use the new ID in the formatted text immediately.
 ### 2. Bibliography — `\cite{}`
 
 - **Always** `\cite{key}` — **never** `\parencite{}` (not loaded).
-- Place immediately after the claim, **before** the full stop: `…výsledek.~\cite{key}`
+- Place citations at the **end of a logical block** (typically end of paragraph), before terminal punctuation: `…shrnutí argumentu~\cite{key}.`
+- Avoid inline citations in the middle of running prose; attach one cite-block to the closing claim of the block.
 - If the citation key is unknown, write `\cite{TODO}` with a `% TODO: doplnit klíč` comment.
 - Multiple consecutive citations: `\cite{key1}\cite{key2}` (no space between).
 
@@ -313,30 +315,51 @@ Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_vari
 
 ### 10. Typography & csquotes
 
-#### Czech quotation marks
+#### Czech quotation marks — detection and fixing
 
-The project uses the `csquotes` package with Czech locale. Correct Unicode pairing:
+The project uses the `csquotes` package with Czech locale. The **most common error** is using ASCII `"` (U+0022) or left double quote `"` (U+201C) to close Czech quotations opened with `„` (U+201E), which causes the compilation error: `Unbalanced groups in csquotes`.
+
+**Correct Unicode pairing:**
 
 | Position | Character | Unicode | Name |
 |----------|-----------|---------|------|
 | Opening  | „         | U+201E  | double low-9 quotation mark |
 | Closing  | "         | U+201D  | right double quotation mark |
 
-**Common errors that cause `csquotes` "Unbalanced groups" compilation failure:**
+**Detection pattern — check for these violations in pasted text:**
 
-| Wrong closing | Unicode | How it looks | Fix |
-|---------------|---------|-------------|-----|
-| `"`           | U+0022  | straight/ASCII double quote | → `"` (U+201D) |
-| `"`           | U+201C  | left double quotation mark  | → `"` (U+201D) |
+```regex
+„[^"„"]*"     # Opening „ followed by content, then ASCII/wrong-quote closing
+„[^"„"]*"     # Opening „ followed by content, then left-double-quote U+201C closing
+```
 
-Examples:
-- **Wrong:** `„kolektivní vyjednávání"` (ASCII `"` closing) → compilation error
-- **Wrong:** `„kolektivní vyjednávání"` (U+201C closing) → compilation error
-- **Correct:** `„kolektivní vyjednávání"` (U+201D closing)
+**When you encounter** `„...ASCII"` or `„..."` (U+201C), apply these fixes:
 
-Preferred alternative: use `\enquote{text}` — csquotes picks the correct locale quotes automatically.
+1. **Automatic fix via regex** (if editing directly):
+   ```regex
+   Replace: „([^"„"]+)"       with: „$1"
+   Replace: „([^"„"]+)"      with: „$1"
+   ```
 
-When formatting pasted text, **always check** that every `„` is closed by `"` (U+201D), never by ASCII `"` or `"` (U+201C).
+2. **Manual fix:** Replace the closing quote character in the editor:
+   - Find `„` (U+201E) in the text
+   - Look for the closing quote immediately after the quoted text
+   - If it's `"` (straight/ASCII) or `"` (U+201C), replace with `"` (U+201D)
+
+3. **Prevention:** Use `\enquote{text}` macro — csquotes automatically inserts correct locale quotes:
+   ```latex
+   % Instead of:  „text"  or  „text" or  „text"
+   % Write:
+   \enquote{text}  % → csquotes auto-inserts correct Czech quotes
+   ```
+
+**Preferred approach:** When pasting Czech text with quotations, wrap it with `\enquote{...}` rather than manually typing quotes.
+
+| Approach | Input | Output | Issues |
+|----------|-------|--------|--------|
+| Manual Czech quotes | `„text"` | Correct IF closing is U+201D | Error-prone; easy to paste wrong quote character |
+| Manual Czech quotes (wrong) | `„text"` or `„text"` | ✗ **Unbalanced groups error** | Compilation fails |
+| `\enquote{}` macro | `\enquote{text}` | Correct: `„text"` | Safe; always correct; recommended |
 
 #### Other typography rules
 
