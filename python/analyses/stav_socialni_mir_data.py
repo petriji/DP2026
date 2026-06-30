@@ -16,7 +16,6 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from statout.timeline import EU27
-from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch, fetch_eurostat, fetch_ilostat
 
 # EU27 as sorted list for reproducible output
@@ -57,7 +56,7 @@ _ISO3_TO_ISO2: dict[str, str] = {
 B4_EXPERT_SCORE: dict[str, float] = {
     "BG": 100.0,
     "CZ": 100.0,
-    "HU": 75.0,
+    "HU": 100.0,
     "LT": 100.0,
     "LU": 100.0,
     "LV": 100.0,
@@ -205,23 +204,12 @@ def _build_strike_snapshot(force: bool = False) -> tuple[dict[str, float], int]:
     dk = _load_dk_days_from_dst(force=force)
     all_days = pd.concat([ilo, dk], ignore_index=True)
     snap, ref_year = _snapshot_latest(all_days)
-    warn_non_target_year(
-        source="ILOSTAT + Statistics Denmark strike benchmark",
-        year=ref_year,
-        context="B4 strike benchmark latest available year",
-    )
     missing = [geo for geo in _EU27 if geo not in snap]
     if missing:
-        warn_fallback(
-            "Strike-days benchmark missing for some countries; ternary B4 remains covered by expert scores",
-            source="ILOSTAT + Statistics Denmark strike benchmark",
-            year=ref_year,
-        )
-        print(
-            "WARNING: missing strike-days benchmark data for countries: "
+        raise ValueError(
+            "Missing strike-days benchmark data for countries: "
             + ", ".join(missing)
-            + ". They will remain unfilled in the strike choropleth; "
-            + "B4 scoring remains covered by expert scores."
+            + ". Add a documented source or exclude from analysis explicitly."
         )
     return snap, ref_year
 
@@ -251,11 +239,5 @@ def build_b4_scores() -> pd.Series:
             "B4 expert score table incomplete for EU27; missing countries: "
             + ", ".join(missing)
         )
-    warn_fallback(
-        "B4 ternary scores use the expert score table rather than directly observed strike benchmark values",
-        source="Expert assumption",
-        year=get_b4_benchmark_year(),
-        hardcoded=True,
-    )
     vals: dict[str, float] = {geo: float(B4_EXPERT_SCORE[geo]) for geo in _EU27}
     return pd.Series(vals)
