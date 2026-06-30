@@ -5,6 +5,15 @@
 \def\strEuDanovyKlinColorbarLabel{daňový klín [\% mzdových nákladů]}%
 \def\strEuDanovyKlinCaption{Daňový klín (\SI{67}{\percent} průměrné mzdy), EU mapa, 2024. Zdroj dat: Eurostat~\cite{eurostat_earn_nt_taxwedge_PC_AW100}.}%
 %
+
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeEuDanovyKlinCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeEuDanovyKlinCz{0pt}%
+\providecommand\NudgeEuDanovyKlinDk{0pt}%
+\providecommand\NudgeEuDanovyKlinAt{0pt}%
+\providecommand\NudgeEuDanovyKlinDe{0pt}%
+\providecommand\NudgeEuDanovyKlinPl{0pt}%
+\providecommand\NudgeEuDanovyKlinSk{0pt}%
 \begin{figure}[htbp]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_danovy_klin.pgf}}

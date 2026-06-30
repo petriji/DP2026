@@ -5,6 +5,15 @@
 \def\strProblemyJazykyIscedColorbarLabel{\% terciárně vzdělané populace}%
 \def\strProblemyJazykyIscedCaption{Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) znajících alespoň 2~cizí jazyky, \acs{geo-EU}27, 2022. Zdroj dat: Eurostat~\cite{eurostat_edat_aes}.}%
 %
+
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeProblemyJazykyIscedCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeProblemyJazykyIscedCz{0pt}%
+\providecommand\NudgeProblemyJazykyIscedAt{0pt}%
+\providecommand\NudgeProblemyJazykyIscedDe{0pt}%
+\providecommand\NudgeProblemyJazykyIscedDk{0pt}%
+\providecommand\NudgeProblemyJazykyIscedPl{0pt}%
+\providecommand\NudgeProblemyJazykyIscedSk{0pt}%
 \begin{figure}[htbp]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/problemy_jazyky_isced.pgf}}

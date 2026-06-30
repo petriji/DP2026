@@ -71,6 +71,9 @@ _values = (
 _vmin = min(_values.values())
 _vmax = max(_values.values())
 
+COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+
 STRINGS = {
     "title": f"Koeficient ekonomického zatížení seniory ({ds.latest_year})",
     "colorbar_label": r"osoby 65+ / osoby 20--64 [\%]",
@@ -85,13 +88,13 @@ fig = choropleth(
     vmin=_vmin,
     vmax=_vmax,
     label_countries=True,
-    highlight_colorbar=["CZ", "AT", "DE", "SK", "PL", "DK"],
+    highlight_colorbar=COUNTRIES,
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
 
 # ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_zavislost_mapa", strings=STRINGS)
+savefig_pgf(fig, "vyhled_zavislost_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -102,6 +105,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key="eurostat_demo_pjanind",
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

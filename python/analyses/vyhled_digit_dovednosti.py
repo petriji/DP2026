@@ -67,6 +67,9 @@ _values = (
 )
 _vmax = max(_values.values())
 
+COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
+NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
+
 STRINGS = {
     "title": f"Digitální dovednosti nad základní úrovní ({ds.latest_year})",
     "colorbar_label": r"podíl jednotlivců [\%]",
@@ -82,13 +85,13 @@ fig = choropleth(
     vmax=_vmax,
     label_countries=True,
     fill_latest=True,
-    highlight_colorbar=["CZ", "AT", "DE", "DK", "PL", "SK"],
+    highlight_colorbar=COUNTRIES,
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
 
 # ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_digit_dovednosti_mapa", strings=STRINGS)
+savefig_pgf(fig, "vyhled_digit_dovednosti_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
@@ -100,6 +103,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_key=CITE_KEY,
     strings=STRINGS,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

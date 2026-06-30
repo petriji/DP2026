@@ -109,6 +109,7 @@ def _make_choropleth(
     year: int,
     vmin: float = 0,
     vmax: float | None = None,
+    nudge_labels: list | None = None,
 ) -> None:
     """Render a Europe choropleth via statout.map_europe."""
     _values = snap.set_index("geo")["value"].to_dict()
@@ -129,7 +130,7 @@ def _make_choropleth(
         highlight_colorbar=["CZ"],
     )
     apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
-    savefig_pgf(fig, stem, strings=strings)
+    savefig_pgf(fig, stem, strings=strings, nudge_labels=nudge_labels)
     save_figure_tex_pgf(
         stem,
         caption=caption,
@@ -137,6 +138,7 @@ def _make_choropleth(
         resizebox_width=r"\linewidth",
         cite_key="eurostat_edat_aes",
         strings=strings,
+        nudge_labels=nudge_labels,
     )
     print(f"  {stem} done ({year}).")
 
@@ -337,6 +339,7 @@ try:
         ),
         label="fig:problemy_jazyky_isced",
         year=latest_l23,
+        nudge_labels=[(c, rf"\acs{{geo-{c}}}") for c in ["CZ", "AT", "DE", "DK", "PL", "SK"]],
     )
 except Exception as exc:
     print(f"  Figure C skipped: {exc}")

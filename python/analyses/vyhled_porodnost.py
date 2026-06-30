@@ -222,7 +222,7 @@ apply_geo_labels_pgf(fig_map.axes[0], halo=True, values=_values, tooltip_fmt="{:
 
 # ── 6. Save figure B ──────────────────────────────────────────────────────────
 savefig_pgf(fig_map, "vyhled_porodnost_mapa", out_dir=LATEX_PICS_DIR,
-            strings=map_strings)
+            strings=map_strings, nudge_labels=NUDGE_LABELS)
 
 save_figure_tex_pgf(
     "vyhled_porodnost_mapa",
@@ -231,6 +231,7 @@ save_figure_tex_pgf(
     resizebox_width=r"\linewidth",
     cite_keys="eurostat_demo_find",
     strings=map_strings,
+    nudge_labels=NUDGE_LABELS,
 )
 
 print("Figure B done.")

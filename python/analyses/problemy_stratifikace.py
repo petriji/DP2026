@@ -505,17 +505,17 @@ if ispv_path is not None:
             "title": rf"\acs{{geo-CZ}}: mediánová mzda podle kraje (\acs{{ISPV}} {ispv_year}/H2)",
             "xlabel": "Index (národní medián = 100)",
         }
-        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FONT_SIZE)
+        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FONT_SIZE + 1)
         ax_a.set_title(
             STRINGS_REG["title"],
-            fontsize=FONT_SIZE,
+            fontsize=FONT_SIZE + 2,
         )
         ax_a.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
+        ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE,
                     loc="lower right")
         savefig_pgf(fig_a, "problemy_regiony", strings=STRINGS_REG)
         save_figure_tex_pgf(
@@ -560,7 +560,7 @@ if ispv_path is not None:
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
+        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE,
                      loc="lower right")
         savefig_pgf(fig_a2, "problemy_regiony", strings=STRINGS_REG2)
         save_figure_tex_pgf(
@@ -611,6 +611,7 @@ try:
                      source_url="Eurostat/earn_gr_gpgr2")
 
     STRINGS_GPG = {
+        "title": rf"Nekorigovaný \acs{{GPG}} (\acs{{geo-EU}}27\,=\,100), {START_YEAR}--{END_YEAR}",
         "ylabel": r"nekorigovaný \acs{GPG} (\acs{geo-EU}27\,=\,100) [\%]",
     }
     fig_b = timeline(
@@ -621,7 +622,7 @@ try:
         annotate_last=True,
         show_eu_avg=True,
         ylabel=STRINGS_GPG["ylabel"],
-        title="",
+        title=STRINGS_GPG["title"],
     )
     ax_b = fig_b.axes[0]
     ax_b.set_xlim(right=2025)
@@ -810,7 +811,7 @@ try:
         vmax=100 + _delta,
         colorbar_label=STRINGS_D["colorbar_label"],
         label_fmt="{:.0f}",
-        label_fontsize=FONT_SIZE - 1,
+        label_fontsize=FONT_SIZE + 2,
         label_names=_CZ_NUTS3_NAMES,
         label_tooltip_fmt="index {:.1f} (medián ČR = 100)",
     )
