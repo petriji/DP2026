@@ -73,6 +73,16 @@ script   = "analyses/rscp_stratification.py"
 texparts = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
 pics     = ["rscp_regional_wages", "rscp_gender_gap", "rscp_sector_percentiles"]
 
+[cz_tax_model]
+script   = "analyses/cz_tax_model.py"
+texparts = ["cz_tax_wedge", "cz_tax_breakdown"]
+pics     = ["cz_tax_wedge", "cz_tax_breakdown"]
+
+[cz_pension]
+script   = "analyses/cz_pension_model.py"
+texparts = ["cz_pension_solidarity", "cz_pension_income", "cz_tax_wedge_comparison"]
+pics     = ["cz_pension_solidarity", "cz_pension_income", "cz_tax_wedge_comparison"]
+
 [wage_pension_distribution]
 script   = "analyses/wage_pension_distribution.py"
 texparts = ["wage_pension_distribution"]

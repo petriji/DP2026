@@ -1,51 +1,28 @@
-r"""Czech old-age pension (starobní důchod) – calculation model and figures.
+r"""
+Czech statutory old-age pension model for the 2026 calculation rules.
 
-X-axis semantics (shared by all plot functions)
-------------------------------------------------
-For a fair economic comparison between an employee and an OSVČ doing equivalent
-work, the x-axis represents the *total cost to the payer* (employer or client):
+Models pension entitlement and replacement rates for:
+  * Zaměstnanci (employees)
+  * OSVČ using výdajový paušál (40 %, 60 %, 80 %)
+  * OSVČ on paušální daň pásmo 1
 
-  • Zaměstnanec (employee):
-      x = celkové náklady zaměstnavatele = hrubá mzda × (1 + EMPLOYER_INS_RATE)
-          (employer social 24,8 % + health 9,0 % = 33,8 % on top of gross wage)
-      OVZ = hrubá mzda = x / (1 + EMPLOYER_INS_RATE)
-
-  • OSVČ – standardní odvody:
-      x = zisk (příjmy − výdaje)      OVZ = max(55 % × zisk, OSVC_MIN_MONTHLY_BASE)
-
-  • OSVČ – paušální daň pásma 1–3:
-      x = měsíční příjmy (revenue); assessment base fixed per pásmo.
-      Income ceilings (83 333 / 125 000 / 166 667 Kč/měs.) are revenue-based.
-
-This normalisation makes the švarc-systém comparison meaningful: a client that
-budgets 100 000 Kč/month either pays an employer for an employee 100 000 Kč total (gross
-≈ 74 700 Kč) or an OSVČ 100 000 Kč as their revenue/profit.
-
-All calculations use 2026 parameters:
-  zákon č. 155/1995 Sb. (ZPDS), zákon č. 270/2023 Sb. (pension reform),
-  nařízení vlády č. 365/2025 Sb. (valuation for 2026).
-
-Pension formula (§ 33–34 ZPDS):
-    pension = základní výměra + ROVZ × pojistná_doba × PCT_PER_YEAR
-
-PCT_PER_YEAR = 1,495 % for 2026 (gradual reduction from 1,5 % to 1,45 % by 2035,
-               zákon č. 270/2023 Sb., § 34 odst. 1).
-
-Reduction (§ 15 ZPDS):
-    ROVZ = min(OVZ, RH1) × 1.00
-         + max(min(OVZ, RH2) − RH1, 0) × 0.26
-         + max(OVZ − RH2, 0) × 0.22
+Legislation:
+  Zákon č. 155/1995 Sb. (zákon o důchodovém pojištění)
+  Zákon č. 270/2023 Sb. (progressive pension reform, new reduction boundaries)
+  NV č. 365/2025 Sb. (all-purpose assessment base, vyměřovací základ 2026)
 
 Figures
 -------
-  plot_pension_comparison() – single panel: monthly pension vs x-axis cost.
-      Output: pics/python/cz_pension_income.pdf
+  ``cz_pension_solidarity`` – 2-panel: absolute pension + replacement rate
+  ``cz_pension_income``     – single-panel absolute pension comparison
+  ``cz_tax_wedge_comparison`` – scatter: tax wedge vs. replacement rate
 
-  plot_pension_solidarity()  – two panels:
-      Top:    monthly pension (tis. Kč) – absolute values
-      Bottom: replacement rate (%) = pension / x – the declining slope shows
-              the solidarity mechanism; lower earners receive proportionally more.
-      Output: pics/python/cz_pension_solidarity.pdf
+Output
+------
+  pics/python/cz_pension_solidarity.pdf
+  pics/python/cz_pension_income.pdf
+  pics/python/cz_tax_wedge_comparison.pdf
+  latex/texparts/python/ (matching .tex files)
 
 Run
 ---
@@ -57,600 +34,317 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from matplotlib.lines import Line2D
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import numpy as np
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
-from stattool.style import apply_style, cm2in, save_figure_tex, savefig
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 
-# ── 2026 statutory parameters ─────────────────────────────────────────────────
-# Sources: zákon č. 155/1995 Sb. ve znění pozdějších předpisů (ZPDS),
-#          zákon č. 270/2023 Sb. (důchodová reforma),
-#          nařízení vlády č. 365/2025 Sb. platné pro rok 2026.
+# Import tax functions for the wedge-vs-replacement scatter
+from cz_tax_model import (
+    tax_wedge_employee,
+    tax_wedge_osvc_vydajovy,
+    tax_wedge_osvc_pausalni,
+    _employer_cost_to_gross,
+    EMPLOYER_INS_RATE,
+    MIN_WAGE,
+    AVG_WAGE,
+    OSVC_SP_RATE,
+    OSVC_ZP_RATE,
+    OSVC_BASE_SP,
+    OSVC_BASE_ZP,
+    OSVC_SP_MIN_MONTHLY,
+    OSVC_ZP_MIN_MONTHLY,
+)
 
-# Průměrná mzda pro účely důchodového pojištění (§ 23b ZPDS)
-AVG_WAGE: int = 48_967  # CZK/month (2026)
+apply_style()
 
-# Základní výměra starobního důchodu (§ 33 ZPDS)
-ZAKLADNI_VYMERA: int = 4_900  # CZK/month (2026)
+# ── 2026 pension parameters ───────────────────────────────────────────────────
 
-# Redukční hranice osobního vyměřovacího základu (§ 15 ZPDS)
-RH1: int = 21_546   # 1. redukční hranice [CZK/month] (2026)
-RH2: int = 195_868  # 2. redukční hranice [CZK/month] (2026)
+RH1: float  = 50_000          # 1. redukční hranice (Kč/month)
+RH2: float  = 182_400         # 2. redukční hranice (Kč/month)
+ZAKLADNI_VYMERA: float = 4_570    # základní výměra (Kč/month)
+PCT_PER_YEAR: float = 0.01495     # procentní výměra za rok pojištění (§ 34 ZDP)
 
-# Sazba procentní výměry za rok pojištění (§ 34 ZPDS)
-# Od roku 2026 se postupně snižuje z 1,5 % na 1,45 % (do roku 2035).
-# Zákon č. 270/2023 Sb., § 34 odst. 1.
-PCT_PER_YEAR: float = 0.01495  # 1,495 % z ROVZ za každý rok pojistné doby (2026)
+MEDIAN_EMP_WAGE: float = 40_709   # ISPV 2024 H2 median hrubá mzda zaměstnanec
+PAUSALNI_BASE: float   = 14_690   # fiktivní základ paušální daně pásmo 1
 
-# Předpokládaná pojistná doba (roky)
-INSURANCE_YEARS: int = 40
-
-# Minimální procentní výměra (§ 34 odst. 1 ZPDS) – dolní hranice procentní části
-MIN_PROCENTNI_VYMERA: int = 4_900  # CZK/month (2026; navázáno na min. mzdu)
-
-# Celková minimální výše důchodu (základní výměra + min. procentní výměra)
-MIN_TOTAL_PENSION: int = ZAKLADNI_VYMERA + MIN_PROCENTNI_VYMERA  # CZK/month
-
-# ── Náklady zaměstnavatele ────────────────────────────────────────────────────
-# Odvody zaměstnavatele za zaměstnance nad rámec hrubé mzdy:
-#   Sociální pojištění: 24,8 % (21,5 % důchodové + 2,1 % nemocenské
-#                               + 1,2 % státní politika zaměstnanosti)
-#   Zdravotní pojištění: 9,0 %
-# Celkové náklady = hrubá mzda × (1 + EMPLOYER_INS_RATE).
-# Hrubá mzda (= OVZ zaměstnance) = celkové náklady / (1 + EMPLOYER_INS_RATE).
-EMPLOYER_INS_RATE: float = 0.338  # 33,8 % z hrubé mzdy
-
-# ── OSVČ – specifika ──────────────────────────────────────────────────────────
-# Vyměřovací základ OSVČ pro sociální pojištění (SP) = 55 % ze základu daně.
-# Zákon č. 589/1992 Sb. § 5b ve znění zákona č. 270/2023 Sb. (důchodová reforma):
-# sazba VZ pro SP zvýšena z 50 % na 55 % s účinností od 1. 1. 2024.
-# Pro důchodové pojištění je OVZ totožný s VZ pro SP (§ 11 ZPDS).
-OSVC_BASE_RATIO: float = 0.55   # SP VZ / OVZ = 55 % ze základu daně (2024–)
-
-# Vyměřovací základ OSVČ pro zdravotní pojištění (ZP) = 50 % ze základu daně.
-# Zákon č. 592/1992 Sb. § 3a (beze změny reformou).
-OSVC_ZP_BASE_RATIO: float = 0.50  # ZP VZ = 50 % ze základu daně
-
-# Minimální měsíční vyměřovací základ OSVČ pro hlavní činnost (2026).
-# = 40 % průměrné mzdy (od 2026 zvýšeno z 35 % v roce 2025).
-OSVC_MIN_MONTHLY_BASE: int = 19_587  # CZK/month (2026; = 40 % × 48 967)
-
-# ── Paušální daň – vyměřovací základy pro důchodové pojištění ─────────────────
-# Zákon č. 586/1992 Sb. ve znění zákona č. 355/2021 Sb. a nařízení vlády 2026.
-# Pro každé pásmo je stanoven PEVNÝ vyměřovací základ pro důchodové pojištění
-# bez ohledu na skutečný příjem v daném pásmu.
-# Formát: (max_příjem_Kč/měs., vyměřovací_základ_Kč/měs.)
-# Pásmo 1: základ = 40 % prům. mzdy × 1,15 = 22 527 Kč; soc. = 6 578 Kč/měs.
-# Pásmo 2: základ pevně 28 050 Kč; soc. = 8 191 Kč/měs.
-# Pásmo 3: základ pevně 42 900 Kč; soc. = 12 527 Kč/měs.
-# Sazba sociálního pojištění OSVČ: 29,2 % z vyměřovacího základu.
-PAUSALNI_DAN: list[tuple[int, int]] = [
-    (83_333,  22_527),   # pásmo 1: příjmy ≤ 1 000 000 Kč/rok
-    (125_000, 28_050),   # pásmo 2: příjmy ≤ 1 500 000 Kč/rok
-    (166_667, 42_900),   # pásmo 3: příjmy ≤ 2 000 000 Kč/rok
-]
-
-# Paušální daň – celkové měsíční platby (pojistné + daň z příjmů)
-# Formát: (max_příjem_Kč/měs., celková_platba_Kč/měs.)
-# Pásmo 1: daň 100 + soc. 6 578 + zdrav. 3 306 = 9 984 Kč/měs.
-# Pásmo 2: daň 4 963 + soc. 8 191 + zdrav. 3 591 = 16 745 Kč/měs.
-# Pásmo 3: daň 9 320 + soc. 12 527 + zdrav. 5 292 = 27 139 Kč/měs.
-PAUSALNI_DAN_TOTAL: list[tuple[int, int]] = [
-    (83_333,   9_984),   # pásmo 1: příjmy ≤ 1 000 000 Kč/rok
-    (125_000, 16_745),   # pásmo 2: příjmy ≤ 1 500 000 Kč/rok
-    (166_667, 27_139),   # pásmo 3: příjmy ≤ 2 000 000 Kč/rok
-]
-
-# ── Daň z příjmů fyzických osob (DPFO) a odvody zaměstnance ──────────────────
-# Zákon č. 586/1992 Sb. (zákon o daních z příjmů, ZDP).
-
-# Sazby daně z příjmů (§ 16 ZDP):
-INCOME_TAX_RATE_LOW: float  = 0.15   # 15 % (do 3× průměrné mzdy/měsíc)
-INCOME_TAX_RATE_HIGH: float = 0.23   # 23 % (nad 3× průměrné mzdy/měsíc)
-TAX_THRESHOLD_MONTHLY: int  = 3 * AVG_WAGE  # 146 901 Kč/měsíc (2026)
-
-# Základní sleva na poplatníka (§ 35ba odst. 1 písm. a) ZDP):
-SLEVA_POPLATNIK_MONTHLY: int = 2_570  # 2 570 Kč/měsíc (= 30 840 Kč/rok)
-
-# Sazby pojistného zaměstnance (§ 7 zák. č. 589/1992 Sb., § 2 zák. č. 592/1992 Sb.):
-#   Sociální (důchodové 6,5 % + nemocenské 0,6 %): 7,1 %
-#   Zdravotní: 4,5 %
-EMPLOYEE_SOCIAL_RATE: float = 0.071   # 7,1 % z hrubé mzdy
-EMPLOYEE_HEALTH_RATE: float = 0.045   # 4,5 % z hrubé mzdy
-
-# ── OSVČ – sazby zdravotního a sociálního pojistného ─────────────────────────
-# Zákon č. 589/1992 Sb. (sociální) a zákon č. 592/1992 Sb. (zdravotní).
-OSVC_SOCIAL_RATE: float = 0.292   # 29,2 % z vyměřovacího základu
-OSVC_HEALTH_RATE: float = 0.135   # 13,5 % z vyměřovacího základu
-
-# Minimální měsíční vyměřovací základ OSVČ pro zdravotní pojištění (2026):
-# = 50 % průměrné mzdy.
-OSVC_MIN_HEALTH_BASE: int = AVG_WAGE // 2  # 24 484 Kč/měsíc (2026)
-
-# ── Minimální mzda ────────────────────────────────────────────────────────────
-# Nařízení vlády č. 405/2025 Sb. – platné od 1. 1. 2026.
-MIN_WAGE: int = 20_800  # CZK/měsíc (hrubá mzda, zaměstnanec)
-# Celkové náklady zaměstnavatele při minimální mzdě (osa x ekvivalent):
-MIN_WAGE_TOTAL_COST: int = int(MIN_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 27 830 Kč
-
-# ── Mediánová mzda zaměstnance ────────────────────────────────────────────────
-# Zdroj: ISPV (Informační systém o průměrném výdělku), ČSÚ/MPSV, rok 2024.
-# Medián hrubé měsíční mzdy zaměstnanců v podnikatelské sféře: 40 709 Kč.
-# ISPV se vztahuje pouze na zaměstnance v podnicích; pro OSVČ srovnatelná
-# statistika mediánu zisku není zveřejňována (viz komentář ve funkci
-# plot_tax_wedge_comparison()).
-MEDIAN_EMP_WAGE: int = 40_709   # CZK/měsíc hrubé mzdy (ISPV 2024)
-MEDIAN_EMP_TOTAL_COST: int = int(MEDIAN_EMP_WAGE * (1 + EMPLOYER_INS_RATE))  # ≈ 54 469 Kč
-
-# ── Polohy zlomů (kinks) na ose x (celkové náklady / příjmy) pro RH1/RH2 ─────
-# Redukční hranice RH1 a RH2 jsou prahové hodnoty OVZ, nikoliv osy x.
-# Zaměstnanec: OVZ = hrubá = x / (1 + EMPLOYER_INS_RATE) → kink = RH × (1 + rate)
-# OSVČ s výdajovým paušálem r: OVZ = 55 % × (1-r) × x → kink = RH / (0,55 × (1-r))
-EMP_RH1_X: int  = int(RH1 * (1 + EMPLOYER_INS_RATE))   # ≈ 28 829 Kč (zam. kink @ RH1)
-EMP_RH2_X: int  = int(RH2 * (1 + EMPLOYER_INS_RATE))   # ≈ 262 272 Kč (mimo std. rozsah)
-OSVC_RH1_X: int = int(RH1 / OSVC_BASE_RATIO)           # ≈ 39 175 Kč (OSVČ kink @ RH1, r=0)
-OSVC_RH2_X: int = int(RH2 / OSVC_BASE_RATIO)           # ≈ 356 124 Kč (mimo std. rozsah)
-
-# ── OSVČ typy pro srovnání ────────────────────────────────────────────────────
-# Formát: (výdajový_paušál, popisek, barva, max_pásmo_paušální_daně)
-# výdajový_paušál: podíl příjmů uznaný jako výdaje → zisk = příjmy × (1 − sazba)
-# max_pásmo: maximální pásmo paušální daně (40 % svobodná povolání = jen pásmo 1)
-OSVC_TYPES: list[tuple[float, str, str, int]] = [
-    (0.60, "OSVČ 60\u202f%\u00a0výdajů (ost.\u00a0živnosti)",       PALETTE[1], 3),
-    (0.80, "OSVČ 80\u202f%\u00a0výdajů (řemeslná živnost)",          PALETTE[4], 3),
-    (0.40, "OSVČ 40\u202f%\u00a0výdajů (svobodná\u00a0povolání)",   PALETTE[5], 1),
-]
-
-# Barvy paušální daně – jedna barva na pásmo (nezávisle na typu OSVČ,
-# protože VZ paušálu je pevný na pásmo a křivky různých typů OSVČ se překrývají).
-PASMO_COLORS: list[str] = [PALETTE[2], PALETTE[3], PALETTE[6]]  # pásmo 1, 2, 3
-
-# ── Pomocné výpočetní funkce ──────────────────────────────────────────────────
-
-def _fmt_czk(amount: int) -> str:
-    """Formátuje celé číslo jako CZK s úzkými mezerami jako oddělovači tisíců.
-
-    Příklad: 17121 → '17\u202f121\u00a0Kč'
-    """
-    return f"{amount:,}".replace(",", "\u202f") + "\u00a0Kč"
+DEFAULT_YEARS: int = 40
 
 
-def _rovz(ovz: np.ndarray | float) -> np.ndarray | float:
-    """Redukovaný osobní vyměřovací základ (ROVZ) dle § 15 ZPDS.
+# ── Reduction function ────────────────────────────────────────────────────────
+
+def _reduce_ovz(ovz_monthly: float) -> float:
+    """Apply statutory reduction thresholds to personal assessment base.
 
     Parameters
     ----------
-    ovz:
-        Osobní vyměřovací základ (OVZ) v Kč/měsíc.  Může být skalár nebo
-        numpy pole.
+    ovz_monthly:
+        Average monthly personal assessment base (OVZ) in Kč.
 
     Returns
     -------
-    ROVZ v Kč/měsíc (stejného typu/tvaru jako vstup).
+    Reduced OVZ for procentní výměra calculation.
     """
-    return (
-        np.minimum(ovz, RH1)
-        + np.maximum(np.minimum(ovz, RH2) - RH1, 0) * 0.26
-        + np.maximum(ovz - RH2, 0) * 0.22
-    )
+    if ovz_monthly <= RH1:
+        return ovz_monthly
+    elif ovz_monthly <= RH2:
+        return RH1 + (ovz_monthly - RH1) * 0.26
+    else:
+        return RH1 + (RH2 - RH1) * 0.26  # above RH2 → 0 % counted
 
 
-def _pension(ovz: np.ndarray | float, years: int = INSURANCE_YEARS) -> np.ndarray | float:
-    """Měsíční starobní důchod (Kč/měsíc) pro daný OVZ a pojistnou dobu.
+# ── Pension calculation functions ─────────────────────────────────────────────
+
+def pension_employee(gross_monthly: float, years: int = DEFAULT_YEARS) -> float:
+    """Statutory monthly old-age pension for a full-career employee.
+
+    The assessment base equals gross monthly wage (employee side).
 
     Parameters
     ----------
-    ovz:
-        Osobní vyměřovací základ [Kč/měsíc].
+    gross_monthly:
+        Average gross monthly wage over the career.
     years:
-        Délka pojistné doby [roky].
+        Years of pensionable service.
 
     Returns
     -------
-    Výše starobního důchodu v Kč/měsíc.
+    Monthly pension in Kč.
     """
-    procentni = np.maximum(_rovz(ovz) * years * PCT_PER_YEAR, MIN_PROCENTNI_VYMERA)
+    ovz_reduced = _reduce_ovz(gross_monthly)
+    procentni   = ovz_reduced * PCT_PER_YEAR * years
     return ZAKLADNI_VYMERA + procentni
 
 
-def pension_employee(gross_income: np.ndarray | float,
-                     years: int = INSURANCE_YEARS) -> np.ndarray | float:
-    """Starobní důchod zaměstnance.
+def pension_osvc(
+    revenue_monthly: float,
+    expense_rate: float = 0.55,
+    years: int = DEFAULT_YEARS,
+) -> float:
+    """Statutory monthly old-age pension for OSVČ using výdajový paušál.
 
-    Vyměřovací základ = hrubá mzda (100 %).
-    Celkové náklady zaměstnavatele = hrubá_mzda × (1 + EMPLOYER_INS_RATE).
-    """
-    ovz = np.asarray(gross_income, dtype=float)
-    return _pension(ovz, years)
-
-
-def pension_osvc(gross_profit: np.ndarray | float,
-                 years: int = INSURANCE_YEARS) -> np.ndarray | float:
-    """Starobní důchod OSVČ se standardními odvody.
-
-    Vyměřovací základ = 50 % ze zisku (příjmy − výdaje), minimálně
-    OSVC_MIN_MONTHLY_BASE.
-    """
-    profit = np.asarray(gross_profit, dtype=float)
-    ovz = np.maximum(OSVC_BASE_RATIO * profit, OSVC_MIN_MONTHLY_BASE)
-    return _pension(ovz, years)
-
-
-def pension_pausalni(gross_income: np.ndarray | float,
-                     years: int = INSURANCE_YEARS) -> np.ndarray | float:
-    """Starobní důchod OSVČ v paušálním režimu (odvodový paušál).
-
-    Vyměřovací základ je pro každé pásmo PEVNÝ a nezávisí na skutečném příjmu
-    v rámci pásma – viz PAUSALNI_DAN.  Vstupní příjem nad nejvyšší pásmové
-    maximum je považován za nepřípustný pro paušální daň (vrací NaN).
-    """
-    income = np.asarray(gross_income, dtype=float)
-    result = np.full_like(income, np.nan)
-    for max_income, monthly_base in PAUSALNI_DAN:
-        mask = income <= max_income
-        ovz = float(monthly_base)
-        result = np.where(mask & np.isnan(result), _pension(ovz, years), result)
-    return result
-
-
-def pension_osvc_vydajovy(revenue: np.ndarray | float,
-                          expense_rate: float,
-                          years: int = INSURANCE_YEARS) -> np.ndarray | float:
-    """Starobní důchod OSVČ s výdajovým paušálem dané sazby.
+    The OSVČ SP assessment base = 55 % of (revenue − paušální výdaje).
+    This mirrors the tax-model computation but uses the SP vyměřovací základ
+    as the personal assessment base for pension purposes.
 
     Parameters
     ----------
-    revenue:
-        Měsíční příjmy OSVČ (= x na ose x: co zaplatí klient) [Kč/měsíc].
+    revenue_monthly:
+        Monthly turnover in Kč.
     expense_rate:
-        Sazba výdajového paušálu (0,40 / 0,60 / 0,80).
-        Zisk = příjmy × (1 − expense_rate).
-    """
-    rev = np.asarray(revenue, dtype=float)
-    profit = (1.0 - expense_rate) * rev
-    ovz = np.maximum(OSVC_BASE_RATIO * profit, OSVC_MIN_MONTHLY_BASE)
-    return _pension(ovz, years)
-
-
-# ── Vizualizace ───────────────────────────────────────────────────────────────
-
-def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
-                      color: str, alpha: float = 0.7,
-                      linestyle: tuple = (0, (3, 4))) -> None:
-    """Přidá svislou referenční čáru s anotací do grafu ax.
-
-    Anotace je umístěna pomocí souřadnic osy (axes fraction) pro y, aby
-    nevyžadovala znalost rozsahu dat před dokončením layoutu.
-    """
-    ax.axvline(x_kczk, color=color, linewidth=0.8, linestyle=linestyle,
-               alpha=alpha, zorder=1)
-    ax.annotate(
-        label,
-        xy=(x_kczk, 1),
-        xycoords=("data", "axes fraction"),
-        xytext=(3, -2), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color=color, va="top",
-    )
-
-
-def plot_pension_comparison(
-    income_max: int = 200_000,
-    years: int = INSURANCE_YEARS,
-) -> plt.Figure:
-    """Vykreslí srovnání výše starobního důchodu v závislosti na celkových nákladech.
-
-    Osa x = celkové náklady zaměstnavatele (pro zaměstnance) / měsíční příjmy OSVČ.
-    Pro zaměstnance: hrubá mzda = x / (1 + EMPLOYER_INS_RATE).
-    Pro OSVČ: příjmy = x, zisk = x × (1 − výdajový_paušál).
-
-    Parameters
-    ----------
-    income_max:
-        Horní mez osy x [Kč/měsíc] (= max celkové náklady zaměstnavatele / příjmy OSVČ).
+        Výdajový paušál coefficient (default 0.55, i.e. § 5b SP).
+        For výdaje 80 % pass 0.80, for 60 % pass 0.60, etc.
     years:
-        Předpokládaná pojistná doba [roky] pro výpočet procentní výměry.
-
-    Returns
-    -------
-    matplotlib Figure objekt.
+        Years of pensionable service.
     """
-    x = np.linspace(0, income_max, 2_000)  # Kč/měsíc (total cost / revenue)
-
-    gross_emp = x / (1 + EMPLOYER_INS_RATE)
-    p_emp     = pension_employee(gross_emp, years)
-
-    fig, ax = plt.subplots(figsize=cm2in(16, 10))
-    c_emp = PALETTE[0]
-
-    # Zaměstnanec
-    ax.plot(x / 1_000, p_emp / 1_000,
-            color=c_emp, linewidth=2.0, zorder=3)
-
-    # OSVČ typy – standardní odvody (dashed) + paušální daň (dotted, barva dle pásma)
-    pasmo_plotted: set[int] = set()
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
-        p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
-        ax.plot(x / 1_000, p_osvc / 1_000,
-                color=color, linewidth=1.5, linestyle="--", zorder=3)
-
-        prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
-            p_val  = _pension(monthly_base, years)
-            x_seg  = [prev_max / 1_000, max_income / 1_000]
-            y_seg  = [p_val / 1_000, p_val / 1_000]
-            ax.plot(x_seg, y_seg,
-                    color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax.axvline(max_income / 1_000, color=PASMO_COLORS[i],
-                           linewidth=0.5, linestyle=":", alpha=0.4)
-            pasmo_plotted.add(i)
-            prev_max = max_income
-
-    # Minimální výše důchodu
-    min_pension_kczk = MIN_TOTAL_PENSION / 1_000
-    ax.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
-               linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
-    ax.annotate(
-        f"Min. důchod ({_fmt_czk(MIN_TOTAL_PENSION)})",
-        xy=(income_max * 0.01 / 1_000, min_pension_kczk),
-        xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
+    annual_revenue = revenue_monthly * 12
+    annual_tax_base = annual_revenue * (1 - expense_rate)
+    sp_base_monthly = max(
+        annual_tax_base * OSVC_BASE_SP / 12,
+        OSVC_SP_MIN_MONTHLY,
     )
-
-    # Referenční svislé čáry
-    _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
-                      color="#cc6600", linestyle=(0, (4, 3)))
-    _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
-                      color="#888888")
-    if EMP_RH1_X <= income_max:
-        _add_vertical_ref(ax, EMP_RH1_X / 1_000,
-                          f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
-                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
-
-    ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
-    ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
-    ax.set_title(
-        f"Výše starobního důchodu v závislosti na nákladech na práci\n"
-        f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02026)",
-        loc="center",
-    )
-    ax.set_xlim(0, income_max / 1_000)
-    ax.set_ylim(bottom=0)
-
-    # Legenda mimo osy – dole pod grafem; ručně sestavené handles pro přehlednost
-    legend_handles = [
-        Line2D([0], [0], color=c_emp, linewidth=2.0,
-               label="Zaměstnanec (celk.\u00a0nákl.)"),
-    ]
-    for _er, lbl, col, _mp in OSVC_TYPES:
-        legend_handles.append(
-            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
-    for i in range(len(PAUSALNI_DAN)):
-        legend_handles.append(
-            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
-                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
-    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
-               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
-
-    return fig
+    ovz_reduced = _reduce_ovz(sp_base_monthly)
+    procentni   = ovz_reduced * PCT_PER_YEAR * years
+    return ZAKLADNI_VYMERA + procentni
 
 
-def plot_pension_solidarity(
-    income_max: int = 200_000,
-    income_min_rr: int = OSVC_MIN_MONTHLY_BASE * 2,
-    years: int = INSURANCE_YEARS,
-) -> plt.Figure:
-    """Dvoupanelový obrázek znázorňující solidární charakter důchodového systému.
+def pension_pausalni(revenue_monthly: float, years: int = DEFAULT_YEARS) -> float:
+    """Statutory monthly old-age pension for OSVČ on paušální daň.
 
-    Osa x = celkové náklady zaměstnavatele (zaměstnanec) / měsíční příjmy OSVČ.
-    Pro zaměstnance: hrubá mzda = x / (1 + EMPLOYER_INS_RATE).
-    Náhradový poměr = důchod / x.
-
-    Horní panel zobrazuje absolutní výši důchodu.
-    Dolní panel zobrazuje náhradový poměr – klesající průběh demonstruje solidaritu.
-
-    Parameters
-    ----------
-    income_max:
-        Horní mez osy x [Kč/měsíc].
-    income_min_rr:
-        Spodní mez x pro dolní panel [Kč/měsíc].
-        Výchozí = OSVC_MIN_MONTHLY_BASE × 2: pod touto hodnotou tvoří zákonný
-        minimální základ OSVČ více než 50 % zisku (křivka OSVČ by byla umělá).
-    years:
-        Předpokládaná pojistná doba [roky].
-
-    Returns
-    -------
-    matplotlib Figure objekt (dva panely sdílející osu x).
+    Uses the fixed PAUSALNI_BASE as the SP vyměřovací základ regardless of
+    actual revenue (within pásmo 1 cap).
     """
-    # ── Datové vektory ─────────────────────────────────────────────────────────
-    x    = np.linspace(0, income_max, 2_000)
-    x_rr = np.linspace(income_min_rr, income_max, 2_000)
-
-    gross_emp    = x    / (1 + EMPLOYER_INS_RATE)
-    gross_emp_rr = x_rr / (1 + EMPLOYER_INS_RATE)
-
-    p_emp    = pension_employee(gross_emp,    years)
-    p_emp_rr = pension_employee(gross_emp_rr, years)
-
-    # ── Vytvoření figury se dvěma panely ──────────────────────────────────────
-    fig, (ax_top, ax_bot) = plt.subplots(
-        2, 1,
-        figsize=cm2in(16, 14),
-        gridspec_kw={"height_ratios": [3, 2]},
-        sharex=True,
-    )
-    fig.subplots_adjust(hspace=0.08)
-
-    c_emp = PALETTE[0]
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # HORNÍ PANEL – výše důchodu [tis. Kč/měsíc]
-    # ══════════════════════════════════════════════════════════════════════════
-    ax_top.plot(x / 1_000, p_emp / 1_000,
-                color=c_emp, linewidth=2.0, zorder=3)
-
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
-        p_osvc = pension_osvc_vydajovy(x, expense_rate, years)
-        ax_top.plot(x / 1_000, p_osvc / 1_000,
-                    color=color, linewidth=1.5, linestyle="--", zorder=3)
-
-        prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
-            p_val = _pension(monthly_base, years)
-            x_seg = [prev_max / 1_000, max_income / 1_000]
-            y_seg = [p_val / 1_000, p_val / 1_000]
-            ax_top.plot(x_seg, y_seg,
-                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_top.axvline(max_income / 1_000, color=PASMO_COLORS[i],
-                               linewidth=0.5, linestyle=":", alpha=0.4)
-            prev_max = max_income
-
-    # Minimální výše důchodu
-    min_pension_kczk = MIN_TOTAL_PENSION / 1_000
-    ax_top.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
-                   linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
-    ax_top.annotate(
-        f"Min. důchod ({_fmt_czk(MIN_TOTAL_PENSION)})",
-        xy=(income_max * 0.01 / 1_000, min_pension_kczk),
-        xytext=(3, 4), textcoords="offset points",
-        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
-    )
-
-    # Referenční svislé čáry
-    _add_vertical_ref(ax_top, MIN_WAGE_TOTAL_COST / 1_000,
-                      f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
-                      color="#cc6600", linestyle=(0, (4, 3)))
-    _add_vertical_ref(ax_top, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      f"Medián\u00a0(zam.)\n({_fmt_czk(MEDIAN_EMP_TOTAL_COST)})",
-                      color="#888888")
-    if EMP_RH1_X <= income_max:
-        _add_vertical_ref(ax_top, EMP_RH1_X / 1_000,
-                          f"1.\u00a0RH\u00a0(zam.)\n({_fmt_czk(EMP_RH1_X)})",
-                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
-
-    ax_top.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
-    ax_top.set_title(
-        f"Výše a solidarita starobního důchodu v závislosti na nákladech na práci\n"
-        f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02026)",
-        loc="center",
-    )
-    ax_top.set_xlim(0, income_max / 1_000)
-    ax_top.set_ylim(bottom=0)
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # DOLNÍ PANEL – náhradový poměr [%] = důchod / x × 100
-    # ══════════════════════════════════════════════════════════════════════════
-    rr_emp = p_emp_rr / x_rr * 100
-    ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
-
-    for expense_rate, label, color, max_pasmo in OSVC_TYPES:
-        p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
-        rr_osvc   = p_osvc_rr / x_rr * 100
-        ax_bot.plot(x_rr / 1_000, rr_osvc,
-                    color=color, linewidth=1.5, linestyle="--")
-
-        prev_max = 0
-        for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN[:max_pasmo]):
-            p_val   = _pension(monthly_base, years)
-            x_band  = np.linspace(max(prev_max + 1, income_min_rr), max_income, 300)
-            rr_band = p_val / x_band * 100
-            ax_bot.plot(x_band / 1_000, rr_band,
-                        color=PASMO_COLORS[i], linewidth=2.0, linestyle=":")
-            if i < max_pasmo - 1 and i < len(PAUSALNI_DAN) - 1:
-                ax_bot.axvline(max_income / 1_000, color=PASMO_COLORS[i],
-                               linewidth=0.5, linestyle=":", alpha=0.4)
-            prev_max = max_income
-
-    # Referenční svislé čáry – dolní panel
-    _add_vertical_ref(ax_bot, MIN_WAGE_TOTAL_COST / 1_000,
-                      "Min.\u00a0mzda",
-                      color="#cc6600", linestyle=(0, (4, 3)))
-    _add_vertical_ref(ax_bot, MEDIAN_EMP_TOTAL_COST / 1_000,
-                      "Medián\u00a0(zam.)",
-                      color="#888888")
-    if EMP_RH1_X <= income_max:
-        _add_vertical_ref(ax_bot, EMP_RH1_X / 1_000,
-                          "1.\u00a0RH\u00a0(zam.)",
-                          color=c_emp, alpha=0.35, linestyle=(0, (2, 6)))
-
-    ax_bot.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
-    ax_bot.set_ylabel("Náhradový poměr (důchod\u00a0/\u00a0nákl.)\u00a0[%]")
-    ax_bot.set_xlim(0, income_max / 1_000)
-    ax_bot.set_ylim(bottom=0)
-
-    # Legenda mimo osy – dole pod figúrou; sdílena oběma panely
-    legend_handles = [
-        Line2D([0], [0], color=c_emp, linewidth=2.0,
-               label="Zaměstnanec (celk.\u00a0nákl.)"),
-    ]
-    for _er, lbl, col, _mp in OSVC_TYPES:
-        legend_handles.append(
-            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
-    for i in range(len(PAUSALNI_DAN)):
-        legend_handles.append(
-            Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
-                   label=f"Paušální daň – pásmo\u00a0{i + 1}"))
-    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
-               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
-
-    return fig
+    ovz_reduced = _reduce_ovz(PAUSALNI_BASE)
+    procentni   = ovz_reduced * PCT_PER_YEAR * years
+    return ZAKLADNI_VYMERA + procentni
 
 
-# ── Spuštění ──────────────────────────────────────────────────────────────────
+def replacement_rate(pension: float, gross_monthly: float) -> float:
+    """Pension replacement rate = pension / gross income."""
+    if gross_monthly <= 0:
+        return 0.0
+    return pension / gross_monthly
 
-if __name__ == "__main__":
-    apply_style()
 
-    # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
-    fig_cmp = plot_pension_comparison()
-    savefig(fig_cmp, "cz_pension_income", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
-        "cz_pension_income",
-        caption=(
-            r"Výše starobního důchodu v závislosti na celkových nákladech "
-            r"zaměstnavatele (zaměstnanec) resp. zisku (OSVČ) za měsíc. "
-            r"Osa x odpovídá celkovým výdajům plátce: pro zaměstnance zahrnuje "
-            r"hrubou mzdu i odvody zaměstnavatele (33,8\,\%); pro OSVČ se standardními "
-            r"odvody je to zisk (příjmy\,−\,výdaje); pro OSVČ v~paušálním daňovém "
-            r"režimu jde o~měsíční příjmy (revenue), přičemž výše důchodu je v~každém "
-            r"pásmu pevná. "
-            r"Parametry roku~2026, předpokládaná pojistná doba 40~let. "
-            r"Výpočet dle zákona č.\,155/1995~Sb.\ (zákon o~důchodovém pojištění), "
-            r"zákona č.\,270/2023~Sb.\ (důchodová reforma) "
-            r"a nařízení vlády č.\,365/2025~Sb."
-        ),
-        label="fig:cz_pension_income",
-        width=r"0.95\linewidth",
-    )
+# ── Build data arrays ─────────────────────────────────────────────────────────
 
-    # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
-    fig_sol = plot_pension_solidarity()
-    savefig(fig_sol, "cz_pension_solidarity", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
-        "cz_pension_solidarity",
-        caption=(
-            r"Výše starobního důchodu (horní panel) a náhradový poměr "
-            r"(dolní panel) v závislosti na celkových nákladech zaměstnavatele "
-            r"(zaměstnanec) resp. zisku (OSVČ) za měsíc – viz obrázek "
-            r"\ref{fig:cz_pension_income} pro popis osy\,x. "
-            r"Náhradový poměr = důchod\,/\,celkové náklady\,/\,zisk; "
-            r"klesající průběh dokládá solidární přerozdělení ve prospěch nižších příjmů. "
-            r"Parametry roku~2026, pojistná doba 40~let. "
-            r"Výpočet dle zákona č.\,155/1995~Sb., zákona č.\,270/2023~Sb. "
-            r"a nařízení vlády č.\,365/2025~Sb."
-        ),
-        label="fig:cz_pension_solidarity",
-        width=r"0.95\linewidth",
-    )
+X = np.linspace(MIN_WAGE, 200_000, 800)   # gross wage / OSVČ revenue axis
 
-    print("Hotovo.")
+pen_emp    = np.array([pension_employee(x)          for x in X])
+pen_60     = np.array([pension_osvc(x, 0.40)        for x in X])  # 60% výdaje → 40% základ
+pen_80     = np.array([pension_osvc(x, 0.20)        for x in X])  # 80% výdaje → 20% základ
+pen_40     = np.array([pension_osvc(x, 0.60)        for x in X])  # 40% výdaje → 60% základ
+pen_paul   = np.array([pension_pausalni(x)          for x in X])  # constant
+
+rr_emp     = np.array([replacement_rate(p, w) for p, w in zip(pen_emp,  X)])
+rr_60      = np.array([replacement_rate(p, r) for p, r in zip(pen_60,   X)])
+rr_80      = np.array([replacement_rate(p, r) for p, r in zip(pen_80,   X)])
+rr_40      = np.array([replacement_rate(p, r) for p, r in zip(pen_40,   X)])
+rr_paul    = np.array([replacement_rate(p, r) for p, r in zip(pen_paul, X)])
+
+
+# ── Figure 1: cz_pension_solidarity (2-panel) ─────────────────────────────────
+
+fig1, (ax_a, ax_b) = plt.subplots(1, 2, figsize=cm2in(18, 9))
+
+# Panel A – absolute pension
+ax_a.plot(X / 1_000, pen_emp  / 1_000, color=PALETTE[0], label="Zaměstnanec")
+ax_a.plot(X / 1_000, pen_60   / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
+ax_a.plot(X / 1_000, pen_80   / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
+ax_a.plot(X / 1_000, pen_40   / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
+ax_a.plot(X / 1_000, pen_paul / 1_000, color=PALETTE[4], linestyle="--",
+          label="Paušální daň pás. 1")
+
+for ax in (ax_a, ax_b):
+    ax.axvline(MIN_WAGE / 1_000, color="grey", linewidth=0.8, linestyle=":")
+    ax.axvline(AVG_WAGE / 1_000, color="grey", linewidth=0.8, linestyle=":")
+
+ax_a.scatter([MEDIAN_EMP_WAGE / 1_000],
+             [pension_employee(MEDIAN_EMP_WAGE) / 1_000],
+             color=PALETTE[0], s=30, zorder=5)
+ax_a.set_xlabel("Hrubý příjem (tis. Kč/měsíc)")
+ax_a.set_ylabel("Důchod (tis. Kč/měsíc)")
+ax_a.set_title("Výše starobního důchodu")
+ax_a.legend(fontsize=FONT_SIZE - 1, loc="upper left")
+
+# Panel B – replacement rate
+ax_b.plot(X / 1_000, rr_emp  * 100, color=PALETTE[0])
+ax_b.plot(X / 1_000, rr_60   * 100, color=PALETTE[1])
+ax_b.plot(X / 1_000, rr_80   * 100, color=PALETTE[2])
+ax_b.plot(X / 1_000, rr_40   * 100, color=PALETTE[3])
+ax_b.plot(X / 1_000, rr_paul * 100, color=PALETTE[4], linestyle="--")
+
+ax_b.scatter([MEDIAN_EMP_WAGE / 1_000],
+             [replacement_rate(pension_employee(MEDIAN_EMP_WAGE),
+                               MEDIAN_EMP_WAGE) * 100],
+             color=PALETTE[0], s=30, zorder=5)
+ax_b.set_xlabel("Hrubý příjem (tis. Kč/měsíc)")
+ax_b.set_ylabel("Náhradový poměr (%)")
+ax_b.set_title("Náhradový poměr")
+ax_b.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
+
+# Annotate min/avg lines on panel A
+for ax, dy in [(ax_a, 1), (ax_b, 2)]:
+    ax.text(MIN_WAGE / 1_000 + 0.3, ax.get_ylim()[0] + dy,
+            "min.", fontsize=FONT_SIZE - 2, color="grey")
+    ax.text(AVG_WAGE / 1_000 + 0.3, ax.get_ylim()[0] + dy,
+            "prům.", fontsize=FONT_SIZE - 2, color="grey")
+
+savefig(fig1, "cz_pension_solidarity", out_dir=LATEX_PICS_DIR)
+
+save_figure_tex(
+    "cz_pension_solidarity",
+    caption=(
+        "Výše starobního důchodu (vlevo) a náhradový poměr (vpravo) "
+        "v závislosti na hrubém příjmu pro zaměstnance a různé formy OSVČ, "
+        "parametry 2026. Tečkovaná svislá čára označuje minimální a průměrnou mzdu."
+    ),
+    label="fig:cz_pension_solidarity",
+    width=r"0.95\linewidth",
+)
+
+
+# ── Figure 2: cz_pension_income (single panel) ────────────────────────────────
+
+fig2, ax2 = plt.subplots(figsize=cm2in(15, 9))
+
+ax2.plot(X / 1_000, pen_emp  / 1_000, color=PALETTE[0], label="Zaměstnanec")
+ax2.plot(X / 1_000, pen_60   / 1_000, color=PALETTE[1], label="OSVČ výdaje 60 %")
+ax2.plot(X / 1_000, pen_80   / 1_000, color=PALETTE[2], label="OSVČ výdaje 80 %")
+ax2.plot(X / 1_000, pen_40   / 1_000, color=PALETTE[3], label="OSVČ výdaje 40 %")
+ax2.plot(X / 1_000, pen_paul / 1_000, color=PALETTE[4], linestyle="--",
+         label="Paušální daň pás. 1")
+
+ax2.axvline(MIN_WAGE / 1_000,      color="grey", linewidth=0.8, linestyle=":")
+ax2.axvline(AVG_WAGE / 1_000,      color="grey", linewidth=0.8, linestyle=":")
+ax2.axvline(MEDIAN_EMP_WAGE / 1_000, color=PALETTE[0], linewidth=0.8,
+            linestyle="-.", alpha=0.6)
+
+ax2.text(MIN_WAGE / 1_000 + 0.3,      0.6, "min. mzda",
+         fontsize=FONT_SIZE - 1, color="grey")
+ax2.text(AVG_WAGE / 1_000 + 0.3,      0.6, "prům. mzda",
+         fontsize=FONT_SIZE - 1, color="grey")
+ax2.text(MEDIAN_EMP_WAGE / 1_000 + 0.3, 0.6, "medián mzdy",
+         fontsize=FONT_SIZE - 1, color=PALETTE[0], alpha=0.8)
+
+ax2.set_xlabel("Hrubý příjem (tis. Kč/měsíc)")
+ax2.set_ylabel("Starobní důchod (tis. Kč/měsíc)")
+ax2.legend(loc="upper left")
+
+savefig(fig2, "cz_pension_income", out_dir=LATEX_PICS_DIR)
+
+save_figure_tex(
+    "cz_pension_income",
+    caption=(
+        "Výše statutárního starobního důchodu v závislosti na hrubém příjmu "
+        "pro zaměstnance a OSVČ (různé formy paušálu), parametry 2026."
+    ),
+    label="fig:cz_pension_income",
+    width=r"0.95\linewidth",
+)
+
+
+# ── Figure 3: cz_tax_wedge_comparison (scatter: tax wedge vs. replacement rate)
+
+REV_RANGE = np.linspace(MIN_WAGE, 200_000, 400)
+
+# Employee: convert revenue axis to gross wage (employer-cost / (1+ins))
+gross_range   = REV_RANGE  # same scale – revenue IS the gross for employees here
+
+tw_emp_arr    = np.array([tax_wedge_employee(g)              for g in gross_range])
+tw_60_arr     = np.array([tax_wedge_osvc_vydajovy(r, 0.60)   for r in REV_RANGE])
+tw_80_arr     = np.array([tax_wedge_osvc_vydajovy(r, 0.80)   for r in REV_RANGE])
+tw_paul_arr   = np.array([tax_wedge_osvc_pausalni(r)         for r in REV_RANGE])
+
+rr_emp_arr    = np.array([replacement_rate(pension_employee(g), g) for g in gross_range])
+rr_60_arr     = np.array([replacement_rate(pension_osvc(r, 0.40), r) for r in REV_RANGE])
+rr_80_arr     = np.array([replacement_rate(pension_osvc(r, 0.20), r) for r in REV_RANGE])
+rr_paul_arr   = np.array([replacement_rate(pension_pausalni(r), r) for r in REV_RANGE])
+mask_paul_sc  = ~np.isnan(tw_paul_arr)
+
+fig3, ax3 = plt.subplots(figsize=cm2in(15, 9))
+
+ax3.plot(tw_emp_arr   * 100, rr_emp_arr  * 100, color=PALETTE[0], label="Zaměstnanec")
+ax3.plot(tw_60_arr    * 100, rr_60_arr   * 100, color=PALETTE[1], label="OSVČ výdaje 60 %")
+ax3.plot(tw_80_arr    * 100, rr_80_arr   * 100, color=PALETTE[2], label="OSVČ výdaje 80 %")
+ax3.plot(tw_paul_arr[mask_paul_sc] * 100, rr_paul_arr[mask_paul_sc] * 100,
+         color=PALETTE[4], linestyle="--", label="Paušální daň pás. 1")
+
+# Annotate min_wage and avg_wage dots on each series
+for income, marker_color, series_tw, series_rr in [
+    (MIN_WAGE, "k", tw_emp_arr, rr_emp_arr),
+    (AVG_WAGE, "k", tw_emp_arr, rr_emp_arr),
+]:
+    idx = np.argmin(np.abs(gross_range - income))
+    ax3.scatter(series_tw[idx] * 100, series_rr[idx] * 100,
+                color=marker_color, s=25, zorder=5)
+    label = "min. mzda" if income == MIN_WAGE else "prům. mzda"
+    ax3.annotate(label,
+                 (series_tw[idx] * 100, series_rr[idx] * 100),
+                 textcoords="offset points", xytext=(4, 4),
+                 fontsize=FONT_SIZE - 2, color="grey")
+
+ax3.set_xlabel("Daňový klín (%)")
+ax3.set_ylabel("Náhradový poměr (%)")
+ax3.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
+ax3.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
+ax3.legend(loc="upper right")
+
+savefig(fig3, "cz_tax_wedge_comparison", out_dir=LATEX_PICS_DIR)
+
+save_figure_tex(
+    "cz_tax_wedge_comparison",
+    caption=(
+        "Parametrický vztah mezi daňovým klínem a náhradovým poměrem "
+        "starobního důchodu pro zaměstnance a OSVČ – každý bod odpovídá "
+        "jedné úrovni příjmu z intervalu 20 800–200 000 Kč/měsíc (2026)."
+    ),
+    label="fig:cz_tax_wedge_comparison",
+    width=r"0.95\linewidth",
+)
+
+print("Done.")
