@@ -44,6 +44,7 @@ import matplotlib.patheffects as pe
 import numpy as np
 
 from config import FONT_SIZE
+from stattool.style import GEO_LONG_NAMES
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -323,7 +324,7 @@ def _add_ternary_tooltips(
 ) -> None:
     r"""Invisible \pdftooltip anchors at each data point (PGF backend only).
 
-    Tooltip text format: "CC: A_label A% / B_label B% / C_label C%".
+    Tooltip text format: "Country: A_label A% / B_label B% / C_label C%".
     No-op when the active backend is not ``pgf``.
     """
     if mpl.get_backend() != "pgf":
@@ -331,8 +332,9 @@ def _add_ternary_tooltips(
     a_lbl, b_lbl, c_lbl = vertex_labels
     for country, (a, b, c) in data.items():
         px, py = barycentric_to_cartesian(a, b, c)
+        country_label = GEO_LONG_NAMES.get(country, country)
         tip = (
-            f"{country}: "
+            f"{country_label}: "
             f"{a_lbl} {int(round(a))}\\% / "
             f"{b_lbl} {int(round(b))}\\% / "
             f"{c_lbl} {int(round(c))}\\%"
