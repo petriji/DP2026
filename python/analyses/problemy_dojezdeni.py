@@ -307,7 +307,7 @@ try:
         colorbar_label=STRINGS_NUTS2["colorbar_label"],
         cmap="RdYlGn_r",
         vmin=0,# float(data_series.min()),
-        vmax=15,# float(data_series.max()),
+        vmax=10,# float(data_series.max()),
         label_cz=True,
         label_nbr=True,
         label_fmt="{:.1f}",

@@ -323,12 +323,12 @@ ax_a.xaxis.set_major_formatter(
 ax_a.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 STRINGS_A = {
     "title": rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR}); chybové úsečky P25--P75 (\acs{{IQR}})",
-    "xlabel": r"hrubá měsíční mzda/plat -- medián [tis.\,\si{\czk}]",
+    "xlabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
-ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE)
+ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FONT_SIZE + 1)
 ax_a.set_title(
     STRINGS_A["title"],
-    fontsize=FONT_SIZE,
+    fontsize=FONT_SIZE + 2,
 )
 
 patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (soukromý sektor, ~3\u00a0010\u00a0tis.\u00a0osob)")
@@ -474,7 +474,7 @@ ax_b.set_title(
     STRINGS_B["title"],
     fontsize=FONT_SIZE,
 )
-ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="upper left")
+ax_b.legend(frameon=False, fontsize=FONT_SIZE, loc="upper left")
 ax_b.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_b.set_axisbelow(True)
 

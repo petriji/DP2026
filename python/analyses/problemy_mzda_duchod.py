@@ -653,11 +653,11 @@ _add_vertical_ref(
 # Median labels are intentionally shifted to fixed x-positions for readability.
 _ann_w = ax.annotate(
     f"medián~čisté~mzdy\n{_fmt_czk(int(round(med_wage_net)))}",
-    xy=(42.0, 1),
+    xy=(48.0, 1),
     xycoords=("data", "axes fraction"),
     xytext=(0, 8),
     textcoords="offset points",
-    fontsize=FONT_SIZE - 2,
+    fontsize=FONT_SIZE,
     color=_COLOR_WAGE,
     va="bottom",
     ha="center",
@@ -670,7 +670,7 @@ _ann_p = ax.annotate(
     xycoords=("data", "axes fraction"),
     xytext=(0, 8),
     textcoords="offset points",
-    fontsize=FONT_SIZE - 2,
+    fontsize=FONT_SIZE,
     color=_COLOR_PENSION,
     va="bottom",
     ha="center",
@@ -690,26 +690,26 @@ ax.annotate(
     "starobní důchody",
     xy=(_pension_label_x / 1_000, y_pension_at),
     xytext=(2, 4), textcoords="offset points",
-    fontsize=FONT_SIZE - 1, color=_COLOR_PENSION,
+    fontsize=FONT_SIZE, color=_COLOR_PENSION,
     ha="left", va="bottom", zorder=5,
 )
 ax.annotate(
     "čistá mzda (podnikatelská sféra)",
     xy=(_wage_label_x / 1_000, y_wage_at),
     xytext=(2, 4), textcoords="offset points",
-    fontsize=FONT_SIZE - 1, color=_COLOR_WAGE,
+    fontsize=FONT_SIZE, color=_COLOR_WAGE,
     ha="left", va="bottom", zorder=5,
 )
 
 # ── Axis styling ──────────────────────────────────────────────────────────────
-ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE)
-ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE)
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE + 1)
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE + 1)
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
-ax.tick_params(axis="both", labelsize=FONT_SIZE - 1)
+ax.tick_params(axis="both", labelsize=FONT_SIZE)
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
-ax.set_title(STRINGS["title"], fontsize=FONT_SIZE, pad=30)
+ax.set_title(STRINGS["title"], fontsize=FONT_SIZE + 2, pad=34)
 
 # Minor grid
 ax.minorticks_on()
