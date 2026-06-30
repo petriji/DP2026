@@ -33,12 +33,12 @@ from statout.scatter import scatter_xy
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-# EU27 member states (ISO 3166-1 alpha-3 for OECD filter)
-EU27_OECD = (
-    "AUT+BEL+BGR+HRV+CYP+CZE+DNK+EST+FIN+FRA+DEU+GRC"
-    "+HUN+IRL+ITA+LVA+LTU+LUX+MLT+NLD+POL+PRT+ROU+SVK"
-    "+SVN+ESP+SWE"
-)
+# EU27 member states (ISO-2, as returned by from_oecd_csv and Eurostat)
+EU27_ISO2 = {
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+    "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
+    "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+}
 START_YEAR = 2010
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 
@@ -46,10 +46,9 @@ HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 apply_style()
 
 # ── 1. Download union density ─────────────────────────────────────────────────
-# TUD dataset – all EU27 members
+# TUD dataset – fetch full dataset, filter EU27 in Python (country filter 404s)
 path_tud = fetch_oecd(
     "TUD",
-    f"{EU27_OECD}.../all",
     start_period=START_YEAR,
 )
 
@@ -60,6 +59,7 @@ ds_tud = Dataset.from_oecd_csv(
     source_url="OECD AIAS ICTWSS / TUD",
     filters={"INDICATOR": "TUD"},
 )
+# Keep all countries (not just EU27) for a fuller grey cloud and better trendline
 
 # ── 2. Download Gini coefficient ──────────────────────────────────────────────
 # ilc_di12: Gini coefficient of equivalised disposable income
@@ -83,12 +83,13 @@ ds_gini = Dataset.from_sdmx_csv(
 fig = scatter_xy(
     ds_tud,
     ds_gini,
-    title="Hustota odborů vs. Giniho koeficient (EU27)",
-    xlabel="Hustota odborů (%)",
-    ylabel="Giniho koeficient (disponibilní příjem)",
+    title="hustota odborů vs. Giniho koeficient [EU27]",
+    xlabel="hustota odborů [%]",
+    ylabel="Giniho koeficient (disponibilní příjem, 0–100)",
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
+    x_min=0,
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ save_figure_tex(
     ),
     label="fig:union_gini_scatter",
     width=r"0.85\linewidth",
-    cite_key="oecd_aias_ictwss",
+    cite_key="oecd_aias_ictwss_TUD_pct,eurostat_ilc_di12_Gini",
 )
 
 print("Done.")

@@ -7,8 +7,8 @@ to its wage level is a key protiargument that the thesis addresses.
 
 Data source: Eurostat, ``lfsi_emp_a``
   Employment rate by sex and age (annual), age group Y20-64.
-  Dimensions: freq · unit · sex · age · geo
-  Filter: freq=A, unit=PC_POP (%), sex=T (total), age=Y20-64.
+  Dimensions: freq · indic_em · sex · age · unit · geo
+  Filter: freq=A, indic_em=EMP_LFS, sex=T (total), age=Y20-64, unit=PC_POP (%).
 
 Output
 ------
@@ -46,7 +46,7 @@ apply_style()
 # Dimensions: freq · unit · sex · age · geo
 path = fetch_eurostat(
     "lfsi_emp_a",
-    f"A.PC_POP.T.Y20-64.{GEO}",
+    f"A.EMP_LFS.T.Y20-64.PC_POP.{GEO}",
     start_period=START_YEAR,
 )
 

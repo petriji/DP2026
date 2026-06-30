@@ -39,10 +39,10 @@ apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # Filter expression: freq . unit . na_item . geo
-filter_expr = f"A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.{GEO_FILTER}"
+# Fetch all countries (trailing dot) for the EU grey cloud
 path = fetch_eurostat(
     "nama_10_pc",
-    filter_expr,
+    "A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.",
     start_period=START_YEAR,
 )
 
@@ -53,21 +53,23 @@ ds = Dataset.from_sdmx_csv(
     unit="EU27=100",
     source_url="https://ec.europa.eu/eurostat – nama_10_pc",
 )
+# Remove LU and IE: outliers with ~270 and ~175 EU27=100 that distort the y-axis
+ds.df = ds.df[~ds.df["geo"].isin({"LU", "IE"})].copy()
 print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
 
 # ── 3. Timeline figure ────────────────────────────────────────────────────────
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="HDP na obyvatele v PPS – vývoj (EU27\xa0=\xa0100)",
+    title="HDP na obyvatele",
     ylabel="HDP/obyvatele (EU27 = 100)",
     highlight=HIGHLIGHT,
     annotate_last=True,
-    show_eu_avg=False,
-)
+    show_eu_avg=False,    background_eu=True,)
 
 # Add EU27 = 100 reference line
 ax = fig.axes[0]
+ax.set_xlim(START_YEAR, ds.years[-1])
 ax.axhline(100, color="gray", linewidth=0.8, linestyle="--", alpha=0.6, zorder=1)
 ax.annotate(
     "EU27 = 100",
@@ -86,12 +88,13 @@ savefig(fig, "gdp_ppp_timeline", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "gdp_ppp_timeline",
     caption=(
-        "HDP na obyvatele v paritě kupní síly (EU27\\,=\\,100), "
+        "HDP na obyvatele v~paritě kupní síly (PPS), index EU27\\,=\\,100 "
+        "(kód \\texttt{PC\_EU27\_2020\_HAB\_MPPS\_CP}), "
         f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:gdp_ppp_timeline",
     width=r"0.95\linewidth",
-    cite_key="eurostat_nama_10_pc",
+    cite_key="eurostat_nama_10_pc_PPS_EU27eq100",
 )
 
 print("Done.")
