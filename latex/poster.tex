@@ -48,6 +48,13 @@
 %\posterbibliographymaxheight{135mm}
 %\posterbibliographyfont{\fontsize{6.9}{7.4}\selectfont}
 
+% Helper for the grid-layout mockups below: a boxed rule sized to exactly fit
+% \linewidth once the \fbox frame + sep are accounted for (avoids overfull
+% \hbox warnings that a plain \rule{\linewidth}{0pt} inside \fbox would cause).
+\newcommand{\PosterMockupFigure}[1]{%
+  \fbox{\rule{0pt}{#1}\rule{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{0pt}}%
+}
+
 \begin{document}
 \makepostertitle
 
@@ -70,6 +77,12 @@
 Motivace tématu, výzkumná otázka, kontext. Lze použít odkazy na literaturu
 \cite{noauthor_penny_2026} a běžné LaTeX prostředky.
 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+velit esse cillum dolore eu fugiat nulla pariatur.
+
 \section{Metodika}
 Stručný popis dat, metod a předpokladů. Vzorec lze umístit přímo do textu:
 $y = \beta_0 + \beta_1 x + \varepsilon$, případně blokově:
@@ -77,22 +90,109 @@ $y = \beta_0 + \beta_1 x + \varepsilon$, případně blokově:
   \widehat{\beta} = (X^\top X)^{-1} X^\top y.
 \end{equation*}
 
-% ===== RIGHT COLUMN — explicit break is optional; multicol balances itself =
-%\columnbreak
+Postup práce lze shrnout do několika kroků (ukázka prostředí
+\texttt{itemize}):
+\begin{itemize}
+  \item sběr a~příprava dat z~vybraných zdrojů;
+  \item deskriptivní analýza a~kontrola konzistence;
+  \item korelační/regresní model hlavního vztahu;
+  \item ověření závěrů na doplňkovém vzorku či případové studii.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+% UKÁZKA ROZVRŽENÍ 1×2 (dva obrázky vedle sebe v~jedné řadě). Pro reálná
+% PGF/matplotlib data použijte třídní makro
+%   \postertwofigures{jméno1}{popisek1}{label1}{jméno2}{popisek2}{label2}
+% které vloží dvě volání \postercompactpgf{} do dvou minipage o šířce
+% 0,49\linewidth. Zde je stejné rozvržení sestaveno ručně z~"fbox" maket,
+% protože tato šablona neobsahuje žádná reálná PGF data.
+% ---------------------------------------------------------------------------
+\par\noindent
+\begin{minipage}[t]{0.49\linewidth}
+  \centering
+  \PosterMockupFigure{40mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku A (rozvržení 1×2, levá polovina).}
+  \label{fig:poster-mockup-1x2-a}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+  \centering
+  \PosterMockupFigure{40mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku B (rozvržení 1×2, pravá polovina).}
+  \label{fig:poster-mockup-1x2-b}
+\end{minipage}\par\vspace{2mm}
 
 \section{Výsledky}
-Hlavní zjištění, ideálně podpořená obrázkem nebo grafem.
+Hlavní zjištění, ideálně podpořená obrázkem nebo grafem (ukázka výčtu):
+\begin{itemize}
+  \item první klíčové zjištění, viz obrázek~\ref{fig:poster-mockup-1x2-a};
+  \item druhé zjištění doplněné o~srovnání s~referenčním modelem;
+  \item třetí zjištění shrnující praktický dopad pro cílovou skupinu.
+\end{itemize}
 
-% Figures inside multicols must use [H] or \captionof.
-\begin{center}
-  % \inputpgffigure{nazev_figury}      % when the .pgf exists
-  \fbox{\rule{0pt}{60mm}\rule{120mm}{0pt}}\par\medskip
-  \captionof{figure}{Ilustrační obrázek (nahraďte vlastním
-    \texttt{\textbackslash inputpgffigure\{...\}}).}
-\end{center}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
+euismod, turpis nec facilisis facilisis, nunc nisl aliquet nunc, nec
+facilisis nunc nisl nec nunc. Integer posuere erat a~ante venenatis dapibus
+posuere velit aliquet.
+
+% ===== RIGHT COLUMN — forces the split here so the grid mockups below open
+% the second column (multicol* does not auto-balance without it) ===========
+\columnbreak
+
+% ---------------------------------------------------------------------------
+% UKÁZKA ROZVRŽENÍ 2×2 (čtyři obrázky ve dvou řadách). Sestaveno ze dvou
+% dvojic prostředí \texttt{minipage} o~šířce 0,485\linewidth, oddělených
+% svislou mezerou \texttt{\textbackslash vspace}. Pro reálná data lze každou
+% buňku nahradit voláním
+%   \postercompactpgf{jméno}{popisek}{label}
+% který vkládá \posterpgfinput{} přeškálovaný na \linewidth i~s~popiskem.
+% ---------------------------------------------------------------------------
+\par\noindent
+\begin{minipage}[t]{0.485\linewidth}
+  \centering
+  \PosterMockupFigure{28mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku 1 (mřížka 2×2, vlevo nahoře).}
+  \label{fig:poster-mockup-2x2-1}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\linewidth}
+  \centering
+  \PosterMockupFigure{28mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku 2 (mřížka 2×2, vpravo nahoře).}
+  \label{fig:poster-mockup-2x2-2}
+\end{minipage}\par\vspace{2mm}
+\noindent
+\begin{minipage}[t]{0.485\linewidth}
+  \centering
+  \PosterMockupFigure{28mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku 3 (mřížka 2×2, vlevo dole).}
+  \label{fig:poster-mockup-2x2-3}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\linewidth}
+  \centering
+  \PosterMockupFigure{28mm}\par\vspace{1mm}
+  \captionof{figure}{Maketa obrázku 4 (mřížka 2×2, vpravo dole).}
+  \label{fig:poster-mockup-2x2-4}
+\end{minipage}\par\vspace{2mm}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent nec nunc
+et sapien porttitor gravida. Phasellus at felis eget arcu tincidunt cursus.
+Nulla facilisi. Suspendisse potenti. Aenean euismod, nunc nec faucibus
+gravida, sapien nunc dictum sapien, nec dictum nunc sapien nec sapien.
+
+\section{Doporučení}
+Ukázka číslovaného výčtu (prostředí \texttt{enumerate}), typicky pro
+shrnutí návrhů či doporučení plynoucích z~výsledků:
+\begin{enumerate}
+  \item první doporučení odvozené z~hlavního zjištění;
+  \item druhé doporučení podpořené srovnáním s~referenčním modelem;
+  \item třetí doporučení směřující k~praktické implementaci;
+  \item čtvrté doporučení pro navazující výzkum;
+  \item páté, shrnující doporučení s~odkazem na dopad na cílovou skupinu.
+\end{enumerate}
 
 \section{Závěr}
-Shrnutí přínosu, limity a směr dalšího výzkumu.
+Shrnutí přínosu, limity a směr dalšího výzkumu. Lorem ipsum dolor sit
+amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua.
 
 % ===== END-OF-BODY: English summary + contact block =========================
 \postersummary{%
