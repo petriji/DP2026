@@ -30,6 +30,16 @@ from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, FONT_SIZE
 from stattool.fetch import fetch
 from stattool.style import cm2in
 
+# Default per-NUTS_ID nudges (EPSG:3035 metres).  Applied when *label_nudges*
+# is not overridden by the caller.  Fixes label collisions where the
+# geometric centroid of one region falls inside or on top of another:
+#   - CZ010 (Prague) sits entirely inside CZ020 (Středočeský kraj); their
+#     centroids are ~7 km apart and the default labels overlap.
+_DEFAULT_CZ_LABEL_NUDGES: dict[str, tuple[float, float]] = {
+    "CZ010": (-10_000, 7_000),    # Prague — nudge NW, out of Středočeský
+    "CZ020": (18_000, -6_000),    # Středočeský — push SE toward its bulk
+}
+
 # ── GISCO NUTS 2021 GeoJSON (20M resolution, already in EPSG:3035) ────────────
 _GISCO_NUTS_URL = (
     "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
@@ -76,6 +86,10 @@ def choropleth_cz(
     label_cz: bool = True,
     label_nbr: bool = False,
     label_fmt: str = "{:.1f}",
+    label_fontsize: Optional[float] = None,
+    label_nudges: Optional[dict] = None,
+    label_names: Optional[dict] = None,
+    label_tooltip_fmt: Optional[str] = None,
     colorbar_label: Optional[str] = None,
     border_color: str = "black",
     border_linewidth: float = 0.8,
@@ -115,6 +129,21 @@ def choropleth_cz(
         Annotate neighbour regions with their value (default False).
     label_fmt:
         Python format string applied to each value, e.g. ``"{:.1f}"``.
+    label_fontsize:
+        Label font size in points.  Defaults to ``FONT_SIZE - 1``.
+    label_nudges:
+        Per-NUTS_ID ``(dx, dy)`` offsets (EPSG:3035 metres) added to the
+        centroid before placing the label.  Useful to separate overlapping
+        centroids (Prague vs. Středočeský).  Merged over sensible defaults
+        for CZ010/CZ020; pass an explicit empty dict to disable.
+    label_names:
+        Mapping NUTS_ID → long region name, used for PGF tooltips.  When set
+        together with *label_tooltip_fmt* and the PGF backend is active, the
+        visible value is wrapped in ``\pdftooltip{value}{name: formatted-value}``
+        so hover-capable PDF viewers show the full region name.
+    label_tooltip_fmt:
+        Format string for the tooltip's numeric value; defaults to *label_fmt*.
+        Only used when the PGF backend is active.
     colorbar_label:
         Colourbar axis label.
     border_color:
@@ -178,6 +207,14 @@ def choropleth_cz(
     x_lim = xlim or _CZ_XLIM_DEFAULT
     y_lim = ylim or _CZ_YLIM_DEFAULT
 
+    _is_pgf = mpl.get_backend() == "pgf"
+    _font = float(label_fontsize) if label_fontsize is not None else FONT_SIZE - 1
+    _nudges: dict = dict(_DEFAULT_CZ_LABEL_NUDGES)
+    if label_nudges is not None:
+        _nudges.update(label_nudges)
+    _names: dict = label_names or {}
+    _tip_fmt = label_tooltip_fmt or label_fmt
+
     def _plot_layer(gdf: gpd.GeoDataFrame, do_label: bool) -> None:
         for _, row in gdf.iterrows():
             geom = row.geometry
@@ -190,12 +227,31 @@ def choropleth_cz(
                 edgecolor=region_edgecolor, linewidth=region_linewidth,
             )
             if do_label and pd.notna(val):
+                nuts_id = row.get("NUTS_ID", "")
                 cx, cy = geom.centroid.x, geom.centroid.y
-                if x_lim[0] <= cx <= x_lim[1] and y_lim[0] <= cy <= y_lim[1]:
+                dx, dy = _nudges.get(nuts_id, (0.0, 0.0))
+                cx, cy = cx + dx, cy + dy
+                if not (x_lim[0] <= cx <= x_lim[1] and y_lim[0] <= cy <= y_lim[1]):
+                    continue
+                disp = label_fmt.format(val)
+                if _is_pgf:
+                    # Contour halo (white outline) for readability, without
+                    # path_effects — which PGF renders as outlined glyph paths
+                    # and therefore strips the text content entirely.
+                    text = rf"\contour{{white}}{{{disp}}}"
+                    if _names.get(nuts_id):
+                        tip = f"{_names[nuts_id]}: {_tip_fmt.format(val)}"
+                        text = rf"\pdftooltip{{{text}}}{{{tip}}}"
                     ax.text(
-                        cx, cy, label_fmt.format(val),
+                        cx, cy, text,
                         ha="center", va="center",
-                        fontsize=FONT_SIZE - 1, color="black",
+                        fontsize=_font, color="black",
+                    )
+                else:
+                    ax.text(
+                        cx, cy, disp,
+                        ha="center", va="center",
+                        fontsize=_font, color="black",
                         path_effects=[
                             mpe.withStroke(linewidth=1.5, foreground="white")
                         ],
