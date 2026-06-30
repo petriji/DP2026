@@ -257,3 +257,7 @@ script   = "analyses/eu_ict_gender.py"
 texparts = ["eu_ict_gender"]
 pics     = ["eu_ict_gender"]
 
+[mne_map]
+script   = "analyses/eu_mne_mapa.py"
+texparts = ["eu_mne_mapa"]
+pics     = ["eu_mne_mapa"]
