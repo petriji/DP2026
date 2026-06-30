@@ -1,10 +1,10 @@
 r"""
-Digital skills -- EU map (above-basic level, individuals 16--74).
+Digital skills – EU map (above-basic level, individuals 16–74).
 
 Data source: Eurostat ``isoc_sk_dskl_i21``
   Dimensions: freq.ind_type.indic_is.unit.geo
   I_DSK2_AB = individuals with above-basic overall digital skills
-  IND_TOTAL = all individuals (16--74)
+  IND_TOTAL = all individuals (16–74)
   PC_IND = percentage of individuals
 
 Output
@@ -25,12 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-)
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -38,7 +33,7 @@ from statout.map_europe import choropleth
 CITE_KEY = "eurostat_isoc_sk_dskl_i21_AB"
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # isoc_sk_dskl_i21: Individuals' level of digital skills (from 2021)
@@ -61,48 +56,31 @@ print(f"Countries: {len(ds.countries)}  |  Years: {ds.years}")
 print(f"Display year (latest): {ds.latest_year}")
 
 # ── 3. Choropleth map ────────────────────────────────────────────────────────
-_values = (
-    ds.df[ds.df["time"] <= ds.latest_year]
-    .sort_values("time").groupby("geo")["value"].last().to_dict()
-)
-_vmin = min(_values.values())
-_vmax = max(_values.values())
-
-COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
-
-STRINGS = {
-    "title": f"Digitální dovednosti nad základní úrovní ({ds.latest_year})",
-    "colorbar_label": r"podíl jednotlivců [\%]",
-}
-
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=STRINGS["title"],
-    colorbar_label=STRINGS["colorbar_label"],
+    title=f"Digitální dovednosti nad základní úrovní ({ds.latest_year})",
+    colorbar_label="podíl jednotlivců [%]",
     cmap="RdYlGn",
-    vmin=_vmin,
-    vmax=_vmax,
+    vmin=0,
+    vmax=70,
     label_countries=True,
     fill_latest=True,
-    highlight_colorbar=COUNTRIES,
 )
 
-apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")
-
-# ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_digit_dovednosti_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+# ── 4. Save figure ────────────────────────────────────────────────────────────
+savefig(fig, "vyhled_digit_dovednosti_mapa", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
+save_figure_tex(
     "vyhled_digit_dovednosti_mapa",
-    caption=f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, \\acs{{EU}}, {ds.latest_year}",
+    caption=(
+        f"Podíl jednotlivců s~nadprůměrnými digitálními dovednostmi, "
+        f"EU mapa, {ds.latest_year}."
+    ),
     label="fig:vyhled_digit_dovednosti_mapa",
-    resizebox_width=r"\linewidth",
+    width=r"0.92\linewidth",
     cite_key=CITE_KEY,
-    strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")
