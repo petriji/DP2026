@@ -183,7 +183,7 @@ try:
         stem="language_skills_total_map",
         caption=(
             f"Podíl osob znajících alespoň 2 cizí jazyky v~populaci EU\\,27 "
-            f"({latest_l21}; Eurostat edat\_aes\_l21, Adult Education Survey). "
+            f"({latest_l21}; Eurostat edat\\_aes\\_l21, Adult Education Survey). "
             "Šedá = data nedostupná. "
             "CZ se nachází mírně pod průměrem EU, avšak výrazně nad V4 zeměmi "
             "v~témže regionu, zejména v\\,pracovně aktivní věkové skupině."
@@ -254,7 +254,7 @@ try:
         stem="language_skills_age_map",
         caption=(
             f"Podíl osob ve věku 25--54 let znajících alespoň 2 cizí jazyky "
-            f"({latest_l22}; Eurostat edat\_aes\_l22, Adult Education Survey). "
+            f"({latest_l22}; Eurostat edat\\_aes\\_l22, Adult Education Survey). "
             "Tato pracovně aktivní věková skupina reprezentuje populaci "
             "s\\,největším potenciálem mezinárodní mobility. "
             "Vyšší hodnoty v\\,severských státech korelují s\\,otevřeností "
@@ -331,7 +331,7 @@ try:
         caption=(
             f"Podíl vysokoškolsky vzdělaných osob (ISCED\\,5--8) "
             f"znajících alespoň 2 cizí jazyky ({latest_l23}; "
-            "Eurostat edat\_aes\_l23, Adult Education Survey). "
+            "Eurostat edat\\_aes\\_l23, Adult Education Survey). "
             "Terciárně vzdělaní pracovníci s\\,jazykovými kompetencemi "
             "představují klíčový potenciál mozkoviny: vyšší jazyková "
             "vybavenost v\\,kombinaci s\\,nízkými mzdami v\\,CZ a "
