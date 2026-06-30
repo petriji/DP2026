@@ -1,13 +1,21 @@
 % Editable figure definition for stav_zamestnavatele_hustota_vyvoj
 % Edit freely --- Python will NOT overwrite this file.
 % To regenerate defaults, delete this file and re-run the script.
-\def\strStavZamestnavateleHustotaVyvojTitle{Hustota zaměstnavatelských organizací}%
-\def\strStavZamestnavateleHustotaVyvojYlabel{hustota zaměstnavatelských org. [\%]}%
-\def\strStavZamestnavateleHustotaVyvojCaption{Vývoj hustoty zaměstnavatelských organizací, vybrané země EU, 2000--2024}%
+\def\strStavZamestnavateleHustotaVyvojTitle{Zaměstnavatelská organizovanost}%
+\def\strStavZamestnavateleHustotaVyvojYlabel{zaměstnavatelská organizovanost [\%]}%
+% --- Per-label y-nudge knobs (override with \renewcommand)
+% Example: \renewcommand\NudgeStavZamestnavateleHustotaVyvojCz{-3pt}  % shift label up by 3pt
+\providecommand\NudgeStavZamestnavateleHustotaVyvojCz{0pt}%
+\providecommand\NudgeStavZamestnavateleHustotaVyvojAt{0pt}%
+\providecommand\NudgeStavZamestnavateleHustotaVyvojDe{0pt}%
+\providecommand\NudgeStavZamestnavateleHustotaVyvojDk{0pt}%
+\providecommand\NudgeStavZamestnavateleHustotaVyvojPl{0pt}%
+\providecommand\NudgeStavZamestnavateleHustotaVyvojSk{0pt}%
+\def\strStavZamestnavateleHustotaVyvojCaption{Vývoj zaměstnavatelské organizovanosti, vybrané země EU, 2000--2024. Zdroj dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_ED_pct}.}%
 %
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
-  \resizebox{\linewidth}{!}{\input{../python/figures/stav_zamestnavatele_hustota_vyvoj.pgf}}
+  \input{../python/figures/stav_zamestnavatele_hustota_vyvoj.pgf}
   \caption{\strStavZamestnavateleHustotaVyvojCaption}
   \label{fig:stav_zamestnavatele_hustota_vyvoj}
 \end{figure}

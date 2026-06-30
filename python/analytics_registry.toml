@@ -23,10 +23,20 @@ script   = "analyses/eu_danovy_klin.py"
 texparts = ["eu_danovy_klin"]
 pics     = ["eu_danovy_klin"]
 
+[taxwedge_vyvoj]
+script   = "analyses/eu_danovy_klin_vyvoj.py"
+texparts = ["eu_danovy_klin_vyvoj"]
+pics     = ["eu_danovy_klin_vyvoj"]
+
 [arope]
 script   = "analyses/stav_arope.py"
 texparts = ["stav_arope_mapa_*"]
 pics     = ["stav_arope_mapa_*"]
+
+[arope_dual]
+script   = "analyses/stav_arope_dual.py"
+texparts = ["stav_arope_dual"]
+pics     = ["stav_arope_dual"]
 
 [flexicurity]
 script   = "analyses/prakticka_srovnani.py"
@@ -48,32 +58,36 @@ script   = "analyses/eu_konvergence.py"
 texparts = ["eu_konvergence"]
 pics     = ["eu_konvergence"]
 
+[productivity_income_trajectory]
+script   = "analyses/eu_produktivita_prijem_trajektorie.py"
+texparts = ["eu_produktivita_prijem_trajektorie"]
+pics     = ["eu_produktivita_prijem_trajektorie"]
+
 [union_gini]
 script   = "analyses/korelace_hustota_gini.py"
 texparts = ["korelace_hustota_gini"]
 pics     = ["korelace_hustota_gini"]
 
 [cz_pension]
-script   = "analyses/problemy_cz_duchod.py"
-texparts = ["problemy_duchod_solidarita"]
-pics     = ["problemy_duchod_solidarita"]
+script   = "analyses/problemy_cz_model.py"
+texparts = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
+pics     = ["problemy_duchod_solidarita", "problemy_duchod_prijem", "problemy_duchod_klin",
+            "problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
+            "problemy_duchod_sp_pomer"]
 
 [cz_tax_model]
 script   = "analyses/problemy_cz_model.py"
 texparts = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 pics     = ["problemy_danovy_klin_cz", "problemy_cisty_prijem_cz",
-            "problemy_sp_odvody_cz", "problemy_duchod_sp_pomer"]
+            "problemy_duchod_sp_pomer"]
 
 [ipp_wage_growth]
 script   = "analyses/stav_ipp_mzdy.py"
 texparts = ["stav_ipp_mzdy"]
 pics     = ["stav_ipp_mzdy"]
-
-[ipp_supplementary]
-script   = "analyses/stav_ipp_doplnkove.py"
-texparts = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
-pics     = ["stav_ipp_kumulativ", "stav_ipp_mezera"]
 
 [ipp_ca_breadth]
 script   = "analyses/stav_ipp_rozsah.py"
@@ -115,6 +129,16 @@ script   = "analyses/eu_gini_prijem.py"
 texparts = ["eu_gini_prijem"]
 pics     = ["eu_gini_prijem"]
 
+[income_distribution]
+script   = "analyses/eu_prijem_distribuce.py"
+texparts = ["eu_prijem_distribuce"]
+pics     = ["eu_prijem_distribuce"]
+
+[wage_distribution]
+script   = "analyses/eu_mzda_distribuce.py"
+texparts = ["eu_mzda_distribuce"]
+pics     = ["eu_mzda_distribuce"]
+
 [wage_pension_distribution]
 script   = "analyses/problemy_mzda_duchod.py"
 texparts = ["problemy_mzda_duchod"]
@@ -152,7 +176,7 @@ pics     = ["stav_prijem_pomer"]
 
 [correlations]
 script   = "analyses/korelace_analyza.py"
-texparts = ["korelace_scatter", "korelace_tabulka"]
+texparts = ["korelace_scatter", "korelace_tabulka", "korelace_model_cz"]
 pics     = ["korelace_scatter"]
 
 [wealth_timeline]
@@ -203,10 +227,78 @@ pics     = ["problemy_gpg_mapa", "problemy_gpg_stratifikace"]
 
 [public_private_wages]
 script   = "analyses/problemy_verejny_soukromy.py"
-texparts = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
-pics     = ["problemy_verejny_soukromy", "problemy_verejny_soukromy_dist"]
+texparts = ["problemy_verejny_soukromy"]
+pics     = ["problemy_verejny_soukromy"]
 
 [natality]
 script   = "analyses/vyhled_porodnost.py"
 texparts = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
 pics     = ["vyhled_porodnost_vyvoj", "vyhled_porodnost_mapa"]
+
+[employer_density]
+script   = "analyses/stav_zamestnavatele_hustota.py"
+texparts = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+pics     = ["stav_zamestnavatele_hustota_mapa",
+            "stav_zamestnavatele_hustota_vyvoj"]
+
+[tertiary_education]
+script   = "analyses/vyhled_vzdelani.py"
+texparts = ["vyhled_vzdelani_vyvoj"]
+pics     = ["vyhled_vzdelani_vyvoj"]
+
+[digital_skills]
+script   = "analyses/vyhled_digit_dovednosti.py"
+texparts = ["vyhled_digit_dovednosti_mapa"]
+pics     = ["vyhled_digit_dovednosti_mapa"]
+
+[ict_gender]
+script   = "analyses/eu_ict_gender.py"
+texparts = ["eu_ict_gender"]
+pics     = ["eu_ict_gender"]
+
+[mne_map]
+script   = "analyses/eu_mne_mapa.py"
+texparts = ["eu_mne_mapa"]
+pics     = ["eu_mne_mapa"]
+
+[bohatstvi_top1_wid]
+script   = "analyses/eu_bohatstvi_top1_wid.py"
+texparts = ["eu_bohatstvi_top1_wid"]
+pics     = ["eu_bohatstvi_top1_wid"]
+
+[practical_ternary_social_dialog]
+script   = "analyses/practical_ternary_social_dialog.py"
+texparts = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+pics     = ["practical_ternary_social_dialog", "practical_ternary_strength_map"]
+
+[stav_socialni_mir_mapa]
+script   = "analyses/stav_socialni_mir_mapa.py"
+texparts = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+pics     = ["stav_socialni_mir_skore_mapa", "stav_socialni_mir_dny_mapa"]
+
+[stav_stavky]
+script   = "analyses/stav_stavky.py"
+texparts = ["stav_stavky"]
+pics     = ["stav_stavky"]
+
+[stav_kolektivni_spory_vyvoj]
+script   = "analyses/stav_kolektivni_spory_vyvoj.py"
+texparts = ["stav_kolektivni_spory_vyvoj"]
+pics     = ["stav_kolektivni_spory_vyvoj"]
+
+[stav_korporatni_dan]
+script   = "analyses/stav_korporatni_dan.py"
+texparts = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+pics     = ["stav_korporatni_dan_mapa", "stav_korporatni_dan_vyvoj"]
+
+[stav_volna_mista_vyvoj]
+script   = "analyses/stav_volna_mista_vyvoj.py"
+texparts = ["stav_volna_mista_vyvoj"]
+pics     = ["stav_volna_mista_vyvoj"]
+
+[stav_struktura_prac_sily]
+script   = "analyses/stav_struktura_prac_sily.py"
+texparts = ["stav_struktura_prac_sily"]
+pics     = []
+
