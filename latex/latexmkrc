@@ -1,4 +1,10 @@
 $out_dir = 'build';
+$pdf_mode = 1;   # use pdflatex
+# Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
+# The -shell-escape flag is needed only when the tikzextern option is active;
+# uncomment the second line below and comment the first when required.
+$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S';
+# $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -shell-escape %O %S';
 
 # Generate git author/email metadata files before each compilation.
 # CTUthesis.cls reads these via \InputIfFileExists after inputenc is loaded.
@@ -18,3 +24,111 @@ $out_dir = 'build';
         print $fh2 '\gdef\@email{' . $email . "}\n";
     }
 }
+
+# ---------------------------------------------------------------------------
+# Mtime helper — returns 1 when any of @sources is newer than $target,
+# or when $target does not exist yet.  Used to skip texcount when unchanged.
+sub ctu_needs_update {
+    my ($target, @sources) = @_;
+    return 1 unless -f $target;
+    my $t = (stat($target))[9];
+    for my $s (@sources) {
+        return 1 if -f $s && (stat($s))[9] > $t;
+    }
+    return 0;
+}
+
+# Auto-compute normostrana (Czech standard pages = 1800 chars) using texcount.
+# The result is written to build/main-normostrana.tmp and loaded by CTUthesis.cls
+# at \AtBeginDocument only when \normostrana{} has NOT been set manually.
+#
+# Only body text chars are counted (N from "N+M+P" = text, no headers/captions),
+# and only within regions NOT wrapped in %TC:ignore...%TC:endignore in main.tex
+# (so front matter, TOC, and acronym lists are excluded from the count).
+# This matches the Czech normostrana standard (body text only, ČSN ISO 5966).
+#
+# texcount is skipped when no .tex file is newer than the cached tmp — this
+# avoids running it on every incremental recompile that touches only .bib or
+# other non-.tex files.
+{
+    my $tmp = "$out_dir/main-normostrana.tmp";
+    mkdir $out_dir unless -d $out_dir;
+    if (ctu_needs_update($tmp, 'main.tex', glob('texparts/*.tex'))) {
+        my $tc = `texcount -brief -char -inc main.tex 2>/dev/null`;
+        # texcount outputs one "N+M+P (…) File: …" line per file and a final
+        # "N+M+P … File(s) total:" summary.  Grab the LAST N+M+P match so we
+        # always use the grand total (sum across all -inc'd files) and %TC:ignore
+        # regions are already excluded by texcount before the sum is printed.
+        # Use body chars only (first number N = text, excludes headers / captions).
+        my $total = 0;
+        while ($tc =~ /(\d+)\+\d+\+\d+/g) { $total = $1; }
+        if ($total > 0) {
+            # Round to nearest normostrana (round half-up).
+            my $normo = int(($total + 900) / 1800);
+            $normo = 1 if $normo < 1;
+            if (open my $fh, '>', $tmp) {
+                print $fh '\normostrana{' . $normo . "}\n";
+            }
+        }
+    }
+}
+
+# Compute body character counts for abstract and keyword files.
+# texcount -brief -char returns "N+M+P" where N = body text chars.
+# Value -1 is written when the file does not exist or texcount fails;
+# CTUthesis.cls treats -1 as "no data" and skips the corresponding check.
+# Each file is checked individually so only changed files re-run texcount.
+{
+    sub ctu_texcount_chars {
+        my ($file) = @_;
+        return -1 unless -f $file;
+        my $tc = `texcount -brief -char "$file" 2>/dev/null`;
+        return $1 if $tc =~ /(\d+)\+\d+\+\d+/;
+        return -1;
+    }
+    my $tmp = "$out_dir/main-textchecks.tmp";
+    mkdir $out_dir unless -d $out_dir;
+    my @srcs = ('texparts/abstract.tex', 'texparts/abstract_en.tex',
+                'texparts/keywords.tex', 'texparts/keywords_en.tex');
+    if (ctu_needs_update($tmp, @srcs)) {
+        my $na  = ctu_texcount_chars('texparts/abstract.tex');
+        my $nae = ctu_texcount_chars('texparts/abstract_en.tex');
+        my $nk  = ctu_texcount_chars('texparts/keywords.tex');
+        my $nke = ctu_texcount_chars('texparts/keywords_en.tex');
+        if (open my $fh, '>', $tmp) {
+            print $fh "\\makeatletter\n";
+            print $fh '\gdef\@CTUabstractchars{'   . $na  . "}\n";
+            print $fh '\gdef\@CTUabstractenchars{' . $nae . "}\n";
+            print $fh '\gdef\@CTUkeywordschars{'   . $nk  . "}\n";
+            print $fh '\gdef\@CTUkeywordsenchars{' . $nke . "}\n";
+            print $fh "\\makeatother\n";
+        }
+    }
+}
+
+# Count cited bibliography entries from the .bbl file produced by biber.
+# biblatex .bbl files contain one \entry{key}{type}{...} line per cited work.
+#
+# This runs via $pre_pdf_code (before EACH pdflatex pass) rather than once at
+# startup.  That way, when biber produces a fresh .bbl mid-session (between
+# pdflatex passes), the updated count is available for the very next pass —
+# avoiding the "0 entries" warning that would otherwise persist for the rest
+# of the current build.  The mtime guard ensures the file is only rewritten
+# when the .bbl has actually changed.
+sub ctu_update_citcount {
+    my $bbl = "$out_dir/main.bbl";
+    my $tmp = "$out_dir/main-citcount.tmp";
+    return unless ctu_needs_update($tmp, $bbl);
+    my $count = 0;
+    if (-f $bbl && open my $fh, '<', $bbl) {
+        while (<$fh>) { $count++ if /\\entry\{/; }
+        close $fh;
+    }
+    mkdir $out_dir unless -d $out_dir;
+    if (open my $out, '>', $tmp) {
+        print $out "\\makeatletter\n";
+        print $out '\gdef\@CTUcitcount{' . $count . "}\n";
+        print $out "\\makeatother\n";
+    }
+}
+$pre_pdf_code = 'ctu_update_citcount();';
