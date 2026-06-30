@@ -57,8 +57,15 @@ import geopandas as gpd
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style, cm2in, savefig, save_figure_tex
-from statout.timeline import timeline
+from stattool.style import (
+    apply_style_pgf,
+    cm2in,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    add_pgf_tooltips,
+    apply_geo_labels_pgf,
+)
+from statout.timeline import timeline, EU27
 from statout.map_cz import choropleth_cz
 from statout.map_europe import choropleth
 
@@ -75,7 +82,7 @@ _GISCO_NUTS_URL = (
 )
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style()
+apply_style_pgf()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # Download all geo (NUTS2 + national aggregates), all sex/age combos.
@@ -234,20 +241,30 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         ds_nat,
         countries=COUNTRIES,
         title="Přeshraniční pracovní dojíždění",
-        ylabel="podíl pracujících v\u00a0zahraničí [%]",
+        ylabel=r"podíl pracujících v~zahraničí [\%]",
         highlight=HIGHLIGHT,
         annotate_last=True,
         show_eu_avg=False,
         background_eu=True,
     )
-    savefig(fig_a, "problemy_dojezdeni_vyvoj", out_dir=LATEX_PICS_DIR)
+    # Tooltips: foreground countries + grey EU-27 background lines.
+    _ax_a = fig_a.axes[0]
+    _pivot_a_fg = nat[nat["geo"].isin(COUNTRIES)].pivot_table(
+        index="time", columns="geo", values="value", aggfunc="mean"
+    )
+    add_pgf_tooltips(_ax_a, _pivot_a_fg, fmt="{:.2f}")
+    _bg_a = sorted(set(EU27) - set(COUNTRIES))
+    _pivot_a_bg = nat[nat["geo"].isin(_bg_a)].pivot_table(
+        index="time", columns="geo", values="value", aggfunc="mean"
+    )
+    add_pgf_tooltips(_ax_a, _pivot_a_bg, fmt="{:.2f}")
+    savefig_pgf(fig_a, "problemy_dojezdeni_vyvoj")
     yr_min = nat["time"].min()
     yr_max = nat["time"].max()
-    save_figure_tex(
+    save_figure_tex_pgf(
         "problemy_dojezdeni_vyvoj",
-        caption=f"Přeshraniční pracovní dojíždění, vybrané země EU, {yr_min}--{yr_max}",
+        caption=f"Přeshraniční pracovní dojíždění, vybrané země \\acs{{geo-EU}}, {yr_min}--{yr_max}",
         label="fig:problemy_dojezdeni_vyvoj",
-        width=r"0.95\linewidth",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
     )
 
@@ -263,22 +280,23 @@ try:
     fig_b = choropleth(
         ds_map, year=latest_nat,
         title=(
-            f"Přeshraniční pracovní dojíždění v\u00a0EU ({latest_nat})\n"
-            "% zaměstnaných pracujících v\u00a0zahraničí"
+            f"Přeshraniční pracovní dojíždění v~\\acs{{geo-EU}} ({latest_nat})\n"
+            r"\% zaměstnaných pracujících v~zahraničí"
         ),
-        colorbar_label="% zaměstnaných pracujících v zahraničí",
-        cmap="YlOrRd",
-        vmin=0,
-        vmax=float(snap_nat["value"].quantile(0.95)),
+        colorbar_label=r"\% zaměstnaných pracujících v zahraničí",
+        cmap="RdYlGn_r",
+
         label_countries=True,
     )
+    # PGF hover tooltips on country codes (values shown on hover).
+    _snap_map = snap_nat.set_index("geo")["value"].to_dict()
+    apply_geo_labels_pgf(fig_b.axes[0], values=_snap_map, tooltip_fmt="{:.2f} %")
 
-    savefig(fig_b, "problemy_dojezdeni_mapa", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_b, "problemy_dojezdeni_mapa")
+    save_figure_tex_pgf(
         "problemy_dojezdeni_mapa",
-        caption=f"Přeshraniční pracovní dojíždění, EU27, {latest_nat}.",
+        caption=f"Přeshraniční pracovní dojíždění, \\acs{{geo-EU}}27, {latest_nat}.",
         label="fig:problemy_dojezdeni_mapa",
-        width=r"0.85\linewidth",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
     )
     print(f"  Figure B done ({latest_nat}).")
@@ -319,15 +337,23 @@ try:
               "values not normalised; map may have non-comparable scale.")
 
     data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
+
+    # Flag whether German NUTS2 data is present (often missing in lfst_r_lfe2ecomm).
+    _de_regions = [g for g in data_series.index if g.startswith("DE")]
+    _de_missing = len(_de_regions) == 0
+    if _de_missing:
+        print("  NOTE: German NUTS2 data not available in lfst_r_lfe2ecomm — "
+              "DE regions render as 'data nedostupná'.")
+
     fig_c = choropleth_cz(
         data_series,
         nuts_level_cz=2,
         title=(
             f"ČR NUTS2: přeshraniční dojíždění ({latest_nuts2})\n"
-            "% regionální pracovní síly pracující v\u00a0zahraničí"
+            r"\% regionální pracovní síly pracující v~zahraničí"
         ),
-        colorbar_label="% regionální pracovní síly pracující v zahraničí",
-        cmap="YlOrRd",
+        colorbar_label=r"\% regionální pracovní síly pracující v zahraničí",
+        cmap="RdYlGn_r",
         label_cz=False,
     )
     # Annotate each CZ NUTS2 region with its top destination country code
@@ -344,23 +370,32 @@ try:
                 if _rid not in _top_dest:
                     continue
                 _cx, _cy = _row.geometry.centroid.x, _row.geometry.centroid.y
+                _dest = _top_dest[_rid]
+                # \pdftooltip so hover shows NUTS_ID + destination country long name.
+                from stattool.style import GEO_LONG_NAMES as _GL
+                _tip = f"{_rid} \u2192 {_GL.get(_dest, _dest)}"
                 _ax_c.text(
-                    _cx, _cy, _top_dest[_rid],
+                    _cx, _cy,
+                    rf"\pdftooltip{{{_dest}}}{{{_tip}}}",
                     ha="center", va="center",
                     fontsize=FONT_SIZE, fontweight="bold", color="white",
                     path_effects=[mpe.withStroke(linewidth=2.5, foreground="black")],
                 )
         except Exception as _exc:
             print(f"  Top-destination labels skipped: {_exc}")
-    savefig(fig_c, "problemy_dojezdeni_nuts2", out_dir=LATEX_PICS_DIR)
-    save_figure_tex(
+    savefig_pgf(fig_c, "problemy_dojezdeni_nuts2")
+    _de_note = (
+        " Německé regiony nejsou v~datech dostupné."
+        if _de_missing else ""
+    )
+    save_figure_tex_pgf(
         "problemy_dojezdeni_nuts2",
         caption=(
-            f"Přeshraniční dojíždění, regiony NUTS2, ČR a\u00a0sousední země, {latest_nuts2}. "
-            r"Hodnoty: podíl regionální pracovní síly pracující v\,zahraničí (\%)."
+            f"Přeshraniční dojíždění, regiony NUTS2, ČR a~sousední země, {latest_nuts2}. "
+            r"Hodnoty: podíl regionální pracovní síly pracující v~zahraničí (\%)."
+            f"{_de_note}"
         ),
         label="fig:problemy_dojezdeni_nuts2",
-        width=r"0.85\linewidth",
         cite_keys="eurostat_lfst_r_lfe2ecomm",
     )
     print(f"  Figure C done ({latest_nuts2}).")

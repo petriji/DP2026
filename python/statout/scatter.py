@@ -184,13 +184,19 @@ def scatter_xy(
                 label=f"OLS  $R^2={r2:.2f}$")
         ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
-    ax.set_xlabel(xlabel or (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
-    ax.set_ylabel(ylabel or (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
+    ax.set_xlabel(xlabel if xlabel is not None
+                  else (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
+    ax.set_ylabel(ylabel if ylabel is not None
+                  else (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
     if title:
         ax.set_title(f"{title} ({year})")
 
     if x_min is not None:
         ax.set_xlim(left=x_min)
+
+    # Stash the merged (geo, x, y) data on the figure so callers (e.g. PGF
+    # scripts) can attach hover tooltips with add_pgf_tooltips_scatter().
+    fig._scatter_merged = merged.copy()  # type: ignore[attr-defined]
 
     return fig
 
@@ -237,8 +243,10 @@ def scatter_time_series(
                     color=line.get_color(),
                 )
 
-    ax.set_xlabel(xlabel or (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
-    ax.set_ylabel(ylabel or (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
+    ax.set_xlabel(xlabel if xlabel is not None
+                  else (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
+    ax.set_ylabel(ylabel if ylabel is not None
+                  else (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
     if title:
         ax.set_title(title)
     ax.legend(

@@ -28,7 +28,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR, FONT_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, apply_geo_labels_pgf
+import pandas as pd
+from stattool.style import (
+    apply_style_pgf,
+    savefig_pgf,
+    save_figure_tex_pgf,
+    apply_geo_labels_pgf,
+    add_pgf_tooltips,
+)
 from statout.timeline import timeline
 from statout.map_europe import choropleth
 
@@ -103,6 +110,22 @@ fig = timeline(
 ax = fig.axes[0]
 ax.set_xlim(START_YEAR, ds.years[-1])
 
+# Tooltip on every data point (hover in Acrobat/Foxit shows country, year, value)
+_pivot = (
+    ds.df[ds.df["geo"].isin(COUNTRIES)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(ax, _pivot, fmt="{:.2f}")
+
+# Tooltip also on the grey EU-27 background lines (background_eu=True)
+from statout.timeline import EU27 as _EU27
+_bg = sorted(set(_EU27) - set(COUNTRIES))
+_pivot_bg = (
+    ds.df[ds.df["geo"].isin(_bg)]
+    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
+)
+add_pgf_tooltips(ax, _pivot_bg, fmt="{:.2f}")
+
 # Replace bare country codes with \acs{geo-XX} in annotations and legend
 for child in ax.get_children():
     if hasattr(child, "get_text"):
@@ -172,6 +195,13 @@ map_strings = {
     "title": map_title,
     "colorbar_label": STRINGS_MAP["colorbar_label"],
 }
+_values = (
+    ds.df[ds.df["time"] <= ds.latest_year]
+    .sort_values("time")
+    .groupby("geo")["value"]
+    .last()
+    .to_dict()
+)
 fig_map = choropleth(
     ds,
     year=ds.latest_year,
@@ -181,10 +211,11 @@ fig_map = choropleth(
     vmin=1.0,
     vmax=2.1,
     label_countries=True,
+    highlight_colorbar=COUNTRIES,
 )
 
-# Replace bare ISO-2 codes with \acs{geo-XX} and add white contour halo.
-apply_geo_labels_pgf(fig_map.axes[0], halo=True)
+# Replace bare ISO-2 codes with \acs{geo-XX}, add white halo, and hover tooltip.
+apply_geo_labels_pgf(fig_map.axes[0], halo=True, values=_values, tooltip_fmt="{:.2f}")
 
 # ── 6. Save figure B ──────────────────────────────────────────────────────────
 savefig_pgf(fig_map, "vyhled_porodnost_mapa", out_dir=LATEX_PICS_DIR,
