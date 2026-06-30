@@ -405,7 +405,7 @@ def _plot_osvc_lines(
         prev_max = 0
         for i, ((max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
                 zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            x_band = np.linspace(max(prev_max + 1, 1), min(max_inc_t, income_max), 300)
+            x_band = np.linspace(max(prev_max + 1, MIN_WAGE_TOTAL_COST), min(max_inc_t, income_max), 300)
             y_band = fn_pausalni(x_band, total_pay, i)
             ax.plot(x_band / 1_000, y_band,
                     color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
@@ -417,6 +417,7 @@ def _plot_osvc_lines(
 
 def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
     """Přidá sdílenou legendu dole mimo osy (stejný formát jako v cz_pension_model)."""
+    fig.subplots_adjust(bottom=0.20)
     legend_handles = [
         Line2D([0], [0], color=c_emp, linewidth=2.0,
                label="Zaměstnanec (celk.\u00a0nákl.)"),
@@ -447,7 +448,7 @@ def plot_tax_wedge_vs_income(
     Pro OSVČ s výdajovým paušálem SP a ZP nejsou odečitatelné od ZD DPFO
     (ZDP § 7 odst. 7). Sleva na poplatníka 2 570 Kč/měs. uplatněna.
     """
-    x = np.linspace(1, income_max, 2_000)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     tw_emp = tax_wedge_employee(x)
 
@@ -477,7 +478,7 @@ def plot_tax_wedge_vs_income(
         "(parametry\u00a02026)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
     _bottom_legend(fig, c_emp)
@@ -498,7 +499,7 @@ def plot_net_income_vs_income(
     OSVČ paušální daň: čistý = příjmy − celková pevná platba
         (skutečné výdaje nejsou modelovány).
     """
-    x = np.linspace(1, income_max, 2_000)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     ni_emp = net_income_employee(x)
 
@@ -528,7 +529,7 @@ def plot_net_income_vs_income(
         "(parametry\u00a02026; OSVČ s výdajovým paušálem: po odečtení paušálních výdajů)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
     _bottom_legend(fig, c_emp)
@@ -570,7 +571,7 @@ def plot_pension_vs_income(
     Osa x = celkové náklady zaměstnavatele / příjmy OSVČ [tis. Kč/měsíc].
     Osa y = měsíční starobní důchod [tis. Kč/měsíc] (pojistná doba {years} let).
     """
-    x = np.linspace(1, income_max, 2_000)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
     pen_emp = pension_employee(gross_emp, years) / 1_000
@@ -600,7 +601,7 @@ def plot_pension_vs_income(
         f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
     _bottom_legend(fig, c_emp)
@@ -619,7 +620,7 @@ def plot_sp_vs_income(
     OSVČ: SP = 29,2 % × max(55 % × ZD, min. základ).
     Paušální daň: SP = 29,2 % × pevný vyměřovací základ pásma.
     """
-    x = np.linspace(1, income_max, 2_000)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     sp_emp = sp_employee(x) / 1_000
 
@@ -648,7 +649,7 @@ def plot_sp_vs_income(
         "(parametry\u00a02026; zaměstnanec: SP zaměstnance + SP zaměstnavatele)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
     ax.set_ylim(bottom=0)
 
     _bottom_legend(fig, c_emp)
@@ -667,10 +668,10 @@ def plot_pension_sp_ratio_vs_income(
     Ukazuje, kolik Kč měsíčního důchodu připadá na každou Kč měsíčně odváděnou na SP.
     Vyšší hodnota = vyšší návratnost (rentabilita) odvodů na SP.
     """
-    x = np.linspace(OSVC_MIN_MONTHLY_BASE * 2, income_max, 2_000)
+    x = np.linspace(MIN_WAGE_TOTAL_COST, income_max, 2_000)
     c_emp = PALETTE[0]
     gross_emp = x / (1 + EMPLOYER_INS_RATE)
-    ratio_emp = pension_employee(gross_emp, years) / sp_employee(x)
+    ratio_emp = INSURANCE_YEARS / (pension_employee(gross_emp, years) / sp_employee(x))
 
     fig, ax = plt.subplots(figsize=cm2in(16, 10))
     ax.plot(x / 1_000, ratio_emp, color=c_emp, linewidth=2.0, zorder=3)
@@ -678,7 +679,7 @@ def plot_pension_sp_ratio_vs_income(
     for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
         pen_o = pension_osvc_vydajovy(x, expense_rate, years)
         sp_o = sp_osvc_vydajovy(x, expense_rate)
-        ratio_o = pen_o / sp_o
+        ratio_o = INSURANCE_YEARS / (pen_o / sp_o)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x, cap, side='right'))
         if idx > 0:
@@ -689,20 +690,30 @@ def plot_pension_sp_ratio_vs_income(
             ax.plot(x[start:] / 1_000, ratio_o[start:],
                     color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
-        prev_max = int(OSVC_MIN_MONTHLY_BASE * 2)
+        prev_max = int(MIN_WAGE_TOTAL_COST)
         for i, ((max_inc_t, monthly_base), (_max_inc_t2, _total_pay)) in enumerate(
                 zip(PAUSALNI_DAN[:max_pasmo], PAUSALNI_DAN_TOTAL[:max_pasmo])):
-            x_band = np.linspace(max(prev_max, int(OSVC_MIN_MONTHLY_BASE * 2)),
+            x_band = np.linspace(max(prev_max, int(MIN_WAGE_TOTAL_COST)),
                                  min(max_inc_t, income_max), 300)
             if len(x_band) == 0:
                 prev_max = max_inc_t
                 continue
             pen_band = _pension(monthly_base, years)
             sp_band = OSVC_SOCIAL_RATE * monthly_base
-            ratio_band = np.full_like(x_band, pen_band / sp_band)
+            ratio_band = np.full_like(x_band, INSURANCE_YEARS / (pen_band / sp_band))
             ax.plot(x_band / 1_000, ratio_band,
                     color=PASMO_COLORS[i], linewidth=2.0, linestyle=":", zorder=2)
             prev_max = max_inc_t
+
+    ax.invert_yaxis()
+
+    ax.axhline(24.7, color="#555555", linewidth=1.0, linestyle=(0, (5, 5)), alpha=0.8, zorder=1)
+    ax.annotate(
+        "Průměrná délka pobírání\ndůchodu (24,7 let, 2024)",
+        xy=(income_max * 0.98 / 1_000, 24.7),
+        xytext=(-3, 4), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color="#555555", va="bottom", ha="right",
+    )
 
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
                       f"Min.\u00a0mzda\n({_fmt_czk(MIN_WAGE_TOTAL_COST)})",
@@ -712,15 +723,14 @@ def plot_pension_sp_ratio_vs_income(
                       color="#888888")
 
     ax.set_xlabel("Celkové náklady zaměstnavatele / příjmy OSVČ [tis.\u00a0Kč/měsíc]")
-    ax.set_ylabel("Důchod\u00a0/\u00a0odvody na SP")
+    ax.set_ylabel("Roky důchodu ke splacení 40 let odvodů na SP")
     ax.set_title(
-        f"Poměr starobního důchodu k odvodům na SP\n"
+        f"Počet let pobírání důchodu k vrácení 40 let odvodů na SP\n"
         f"(parametry\u00a02026, pojistná doba\u00a0{years}\u00a0let; "
-        f"zaměstnanec: celkové SP)",
+        f"zaměstnanec: celkové SP; nižší = lepší návratnost)",
         loc="center",
     )
-    ax.set_xlim(0, income_max / 1_000)
-    ax.set_ylim(bottom=0)
+    ax.set_xlim(MIN_WAGE_TOTAL_COST / 1_000, income_max / 1_000)
 
     _bottom_legend(fig, c_emp)
     return fig
@@ -728,7 +738,7 @@ def plot_pension_sp_ratio_vs_income(
 
 def plot_tax_wedge_comparison(
     income_max: int = 300_000,
-    income_min: int = OSVC_MIN_MONTHLY_BASE * 2,
+    income_min: int = MIN_WAGE_TOTAL_COST,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
     """Parametrický obrázek: náhradový poměr vs. daňový klín.
