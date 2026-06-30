@@ -1,10 +1,8 @@
 # Core data
 pandas>=2.0
 openpyxl           # xlsx support for pd.read_excel
-xlrd>=2.0.1        # xls support for pd.read_excel (IPP 2007–2018 files)
 requests           # HTTP downloads
 tqdm               # progress bars
-scipy              # statistical distributions (wage_pension_distribution)
 
 # Geospatial (Europe choropleth maps)
 geopandas>=0.14

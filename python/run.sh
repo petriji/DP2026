@@ -13,13 +13,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Resolve venv: project-local first, then /tmp (WSL2), then legacy home location
-if [[ -n "${VENV_DIR:-}" && -f "$VENV_DIR/bin/activate" ]]; then
-    : # user-supplied override
-elif [[ -f "$SCRIPT_DIR/.venv/bin/activate" ]]; then
+# Resolve venv: project-local first, then legacy home location
+if [[ -f "$SCRIPT_DIR/.venv/bin/activate" ]]; then
     VENV_DIR="$SCRIPT_DIR/.venv"
-elif [[ -f /tmp/dp_venv/bin/activate ]]; then
-    VENV_DIR="/tmp/dp_venv"
+elif [[ -n "${VENV_DIR:-}" && -f "$VENV_DIR/bin/activate" ]]; then
+    : # user-supplied override
 elif [[ -f "$HOME/.venvs/dp_thesis/bin/activate" ]]; then
     VENV_DIR="$HOME/.venvs/dp_thesis"
 else

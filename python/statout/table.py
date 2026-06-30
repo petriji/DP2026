@@ -15,7 +15,6 @@ Typical usage
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Optional, Union
 
@@ -36,10 +35,6 @@ def to_latex(
     index_name: str = "",
     bold_header: bool = True,
     midrule_after: Optional[list[str]] = None,
-    italic_rows: Optional[list[str]] = None,
-    long_table: bool = False,
-    arraystretch: Optional[float] = None,
-    sans_serif: bool = False,
 ) -> str:
     r"""Generate a LaTeX ``table`` + ``tabular`` environment in *booktabs* style.
 
@@ -64,8 +59,7 @@ def to_latex(
         Full LaTeX column spec, e.g. ``"lrrrrrr"``.  Auto-generated as
         ``l`` for the first column and ``r`` for the rest when omitted.
     fontsize:
-        LaTeX font size command (default ``small``).  Ignored when
-        ``long_table=True`` (font size commands bleed out of longtable).
+        LaTeX font size command (default ``small``).
     position:
         Float placement, e.g. ``"htbp"`` or ``"H"``.
     index_name:
@@ -74,19 +68,9 @@ def to_latex(
         Wrap column header cells in ``\\textbf{}``.
     midrule_after:
         List of row *index values* after which to insert a ``\midrule``.
-    italic_rows:
-        List of row *index values* whose entire row (label + all cells) should
-        be wrapped in ``\textit{}``.  Use for sub-rows and derived indicators.
-    long_table:
-        When ``True``, emit an ``xltabular`` environment (longtable + tabularx
-        combined) instead of the default ``table`` + ``tabularx`` pair.  This
-        supports page breaks, repeating headers, and continuation captions.
-        The ``position`` and ``fontsize`` parameters are ignored.
     """
     if cite_keys:
-        cap_base = caption.rstrip(". \t\n")
-        cap_cites = "~".join(f"\\cite{{{k}}}" for k in cite_keys)
-        caption = f"{cap_base}.~{cap_cites}"
+        caption = caption + " " + "".join(f"\\cite{{{k}}}" for k in cite_keys)
 
     cols = list(df.columns)
     n_cols = 1 + len(cols)  # index column + data columns
@@ -112,8 +96,6 @@ def to_latex(
     rows_str: list[str] = []
     for idx, row in df.iterrows():
         cells = [str(idx)] + [_fmt(v) for v in row]
-        if italic_rows and idx in italic_rows:
-            cells = [f"\\textit{{{c}}}" for c in cells]
         rows_str.append("  " + " & ".join(cells) + r" \\")
         if midrule_after and idx in midrule_after:
             rows_str.append(r"  \midrule")
@@ -124,100 +106,46 @@ def to_latex(
     note_block = ""
     if note:
         # Span all columns using \multicolumn
-        escaped_note = re.sub(r"(?<!\\)%", r"\\%", note)
+        escaped_note = note.replace("%", r"\%")
         note_block = (
-            f"  \\multicolumn{{{n_cols}}}{{@{{}}p{{\\linewidth}}@{{}}}}{{"
+            f"  \\multicolumn{{{n_cols}}}{{l}}{{"
             f"\\footnotesize {escaped_note}"
             f"}} \\\\\n"
         )
 
-    if long_table:
-        # ── xltabular (longtable + tabularx, multi-page) ─────────────────────
-        # No \begin{table} wrapper; caption and label live inside the env.
-        cap_line = f"  \\caption{{{caption}}}"
-        if label:
-            cap_line += f"\\label{{{label}}}"
-        cap_line += r" \\"
+    lines = [
+        f"\\begin{{table}}[{position}]",
+        "  \\centering",
+        f"  \\{fontsize}",
+    ]
+    if caption:
+        lines.append(f"  \\caption{{{caption}}}")
+    if label:
+        lines.append(f"  \\label{{{label}}}")
 
-        # Keep continuation header text as a plain row, not a caption,
-        # so hyperlink/table anchors are emitted only from the first caption.
-        # No auto-numbering or caption setup on continuation pages.
-        cont_cap_line = (
-            f"  \\multicolumn{{{n_cols}}}{{l}}"
-            "{\\footnotesize(pokra\u010dov\u00e1n\u00ed tabulky)} \\\\"
-        )
-        foot_line = (
-            f"  \\multicolumn{{{n_cols}}}{{r}}"
-            "{\\footnotesize(pokra\u010duje na dal\u0161\u00ed str\u00e1nce)} \\\\"
-        )
-
-        lines = [f"\\begin{{xltabular}}{{\\linewidth}}{{{col_format}}}"]
-        # Note: For xltabular (long tables), font size and arraystretch should NOT be applied
-        # at the macro level as they interfere with multi-page table functionality.
-        # Users should control table appearance via column widths and CSS/styling.
-        # Arraystretch is still applied via a per-row approach if needed.
-        if arraystretch is not None:
-            # For xltabular, we need to use a different approach - wrap the content rows
-            # For now, we'll skip global arraystretch for xltabular to avoid \noalign errors
-            pass
-        
-        if caption:
-            lines.append(cap_line)
-        lines += [
-            "  \\toprule",
-            header_row,
-            "  \\midrule",
-            "  \\endfirsthead",
-            cont_cap_line,
-            "  \\toprule",
-            header_row,
-            "  \\midrule",
-            "  \\endhead",
-            "  \\midrule",
-            foot_line,
-            "  \\endfoot",
-            "  \\bottomrule",
-        ]
-        if note_block:
-            lines.append(note_block.rstrip())
-        lines.append("  \\endlastfoot")
-        lines += rows_str
-        lines.append("\\end{xltabular}")
+    # Use tabularx when column spec contains X columns (requires \linewidth arg)
+    use_tabularx = "X" in col_format
+    if use_tabularx:
+        tabular_begin = f"  \\begin{{tabularx}}{{\\linewidth}}{{{col_format}}}"
+        tabular_end   = "  \\end{tabularx}"
     else:
-        lines = [
-            r"\par",
-            f"\\begin{{table}}[{position}]",
-            "  \\centering",
-            f"  \\{fontsize}",
-        ]
-        if caption:
-            lines.append(f"  \\caption{{{caption}}}")
-        if label:
-            lines.append(f"  \\label{{{label}}}")
+        tabular_begin = f"  \\begin{{tabular}}{{{col_format}}}"
+        tabular_end   = "  \\end{tabular}"
 
-        # Use tabularx when column spec contains X-based columns (X, R, L, C, s)
-        use_tabularx = bool(re.search(r'[XRLCs]', col_format))
-        if use_tabularx:
-            tabular_begin = f"  \\begin{{tabularx}}{{\\linewidth}}{{{col_format}}}"
-            tabular_end   = "  \\end{tabularx}"
-        else:
-            tabular_begin = f"  \\begin{{tabular}}{{{col_format}}}"
-            tabular_end   = "  \\end{tabular}"
-
-        lines += [
-            tabular_begin,
-            "    \\toprule",
-            "  " + header_row,
-            "    \\midrule",
-        ]
-        lines += rows_str
-        lines.append("    \\bottomrule")
-        if note_block:
-            lines.append(note_block.rstrip())
-        lines += [
-            tabular_end,
-            "\\end{table}",
-        ]
+    lines += [
+        tabular_begin,
+        "    \\toprule",
+        "  " + header_row,
+        "    \\midrule",
+    ]
+    lines += rows_str
+    lines.append("    \\bottomrule")
+    if note_block:
+        lines.append(note_block.rstrip())
+    lines += [
+        tabular_end,
+        "\\end{table}",
+    ]
     return "\n".join(lines) + "\n"
 
 
