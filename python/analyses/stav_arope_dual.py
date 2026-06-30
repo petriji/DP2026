@@ -74,7 +74,7 @@ ds_arope = Dataset.from_sdmx_csv(
 )
 
 # ── 2. Fetch & build D3-vs-EU-median Dataset (ilc_di01) ───────────────────────
-# ilc_di01 dim order: freq · quantile · indic_il · currency · geo
+# ilc_di01 dim order: freq · quantile · statinfo/indic_il · currency · geo
 # Need D3 per country in PPS, plus D5 for EU27_2020 as the baseline.
 # The EU27_2020 D5 PPS series is published only from 2018. For 2015--2017 we
 # back-fill it with the D5 EUR value for EU27_2020: at EU27 level PPP ≡ 1 by
@@ -91,35 +91,72 @@ raw["OBS_VALUE"] = pd.to_numeric(raw["OBS_VALUE"], errors="coerce")
 raw = raw.dropna(subset=["OBS_VALUE"])
 raw["time"] = raw["TIME_PERIOD"].astype(str).str[:4].astype(int)
 
+_indicator_col = next(
+    (c for c in ("statinfo", "indic_il", "indicator") if c in raw.columns),
+    None,
+)
+if _indicator_col is None:
+    raise ValueError(f"ilc_di01 dataset has no indicator column: {list(raw.columns)}")
+_currency_col = next((c for c in ("unit", "currency") if c in raw.columns), None)
+if _currency_col is None:
+    raise ValueError(f"ilc_di01 dataset has no currency/unit column: {list(raw.columns)}")
+
 # EU27 D3 threshold in PPS (reference bar shared across countries).
 # PPS series starts 2018; for 2015--2017 use EUR value (EU27 PPP ≡ 1).
 eu_d3_pps = (
     raw[(raw["geo"] == "EU27_2020")
         & (raw["quantile"] == "D3")
-        & (raw["indic_il"] == "TC")
-        & (raw["currency"] == "PPS")]
+        & (raw[_indicator_col] == "TC")
+        & (raw[_currency_col] == "PPS")]
     .groupby("time")["OBS_VALUE"].mean()
 )
 eu_d3_eur = (
     raw[(raw["geo"] == "EU27_2020")
         & (raw["quantile"] == "D3")
-        & (raw["indic_il"] == "TC")
-        & (raw["currency"] == "EUR")]
+        & (raw[_indicator_col] == "TC")
+        & (raw[_currency_col] == "EUR")]
     .groupby("time")["OBS_VALUE"].mean()
 )
-eu_d3 = eu_d3_pps.combine_first(eu_d3_eur).rename("eu_d3")
-fallback_years = sorted(set(eu_d3_eur.index) - set(eu_d3_pps.index))
+# Convert EUR fallback to PPS using PLI (EU27 = 100 by definition).
+# Keep explicit conversion path for methodological consistency with other
+# scripts that convert EUR-level indicators to PPS via prc_ppp_ind.
+path_pli = fetch_eurostat(
+    "prc_ppp_ind",
+    "A.PLI_EU27_2020.GDP.EU27_2020",
+)
+raw_pli = pd.read_csv(path_pli, comment="#")
+raw_pli.columns = [c.strip() for c in raw_pli.columns]
+if {"TIME_PERIOD", "OBS_VALUE"}.issubset(raw_pli.columns):
+    pli_eu = (
+        raw_pli[["TIME_PERIOD", "OBS_VALUE"]]
+        .dropna(subset=["OBS_VALUE"])
+        .assign(time=lambda d: d["TIME_PERIOD"].astype(str).str[:4].astype(int))
+        .groupby("time")["OBS_VALUE"]
+        .mean()
+    )
+else:
+    pli_eu = pd.Series(dtype=float)
+
+if pli_eu.empty:
+    # EU27 PLI is 100 by definition even when not explicitly published.
+    eur_to_pps = pd.Series(100.0, index=eu_d3_eur.index)
+else:
+    eur_to_pps = pli_eu.reindex(eu_d3_eur.index).fillna(100.0)
+
+eu_d3_eur_as_pps = eu_d3_eur / (eur_to_pps / 100.0)
+eu_d3 = eu_d3_pps.combine_first(eu_d3_eur_as_pps).rename("eu_d3")
+fallback_years = sorted(set(eu_d3_eur_as_pps.index) - set(eu_d3_pps.index))
 if fallback_years:
     warn_fallback(
-        f"EU27 D3 PPS series missing in years {fallback_years}; EUR used as fallback",
+        f"EU27 D3 PPS series missing in years {fallback_years}; EUR converted to PPS via PLI used as fallback",
         source="Eurostat/ilc_di01",
     )
 
 # Country deciles D1..D9 in PPS (long → wide per country-year)
 _DEC_ORDER = [f"D{k}" for k in range(1, 10)]
 dec = (
-    raw[(raw["indic_il"] == "TC")
-        & (raw["currency"] == "PPS")
+    raw[(raw[_indicator_col] == "TC")
+        & (raw[_currency_col] == "PPS")
         & (raw["geo"] != "EU27_2020")
         & (raw["quantile"].isin(_DEC_ORDER))]
     [["geo", "time", "quantile", "OBS_VALUE"]]
