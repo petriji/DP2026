@@ -984,13 +984,13 @@
       \input{#3}%
       \CTU@abshead{Keywords}%
       \begin{center}%
-        \input{#4}%
+        \textit{\input{#4}}%
       \end{center}%
       \CTU@abshead{Abstrakt}%
       \input{#1}%
       \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
       \begin{center}%
-        \input{#2}%
+        \textit{\input{#2}}%
       \end{center}%
     \else
       % Czech thesis: CZ block first (matches \abstractname = "Abstrakt"),
@@ -998,13 +998,13 @@
       \input{#1}%
       \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
       \begin{center}%
-        \input{#2}%
+        \textit{\input{#2}}%
       \end{center}%
       \CTU@abshead{Abstract}%
       \input{#3}%
       \CTU@abshead{Keywords}%
       \begin{center}%
-        \input{#4}%
+        \textit{\input{#4}}%
       \end{center}%
     \fi
   \end{abstract}}
@@ -1774,9 +1774,9 @@
 %   box, making missing or unexpected links easy to spot.
 %   Requires 3 full compilations after any cross-reference change to stabilize.
 \if@debug
-  \RequirePackage[draft=false]{hyperref}
+  \RequirePackage[draft=false,unicode=true]{hyperref}
 \else
-  \RequirePackage[draft=false,hidelinks]{hyperref}
+  \RequirePackage[draft=false,hidelinks,unicode=true]{hyperref}
 \fi
 % bookmark: extended PDF bookmark control, loaded after hyperref.
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
