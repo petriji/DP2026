@@ -2,13 +2,18 @@
 % Replicates: https://www.eurofound.europa.eu/en/surveys-and-data/data-catalogue/...
 % Edit freely — not generated.
 \def\strEuPayEquitySchemaCaption{Horizontální a~vertikální vliv \acs{KS} na~mzdovou rovnost na~úrovni podniku (převzato a~upraveno z~\cite{eurofound_ca_pay_equity_2026}).}%
+% Poster override (before \input this file):
+%   \renewcommand\DPEquityBaseSize{\normalsize}
+%   \renewcommand\DPEquityArrowSize{\large}
+\providecommand\DPEquityBaseSize{\small}
+\providecommand\DPEquityArrowSize{\normalsize}
 %
 \begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
-    font=\sffamily\small,
-    every node/.style={align=center, inner sep=2.5pt, font=\sffamily\small,
+    font=\sffamily\DPEquityBaseSize,
+    every node/.style={align=center, inner sep=2.5pt, font=\sffamily\DPEquityBaseSize,
       execute at begin node=\linespread{0.9}\selectfont},
     sectoralWide/.style   ={draw=black!75, fill=black!18, rounded corners=2.5pt, minimum height=1.05cm, text width=6.2cm, line width=0.6pt},
     sectoralNoPay/.style  ={draw=black!75, fill=black!10, rounded corners=2.5pt, minimum height=1.0cm,  text width=3.7cm, line width=0.6pt},
@@ -73,12 +78,12 @@
     % --- Horní vodorovná šipka „Horizontální přístupy” — zprava doleva ---
     \draw[bigArrow]
       ({\cE+1.7},7.35) -- ({\cA-1.7},7.35)
-      node[midway, above=2pt, font=\sffamily\bfseries] {Horizontální přístupy};
+      node[midway, above=2pt, font=\sffamily\DPEquityArrowSize\bfseries] {Horizontální přístupy};
 
     % --- Levá svislá šipka „Vertikální vliv” ---
     \draw[bigArrow]
       (-2.2,6.45) -- (-2.2,-1.9)
-      node[midway, left=4pt, rotate=90, anchor=south, font=\sffamily\bfseries] {Vertikální vliv};
+      node[midway, left=4pt, rotate=90, anchor=south, font=\sffamily\DPEquityArrowSize\bfseries] {Vertikální vliv};
   \end{tikzpicture}}
   \caption{\strEuPayEquitySchemaCaption}
   \label{fig:eu_pay_equity_schema}

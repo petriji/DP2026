@@ -183,7 +183,7 @@ def timeline(
                     xy=(valid.index[-1], valid.iloc[-1]),
                     xytext=_ofs,
                     textcoords="offset points",
-                    fontsize=FONT_SIZE,
+                    fontsize=FONT_SIZE - 1,
                     va="center",
                     color=color,
                 )
@@ -204,7 +204,7 @@ def timeline(
             xy=(eu_vals.index[-1], eu_vals.iloc[-1]),
             xytext=(4, 0),
             textcoords="offset points",
-            fontsize=FONT_SIZE,
+            fontsize=FONT_SIZE - 1,
             va="center",
             color="#555555",
             alpha=0.8,
@@ -222,7 +222,7 @@ def timeline(
 
     if not annotate_last:
         ax.legend(bbox_to_anchor=(1.01, 1), loc="upper left",
-                  borderaxespad=0, frameon=False, fontsize=FONT_SIZE)
+                  borderaxespad=0, frameon=False, fontsize=FONT_SIZE - 1)
 
     # Stash the pivots so savefig_pgf() can attach \pdftooltip nodes after
     # the script has finalised xlim/ylim, and so apply_geo_labels_pgf() can
@@ -304,7 +304,7 @@ def timeline_groups(
                 xy=(avg.index[-1], avg.iloc[-1]),
                 xytext=(4, 0),
                 textcoords="offset points",
-                fontsize=FONT_SIZE,
+                fontsize=FONT_SIZE - 1,
                 va="center",
                 color=color,
             )
@@ -319,7 +319,7 @@ def timeline_groups(
         ax.annotate("EU27",
                     xy=(eu_vals.index[-1], eu_vals.iloc[-1]),
                     xytext=(4, 0), textcoords="offset points",
-                    fontsize=FONT_SIZE, va="center", color="#555555", alpha=0.8)
+                    fontsize=FONT_SIZE - 1, va="center", color="#555555", alpha=0.8)
         if x_min is not None:
             x_min = min(x_min, eu_vals.index.min())
             x_max = max(x_max, eu_vals.index.max())
@@ -335,6 +335,6 @@ def timeline_groups(
         _apply_year_ticks(ax, idx)
 
     if not annotate_last:
-        ax.legend(frameon=False, fontsize=FONT_SIZE)
+        ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
     return fig

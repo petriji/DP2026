@@ -29,6 +29,9 @@ from config import (
     FIGURE_DPI,
     FIGURE_FORMAT,
     FIGURE_HEIGHT_CM,
+    FIGURE_LABEL_SIZE,
+    FIGURE_TEXT_SIZE,
+    FIGURE_TITLE_SIZE,
     FIGURE_WIDTH_CM,
     FIGURES_DIR,
     FONT_SIZE,
@@ -62,13 +65,13 @@ def apply_style() -> None:
     mpl.rcParams.update(
         {
             # --- Typography ---
-            "font.size": FONT_SIZE,
-            "axes.titlesize": FONT_SIZE,
-            "axes.labelsize": FONT_SIZE,
-            "xtick.labelsize": FONT_SIZE,
-            "ytick.labelsize": FONT_SIZE,
-            "legend.fontsize": FONT_SIZE,
-            "figure.titlesize": FONT_SIZE + 1,
+            "font.size": FIGURE_TEXT_SIZE,
+            "axes.titlesize": FIGURE_TITLE_SIZE,
+            "axes.labelsize": FIGURE_LABEL_SIZE,
+            "xtick.labelsize": FIGURE_LABEL_SIZE,
+            "ytick.labelsize": FIGURE_LABEL_SIZE,
+            "legend.fontsize": FIGURE_LABEL_SIZE,
+            "figure.titlesize": FIGURE_TITLE_SIZE,
             # Latin Modern Sans matches the CMU sans-serif font used in
             # the CTUthesis LaTeX document. Falls back to DejaVu Sans.
             "font.family": "sans-serif",
@@ -407,13 +410,13 @@ def apply_style_pgf() -> None:
             # --- Typography (must match document) ---
             "font.family": "sans-serif",
             "font.sans-serif": ["Latin Modern Sans", "CMU Sans Serif", "DejaVu Sans"],
-            "font.size": FONT_SIZE,
-            "axes.titlesize": FONT_SIZE + 2,
-            "axes.labelsize": FONT_SIZE,
-            "xtick.labelsize": FONT_SIZE,
-            "ytick.labelsize": FONT_SIZE,
-            "legend.fontsize": FONT_SIZE,
-            "figure.titlesize": FONT_SIZE + 2,
+            "font.size": FIGURE_TEXT_SIZE,
+            "axes.titlesize": FIGURE_TITLE_SIZE,
+            "axes.labelsize": FIGURE_LABEL_SIZE,
+            "xtick.labelsize": FIGURE_LABEL_SIZE,
+            "ytick.labelsize": FIGURE_LABEL_SIZE,
+            "legend.fontsize": FIGURE_LABEL_SIZE,
+            "figure.titlesize": FIGURE_TITLE_SIZE,
             "axes.titlepad": 6,
             # --- Lines & ticks ---
             "axes.linewidth": 0.6,

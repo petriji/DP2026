@@ -34,7 +34,13 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import (
+    COUNTRY_COLORS,
+    FIGURE_COMPACT_LABEL_SIZE,
+    FIGURE_COMPACT_TEXT_SIZE,
+    FONT_SIZE,
+    LATEX_PICS_DIR,
+)
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -265,7 +271,9 @@ all_vals = pd.concat(
 vmin_global = all_vals.min()
 vmax_global = all_vals.max()
 
-fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(28, 22))
+# Keep canvas close to final LaTeX width to avoid aggressive downscaling
+# by \resizebox{\linewidth}{!}{...}, which would shrink text too much.
+fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(15, 12))
 panel_labels = iter("abcd")
 
 STRINGS_MAP = {
@@ -311,11 +319,15 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         tooltip_fmt="{:.1f}",
     )
     lbl = next(panel_labels)
-    ax_i.set_title(f"({lbl}) {sec_title}", fontsize=max(FONT_SIZE, 10), pad=4)
+    ax_i.set_title(
+        f"({lbl}) {sec_title}",
+        fontsize=FIGURE_COMPACT_TEXT_SIZE,
+        pad=4,
+    )
 
 fig_maps.suptitle(
     STRINGS_MAP["title"],
-    fontsize=FONT_SIZE + 4,
+    fontsize=FIGURE_COMPACT_TEXT_SIZE,
     y=0.98,
 )
 
@@ -338,8 +350,11 @@ cax_center = _inset_axes(
 )
 cb_center = fig_maps.colorbar(sm_shared, cax=cax_center,
                                label=STRINGS_MAP["colorbar_label"])
-cb_center.ax.tick_params(labelsize=max(FONT_SIZE + 1, 10))
-cb_center.set_label(STRINGS_MAP["colorbar_label"], fontsize=max(FONT_SIZE + 2, 10))
+cb_center.ax.tick_params(labelsize=FIGURE_COMPACT_LABEL_SIZE)
+cb_center.set_label(
+    STRINGS_MAP["colorbar_label"],
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
+)
 
 # Subplot spacing — no large central gap needed; colorbar is an inset overlay.
 fig_maps.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.04,

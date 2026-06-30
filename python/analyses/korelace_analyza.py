@@ -44,7 +44,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, LATEX_TEXPARTS_DIR
+from config import (
+    COUNTRY_COLORS,
+    FIGURE_COMPACT_TEXT_SIZE,
+    FONT_SIZE,
+    LATEX_PICS_DIR,
+    LATEX_TEXPARTS_DIR,
+)
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
@@ -225,12 +231,16 @@ print("Plotting combined scatter figure (2×2) …")
 _SUBCAPTIONS = ["(a)", "(b)", "(c)", "(d)"]
 
 STRINGS = {
-    "title": r"Korelace pokrytí \acs{KV} s\,vybranými ukazateli trhu práce (2024)",
+    "title": (
+        r"Korelace pokrytí \acs{KV}"
+        "\n"
+        r"s\,vybranými ukazateli trhu práce (2024)"
+    ),
 }
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
     STRINGS["title"],
-    fontsize=max(FONT_SIZE, 10),
+    fontsize=FIGURE_COMPACT_TEXT_SIZE,
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     row_bottom = idx >= 2
@@ -264,7 +274,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     ax.text(
         0.03, 0.97, _SUBCAPTIONS[idx],
         transform=ax.transAxes,
-        fontsize=max(FONT_SIZE, 10), fontweight="bold",
+        fontsize=FIGURE_COMPACT_TEXT_SIZE, fontweight="bold",
         va="top", ha="left",
     )
     # Hide x-axis tick labels for top row
@@ -278,7 +288,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         )
     )
     for item in ax.get_xticklabels() + ax.get_yticklabels():
-        item.set_fontsize(max(item.get_fontsize(), 10))
+        item.set_fontsize(max(item.get_fontsize(), FIGURE_COMPACT_TEXT_SIZE))
 fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
 savefig_pgf(fig_all, "korelace_scatter", strings=STRINGS)
 save_figure_tex_pgf(

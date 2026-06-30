@@ -59,9 +59,31 @@ PGF_RECOMPRESS_COMPANION_IMAGES: bool = False
 # CTUthesis textwidth: 210mm − 35mm (left) − 25mm (right) = 150mm
 FIGURE_WIDTH_CM: float = 15.0
 FIGURE_HEIGHT_CM: float = 9.0
-# Body font size: matches LaTeX footnotesize at 12 pt base (CTUthesis default).
-# Minimum 10 pt – anything smaller is illegible at print scale.
-FONT_SIZE: int = 10
+
+# Typography source of truth from LaTeX (CTUthesis 12pt base):
+#   \normalsize  = 12pt
+#   \small       = 11pt
+#   \footnotesize= 10pt
+LATEX_NORMAL_SIZE_PT: int = 12
+LATEX_SMALL_SIZE_PT: int = 11
+LATEX_FOOTNOTE_SIZE_PT: int = 10
+
+# Legacy compatibility constant used by older analysis scripts.
+# Keep at 10 so existing hardcoded +1/+2 adjustments don't explode in size.
+FONT_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
+
+# Typography policy used across plotting helpers.
+# - Figure titles: same as normal figure text.
+# - Figure labels/ticks: one point smaller than normal figure text.
+# - LaTeX tables: one point smaller via \small.
+FIGURE_TEXT_SIZE: int = LATEX_NORMAL_SIZE_PT
+FIGURE_TITLE_SIZE: int = FIGURE_TEXT_SIZE
+FIGURE_LABEL_SIZE: int = LATEX_SMALL_SIZE_PT
+
+# Dense combined plots can use a compact profile without going below 10pt.
+FIGURE_COMPACT_TEXT_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
+FIGURE_COMPACT_LABEL_SIZE: int = LATEX_FOOTNOTE_SIZE_PT
+TABLE_FONT_SIZE_LATEX: str = "small"
 
 # Colour palette – qualitative, colour-blind safe (based on Wong 2011).
 # Excluded: yellow (#F0E442, #E69F00) – near-invisible on white.

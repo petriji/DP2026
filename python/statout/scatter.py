@@ -163,7 +163,7 @@ def scatter_xy(
                     xy=(row["x"], row["y"]),
                     xytext=(5, 2),
                     textcoords="offset points",
-                    fontsize=FONT_SIZE,
+                    fontsize=FONT_SIZE - 1,
                     color=color,
                     fontweight="bold",
                     va="center",

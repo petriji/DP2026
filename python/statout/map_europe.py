@@ -27,8 +27,9 @@ from stattool.dataset import Dataset
 from stattool.fetch import fetch
 from stattool.style import cm2in
 
-# ── Natural Earth countries shapefile (110m) ──────────────────────────────────
-_NE_URL = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
+# ── Natural Earth countries shapefile (50m) ───────────────────────────────────
+# 50m keeps small EU states (e.g. Malta) that are missing in 110m.
+_NE_URL = "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip"
 _WORLD: "gpd.GeoDataFrame | None" = None
 
 # ETRS89-LAEA Europe projection (Eurostat standard, equal-area → no skew)
@@ -101,6 +102,7 @@ def choropleth(
     fill_latest: bool = True,
     ylim_south: Optional[float] = None,
     highlight_colorbar: Optional[list[str]] = None,
+    plain_highlight_labels: bool = False,
     show_colorbar: bool = True,
 ) -> plt.Figure:
     # Default markers on every choropleth colorbar (key reference economies).
@@ -242,7 +244,9 @@ def choropleth(
                 [-0.12], [val], marker=">", markersize=4,
                 color=color, clip_on=False, zorder=6, transform=trans,
             )
-            lbl = rf"\acs{{geo-{geo}}}" if _pgf else geo
+            # In PGF/main.tex context, acro labels render as \acs{geo-XX}.
+            # For standalone PDF exports, callers can force plain ISO labels.
+            lbl = geo if plain_highlight_labels else (rf"\acs{{geo-{geo}}}" if _pgf else geo)
             # Place label 3pt to the left of the marker using an offset transform.
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(
@@ -272,7 +276,7 @@ def choropleth(
             if (_EU_XLIM[0] <= pt.x <= _EU_XLIM[1] and
                     eu_ylim[0] <= pt.y <= eu_ylim[1]):
                 ax.text(pt.x, pt.y, code,
-                        fontsize=FONT_SIZE, ha="center", va="center",
+                        fontsize=FONT_SIZE - 1, ha="center", va="center",
                         color="black", fontweight="bold",
                         path_effects=[
                             __import__("matplotlib.patheffects", fromlist=["withStroke"])

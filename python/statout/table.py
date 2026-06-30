@@ -21,6 +21,8 @@ from typing import Optional, Union
 
 import pandas as pd
 
+from config import TABLE_FONT_SIZE_LATEX
+
 
 def to_latex(
     df: pd.DataFrame,
@@ -31,7 +33,7 @@ def to_latex(
     cite_keys: Optional[list[str]] = None,
     col_headers: Optional[list[str]] = None,
     col_format: Optional[str] = None,
-    fontsize: str = "small",
+    fontsize: str = TABLE_FONT_SIZE_LATEX,
     position: str = "htbp",
     index_name: str = "",
     bold_header: bool = True,

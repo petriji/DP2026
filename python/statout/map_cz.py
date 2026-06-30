@@ -291,7 +291,7 @@ def choropleth_cz(
     )
     cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
     if colorbar_label:
-        cb.set_label(colorbar_label, fontsize=FONT_SIZE)
+        cb.set_label(colorbar_label, fontsize=FONT_SIZE - 1)
     cb.ax.tick_params(labelsize=FONT_SIZE - 1)
 
     # ── Axes formatting ───────────────────────────────────────────────────────

@@ -3,14 +3,19 @@
 % U jednoho zaměstnavatele se ZO mohou koordinovat v P~KOV; §24 ZP řeší pluralitu OO.
 % Edit freely —  not generated.
 \def\strOOHierarchieCaption{Třístupňová hierarchie odborové reprezentace v~\acs{geo-CZ}: zastřešující konfederace (\acs{ČMKOS}, \acs{ASO}, \ldots), odborové svazy a~podnikové či lokální \acs{ZO}; u~zaměstnavatele s~více \acs{ZO} může jejich vyjednávání koordinovat \acs{PKOV}.}%
+% Poster override (before \input this file):
+%   \renewcommand\DPOOBaseSize{\large}
+%   \renewcommand\DPOONoteSize{\normalsize}
+\providecommand\DPOOBaseSize{\normalsize}
+\providecommand\DPOONoteSize{\small}
 %
 \begin{figure}[H]
   \centering
   \resizebox{0.95\linewidth}{!}{%
   \begin{tikzpicture}[
-    font=\sffamily\fontsize{10}{11.5}\selectfont,
+    font=\sffamily\DPOOBaseSize,
     every node/.style={align=center, inner sep=3pt,
-      font=\sffamily\fontsize{10}{11.5}\selectfont,
+      font=\sffamily\DPOOBaseSize,
       execute at begin node=\linespread{0.9}\selectfont},
     topBox/.style    ={draw=black!85, fill=black!22, rounded corners=3pt,
                        text width=3.4cm, minimum height=1.0cm, line width=0.9pt},
@@ -22,7 +27,7 @@
                        text width=2.0cm, minimum height=0.7cm, line width=0.7pt},
     link/.style      ={->, line width=0.9pt, draw=black!85, >=Stealth},
     linkDashed/.style={->, dashed, line width=0.8pt, draw=black!75, >=Stealth},
-    dots/.style      ={font=\sffamily\fontsize{11}{13}\selectfont},
+    dots/.style      ={font=\sffamily\DPOOBaseSize},
   ]
     % --- Vrcholová úroveň: konfederace ---
     \node[topBox] (CMKOS) at (-3.2,3.0) {\textbf{\acs{ČMKOS}}\\konfederace};
@@ -63,7 +68,7 @@
 
     % --- Anotace: pluralita §24 ZákP ---
     \node[draw=black!60, dashed, rounded corners=2pt,
-          text width=4.2cm, inner sep=4pt, font=\sffamily\fontsize{9}{10.5}\selectfont]
+          text width=4.2cm, inner sep=4pt, font=\sffamily\DPOONoteSize]
          (Note) at ( 5.0,-3.0)
          {Více \acs{ZO} u~jednoho zaměstnavatele může jednat koordinovaně v~\acs{PKOV}; pluralitu \acs{OO} upravuje \mbox{§~24} \acs{ZP}};
     \draw[linkDashed] (Note.west) -- (PKOV.east);
