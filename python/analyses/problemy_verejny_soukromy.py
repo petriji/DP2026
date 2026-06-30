@@ -59,6 +59,7 @@ import numpy as np
 import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR
+from stattool.data_quality import warn_fallback
 from stattool.fetch import fetch
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -377,12 +378,20 @@ _stat_defaults = {
     "pls": {"p10": 32_099, "p25": 39_252, "median": 48_064, "p75": 64_016, "p90": 97_225, "mean": 59_543},
 }
 
-def _stat(parsed: dict, key: str, default: float) -> float:
+def _stat(parsed: dict, key: str, default: float, *, sphere: str) -> float:
     v = parsed.get(key)
-    return float(v) if v is not None and pd.notna(v) else default
+    if v is not None and pd.notna(v):
+        return float(v)
+    warn_fallback(
+        f"Using hardcoded {sphere} distribution fallback for {key}",
+        source="MPSV/TREXIMA ISPV",
+        year=ISPV_YEAR,
+        hardcoded=True,
+    )
+    return default
 
-mzs_stat = {k: _stat(_overall_mzs, k, _stat_defaults["mzs"][k]) for k in _stat_defaults["mzs"]}
-pls_stat = {k: _stat(_overall_pls, k, _stat_defaults["pls"][k]) for k in _stat_defaults["pls"]}
+mzs_stat = {k: _stat(_overall_mzs, k, _stat_defaults["mzs"][k], sphere="MZS") for k in _stat_defaults["mzs"]}
+pls_stat = {k: _stat(_overall_pls, k, _stat_defaults["pls"][k], sphere="PLS") for k in _stat_defaults["pls"]}
 
 # Extract the actual P90 value from the M0 totals in the parsed files if available
 if p_mzs is not None:

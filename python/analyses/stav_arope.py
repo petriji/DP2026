@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -53,6 +54,7 @@ ds = Dataset.from_sdmx_csv(
 )
 
 print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}--{ds.years[-1]}")
+warn_non_target_year(source="Eurostat ilc_peps01n", year=ds.latest_year, context="AROPE map reference year")
 
 # ── 2. Figure A -- Europe choropleth (latest year) ─────────────────────────────
 map_name = f"stav_arope_mapa_{ds.latest_year}"

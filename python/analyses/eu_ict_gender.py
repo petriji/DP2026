@@ -26,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -64,8 +65,11 @@ ds = Dataset.from_sdmx_csv(
 
 print(f"Countries: {len(ds.countries)}  |  Years: {ds.years}")
 print(f"Display year (latest): {ds.latest_year}")
+warn_non_target_year(source="Eurostat isoc_sks_itsps", year=ds.latest_year, context="Women in ICT map reference year")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
+_years_used = ds.df.sort_values("time").groupby("geo")["time"].last().to_dict()
+warn_years("Eurostat isoc_sks_itsps", _years_used.values(), context="Women in ICT map country fill years")
 _values = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()

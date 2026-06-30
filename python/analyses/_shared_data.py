@@ -15,6 +15,7 @@ from typing import Optional
 
 import pandas as pd
 
+from stattool.data_quality import warn_fallback
 from stattool.dataset import Dataset, _OECD_ISO3_TO_ISO2
 from stattool.fetch import fetch_eurostat, fetch_ipp, fetch_oecd
 
@@ -40,6 +41,10 @@ _ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
 
 def load_cb_coverage(*, start_period: int = 1990) -> Dataset:
     """Load CB coverage: ICTWSS AdjCov for EU-27 (exc. DE, SK, SI) + OECD CBC ERB."""
+    warn_fallback(
+        "Collective-bargaining coverage uses OECD CBC ERB fallback for DE, SK, and SI where ICTWSS AdjCov density is insufficient",
+        source="ICTWSS AdjCov + OECD CBC ERB",
+    )
     # ── ICTWSS AdjCov ─────────────────────────────────────────────────────────
     with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as resp:
         raw_csv = resp.read().decode("utf-8-sig")

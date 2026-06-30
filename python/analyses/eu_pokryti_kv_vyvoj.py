@@ -163,7 +163,7 @@ save_figure_tex_pgf(
     label="fig:eu_pokryti_kv_vyvoj_2004",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
-    strings={},
+    strings=STRINGS_2004,
     nudge_labels=NUDGE_LABELS,
 )
 

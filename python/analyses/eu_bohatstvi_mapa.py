@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -53,9 +54,12 @@ ds = Dataset.from_oecd_csv(
 
 print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year (latest): {ds.latest_year}")
+warn_non_target_year(source="OECD WEALTH SH_TOP10", year=ds.latest_year, context="Top 10% wealth-share map reference year")
 
 # ── 2. Choropleth map ─────────────────────────────────────────────────────────
 # fill_latest=True (default) fills countries with their most recent survey data
+_years_used = ds.df.sort_values("time").groupby("geo")["time"].last().to_dict()
+warn_years("OECD WEALTH SH_TOP10", _years_used.values(), context="Top 10% wealth-share map country fill years")
 _values = (
     ds.df[ds.df["time"] <= ds.latest_year]
     .sort_values("time").groupby("geo")["value"].last().to_dict()

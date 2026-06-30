@@ -51,6 +51,7 @@ from config import (
     LATEX_PICS_DIR,
     LATEX_TEXPARTS_DIR,
 )
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips_scatter
@@ -463,6 +464,7 @@ TARGET_COVERAGE = 80.0
 _cbc_cz = ds_cbc.df[ds_cbc.df[ds_cbc.geo_col] == "CZ"].dropna(subset=[ds_cbc.value_col])
 _cz_cov_val = float(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.value_col].iloc[-1])
 _cz_cov_year = int(_cbc_cz.sort_values(ds_cbc.time_col)[ds_cbc.time_col].iloc[-1])
+warn_non_target_year(source="ICTWSS AdjCov + OECD CBC ERB", year=_cz_cov_year, context="Correlation predictions current CZ coverage")
 _delta_x = TARGET_COVERAGE - _cz_cov_val
 
 
@@ -472,7 +474,9 @@ def _get_cz_latest(ds: "Dataset") -> tuple[float, int]:
     if df_cz.empty:
         return float("nan"), 0
     row = df_cz.sort_values(ds.time_col).iloc[-1]
-    return float(row[ds.value_col]), int(row[ds.time_col])
+    year = int(row[ds.time_col])
+    warn_non_target_year(source=str(ds.source_url), year=year, context=f"Correlation predictions current CZ value for {ds.name}")
+    return float(row[ds.value_col]), year
 
 
 def _ols_beta(ds_x: "Dataset", ds_y: "Dataset") -> float:

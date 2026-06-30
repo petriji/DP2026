@@ -34,6 +34,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import DATA_DIR
+from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -118,6 +119,8 @@ latest_rows["value"] = latest_rows["value"] * 100.0  # fraction → percent
 display_year = int(latest_rows["time"].max())
 print(f"\nDisplay year (global max): {display_year}")
 print(f"Countries with data: {sorted(latest_rows['geo'].tolist())}")
+warn_non_target_year(source="WID shwealj992", year=display_year, context="Top 1% wealth-share WID map reference year")
+warn_years("WID shwealj992", latest_rows["time"].tolist(), context="Top 1% wealth-share WID map country fill years")
 
 ds = Dataset(
     latest_rows[["geo", "time", "value"]],

@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import COUNTRY_COLORS, FONT_SIZE
 from statout.timeline import EU27
+from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch_eurostat
 from stattool.style import (
     apply_style_pgf,
@@ -100,6 +101,8 @@ latest = counts.sort_values("year").groupby("geo")["year"].last().to_dict()
 ref_year = max(latest.values()) if latest else int(raw["year"].max())
 print(f"Reference year (per country): {latest}")
 print(f"Reference year for caption: {ref_year}")
+warn_non_target_year(source="Eurostat earn_ses_hourly", year=ref_year, context="Hourly wage distribution caption year")
+warn_years("Eurostat earn_ses_hourly", latest.values(), context="Hourly wage distribution country fit years")
 
 snap = raw[raw.apply(lambda r: r["year"] == latest.get(r["geo"], -1), axis=1)]
 

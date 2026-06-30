@@ -82,6 +82,7 @@ import numpy as np
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_ispv, fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -262,6 +263,10 @@ if ispv_wages is not None and len(ispv_wages) >= 5:
     print(f"  ISPV 2025 (GUID): {len(ispv_wages)} NACE sectors parsed")
 else:
     # Fallback: try legacy fetch_ispv() URL pattern
+    warn_fallback(
+        "GUID 2025 ISPV workbook unavailable, trying legacy ISPV endpoints",
+        source="MPSV/TREXIMA ISPV",
+    )
     for yr in range(END_YEAR, START_YEAR - 1, -1):
         try:
             path_ispv = fetch_ispv(yr, half=2, sphere="podnikatelska")
@@ -275,7 +280,16 @@ else:
             print(f"  ISPV {yr}H2: skipped ({type(exc).__name__}: {exc})")
 
 if ispv_wages is None:
-    print("  ISPV unavailable -- sector bar chart will be skipped or use Eurostat fallback.")
+    warn_fallback(
+        "ISPV unavailable; sector bar chart will use Eurostat fallback or be skipped",
+        source="MPSV/TREXIMA ISPV",
+    )
+else:
+    warn_non_target_year(
+        source="MPSV/TREXIMA ISPV",
+        year=ispv_year,
+        context="Sector wage bar input",
+    )
 
 # ════════════════════════════════════════════════════════════════════════════
 # 2. Fetch Eurostat LCI by NACE for CZ

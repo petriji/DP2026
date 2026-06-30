@@ -48,6 +48,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -184,6 +185,7 @@ try:
     # National-level only (2-char geo)
     filt_l21 = filt_l21[filt_l21["geo"].str.len() == 2]
     latest_l21 = int(filt_l21["time"].max())
+    warn_non_target_year(source="Eurostat edat_aes_l21", year=latest_l21, context="Foreign-languages panel A")
     snap_l21 = filt_l21[filt_l21["time"] == latest_l21].copy()
     print(f"  {len(snap_l21)} countries, year={latest_l21}")
 
@@ -251,6 +253,7 @@ try:
     filt_l22 = _filter_aes(raw_l22, filters_l22)
     filt_l22 = filt_l22[filt_l22["geo"].str.len() == 2]
     latest_l22 = int(filt_l22["time"].max())
+    warn_non_target_year(source="Eurostat edat_aes_l22", year=latest_l22, context="Foreign-languages panel B")
     snap_l22 = filt_l22[filt_l22["time"] == latest_l22].copy()
     print(f"  {len(snap_l22)} countries, year={latest_l22}")
 
@@ -323,6 +326,7 @@ try:
     filt_l23 = _filter_aes(raw_l23, filters_l23)
     filt_l23 = filt_l23[filt_l23["geo"].str.len() == 2]
     latest_l23 = int(filt_l23["time"].max())
+    warn_non_target_year(source="Eurostat edat_aes_l23", year=latest_l23, context="Foreign-languages panel C")
     snap_l23 = filt_l23[filt_l23["time"] == latest_l23].copy()
     print(f"  {len(snap_l23)} countries, year={latest_l23}")
 

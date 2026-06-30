@@ -646,6 +646,16 @@ def _nudge_macro_name(prefix: str, label_id: str) -> str:
     return macro
 
 
+def _extract_figure_tex_macro_value(content: str, macro: str) -> str | None:
+    r"""Return the value of a ``\def\str...{...}%`` macro from a figure wrapper."""
+    import re as _re
+
+    macro_name = macro[1:] if macro.startswith("\\") else macro
+    pattern = _re.compile(rf"^\\def{_re.escape(macro_name)}\{{(.*)\}}%?\s*$", _re.MULTILINE)
+    match = pattern.search(content)
+    return match.group(1) if match else None
+
+
 def _apply_label_nudges_pgf(
     pgf_path: Path,
     name: str,
@@ -1114,6 +1124,7 @@ def save_figure_tex_pgf(
     if strings is not None or nudge_labels:
         from config import LATEX_FIGURES_TEX_DIR
         prefix = _macro_prefix(name)
+        caption_macro = _macro_name(prefix, "caption")
         strings_file = LATEX_FIGURES_TEX_DIR / f"{name}.tex"
         strings_input_path = f"texparts/figures/{name}"
         # Build list of nudge macros (auto-derived names).
@@ -1128,7 +1139,6 @@ def save_figure_tex_pgf(
                     label_id, _ = entry
                 nudge_macros.append(_nudge_macro_name(prefix, label_id))
         if not strings_file.exists():
-            caption_macro = _macro_name(prefix, "caption")
             lines = [
                 f"% Editable figure definition for {name}",
                 f"% Edit freely --- Python will NOT overwrite this file.",
@@ -1161,26 +1171,63 @@ def save_figure_tex_pgf(
             print(f"  Created figure tex: {strings_file}")
         else:
             # File exists: do NOT overwrite, but ensure any newly-introduced
-            # nudge macros have a default \providecommand so the build does
-            # not break when the .pgf references them.
+            # wrapper string/nudge macros have defaults so the build does not
+            # break when the .pgf references them. Existing differing values
+            # are preserved as user customizations.
+            existing = strings_file.read_text(encoding="utf-8")
+            stale_macros: list[str] = []
+            expected_macros = {caption_macro: caption_str}
+            missing_macro_defs: list[str] = []
+            for key, value in (strings or {}).items():
+                expected_macros[_macro_name(prefix, key)] = str(value)
+            for macro, expected in expected_macros.items():
+                actual = _extract_figure_tex_macro_value(existing, macro)
+                expected_esc = re.sub(r"(?<!\\)%", r"\\%", expected)
+                if actual is None:
+                    missing_macro_defs.append(f"\\def{macro}{{{expected_esc}}}%")
+                    continue
+                if actual != expected_esc:
+                    stale_macros.append(macro)
+            add_blocks: list[str] = []
+            if missing_macro_defs:
+                add_blocks.extend([
+                    "",
+                    "% --- Auto-added string macros from current Python defaults",
+                    *missing_macro_defs,
+                ])
+            missing_nudges: list[str] = []
             if nudge_macros:
-                existing = strings_file.read_text(encoding="utf-8")
-                missing = [m for m in nudge_macros if m not in existing]
-                if missing:
-                    add = ["", "% --- Auto-added nudge knobs (override with \\renewcommand)"]
-                    for m in missing:
-                        add.append(f"\\providecommand{m}{{0pt}}%")
-                    # Insert before the \begin{figure} line so defaults are
-                    # in scope when \input{...pgf} expands.
-                    marker = "\\begin{figure}"
-                    if marker in existing:
-                        existing = existing.replace(
-                            marker, "\n".join(add) + "\n" + marker, 1
-                        )
-                    else:
-                        existing = existing + "\n".join(add) + "\n"
-                    strings_file.write_text(existing, encoding="utf-8")
-                    print(f"  Added {len(missing)} nudge default(s) to: {strings_file}")
+                missing_nudges = [m for m in nudge_macros if m not in existing]
+                if missing_nudges:
+                    add_blocks.extend([
+                        "",
+                        "% --- Auto-added nudge knobs (override with \\renewcommand)",
+                        *(f"\\providecommand{m}{{0pt}}%" for m in missing_nudges),
+                    ])
+            if add_blocks:
+                # Insert before the \begin{figure} line so defaults are in
+                # scope when \input{...pgf} expands.
+                marker = "\\begin{figure}"
+                if marker in existing:
+                    existing = existing.replace(
+                        marker, "\n".join(add_blocks) + "\n" + marker, 1
+                    )
+                else:
+                    existing = existing + "\n".join(add_blocks) + "\n"
+                strings_file.write_text(existing, encoding="utf-8")
+                if missing_macro_defs:
+                    print(
+                        f"  Added {len(missing_macro_defs)} missing string macro default(s) to: {strings_file}"
+                    )
+                if missing_nudges:
+                    print(f"  Added {len(missing_nudges)} nudge default(s) to: {strings_file}")
+            if stale_macros:
+                preview = ", ".join(stale_macros[:4])
+                extra = "" if len(stale_macros) <= 4 else f" (+{len(stale_macros) - 4} more)"
+                print(
+                    "  WARNING: figure tex macros differ from current Python defaults; "
+                    f"kept custom wrapper as-is: {strings_file} [{preview}{extra}]"
+                )
             print(f"  Figure tex exists (kept): {strings_file}")
 
         # Wrapper is a one-line macro call --- always regenerated, no user content.

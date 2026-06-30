@@ -23,6 +23,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year
 from stattool.style import (
     apply_style_pgf,
     savefig_pgf,
@@ -40,6 +41,7 @@ ds = load_lmp_active()
 
 print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
+warn_non_target_year(source="OECD LMPEXP", year=ds.latest_year, context="Active LMP expenditure map")
 
 # Latest value per country (for tooltips and vmax)
 _values = (

@@ -38,6 +38,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_ilostat, fetch_eurostat, fetch
 from stattool.dataset import Dataset
 from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
@@ -99,6 +100,10 @@ if obs_col not in df_ilo.columns:
     # Fallback: try 'value'
     obs_col = "value" if "value" in df_ilo.columns else df_ilo.columns[-1]
     log.warning("obs_value column not found; using '%s'", obs_col)
+    warn_fallback(
+        f"ILOSTAT strike dataset used fallback value column '{obs_col}' instead of 'obs_value'",
+        source="ILOSTAT STR_DAYS_ECO_RT_A",
+    )
 
 df_ilo = df_ilo.dropna(subset=[obs_col])
 df_ilo[obs_col] = pd.to_numeric(df_ilo[obs_col], errors="coerce")
@@ -131,6 +136,11 @@ df_ilo_clean = df_ilo[["geo", "time", obs_col]].copy()
 df_ilo_clean = df_ilo_clean.rename(columns={obs_col: "D_S"})
 print(f"  ILO clean: {df_ilo_clean['geo'].nunique()} EU27 countries, "
       f"years {df_ilo_clean['time'].min()}--{df_ilo_clean['time'].max()}")
+warn_non_target_year(
+    source="ILOSTAT STR_DAYS_ECO_RT_A",
+    year=int(df_ilo_clean["time"].max()) if not df_ilo_clean.empty else None,
+    context="Strike-activity timeline latest available ILO year",
+)
 
 # ── 1b. Statistics Denmark ABST1 -- lost working days + employment for DK ────────────────
 # ABST1: unit 300 = "Number of lost working days", BRANCHE 000 = Total
@@ -309,7 +319,7 @@ save_figure_tex_pgf(
     label="fig:stav_stavky",
     resizebox_width=r"\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "dst_abst1", "eurostat_lfsa_ewhun2"],
-    strings={},
+    strings=STRINGS,
     nudge_labels=NUDGE_LABELS,
 )
 

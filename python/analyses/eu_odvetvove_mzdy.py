@@ -42,6 +42,7 @@ from config import (
     LATEX_PICS_DIR,
 )
 from stattool.fetch import fetch_eurostat
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.dataset import Dataset
 from stattool.style import (
     cm2in,
@@ -88,6 +89,7 @@ lc = raw_lc[raw_lc["TIME_PERIOD"] == ref_year].pivot_table(
     index="geo", columns="nace_r2", values="OBS_VALUE", aggfunc="first"
 )
 print(f"Sector wages year: {ref_year}  [D1_D4_MD5]")
+warn_non_target_year(source="Eurostat lc_lci_lev", year=int(ref_year), context="Sector wages snapshot")
 
 raw_lc_all = pd.read_csv(path_lc_all)
 raw_lc_all = raw_lc_all[["geo", "nace_r2", "TIME_PERIOD", "OBS_VALUE"]].dropna(subset=["OBS_VALUE"])
@@ -112,6 +114,7 @@ pli = raw_pli[raw_pli["TIME_PERIOD"] == pli_year].set_index("geo")["OBS_VALUE"]
 pli["EU27_2020"] = 100.0   # EU27 PLI = 100 by definition
 print(f"PLI year: {pli_year}")
 print("PLI:", pli[COUNTRIES_EU].to_dict())
+warn_non_target_year(source="Eurostat prc_ppp_ind", year=int(pli_year), context="PLI snapshot for PPS conversion")
 
 # ── 3. Convert EUR/h → PPS/h ──────────────────────────────────────────────────
 # PPS_wage = EUR_wage / (PLI / 100)
@@ -134,12 +137,20 @@ lc_6 = lc_pps.loc[[c for c in COUNTRIES if c in lc_pps.index]]
 _EU27_GEO = "EU27_2020"
 if _EU27_GEO not in lc_pps.index:
     lc_pps.loc[_EU27_GEO] = float("nan")
+_fallback_sectors: list[str] = []
 for s in SECTORS:
     if pd.isna(lc_pps.loc[_EU27_GEO, s]) if s in lc_pps.columns else True:
         if s in lc_pps_all.columns:
             fallback_eu = lc_pps_all[s].dropna().mean()
             lc_pps.loc[_EU27_GEO, s] = fallback_eu
+            _fallback_sectors.append(s)
             print(f"  EU27 fallback mean used for sector {s}: {fallback_eu:.2f} PPS/h")
+if _fallback_sectors:
+    warn_fallback(
+        f"EU27 sector benchmark missing for {', '.join(_fallback_sectors)}; cross-country mean used",
+        source="Eurostat lc_lci_lev + prc_ppp_ind",
+        year=int(ref_year),
+    )
 
 # ── 3b. EU27=100 index (needed for deviation chart only) ────────────────────────
 _eu27_sector = lc_pps.loc["EU27_2020", list(SECTORS.keys())]
@@ -252,7 +263,7 @@ if "EU27_2020" in lc_pps.index:
         label="fig:eu_odvetvove_mzdy_odchylka",
         resizebox_width=r"\linewidth",
         cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-        strings={},
+        strings=STRINGS_ODCH,
     )
     print("Figure 2 saved.")
 

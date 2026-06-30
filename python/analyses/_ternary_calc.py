@@ -43,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from stattool.dataset import _OECD_ISO3_TO_ISO2
 from statout.timeline import EU27
 from analyses.stav_socialni_mir_data import build_b4_scores
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_eurostat, fetch_oecd
 
 # ── EU27 as sorted list for reproducible output ───────────────────────────────
@@ -87,6 +88,11 @@ def _snapshot(
 
     snap = pd.Series(res)
     print(f"  → snapshot year {latest_year} with LOCF ({snap.notna().sum()} countries matched)")
+    warn_non_target_year(
+        source="Eurostat/OECD snapshot",
+        year=latest_year,
+        context="LOCF snapshot selection",
+    )
     return snap
 
 
@@ -327,6 +333,10 @@ def _axis_b(force: bool = False) -> pd.Series:
 
     missing_b2 = [geo for geo in _EU27 if pd.isna(snap_b2.loc[geo])]
     if missing_b2:
+        warn_fallback(
+            "B2 primary COMB_CIT_RATE incomplete, using OECD same-source alternatives",
+            source="OECD CTS_CIT",
+        )
         print("  → B2 same-source OECD fallback for missing countries (CIT_RATE / CIT_RATE_LESS_SUB_NAT)…")
         for alt_measure in ["CIT_RATE", "CIT_RATE_LESS_SUB_NAT"]:
             if alt_measure not in set(df_b2_all["CORP_TAX"].dropna().unique()):
@@ -354,6 +364,12 @@ def _axis_b(force: bool = False) -> pd.Series:
     missing_b2 = [geo for geo in _EU27 if pd.isna(snap_b2.loc[geo])]
     if missing_b2 == ["CY"]:
         snap_b2.loc["CY"] = 14.1
+        warn_fallback(
+            "B2 expert fallback used for CY (EATR model value)",
+            source="Expert assumption",
+            year=2026,
+            hardcoded=True,
+        )
         print("  → B2 expert fallback: CY set to 14.1 % (EATR model value for 2026)")
 
     unresolved_b2 = [geo for geo in _EU27 if pd.isna(snap_b2.loc[geo])]

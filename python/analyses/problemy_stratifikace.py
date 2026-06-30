@@ -78,6 +78,7 @@ import numpy as np
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
 from statout.timeline import timeline, EU27 as _EU27
@@ -461,6 +462,10 @@ for yr in range(END_YEAR, 2014, -1):
 
 # Fallback: 2025 national MZS workbook via GUID
 if ispv_path is None:
+    warn_fallback(
+        "Standard ISPV endpoints unavailable, trying 2025 GUID workbook",
+        source="MPSV/TREXIMA ISPV",
+    )
     try:
         p = fetch(_ISPV_NAT_2025_URL, suffix=".xlsx")
         with open(p, "rb") as _fh:
@@ -471,6 +476,13 @@ if ispv_path is None:
                 print("  ISPV 2025 GUID fallback: file is not a valid XLSX")
     except Exception as exc:
         print(f"  ISPV 2025 GUID fallback failed: {exc}")
+
+if ispv_year is not None:
+    warn_non_target_year(
+        source="MPSV/TREXIMA ISPV",
+        year=ispv_year,
+        context="Regional/sector stratification ISPV input",
+    )
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure A -- Regional wage levels
@@ -533,6 +545,11 @@ if ispv_path is not None:
         regional_done = True
     # Fallback: download 14 regional ISPV workbooks (NUTS3)
     print("  ISPV regional data unavailable; trying 14 regional ISPV workbooks …")
+    warn_fallback(
+        "Regional table unavailable in national workbook, using 14 regional ISPV workbooks",
+        source="MPSV/TREXIMA ISPV",
+        year=2025,
+    )
     regional_medians = _fetch_ispv_regional_medians()
     if len(regional_medians) >= 4:
         nat_med = float(pd.Series(list(regional_medians.values())).median())

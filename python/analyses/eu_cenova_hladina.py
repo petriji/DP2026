@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import pandas as pd
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -73,6 +74,7 @@ ds = Dataset(
 
 print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
+warn_non_target_year(source="Eurostat prc_ppp_ind", year=ds.latest_year, context="Price level index map")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
 _values = (

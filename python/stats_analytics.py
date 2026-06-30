@@ -49,6 +49,8 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import json
+import os
 import re
 import subprocess
 import sys
@@ -62,6 +64,8 @@ DP_DIR      = PYTHON_DIR.parent
 LATEX_DIR   = DP_DIR / "latex"
 PICS_DIR    = Path(LATEX_PICS_DIR)
 TEX_DIR     = LATEX_DIR / "texparts" / "python"
+FIG_TEX_DIR = LATEX_DIR / "texparts" / "figures"
+REVIEW_DIR  = DP_DIR / "review"
 FIG_EXTS    = (".pgf", ".pdf", ".png", ".svg")
 
 # ── Registry ──────────────────────────────────────────────────────────────────
@@ -76,6 +80,9 @@ with open(PYTHON_DIR / "analytics_registry.toml", "rb") as _f:
 _INPUT_RE   = re.compile(r'\\(?:input|include)\{([^}]+)\}')
 _PGF_RE     = re.compile(r'\\inputpgffigure\{([^}]+)\}')
 _COMMENT_RE = re.compile(r'%.*')
+_CAPTION_RE = re.compile(r'\\caption(?:\[[^\]]*\])?\{(.+?)\}', re.DOTALL)
+_DEF_CAPTION_RE = re.compile(r'\\def\\[A-Za-z0-9_]*Caption\{(.+?)\}\s*%?', re.DOTALL)
+_YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
 
 def _tex_stems(tex_file: Path, visited: set[Path] | None = None) -> set[str]:
     """Recursively collect Python-generated figure stems from *tex_file*.
@@ -161,10 +168,12 @@ def _any_missing(entry: dict, referenced: set[str]) -> bool:
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def _run(key: str, entry: dict) -> None:
+def _run(key: str, entry: dict, *, target_year: int) -> None:
     script = entry["script"]
     print(f"[stats_analytics] running: {script}", flush=True)
-    result = subprocess.run([sys.executable, script], cwd=PYTHON_DIR)
+    env = os.environ.copy()
+    env["DP_TARGET_YEAR"] = str(target_year)
+    result = subprocess.run([sys.executable, script], cwd=PYTHON_DIR, env=env)
     if result.returncode != 0:
         print(
             f"[stats_analytics] ERROR: {script} exited with code {result.returncode}",
@@ -184,7 +193,7 @@ def _covered_stems(referenced: set[str]) -> set[str]:
     return covered
 
 
-def _run_fallback_for_uncovered(referenced: set[str]) -> None:
+def _run_fallback_for_uncovered(referenced: set[str], *, target_year: int) -> None:
     """Run analyses/<stem>.py for referenced stems missing from registry.
 
     This makes "Clean + Analytics + Build all" robust for freshly-added
@@ -207,7 +216,9 @@ def _run_fallback_for_uncovered(referenced: set[str]) -> None:
             f"[stats_analytics] fallback: running unregistered analysis {candidate.name}",
             flush=True,
         )
-        result = subprocess.run([sys.executable, str(candidate)], cwd=PYTHON_DIR)
+        env = os.environ.copy()
+        env["DP_TARGET_YEAR"] = str(target_year)
+        result = subprocess.run([sys.executable, str(candidate)], cwd=PYTHON_DIR, env=env)
         if result.returncode != 0:
             print(
                 f"[stats_analytics] ERROR: fallback {candidate.name} exited with code {result.returncode}",
@@ -231,6 +242,103 @@ def _run_fallback_for_uncovered(referenced: set[str]) -> None:
         sys.exit(2)
 
 
+def _collect_caption_texts(stem: str) -> list[str]:
+    """Collect caption-like texts associated with one generated stem."""
+    texts: list[str] = []
+    candidates = [
+        TEX_DIR / f"{stem}.tex",
+        FIG_TEX_DIR / f"{stem}.tex",
+    ]
+    for path in candidates:
+        if not path.exists():
+            continue
+        body = path.read_text(encoding="utf-8", errors="replace")
+        texts.extend(_CAPTION_RE.findall(body))
+        texts.extend(_DEF_CAPTION_RE.findall(body))
+    return [t.strip() for t in texts if t.strip()]
+
+
+def _extract_years(text: str) -> list[int]:
+    return [int(y) for y in _YEAR_RE.findall(text)]
+
+
+def _audit_target_year(referenced: set[str], *, target_year: int) -> None:
+    """Warn for referenced outputs that don't clearly use target data year."""
+    rows: list[dict] = []
+
+    for stem in sorted(referenced):
+        captions = _collect_caption_texts(stem)
+        years: list[int] = []
+        for cap in captions:
+            years.extend(_extract_years(cap))
+        years_sorted = sorted(set(years))
+
+        status = "ok"
+        msg = ""
+        if not captions:
+            status = "warning"
+            msg = "no caption text found for year audit"
+            print(
+                f"[data-quality][WARNING][missing_caption] {stem}: {msg}",
+                flush=True,
+            )
+        elif not years_sorted:
+            status = "warning"
+            msg = "caption found but no year token detected"
+            print(
+                f"[data-quality][WARNING][missing_year] {stem}: {msg}",
+                flush=True,
+            )
+        elif target_year not in years_sorted:
+            status = "warning"
+            msg = f"caption years {years_sorted} do not include target year {target_year}"
+            print(
+                f"[data-quality][WARNING][year_mismatch] {stem}: {msg}",
+                flush=True,
+            )
+
+        rows.append(
+            {
+                "stem": stem,
+                "status": status,
+                "target_year": target_year,
+                "years": years_sorted,
+                "message": msg,
+            }
+        )
+
+    # Persist report for transparent citation in prose/review workflow.
+    REVIEW_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = REVIEW_DIR / "data_quality_report.json"
+    md_path = REVIEW_DIR / "data_quality_report.md"
+    json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    ok_count = sum(1 for r in rows if r["status"] == "ok")
+    warn_count = len(rows) - ok_count
+    lines = [
+        "# Data Quality Report",
+        "",
+        f"Target year: {target_year}",
+        f"Referenced stems audited: {len(rows)}",
+        f"OK: {ok_count}",
+        f"Warnings: {warn_count}",
+        "",
+        "| Stem | Status | Years | Message |",
+        "|---|---|---|---|",
+    ]
+    for row in rows:
+        years_txt = ", ".join(str(y) for y in row["years"]) if row["years"] else "-"
+        msg = row["message"] or "-"
+        lines.append(f"| {row['stem']} | {row['status']} | {years_txt} | {msg} |")
+    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(
+        f"[data-quality] target-year audit complete: {ok_count} ok, {warn_count} warning(s). "
+        f"Report: {md_path.relative_to(DP_DIR)}",
+        flush=True,
+    )
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -238,6 +346,12 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(
         description="Generate Python-produced figures/texparts referenced in the LaTeX project.",
+    )
+    parser.add_argument(
+        "--target-year",
+        type=int,
+        default=int(os.environ.get("DP_TARGET_YEAR", "2025")),
+        help="Target year for data-quality checks (default: 2025).",
     )
     parser.add_argument(
         "--force",
@@ -258,7 +372,7 @@ def main() -> None:
     main_tex   = LATEX_DIR / "main.tex"
     referenced = _tex_stems(main_tex)
 
-    _run_fallback_for_uncovered(referenced)
+    _run_fallback_for_uncovered(referenced, target_year=args.target_year)
 
     if args.list:
         print("Referenced texparts/python/ stems:")
@@ -287,11 +401,13 @@ def main() -> None:
             continue
 
         if key in forced or _any_missing(entry, referenced):
-            _run(key, entry)
+            _run(key, entry, target_year=args.target_year)
             ran_any = True
 
     if not ran_any:
         print("[stats_analytics] all outputs present — nothing to do.", flush=True)
+
+    _audit_target_year(referenced, target_year=args.target_year)
 
 
 if __name__ == "__main__":

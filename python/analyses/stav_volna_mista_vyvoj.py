@@ -25,6 +25,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
 from stattool.style import apply_style_pgf, add_pgf_tooltips, save_figure_tex_pgf, savefig_pgf
@@ -62,6 +63,11 @@ if _nace_col:
             raw = _tmp
             _chosen_nace = _nace
             break
+if _chosen_nace and _chosen_nace != "B-S_X_O":
+    warn_fallback(
+        f"Vacancy-rate timeline used {_chosen_nace} aggregate instead of preferred B-S_X_O",
+        source="Eurostat jvs_a_r21",
+    )
 
 _chosen_unit = None
 if "unit" in raw.columns:
@@ -71,6 +77,11 @@ if "unit" in raw.columns:
             raw = _tmp
             _chosen_unit = _u
             break
+if _chosen_unit and _chosen_unit != "AVG_3Y":
+    warn_fallback(
+        f"Vacancy-rate timeline used {_chosen_unit} instead of preferred AVG_3Y",
+        source="Eurostat jvs_a_r21",
+    )
 
 if "sizeclas" in raw.columns:
     for _sz in ["GE10", "TOTAL"]:
@@ -107,8 +118,19 @@ if _nace_col and _chosen_nace:
             _country_overrides.append(f"{_geo}:{_alt}")
             break
     raw = pd.concat(_parts, ignore_index=True)
+if _country_overrides:
+    warn_fallback(
+        "Vacancy-rate timeline filled missing countries with alternate NACE aggregates: "
+        + ", ".join(_country_overrides),
+        source="Eurostat jvs_a_r21",
+    )
 
 raw = raw[raw["time"] >= START_YEAR]
+warn_non_target_year(
+    source="Eurostat jvs_a_r21",
+    year=int(raw["time"].max()) if not raw.empty else None,
+    context="Vacancy-rate timeline latest available year",
+)
 
 print(
     "jvs_a_r21 selection:",

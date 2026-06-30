@@ -62,6 +62,19 @@ bash run.sh stats_analytics.py --force all # force-regenerate all
 bash run.sh stats_analytics.py --list      # show which texparts are referenced
 ```
 
+### Data quality warnings (target year = 2025)
+
+The analytics runner now performs a post-run data-quality audit focused on year transparency:
+- `stats_analytics.py` checks referenced generated outputs and warns when caption years do not include the target year.
+- Default target year is `2025` (override with `--target-year` or `DP_TARGET_YEAR`).
+- A machine-readable and prose-friendly report is written to:
+  - `review/data_quality_report.json`
+  - `review/data_quality_report.md`
+
+Analysis scripts can emit standardised warnings via `stattool.data_quality`:
+- `warn_fallback(...)` for secondary/hardcoded/expert fallback paths
+- `warn_non_target_year(...)` for non-2025 data use
+
 ## Optional review tooling
 
 Acrobat PDF review ingestion lives under `tools/` and is intentionally separate
@@ -82,6 +95,10 @@ Figures are generated automatically before every LaTeX build via two hooks:
 
 - **LaTeX Workshop** (VS Code): use the recipe *`stats_analytics → pdflatex → biber → pdflatex×2`*; `stats_analytics.py` runs as the first tool, then the full bibliography cycle follows.
 - **`latexmk`** (CLI): `latexmkrc` runs `stats_analytics.py` as a pre-build step; set `SKIP_PYTHON_ANALYTICS=1` to bypass it.
+
+When run from the VS Code recipes, analytics output is saved to
+`latex/build/stats-analytics.log` (or `stats-analytics-force.log` for the
+force-regeneration variant).
 
 Both hooks are no-ops when all outputs already exist.
 

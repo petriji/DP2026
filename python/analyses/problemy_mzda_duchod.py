@@ -56,6 +56,7 @@ import pandas as pd
 
 from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.style import (
     _add_vertical_ref,
     _fmt_czk,
@@ -515,16 +516,29 @@ def _fetch_cssz_pension_quantiles() -> tuple[dict[float, float], int] | tuple[No
 print("Fetching ISPV wage quantile data …")
 wage_q, wage_year = _fetch_ispv_national_quantiles()
 if wage_q is None:
-    print(f"  → Using fallback ISPV {_FALLBACK_WAGE_YEAR} quantiles")
+    warn_fallback(
+        f"Using fallback ISPV {_FALLBACK_WAGE_YEAR} quantiles",
+        source="MPSV/TREXIMA ISPV",
+        year=_FALLBACK_WAGE_YEAR,
+        hardcoded=True,
+    )
     wage_q    = _FALLBACK_WAGE_Q
     wage_year = _FALLBACK_WAGE_YEAR
 
 print("Fetching CSSZ pension distribution data …")
 pension_q, pension_year = _fetch_cssz_pension_quantiles()
 if pension_q is None:
-    print(f"  → Using fallback CSSZ {_FALLBACK_PENSION_YEAR} representative quantiles")
+    warn_fallback(
+        f"Using fallback CSSZ {_FALLBACK_PENSION_YEAR} representative quantiles",
+        source="CSSZ",
+        year=_FALLBACK_PENSION_YEAR,
+        hardcoded=True,
+    )
     pension_q    = _FALLBACK_PENSION_Q
     pension_year = _FALLBACK_PENSION_YEAR
+
+warn_non_target_year(source="MPSV/TREXIMA ISPV", year=wage_year, context="Wage distribution input")
+warn_non_target_year(source="CSSZ", year=pension_year, context="Pension distribution input")
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fit log-normal distributions

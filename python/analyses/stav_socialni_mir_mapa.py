@@ -38,6 +38,7 @@ from analyses.stav_socialni_mir_data import (
     get_b4_benchmark_year,
     get_b4_strike_days_per_1000,
 )
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
@@ -54,6 +55,11 @@ NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style_pgf()
+warn_non_target_year(source="ETUI/ILOSTAT benchmark", year=YEAR, context="B4 benchmark year")
+warn_fallback(
+    "B4 benchmark combines ETUI/ILOSTAT with national fallback assumptions for lacunae",
+    source="ETUI/ILOSTAT + national context",
+)
 
 # ── 1. Build benchmark datasets ───────────────────────────────────────────────
 rows: list[dict[str, float | int | str]] = []

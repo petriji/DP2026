@@ -59,6 +59,7 @@ import pandas as pd
 import geopandas as gpd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch, fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -236,6 +237,7 @@ print("\nFigure B: EU map …")
 try:
     nat2 = filt[filt["geo"].str.len() == 2].copy()
     latest_nat = int(nat2["time"].max())
+    warn_non_target_year(source="Eurostat lfst_r_lfe2ecomm", year=latest_nat, context="Cross-border commuting country map")
     snap_nat = nat2[nat2["time"] == latest_nat].copy()
 
     ds_map = Dataset(snap_nat, name="Přeshraniční dojíždění", unit="% zaměstnaných",
@@ -280,9 +282,11 @@ try:
     nuts2_data = nuts2_data.sort_values("time")
     snap_nuts2 = nuts2_data.groupby("geo", as_index=False).tail(1)
     latest_nuts2 = int(nuts2_data["time"].max())
+    warn_non_target_year(source="Eurostat lfst_r_lfe2ecomm", year=latest_nuts2, context="Cross-border commuting NUTS2 map reference year")
 
     data_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["value"].dropna()
     year_series = snap_nuts2.drop_duplicates(subset="geo").set_index("geo")["time"]
+    warn_years("Eurostat lfst_r_lfe2ecomm", year_series.values, context="Cross-border commuting NUTS2 region fill years")
 
     # Region long names from the GISCO NUTS layer (used for PGF tooltips).
     _nuts_path = fetch(_GISCO_NUTS_URL, suffix=".geojson")

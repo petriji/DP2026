@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from statout.map_europe import choropleth
 from statout.timeline import EU27 as _EU27, timeline
 from stattool.dataset import Dataset, _OECD_ISO3_TO_ISO2
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_oecd
 from stattool.style import (
     add_pgf_tooltips,
@@ -113,6 +114,11 @@ def main() -> None:
     print(
         f"Ternary primary B2 snapshot year (OECD coverage >=18): {snap_year}; "
         f"matched countries after LOCF: {snap_oecd.notna().sum()}"
+    )
+    warn_non_target_year(
+        source="OECD/CTS_CIT",
+        year=snap_year,
+        context="B2 snapshot year",
     )
     if missing_oecd:
         print("OECD missing countries after LOCF:", ", ".join(missing_oecd))
@@ -253,8 +259,21 @@ def main() -> None:
     if fallback_used.empty:
         print("Same-source OECD fallback used: no")
     else:
+        warn_fallback(
+            "Same-source OECD fallback used for COMB_CIT_RATE gaps",
+            source="OECD/CTS_CIT",
+        )
         print("Same-source OECD fallback used: yes")
         print(fallback_used.to_string(index=False))
+
+    expert_used = newest_df[newest_df["measure"] == "EATR_model"]
+    if not expert_used.empty:
+        warn_fallback(
+            "Expert fallback used for countries without OECD CTS_CIT coverage",
+            source="Expert assumption",
+            year=2026,
+            hardcoded=True,
+        )
 
     # Difference between primary and same-source alternatives where both exist.
     for alt in ["CIT_RATE", "CIT_RATE_LESS_SUB_NAT"]:

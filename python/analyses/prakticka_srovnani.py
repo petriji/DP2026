@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
 
+from stattool.data_quality import warn_fallback, warn_years
 from stattool.fetch import fetch_eurostat, fetch_oecd
 from stattool.dataset import Dataset
 from statout.table import save_table_tex
@@ -135,6 +136,10 @@ def _row_str(label: str, values: dict[str, str]) -> dict:
             **{COUNTRY_LABELS[c]: values.get(c, "--") for c in COUNTRIES}}
 
 
+def _warn_year_usage(source: str, context: str, years_used: dict[str, int]) -> None:
+    warn_years(source, years_used.values(), context=context)
+
+
 # ── 1. Download datasets ──────────────────────────────────────────────────────
 
 print("Downloading Eurostat data …")
@@ -180,6 +185,12 @@ for _nace in ("B-S_X_O", "B-S"):
         )
         _lc_nace = _nace
         print(f"  lc_lci_lev: using nace_r2={_nace}")
+        if _nace != "B-S_X_O":
+            warn_fallback(
+                "Labour-cost series fell back from B-S_X_O to broader B-S aggregate",
+                source="Eurostat lc_lci_lev",
+                year=YEAR,
+            )
         break
     except Exception as _e:
         print(f"  lc_lci_lev/{_nace}: {_e}")
@@ -291,6 +302,25 @@ try:
         f"nace={_chosen_nace or 'n/a'}, unit={_chosen_unit or 'n/a'},",
         "country-overrides=" + (", ".join(_country_overrides) if _country_overrides else "none"),
     )
+    if _chosen_nace and _chosen_nace != "B-S_X_O":
+        warn_fallback(
+            f"Job vacancy rate used {_chosen_nace} aggregate instead of preferred B-S_X_O",
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
+    if _chosen_unit and _chosen_unit != "AVG_3Y":
+        warn_fallback(
+            f"Job vacancy rate used {_chosen_unit} instead of preferred AVG_3Y",
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
+    if _country_overrides:
+        warn_fallback(
+            "Job vacancy rate filled missing countries with alternate NACE aggregates: "
+            + ", ".join(_country_overrides),
+            source="Eurostat jvs_a_r21",
+            year=YEAR,
+        )
 
     if not _jvr_raw.empty:
         ds_jvr = Dataset(_jvr_raw[["geo", "time", "value"]], name="Job vacancy rate", unit="%", source_url="Eurostat/jvs_a_r21")
@@ -458,9 +488,28 @@ v_lowwage, _yr_lowwage = _latest_by_geo(ds_lowwage, YEAR) if ds_lowwage else ({}
 v_cba,     _yr_cba     = _latest_by_geo(ds_cba,     YEAR) if ds_cba    else ({}, {})
 v_density, _yr_density = _latest_by_geo(ds_density, YEAR) if ds_density else ({}, {})
 
+_warn_year_usage("Eurostat nama_10_pc", "Comparative table GDP per capita row", _yr_gdp)
+_warn_year_usage("Eurostat lfsa_ewhun2", "Comparative table weekly hours row", _yr_hrs)
+_warn_year_usage("Eurostat prc_ppp_ind", "Comparative table PLI row", _yr_pli)
+_warn_year_usage("Eurostat earn_nt_taxwedge", "Comparative table tax wedge row", _yr_tax)
+_warn_year_usage("Eurostat ilc_di12", "Comparative table Gini row", _yr_gini)
+_warn_year_usage("Eurostat lfsi_emp_a", "Comparative table employment row", _yr_emp)
+_warn_year_usage("Eurostat demo_pjanind", "Comparative table dependency row", _yr_dep)
+if ds_jvr:
+    _warn_year_usage("Eurostat jvs_a_r21", "Comparative table vacancy row", _yr_jvr)
+if ds_apz:
+    _warn_year_usage("OECD LMPEXP", "Comparative table active LMP row", _yr_apz)
+if ds_lowwage:
+    _warn_year_usage("Eurostat earn_ses_pub1s", "Comparative table low-wage row", _yr_lowwage)
+if ds_cba:
+    _warn_year_usage("OECD AIAS ICTWSS AdjCov/CBC", "Comparative table coverage row", _yr_cba)
+if ds_density:
+    _warn_year_usage("OECD AIAS ICTWSS TUD", "Comparative table union-density row", _yr_density)
+
 # Labour cost EUR/h → PPS/h  (÷ PLI/100)
 if ds_lc_eur is not None:
     v_lc_eur, _yr_lc_eur = _latest_by_geo(ds_lc_eur, YEAR)
+    _warn_year_usage("Eurostat lc_lci_lev", "Comparative table labour-cost row", _yr_lc_eur)
     v_lc_pps = {
         c: v_lc_eur[c] / (v_pli[c] / 100)
         for c in COUNTRIES

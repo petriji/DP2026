@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import LATEX_PICS_DIR
+from stattool.data_quality import warn_non_target_year
 from stattool.style import (
     apply_style_pgf,
     savefig_pgf,
@@ -38,6 +39,7 @@ ds = load_union_density(start_period=2010)
 
 print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
+warn_non_target_year(source="OECD AIAS ICTWSS TUD", year=ds.latest_year, context="Union density map")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
 _values = (

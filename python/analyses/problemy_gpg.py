@@ -47,6 +47,7 @@ import numpy as np
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import (
@@ -120,6 +121,7 @@ gpg_snap = (
 )
 print(f"  GPG snapshot rows: {len(gpg_snap)}, median year: {gpg_snap['time'].median()}")
 snap_year = int(gpg_snap["time"].mode()[0]) if not gpg_snap.empty else 2022
+warn_non_target_year(source="Eurostat earn_gr_gpgr2", year=snap_year, context="Gender pay gap snapshot")
 
 # Build Dataset for choropleth
 gpg_df = (
@@ -223,6 +225,10 @@ if _has_pli:
     print("  EUR → PPS conversion applied")
 else:
     print("  WARNING: PLI unavailable --- keeping EUR values")
+    warn_fallback(
+        "PLI unavailable; SES percentile profiles remain in EUR instead of PPS",
+        source="Eurostat prc_ppp_ind",
+    )
 ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
 
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)
@@ -244,6 +250,7 @@ ses_snap = (
 print(f"  SES snapshot rows: {len(ses_snap)}")
 ses_year = int(ses_snap["time"].mode()[0]) if not ses_snap.empty else 2022
 _HAS_SES_DATA = len(ses_snap) >= 4
+warn_non_target_year(source="Eurostat earn_ses_hourly", year=ses_year, context="SES percentile profile snapshot")
 
 fig_b, ax_b = plt.subplots(figsize=cm2in(15, 9))
 

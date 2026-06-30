@@ -36,6 +36,7 @@ import matplotlib.ticker as ticker
 import pandas as pd
 
 from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
 
@@ -180,6 +181,7 @@ savefig_pgf(fig, "problemy_emigrace_vyvoj", strings=STRINGS)
 
 yr_min = int(df["time"].min()) if not df.empty else START_YEAR
 yr_max = int(df["time"].max()) if not df.empty else 2023
+warn_non_target_year(source="Eurostat migr_emi1ctz", year=yr_max, context="Emigration age-profile timeline latest available year")
 save_figure_tex_pgf(
     "problemy_emigrace_vyvoj",
     caption=(

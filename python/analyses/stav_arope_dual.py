@@ -39,6 +39,7 @@ import pandas as pd
 
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
+from stattool.data_quality import warn_fallback
 from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
@@ -107,6 +108,12 @@ eu_d3_eur = (
     .groupby("time")["OBS_VALUE"].mean()
 )
 eu_d3 = eu_d3_pps.combine_first(eu_d3_eur).rename("eu_d3")
+fallback_years = sorted(set(eu_d3_eur.index) - set(eu_d3_pps.index))
+if fallback_years:
+    warn_fallback(
+        f"EU27 D3 PPS series missing in years {fallback_years}; EUR used as fallback",
+        source="Eurostat/ilc_di01",
+    )
 
 # Country deciles D1..D9 in PPS (long → wide per country-year)
 _DEC_ORDER = [f"D{k}" for k in range(1, 10)]
