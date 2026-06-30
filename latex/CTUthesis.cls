@@ -2050,8 +2050,8 @@
 % ==============================================================================
 % Default content-file paths (without .tex extension, resolved at call time).
 %   Override in preamble with \softwarefile{path} / \attachmentsfile{path}.
-\gdef\CTU@softwarefile{texparts/references/seznamsoftwaru}
-\gdef\CTU@attachmentsfile{texparts/references/seznampriloh}
+\gdef\CTU@softwarefile{texparts/references/list_software}
+\gdef\CTU@attachmentsfile{texparts/references/list_attachments}
 \newcommand\softwarefile[1]{\gdef\CTU@softwarefile{#1}}
 \newcommand\attachmentsfile[1]{\gdef\CTU@attachmentsfile{#1}}
 % \CTUbackmatter: typeset all toggled back-matter sections in the standard order:
