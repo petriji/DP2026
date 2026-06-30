@@ -141,7 +141,13 @@ def to_latex(
             cap_line += f"\\label{{{label}}}"
         cap_line += r" \\"
 
-        cont_cap_line = "  \\caption*{(pokra\u010dov\u00e1n\u00ed)} \\\\"
+        # Keep continuation header text as a plain row, not a caption,
+        # so hyperlink/table anchors are emitted only from the first caption.
+        # No auto-numbering or caption setup on continuation pages.
+        cont_cap_line = (
+            f"  \\multicolumn{{{n_cols}}}{{l}}"
+            "{\\footnotesize(pokra\u010dov\u00e1n\u00ed tabulky)} \\\\"
+        )
         foot_line = (
             f"  \\multicolumn{{{n_cols}}}{{r}}"
             "{\\footnotesize(pokra\u010duje na dal\u0161\u00ed str\u00e1nce)} \\\\"
