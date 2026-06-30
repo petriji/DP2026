@@ -1260,7 +1260,7 @@ def save_figure_tex(
         footnote_line = ""
 
     tex = (
-        f"\\begin{{figure}}[htbp]\n"
+        f"\\begin{{figure}}[H]\n"
         f"  \\centering\n"
         f"  \\includegraphics[width={width}]{{{include_path}}}\n"
         f"  \\caption{{{caption_str}}}\n"
@@ -1379,7 +1379,7 @@ def save_figure_tex_pgf(
                     lines.append(f"\\providecommand{m}{{{default:g}}}%")
             lines.append(f"\\def{caption_macro}{{{caption_str}}}%")
             lines.append(f"%")
-            lines.append(f"\\begin{{figure}}[htbp]")
+            lines.append(f"\\begin{{figure}}[H]")
             lines.append(f"  \\centering")
             lines.append(f"  \\input{{{include_path}}}")
             lines.append(f"  \\caption{{{caption_macro}}}")
@@ -1447,7 +1447,7 @@ def save_figure_tex_pgf(
         tex = f"\\inputpgffigure{{{name}}}\n"
     else:
         tex = (
-            f"\\begin{{figure}}[htbp]\n"
+            f"\\begin{{figure}}[H]\n"
             f"  \\centering\n"
             f"  \\input{{{include_path}}}\n"
             f"  \\caption{{{caption_str}}}\n"

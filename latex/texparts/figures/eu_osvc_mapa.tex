@@ -3,7 +3,7 @@
 % To regenerate defaults, delete this file and re-run the script.
 \def\strEuOsvcMapaTitle{Podíl \acs{OSVČ} na zaměstnanosti (2025)}%
 \def\strEuOsvcMapaColorbarLabel{podíl \acs{OSVČ} [\%]}%
-\def\strEuOsvcMapaCaption{Podíl \acs{OSVČ} na celkové zaměstnanosti, EU mapa, 2025. Zdroj dat: Eurostat~\cite{eurostat_lfsa_egaps}.}%
+\def\strEuOsvcMapaCaption{Podíl \acs{OSVČ} na celkové zaměstnanosti, \acs{geo-EU27} mapa, 2025. Zdroj dat: Eurostat~\cite{eurostat_lfsa_egaps}.}%
 %
 
 % --- Per-label y-nudge knobs (override with \renewcommand)
@@ -14,7 +14,7 @@
 \providecommand\NudgeEuOsvcMapaDe{0pt}%
 \providecommand\NudgeEuOsvcMapaPl{0pt}%
 \providecommand\NudgeEuOsvcMapaSk{-5pt}%
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{\input{../python/figures/eu_osvc_mapa.pgf}}
   \caption{\strEuOsvcMapaCaption}
