@@ -87,10 +87,21 @@ else:
 if YLIM is not None:
     fig.axes[0].set_ylim(*YLIM)
 
+if IS_POSTER_RUN:
+    # Poster: keep a small extra canvas margin on both sides so the rotated
+    # y-label and the rightmost x-tick label are not clipped after resize.
+    _spa = dict(getattr(fig, "_subplots_adjust_kwargs", {}))
+    _spa["left"] = max(float(_spa.get("left", 0.125)), 0.14)
+    _spa["right"] = min(float(_spa.get("right", 1.0)), 0.945)
+    fig._subplots_adjust_kwargs = _spa
+    # Poster: push x-axis label 4pt further down.
+    fig.axes[0].xaxis.labelpad += 4
+
 # COVID-19 annotation: 2020 spike was caused by emergency short-time work
 # schemes (Kurzarbeit/furlough), extended unemployment benefits, and wage
 # subsidies. DK 'Lønkompensation' covered 75% of wages --- hence the highest spike.
 _ax = fig.axes[0]
+_ax.tick_params(axis="y", pad=6)
 _ax.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
 _ax.text(2020.2, 1.9, "COVID-19", fontsize=FIGURE_COMPACT_LABEL_SIZE,
          color="#CC4444", alpha=0.85, va="top")
@@ -152,6 +163,7 @@ if YLIM2 is not None:
     fig2.axes[0].set_ylim(*YLIM2)
 
 _ax2 = fig2.axes[0]
+_ax2.tick_params(axis="y", pad=6)
 _ax2.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
 _ax2.text(2020.2, 1.7, "COVID-19", fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#CC4444", alpha=0.85, va="top")
 

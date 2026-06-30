@@ -336,6 +336,8 @@ STRINGS_A = {
     "xlabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
 }
 ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+fig_a._suptitle_gap_pt = 4
+fig_a._pgf_trim_vertical = True
 fig_a.suptitle(STRINGS_A["title"], fontsize=FIGURE_TEXT_SIZE, y=0.995)
 
 def _fmt_tis(v: float | None) -> str:
@@ -372,7 +374,8 @@ ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
 ax_a.tick_params(axis="y", which="minor", left=False)
 ax_a.set_axisbelow(True)
 
-fig_a.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
+fig_a._tight_layout_kwargs = {"pad": 0.15}
+fig_a._subplots_adjust_kwargs = {"top": 0.94, "bottom": 0.08}
 savefig_pgf(fig_a, "problemy_verejny_soukromy", strings=STRINGS_A)
 save_figure_tex_pgf(
     "problemy_verejny_soukromy",

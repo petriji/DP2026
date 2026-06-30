@@ -2,6 +2,10 @@
 
 *Jiří Petříček 2026 · Built with Claude Sonnet 4.6, April 2026*
 
+> New to this repository? See [README_SETUP.md](../README_SETUP.md) at the
+> repository root for how to install Python and create the virtual environment
+> before following the pipeline details below.
+
 Generates figures and LaTeX snippets for the CTU thesis.
 Sources include Eurostat data (SDMX API) and Czech statutory models
 (pension, tax wedge, DPH).
@@ -21,6 +25,20 @@ PGF export now includes companion-asset optimization:
 
 All generated outputs (`texparts/python/`, `figures/`) are gitignored and auto-created on first run.
 `texparts/figures/` is **git-tracked** — do not delete it.
+
+## Dependencies
+
+Core Python library requirements are specified in `python/requirements.txt`:
+- **pandas** (`>=2.0`) — tabular data transformation and modeling
+- **geopandas** (`>=0.14`) & **geodatasets** — geospatial maps and choropleths (from Natural Earth data)
+- **matplotlib** (`>=3.8`) & **matplotlib-scalebar** — high-quality vector/PGF plotting
+- **scipy** — statistical distribution matching and mathematical operations
+- **requests** — secure HTTP downloads for Eurostat JSON/SDMX data
+- **tqdm** — terminal execution feedback
+- **openpyxl** & **xlrd** (`>=2.0.1`) — reading spreadsheet sheets (`.xlsx` and legacy `.xls` formats)
+
+Optional reviewer comment parsing and importing utility dependencies are in `python/requirements-review.txt`:
+- **PyMuPDF** (`>=1.24`) — PDF comment/highlight extraction and triage report compilation
 
 ## PGF space-saving concepts (roadmap)
 
@@ -62,6 +80,13 @@ bash run.sh stats_analytics.py --force all # force-regenerate all
 bash run.sh stats_analytics.py --list      # show which texparts are referenced
 ```
 
+> **Runtime:** a full `stats_analytics.py` run (from an empty cache) takes
+> roughly **10 minutes**, dominated by network downloads from Eurostat/OECD/
+> other providers — actual time depends heavily on your connection speed.
+> Once source data is cached under `python/data/`, incremental re-runs (only
+> regenerating missing outputs) are much faster. `--force all` re-runs every
+> script but reuses cached downloads, so it doesn't repeat network time.
+
 ### Data quality warnings (target year = 2025)
 
 The analytics runner now performs a post-run data-quality audit focused on year transparency:
@@ -74,6 +99,40 @@ The analytics runner now performs a post-run data-quality audit focused on year 
 Analysis scripts can emit standardised warnings via `stattool.data_quality`:
 - `warn_fallback(...)` for secondary/hardcoded/expert fallback paths
 - `warn_non_target_year(...)` for non-2025 data use
+
+## Optional MCP data server
+
+The repository includes an optional MCP server for agents that need structured
+access to the existing data layer.  It is a thin wrapper around `stattool.fetch`
+and `stattool.dataset`; the normal thesis build still calls those Python APIs
+directly and does not require an MCP server to be running.
+
+Run it from the repository root with the project virtual environment:
+
+```bash
+bash python/run.sh -m mcp_servers.dp_data_server
+```
+
+Typical VS Code MCP configuration:
+
+```json
+{
+  "servers": {
+    "dp-data": {
+      "command": "bash",
+      "args": ["${workspaceFolder}/python/run.sh", "-m", "mcp_servers.dp_data_server"]
+    }
+  }
+}
+```
+
+Exposed tools are intentionally data-oriented and bounded in size:
+- `eurostat_fetch`, `oecd_fetch`, `ilostat_fetch` fetch provider data into
+  `python/data` and return coverage metadata.
+- `dataset_coverage` and `dataset_preview` inspect cached files without sending
+  whole datasets through MCP.
+- `data_cache_list`, `analytics_registry_list`, and `data_quality_report` expose
+  pipeline context for agents.
 
 ## Optional review tooling
 
@@ -91,16 +150,67 @@ See `tools/README-review.md` for details and caveats.
 
 ## LaTeX integration
 
-Figures are generated automatically before every LaTeX build via two hooks:
-
-- **LaTeX Workshop** (VS Code): use the recipe *`stats_analytics → pdflatex → biber → pdflatex×2`*; `stats_analytics.py` runs as the first tool, then the full bibliography cycle follows.
-- **`latexmk`** (CLI): `latexmkrc` runs `stats_analytics.py` as a pre-build step; set `SKIP_PYTHON_ANALYTICS=1` to bypass it.
+- **VS Code / LaTeX Workshop:** the **Build + Analytics** recipe (and its
+  force/poster variants) runs `stats_analytics.py` first, then the full
+  bibliography cycle. See the recipe table in
+  [latex/README.md](../latex/README.md#vs-code--latex-workshop-recipes).
+- **`latexmk`** (CLI): analytics regeneration is **opt-in** — `latexmkrc` only
+  runs `stats_analytics.py` as a pre-build step when `RUN_PYTHON_ANALYTICS=1`
+  is set (`RUN_PYTHON_ANALYTICS=1 latexmk -pdf -outdir=build main.tex`);
+  otherwise the build uses whatever figures/tables already exist.
 
 When run from the VS Code recipes, analytics output is saved to
 `latex/build/stats-analytics.log` (or `stats-analytics-force.log` for the
 force-regeneration variant).
 
-Both hooks are no-ops when all outputs already exist.
+When it does run, the hook is a no-op if all outputs already exist.
+
+## A1 Poster figures
+
+Poster figures use smaller font sizes than the thesis equivalents (one step
+down) and are saved as `python/figures/*_poster.pgf` so they never overwrite
+the thesis PGFs.  The poster variant is controlled by `DP_POSTER_RUN=1`.
+
+### Full poster build recipe
+
+```bash
+# 1. Generate poster-optimised PGF figures
+cd python
+bash run_poster_figures.sh
+
+# 2. Build the poster PDF (biber + two pdflatex passes for bibliography)
+cd ../latex
+pdflatex -interaction=nonstopmode -cnf-line=extra_mem_bot=15000000 \
+         -cnf-line=extra_mem_top=15000000 -output-directory=build poster.tex
+biber --input-directory=. --output-directory=build build/poster
+pdflatex -interaction=nonstopmode -cnf-line=extra_mem_bot=15000000 \
+         -cnf-line=extra_mem_top=15000000 -output-directory=build poster.tex
+```
+
+Output: `latex/build/poster.pdf`
+
+### What `run_poster_figures.sh` does
+
+Sets `DP_POSTER_RUN=1` and runs the six analysis scripts that produce poster
+figures.  Each script detects the env var and:
+
+- calls `poster_stem("stem")` → returns `"stem_poster"` so `savefig_pgf` writes
+  `figures/stem_poster.pgf` without overwriting the thesis `figures/stem.pgf`
+- applies poster-specific sizes (via `IS_POSTER_RUN`) inside shared helpers
+  (`scatter.py`, `ternary.py`, `map_europe.py`)
+- skips `save_figure_tex_pgf()` (thesis `.tex` wrappers are not needed for the poster)
+
+Scripts run: `eu_pokryti_kv_mapa`, `eu_hustota_mapa`, `eu_apz_vydaje`,
+`problemy_cz_model`, `korelace_analyza`, `practical_ternary_social_dialog`.
+
+### Poster-specific size constants (`config.py`)
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `IS_POSTER_RUN` | `DP_POSTER_RUN == "1"` | gate poster-only code paths |
+| `POSTER_FIGURE_LABEL_SIZE` | `FIGURE_LABEL_SIZE - 1` | axis/tick labels |
+| `POSTER_FIGURE_COMPACT_LABEL_SIZE` | `FIGURE_COMPACT_LABEL_SIZE - 1` | y-labels in scatter 2×2 |
+| `poster_stem(s)` | `s + "_poster"` or `s` | output filename selector |
 
 ## Layout
 
@@ -110,6 +220,7 @@ python/
 ├── analytics_registry.toml – maps keys → scripts + texpart patterns
 ├── stats_analytics.py      – orchestrator (called by latexmkrc pre-build)
 ├── requirements.txt        – pip dependencies
+├── mcp_servers/            – optional MCP servers for agent-facing data tools
 ├── stattool/               – data layer
 │   ├── fetch.py            – Eurostat SDMX download + cache
 │   ├── dataset.py          – Dataset wrapper (pivot, filter, normalise)
@@ -119,51 +230,17 @@ python/
 │   ├── map_europe.py       – choropleth map (EPSG:3035)
 │   ├── scatter.py          – scatter plot
 │   └── table.py            – LaTeX table from DataFrame
-└── analyses/               – one script per figure group
-  ├── stav_socialni_mir_data.py – shared B4 source for ternary + social-peace maps
-    ├── stav_korporatni_dan.py – B2 source diagnostics (OECD CTS_CIT map + timeline)
-    ├── cz_tax_model.py     – CZ tax/levy: pure calculation module (no matplotlib, no external imports)
-    ├── problemy_cz_duchod.py – CZ pension: pure calculation module (imports levy constants from cz_tax_model)
-    ├── cz_calculator.py    – Individual pension calculator (VVZ/PK history, earnings history, early/late/children)
-    ├── problemy_cz_model.py       – all 7 CZ model figures (imports from the two modules above)
-    ├── stav_hdp_vyvoj.py – GDP per capita in PPS (EU timeline)
-    ├── eu_danovy_klin.py    – OECD tax wedge choropleth
-    ├── stav_arope.py    – At-risk-of-poverty maps + timeline
-    ├── prakticka_srovnani.py – Flexicurity indicator table
-    ├── stav_hustota_vyvoj.py – Trade union density over time
-    ├── eu_apz_vydaje.py  – Labour market policy expenditure
-    ├── eu_konvergence.py – Wage–GDP convergence scatter
-    ├── eu_produktivita_prijem_trajektorie.py – Productivity vs hourly net income trajectories
-    ├── korelace_hustota_gini.py – Union density vs Gini scatter
-    ├── stav_ipp_mzdy.py  – IPP wage growth analysis
-    ├── stav_ipp_doplnkove.py – IPP supplementary figures
-    ├── problemy_sektor_mzdy.py – Sector wages, LCI growth, dispersion
-    ├── problemy_stratifikace.py – Regional wages, gender gap, percentiles
-    ├── vyhled_zavislost.py – Old-age dependency ratio map
-    ├── stav_zamestnanost.py – Employment rate timeline
-    ├── eu_prijem_pps.py   – Income in PPS choropleth
-    ├── eu_gini_prijem.py – Gini coefficient timeline
-    ├── problemy_mzda_duchod.py – Wage–pension distribution
-    ├── eu_bohatstvi_mapa.py      – Gini wealth coefficient choropleth map
-    ├── eu_bohatstvi_vyvoj.py – Gini wealth inequality over time
-    ├── eu_bohatstvi_top20.py – Wealth shares (top 20 %) over time
-    ├── eu_pokryti_kv_mapa.py      – Collective agreement coverage choropleth
-    ├── korelace_analyza.py – KV coverage correlation analyses
-    ├── eu_pokryti_prijem.py – KV coverage vs. income scatter
-    ├── stav_ipp_rozsah.py       – IPP collective agreement breadth
-    ├── eu_odvetvove_mzdy.py – Sector net wages in PPS
-    ├── problemy_verejny_soukromy.py – Public vs. private sector wage comparison
-    ├── problemy_gpg.py – Wage stratification by gender
-    ├── eu_hustota_mapa.py    – Trade union density choropleth map
-    ├── eu_apz_mapa.py  – LMP expenditure choropleth map
-    ├── eu_cenova_hladina.py              – Price level index choropleth map
-    ├── eu_osvc_mapa.py  – Self-employment rate choropleth map
-    ├── stav_prijem_pomer.py – Net income ratio timeline
-    ├── vyhled_porodnost.py    – Natality (TFR) maps and timeline
-    ├── problemy_jazyky.py      – Language skills maps (age, ISCED, total)
-    ├── problemy_dojezdeni.py – Cross-border commuting maps and timeline
-    └── problemy_emigrace.py        – Czech emigration timeline
+└── analyses/               – one script per figure group (60+ scripts)
 ```
+
+> The full, authoritative list of analysis scripts and which figure/table each
+> one produces is **[analytics_registry.toml](analytics_registry.toml)** — one
+> `[key]` section per script, mapping it to its `texparts`/`pics` output stems.
+> Run `bash run.sh stats_analytics.py --list` to print the same mapping from
+> the command line. Do not maintain a second copy of this list here; it goes
+> stale as scripts are added/renamed (as of writing, `analyses/` has 60+ files
+> — always check `analytics_registry.toml` or the directory itself for the
+> current set).
 
 ## Adding a new figure
 

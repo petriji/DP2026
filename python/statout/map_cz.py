@@ -287,14 +287,15 @@ def choropleth_cz(
                 cx, cy = cx + dx, cy + dy
                 if not (x_lim[0] <= cx <= x_lim[1] and y_lim[0] <= cy <= y_lim[1]):
                     continue
-                disp = label_fmt.format(val)
+                disp = label_fmt.format(val).replace(".", ",")
                 if _is_pgf:
                     # Contour halo (white outline) for readability, without
                     # path_effects — which PGF renders as outlined glyph paths
                     # and therefore strips the text content entirely.
                     text = rf"\contour{{white}}{{{disp}}}"
                     if _names.get(nuts_id):
-                        tip = f"{_names[nuts_id]}: {_tip_fmt.format(val)}"
+                        tip_val = _tip_fmt.format(val).replace(".", ",")
+                        tip = f"{_names[nuts_id]}: {tip_val}"
                         text = rf"\pdftooltip{{{text}}}{{{tip}}}"
                     ax.text(
                         cx, cy, text,
@@ -338,7 +339,9 @@ def choropleth_cz(
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     cb_width_ax = 0.08
     gap_4pt_ax = (4.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
-    cb_anchor_ax = 1.045 + gap_4pt_ax
+    gap_2pt_ax = (2.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
+    # Keep the existing 8pt separation and add another 2pt as requested.
+    cb_anchor_ax = 1.045 + gap_4pt_ax + gap_4pt_ax + gap_2pt_ax
     cax = inset_axes(
         ax, width=cb_width_ax, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
         loc="center left",
@@ -349,27 +352,58 @@ def choropleth_cz(
     cb = fig.colorbar(sm, cax=cax, label=colorbar_label)
     if colorbar_label:
         cb.set_label(colorbar_label, fontsize=FIGURE_LABEL_SIZE)
+    cb.formatter = mpl.ticker.FuncFormatter(lambda x, _pos: f"{x:g}".replace(".", ","))
+    cb.update_ticks()
     cb.ax.tick_params(labelsize=FIGURE_LABEL_SIZE)
+
+    # Estimate right-side content width purely from typographic metrics.
+    # Agg pixel measurements in PGF mode overestimate LaTeX/CM glyph widths
+    # by ~2×, producing an over-wide block_factor and empty right space.
+    # Strategy: char_count × 0.50 em (CM tabular digit) + labelpad + 1 em label.
+    fig.canvas.draw()  # populate tick label text
+    _tick_strs = [
+        t.get_text() for t in cb.ax.get_yticklabels() if t.get_text().strip()
+    ]
+    _max_chars = max((len(s) for s in _tick_strs), default=2)
+    _fs = float(FIGURE_LABEL_SIZE)
+    # right-side content in pt: compact estimate tuned to LaTeX output
+    # (digits in CM are narrower than Agg reports for PGF previews).
+    _right_content_pt = _max_chars * _fs * 0.38 + 2.0 + (_fs * 0.45)
+    # Convert to figure fraction (pt → inches → fraction)
+    _right_content_frac = _right_content_pt / 72.0 / fig.get_figwidth()
 
     # ── Axes formatting ───────────────────────────────────────────────────────
     ax.set_xlim(x_lim)
     ax.set_ylim(y_lim)
     ax.set_axis_off()
 
+    auto_figsize = figsize is None and ax is None
+
     # Reserve explicit right margin for colorbar ticks/label so they do not
     # protrude past the figure bbox when included at exact \linewidth width.
     # Fit (map + colorbar) into full column width with symmetric side margins.
-    side_margin = 0.03
-    block_factor = cb_anchor_ax + cb_width_ax
-    axes_width = (1.0 - 2.0 * side_margin) / block_factor
-    axes_left = side_margin
+    title_center_x = 0.5
+    # Fit the whole block (map + colorbar + right label content), then center it
+    # and nudge slightly right so optical alignment matches surrounding text.
+    side_margin = 0.01
+    axes_width = (
+        (1.0 - (2.0 * side_margin) - _right_content_frac)
+        / (cb_anchor_ax + cb_width_ax)
+    )
+    block_width = axes_width * (cb_anchor_ax + cb_width_ax) + _right_content_frac
+    # Previous +4pt shift was still visually left; add +20pt more.
+    center_shift_right = (24.0 / 72.0) / fig.get_figwidth()
+    axes_left = ((1.0 - block_width) / 2.0) + center_shift_right
+    max_left = 1.0 - block_width
+    axes_left = min(max_left, max(0.0, axes_left))
+    title_center_x = axes_left + (block_width / 2.0)
     axes_right = axes_left + axes_width
-    layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": 0.01}
+    layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": 0.001}
 
     if title:
         # Aligned with statout.map_europe.choropleth so axes/colourbar layout
         # matches and the rasterised colourbar dedups via _shared/.
-        layout_kwargs["top"] = 0.88
+        layout_kwargs["top"] = 0.90
         fig.subplots_adjust(**layout_kwargs)
         fig._subplots_adjust_kwargs = layout_kwargs
         fig._tight_layout_kwargs = {"pad": 0.15}
@@ -382,11 +416,28 @@ def choropleth_cz(
         fig.suptitle(
             wrapped_title,
             fontsize=FIGURE_TITLE_SIZE,
-            y=0.92, ha="center",
+            y=0.935, ha="center",
+            x=title_center_x,
         )
     else:
         fig.subplots_adjust(**layout_kwargs)
         fig._subplots_adjust_kwargs = layout_kwargs
         fig._tight_layout_kwargs = {"pad": 0.15}
+
+    if auto_figsize:
+        top_frac = float(layout_kwargs.get("top", 0.88))
+        bottom_frac = float(layout_kwargs.get("bottom", 0.01))
+        axes_width_frac = float(layout_kwargs["right"] - layout_kwargs["left"])
+        y_span = y_lim[1] - y_lim[0]
+        if y_span > 0 and top_frac > bottom_frac:
+            data_aspect = (x_lim[1] - x_lim[0]) / y_span
+            target_h_in = (
+                (fig.get_figwidth() * axes_width_frac / data_aspect)
+                / (top_frac - bottom_frac)
+            )
+            if target_h_in > 0 and abs(target_h_in - fig.get_figheight()) > 0.02:
+                fig.set_size_inches(fig.get_figwidth(), target_h_in, forward=True)
+                fig.subplots_adjust(**layout_kwargs)
+                fig._subplots_adjust_kwargs = layout_kwargs
 
     return fig
