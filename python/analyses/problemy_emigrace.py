@@ -2,7 +2,7 @@ r"""
 Czech citizen emigration timeline (migr_emi1ctz).
 
 Shows the number of Czech citizens emigrating annually, disaggregated by
-broad age group (youth 15--34 vs. mid-career 35--49) to illustrate the
+broad age group (youth 15–34 vs. mid-career 35–49) to illustrate the
 age profile of brain-drain-relevant emigration.
 
 Data source: Eurostat, ``migr_emi1ctz``
@@ -12,7 +12,7 @@ Data source: Eurostat, ``migr_emi1ctz``
 
 Note: migr_emi1ctz counts emigrants *leaving* a given country (geo) who hold
 a given citizenship (citizen).  Filtering geo=CZ & citizen=CZ gives Czech
-citizens emigrating from CZ.  NOT a destination breakdown -- total outflows.
+citizens emigrating from CZ.  NOT a destination breakdown – total outflows.
 
 Output
 ------
@@ -35,16 +35,15 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
-from stattool.data_quality import warn_non_target_year
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch_eurostat
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 START_YEAR = 2008
 CZ_COLOR   = COUNTRY_COLORS["CZ"]
 
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading migr_emi1ctz …")
@@ -139,12 +138,12 @@ if have_buckets and not df_youth.empty and not df_mid.empty:
     ax.plot(
         df_youth["time"], df_youth[val_col] / 1_000,
         color=PALETTE[0], linewidth=2.2, marker="o", markersize=3.5,
-        label="15--34 let (mládež)",
+        label="15–34 let (mládež)",
     )
     ax.plot(
         df_mid["time"], df_mid[val_col] / 1_000,
         color=PALETTE[1], linewidth=2.2, marker="s", markersize=3.5,
-        label="35--49 let (střední kariéra)",
+        label="35–49 let (střední kariéra)",
     )
     if not df_total.empty:
         ax.plot(
@@ -163,33 +162,27 @@ ax.yaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.")
 )
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-STRINGS = {
-    "title": r"Emigrace občanů \acs{geo-CZ} podle věkové skupiny",
-    "xlabel": "rok",
-    "ylabel": "počet emigrantů [tis.]",
-}
-ax.set_xlabel(STRINGS["xlabel"], fontsize=FIGURE_LABEL_SIZE)
-ax.set_ylabel(STRINGS["ylabel"], fontsize=FIGURE_LABEL_SIZE)
+ax.set_xlabel("rok", fontsize=FONT_SIZE)
+ax.set_ylabel("počet emigrantů [tis.]", fontsize=FONT_SIZE)
 ax.set_title(
-    STRINGS["title"],
-    fontsize=FIGURE_TEXT_SIZE,
+    "Emigrace občanů ČR podle věkové skupiny",
+    fontsize=FONT_SIZE,
 )
-ax.legend(frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE)
+ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "problemy_emigrace_vyvoj", strings=STRINGS)
+savefig(fig, "problemy_emigrace_vyvoj", out_dir=LATEX_PICS_DIR)
 
 yr_min = int(df["time"].min()) if not df.empty else START_YEAR
 yr_max = int(df["time"].max()) if not df.empty else 2023
-warn_non_target_year(source="Eurostat migr_emi1ctz", year=yr_max, context="Emigration age-profile timeline latest available year")
-save_figure_tex_pgf(
+save_figure_tex(
     "problemy_emigrace_vyvoj",
     caption=(
-        f"Emigrace z~\\acs{{geo-CZ}} podle věkové skupiny, {yr_min}--{yr_max}."),
+        f"Emigrace z~ČR podle věkové skupiny, {yr_min}--{yr_max}."
+    ),
     cite_keys="eurostat_migr_emi1ctz",
     label="fig:problemy_emigrace_vyvoj",
-    resizebox_width=r"\linewidth",
-    strings=STRINGS,
+    width=r"0.95\linewidth",
 )
 
 print("Done.")

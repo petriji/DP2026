@@ -1,5 +1,5 @@
 r"""
-CB coverage × GDP per capita scatter -- OECD/EU countries.
+CB coverage × GDP per capita scatter – OECD/EU countries.
 
 Illustrates the correlation between collective bargaining coverage (% of
 salaried workers covered) and GDP per capita in PPS (EU27=100), 
@@ -28,23 +28,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd, fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    load_angle_nudges_from_figure_tex,
-    savefig_pgf,
-    save_figure_tex_pgf,
-)
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.scatter import scatter_xy
 from statout.timeline import EU27
 
-# ── Parameters ─────────────────────────────────────────────────────────────────
+# ── Parameters ────────────────────────────────────────────────────────────────
 
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-LABEL_ANGLE_NUDGES = {geo: 21.8 for geo in HIGHLIGHT_COUNTRIES}
 START_YEAR = 2010
 
-# ── 0. Style ──────────────────────────────────────────────────────────────────────
-apply_style_pgf()
+# ── 0. Style ──────────────────────────────────────────────────────────────────
+apply_style()
 
 # ── 1. Download CB coverage ───────────────────────────────────────────────────
 # CBC dataset: ERB = % salaried employees covered by collective agreements
@@ -74,41 +68,39 @@ ds_gdp = Dataset.from_sdmx_csv(
     source_url="Eurostat/nama_10_pc",
 )
 
-STRINGS = {
-    "title": r"Korelace: pokrytí \acs{KV} a~\acs{HDP} na obyvatele",
-    "xlabel": r"pokrytí \acs{KV} [\%]",
-    "ylabel": r"\acs{HDP} na obyvatele [\acs{PPS}, \acs{geo-EU}27 = 100]",
-}
-# ── 3. Scatter plot ───────────────────────────────────────────────────────────────
+# ── 3. Scatter plot ───────────────────────────────────────────────────────────
 fig = scatter_xy(
     ds_cbc,
     ds_gdp,
-    title=STRINGS["title"],
-    xlabel=STRINGS["xlabel"],
-    ylabel=STRINGS["ylabel"],
+    title="Korelace: pokrytí KV a HDP na obyvatele",
+    xlabel="pokrytí KV [%]",
+    ylabel="HDP na obyvatele [PPS, EU27 = 100]",
     trendline=True,
     label_points=True,
     highlight=HIGHLIGHT_COUNTRIES,
     x_min=0,
     countries=sorted(EU27),
     year_tolerance=3,
-    label_angle_nudges=load_angle_nudges_from_figure_tex("eu_pokryti_prijem", LABEL_ANGLE_NUDGES),
 )
 
 # ── 4. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_pokryti_prijem", strings=STRINGS)
+savefig(fig, "eu_pokryti_prijem", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 common_years = sorted(set(ds_cbc.years) & set(ds_gdp.years))
 display_year = common_years[-1] if common_years else "?"
 
-save_figure_tex_pgf(
+save_figure_tex(
     "eu_pokryti_prijem",
-    caption=f"Pokrytí \\acs{{KS}} a~\\acs{{HDP}} na obyvatele v~paritě kupní síly (\\acs{{geo-EU27}} = 100), pro státy OECD/\\acs{{geo-EU}}, {display_year}. Přerušovaná čára -- regrese \\acs{{MNČ}}",
+    caption=(
+        f"Pokrytí KV a~HDP na obyvatele v~paritě kupní síly (EU27\u00a0=\u00a0100), "
+        f"pro státy OECD/EU, {display_year}. "
+        f"Přerušovaná čára – regrese OLS."
+    ),
+
     label="fig:eu_pokryti_prijem",
+    width=r"0.85\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct,eurostat_nama_10_pc_PPS_EU27eq100",
-    strings=STRINGS,
-    angle_labels=LABEL_ANGLE_NUDGES,
 )
 
 print("Done.")

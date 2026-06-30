@@ -1,5 +1,5 @@
 r"""
-Top 5 % wealth share timeline -- CZ, AT, DE, DK, SK, FI.
+Top 5 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
 
 Shows changes in the top 5 % net wealth share (% of total household net
 wealth) from OECD HFCS survey waves.  The top 5 % captures the broadest
@@ -24,10 +24,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import matplotlib.pyplot as plt
 
-from config import COUNTRY_COLORS, FIGURE_LABEL_SIZE, LATEX_PICS_DIR
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_oecd
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ COUNTRIES = ["CZ", "AT", "DE", "DK", "SK", "FI"]
 START_YEAR = 2008
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # WEALTH dataset: SH_TOP5 = top 5 % net wealth share (% of total)
@@ -49,7 +49,7 @@ ds = Dataset.from_oecd_csv(
     filters={"MEASURE": "SH_TOP5"},
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
 
 # ── 2. Separate all-countries data from highlighted subset ────────────────────
 ds_all = ds   # keep all for grey cloud
@@ -61,10 +61,10 @@ ds_highlighted = Dataset(
 )
 
 # ── 3. Plot ───────────────────────────────────────────────────────────────────
-# Survey data is sparse --- plot as markers connected by dashed lines per country
+# Survey data is sparse — plot as markers connected by dashed lines per country
 fig, ax = plt.subplots(figsize=cm2in(15, 9))
 
-# Grey cloud --- all other countries in the dataset
+# Grey cloud — all other countries in the dataset
 for country in ds_all.countries:
     if country in COUNTRIES:
         continue
@@ -103,26 +103,21 @@ for country in COUNTRIES:
         f"{country}",
         xy=(last[ds_highlighted.time_col], last[ds_highlighted.value_col]),
         xytext=(4, 0), textcoords="offset points",
-        fontsize=FIGURE_LABEL_SIZE, color=color, va="center",
+        fontsize=FONT_SIZE, color=color, va="center",
     )
 
-STRINGS = {
-    "title": r"Podíl top 5\,\% domácností na čistém jmění",
-    "xlabel": r"rok (\acs{HFCS} vlna)",
-    "ylabel": r"podíl top 5\,\% domácností na čistém jmění [\%]",
-}
-ax.set_xlabel(STRINGS["xlabel"])
-ax.set_ylabel(STRINGS["ylabel"])
-ax.set_title(STRINGS["title"])
+ax.set_xlabel("rok (HFCS vlna)")
+ax.set_ylabel("podíl top 5 % domácností na čistém jmění [%]")
+ax.set_title("Podíl top 5 % domácností na čistém jmění")
 ax.set_ylim(20, 60)
 if ds_all.years:
-    ax.set_xlim(ds_all.years[0] - 1, max(ds_all.years[-1], 2025))
+    ax.set_xlim(ds_all.years[0] - 1, ds_all.years[-1] + 1)
 
 # ── 4. Save ───────────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_bohatstvi_top20", strings=STRINGS)
+savefig(fig, "eu_bohatstvi_top20", out_dir=LATEX_PICS_DIR)
 
 # ── 5. LaTeX snippet ──────────────────────────────────────────────────────────
-save_figure_tex_pgf(
+save_figure_tex(
     "eu_bohatstvi_top20",
     caption=(
         f"Podíl top 5\\,\\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
@@ -130,9 +125,8 @@ save_figure_tex_pgf(
         "Šedé linie = ostatní země v~datové sadě."
     ),
     label="fig:eu_bohatstvi_top20",
-    resizebox_width=r"\linewidth",
+    width=r"0.95\linewidth",
     cite_key="oecd_hfcs_wealth_top5_PC",
-    strings=STRINGS,
 )
 
 print("Done.")

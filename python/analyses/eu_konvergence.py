@@ -33,10 +33,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE, FIGURE_TITLE_SIZE
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from statout.timeline import EU27
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ EXCLUDE_OUTLIERS = {"LU", "IE"}   # extreme outliers: ~270 and ~175 EU27=100
 START_YEAR = 2004
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading Eurostat data …")
@@ -60,7 +60,7 @@ path_lp = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# Net annual earnings in PPS (single person, no children, 100 % AW) -- all countries
+# Net annual earnings in PPS (single person, no children, 100 % AW) – all countries
 path_net = fetch_eurostat(
     "earn_nt_net",
     "A.PPS.NET.P1_NCH_AW100.",
@@ -91,7 +91,7 @@ ds_net_raw = Dataset(
 # ── 3. Normalise both series to EU27=100 per year ────────────────────────────
 
 def _to_eu100(ds: Dataset, eu_geo: str = "EU27_2020") -> Dataset:
-    """Normalise every country--year observation to EU27 aggregate = 100."""
+    """Normalise every country–year observation to EU27 aggregate = 100."""
     df = ds.df.copy()
     eu_rows = df[df[ds.geo_col] == eu_geo]
     if not eu_rows.empty:
@@ -117,7 +117,7 @@ def _to_eu100(ds: Dataset, eu_geo: str = "EU27_2020") -> Dataset:
     )
 
 
-# LP is already in EU27=100 (unit PC_EU27_2020_MPPS_CP) --- skip normalization;
+# LP is already in EU27=100 (unit PC_EU27_2020_MPPS_CP) — skip normalization;
 # only remove EU27 aggregate row itself and set unit label.
 _lp_df = ds_lp_raw.df.copy()
 _lp_df = _lp_df[_lp_df[ds_lp_raw.geo_col] != "EU27_2020"]
@@ -136,8 +136,8 @@ ds_net_idx.df = ds_net_idx.df[~ds_net_idx.df[ds_net_idx.geo_col].isin(EXCLUDE_OU
 lp_years = sorted(ds_lp_idx.years)
 net_years = sorted(ds_net_idx.years)
 print(
-    f"LP: {lp_years[0]}--{lp_years[-1]}  |  "
-    f"Net income: {net_years[0] if net_years else 'n/a'}--"
+    f"LP: {lp_years[0]}–{lp_years[-1]}  |  "
+    f"Net income: {net_years[0] if net_years else 'n/a'}–"
     f"{net_years[-1] if net_years else 'n/a'}"
 )
 
@@ -172,7 +172,7 @@ for geo in COUNTRIES:
             ax.annotate(geo, xy=(s_lp.index[-1], s_lp.iloc[-1]),
                         xytext=(4, 5) if geo == "SK" else (4, 0),
                         textcoords="offset points",
-                        fontsize=FIGURE_LABEL_SIZE, color=color, va="center")
+                        fontsize=FONT_SIZE, color=color, va="center")
     if geo in net_pivot.columns:
         s_net = net_pivot[geo].dropna()
         ax.plot(s_net.index, s_net.values,
@@ -180,20 +180,16 @@ for geo in COUNTRIES:
 
 # EU27=100 reference line
 ax.axhline(100, color="#555555", linewidth=0.8, linestyle=":", alpha=0.7, zorder=2)
-ax.text(START_YEAR + 0.3, 101.5, "EU27",
-        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", alpha=0.8, va="bottom")
+ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
+        fontsize=FONT_SIZE - 1, color="#555555", alpha=0.8, va="bottom")
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
-STRINGS = {
-    "title": r"Konvergence produktivity práce a čistého příjmu (\acs{PPS}, \acs{geo-EU}27 = 100)",
-    "xlabel": "rok",
-    "ylabel": r"index [\acs{geo-EU}27 = 100]",
-}
-ax.set_xlabel(STRINGS["xlabel"])
-ax.set_ylabel(STRINGS["ylabel"])
-fig._suptitle_gap_pt = 5
-fig.suptitle(STRINGS["title"], y=1.0, fontsize=FIGURE_TITLE_SIZE, va="bottom")
-ax.set_xlim(START_YEAR, max(lp_years[-1], 2025))
+ax.set_xlabel("rok")
+ax.set_ylabel("index [EU27 = 100]")
+ax.set_title(
+    "Konvergence produktivity práce a čistého příjmu (PPS, EU27 = 100)"
+)
+ax.set_xlim(START_YEAR, lp_years[-1])
 
 # Integer major ticks + minor grid
 ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
@@ -202,20 +198,18 @@ ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
 ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
-fig._tight_layout_kwargs = {"pad": 0.15}
 
 # ── 7. Save figure ────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_konvergence", strings=STRINGS)
+savefig(fig, "eu_konvergence", out_dir=LATEX_PICS_DIR)
 
-# ── 8. Write LaTeX snippet ───────────────────────────────────────────────────────────
+# ── 8. Write LaTeX snippet ────────────────────────────────────────────────────
 last_year = lp_years[-1]
-save_figure_tex_pgf(
+save_figure_tex(
     "eu_konvergence",
-    caption=f"Konvergence produktivity práce a~čistého příjmu k~průměru \\acs{{geo-EU27}}, 2004--{last_year}",
+    caption=f"Konvergence produktivity práce a~čistého příjmu k~EU27, vybrané země EU, {START_YEAR}--{last_year}.",
     cite_keys=["eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100", "eurostat_earn_nt_net_PPS_AW100"],
     label="fig:eu_konvergence",
-    resizebox_width=r"\linewidth",
-    strings=STRINGS,
+    width=r"0.95\linewidth",
 )
 
 print("Done.")

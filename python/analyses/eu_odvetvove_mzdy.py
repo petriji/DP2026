@@ -1,5 +1,5 @@
 r"""
-Hourly wages by NACE sector in PPS -- grouped bar chart, deviation from EU27,
+Hourly wages by NACE sector in PPS – grouped bar chart, deviation from EU27,
 and per-sector choropleth maps for all EU27 countries.
 
 Compares gross hourly wages (adjusted for purchasing power parity) across
@@ -34,33 +34,15 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import (
-    CHOROPLETH_BLEND_WITH_WHITE,
-    CHOROPLETH_WHITE_BLEND_PCT,
-    COUNTRY_COLORS,
-    FIGURE_COMPACT_LABEL_SIZE,
-    FIGURE_COMPACT_TEXT_SIZE,
-    FIGURE_LABEL_SIZE,
-    FIGURE_TITLE_SIZE,
-    MAP_COUNTRY_LABEL_SIZE,
-    LATEX_PICS_DIR,
-)
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
-from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.dataset import Dataset
-from stattool.style import (
-    cm2in,
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-)
-from statout.map_europe import choropleth, CHOROPLETH_COLORBAR_HEIGHT_IN
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
-NUDGE_LABELS = [(c, c) for c in COUNTRIES]
 COUNTRIES_EU = COUNTRIES + ["EU27_2020"]
 GEO_6 = "+".join(COUNTRIES)
 GEO_WITH_EU = GEO_6 + "+EU27_2020"
@@ -68,12 +50,12 @@ SECTORS = {"C": "Výroba", "G": "Obchod", "J": "ICT", "K": "Finance"}
 DISPLAY_YEAR = 2024   # latest available full year
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
-# ── 1. Download sector wages (EUR/h) -- 6 countries + EU27 ────────────────────
+# ── 1. Download sector wages (EUR/h) – 6 countries + EU27 ────────────────────
 # lc_lci_lev: freq.unit.lcstruct.nace_r2.geo
 # D1_D4_MD5 = total labour costs (wages + employer contributions − direct subsidies)
-# D11 (wages only) is NOT used -- D1_D4_MD5 is available for all sectors/countries.
+# D11 (wages only) is NOT used – D1_D4_MD5 is available for all sectors/countries.
 sector_filter = "+".join(SECTORS.keys())
 
 path_lc = fetch_eurostat(
@@ -94,7 +76,6 @@ lc = raw_lc[raw_lc["TIME_PERIOD"] == ref_year].pivot_table(
     index="geo", columns="nace_r2", values="OBS_VALUE", aggfunc="first"
 )
 print(f"Sector wages year: {ref_year}  [D1_D4_MD5]")
-warn_non_target_year(source="Eurostat lc_lci_lev", year=int(ref_year), context="Sector wages snapshot")
 
 raw_lc_all = pd.read_csv(path_lc_all)
 raw_lc_all = raw_lc_all[["geo", "nace_r2", "TIME_PERIOD", "OBS_VALUE"]].dropna(subset=["OBS_VALUE"])
@@ -119,7 +100,6 @@ pli = raw_pli[raw_pli["TIME_PERIOD"] == pli_year].set_index("geo")["OBS_VALUE"]
 pli["EU27_2020"] = 100.0   # EU27 PLI = 100 by definition
 print(f"PLI year: {pli_year}")
 print("PLI:", pli[COUNTRIES_EU].to_dict())
-warn_non_target_year(source="Eurostat prc_ppp_ind", year=int(pli_year), context="PLI snapshot for PPS conversion")
 
 # ── 3. Convert EUR/h → PPS/h ──────────────────────────────────────────────────
 # PPS_wage = EUR_wage / (PLI / 100)
@@ -142,20 +122,12 @@ lc_6 = lc_pps.loc[[c for c in COUNTRIES if c in lc_pps.index]]
 _EU27_GEO = "EU27_2020"
 if _EU27_GEO not in lc_pps.index:
     lc_pps.loc[_EU27_GEO] = float("nan")
-_fallback_sectors: list[str] = []
 for s in SECTORS:
     if pd.isna(lc_pps.loc[_EU27_GEO, s]) if s in lc_pps.columns else True:
         if s in lc_pps_all.columns:
             fallback_eu = lc_pps_all[s].dropna().mean()
             lc_pps.loc[_EU27_GEO, s] = fallback_eu
-            _fallback_sectors.append(s)
             print(f"  EU27 fallback mean used for sector {s}: {fallback_eu:.2f} PPS/h")
-if _fallback_sectors:
-    warn_fallback(
-        f"EU27 sector benchmark missing for {', '.join(_fallback_sectors)}; cross-country mean used",
-        source="Eurostat lc_lci_lev + prc_ppp_ind",
-        year=int(ref_year),
-    )
 
 # ── 3b. EU27=100 index (needed for deviation chart only) ────────────────────────
 _eu27_sector = lc_pps.loc["EU27_2020", list(SECTORS.keys())]
@@ -198,29 +170,28 @@ for xi, eu_val in zip(x, eu27_pps):
                    colors="#222222", linewidth=1.8, zorder=6)
 ax1.hlines([], [], [], colors="#222222", linewidth=1.8, linestyle="-", label="EU27")
 
-STRINGS_BAR = {
-    "title": rf"Hodinové náklady práce dle odvětví ({ref_year})",
-    "ylabel": r"hodinové náklady práce [\si{\pps\per\hour}]",
-}
 ax1.set_xticks(x)
 ax1.set_xticklabels([f"{SECTORS[s]}\n({s})" for s in sector_codes])
-ax1.set_ylabel(STRINGS_BAR["ylabel"])
-ax1.set_title(STRINGS_BAR["title"])
-ax1.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=4)
+ax1.set_ylabel("hodinové náklady práce [PPS/h]")
+ax1.set_title(f"Hodinové náklady práce dle odvětví ({ref_year})")
+ax1.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=4)
 ax1.set_ylim(0, None)
 # y minor grid + remove x minor ticks
 ax1.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax1.grid(which="minor", axis="y", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
 ax1.tick_params(axis="x", which="minor", bottom=False)
 
-savefig_pgf(fig1, "eu_odvetvove_mzdy_bar", strings=STRINGS_BAR)
-save_figure_tex_pgf(
+savefig(fig1, "eu_odvetvove_mzdy_bar", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
     "eu_odvetvove_mzdy_bar",
-    caption=f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~odvětvích Průmysl~(C), Obchod~(G), \\acs{{ICT}}~(J) a~Finance~(K), \\acs{{geo-EU27}}, {ref_year}",
+    caption=(
+        f"Hodinové náklady práce (PPS/h) v~klíčových odvětvích NACE, "
+        f"vybrané země EU, {ref_year}. "
+        f"Plná čára se~zarážkami~= průměr EU27."
+    ),
     label="fig:eu_odvetvove_mzdy_bar",
-    resizebox_width=r"\linewidth",
+    width=r"0.95\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-    strings=STRINGS_BAR,
 )
 print("Figure 1 saved.")
 
@@ -242,39 +213,37 @@ if "EU27_2020" in lc_pps.index:
                  color=COUNTRY_COLORS.get(country, "#999999"),
                  label=country, zorder=3)
 
-    STRINGS_ODCH = {
-        "title": rf"Odchylka nákladů práce od průměru \acs{{geo-EU}}27 ({ref_year})",
-        "xlabel": r"odchylka od průměru \acs{geo-EU}27 [\si{\pp}]",
-    }
     ax2.axvline(0, color="black", linewidth=0.9, zorder=2)
     ax2.set_yticks(y)
     ax2.set_yticklabels([f"{SECTORS[s]} ({s})" for s in sector_codes])
-    ax2.set_xlabel(STRINGS_ODCH["xlabel"])
-    ax2.set_title(STRINGS_ODCH["title"])
-    ax2.legend(frameon=False, fontsize=FIGURE_LABEL_SIZE, ncol=6)
+    ax2.set_xlabel("odchylka od průměru EU27 [p.\\,b.]")
+    ax2.set_title(f"Odchylka nákladů práce od průměru EU27 ({ref_year})")
+    ax2.legend(frameon=False, fontsize=FONT_SIZE - 1, ncol=6)
     # x minor grid + remove y minor ticks
     ax2.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax2.grid(which="minor", axis="x", linewidth=0.2, alpha=0.4, color="#DDDDDD", zorder=0)
     ax2.tick_params(axis="y", which="minor", left=False)
 
-    savefig_pgf(fig2, "eu_odvetvove_mzdy_odchylka", strings=STRINGS_ODCH)
-    save_figure_tex_pgf(
+    savefig(fig2, "eu_odvetvove_mzdy_odchylka", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
         "eu_odvetvove_mzdy_odchylka",
         caption=(
-            f"Odchylka odvětvových nákladů práce od průměru EU27, vybrané země EU, {ref_year}."),
+            f"Odchylka nákladů práce od průměru EU27, {ref_year}. "
+            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
+            f"Záporné hodnoty = nižší náklady práce než průměr EU27."
+        ),
         label="fig:eu_odvetvove_mzdy_odchylka",
-        resizebox_width=r"\linewidth",
+        width=r"0.95\linewidth",
         cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-        strings=STRINGS_ODCH,
     )
     print("Figure 2 saved.")
 
 # ── 6. Combined 2×2 choropleth map ────────────────────────────────────────────
 SECTOR_TITLES = {
-    "C": "Průmysl C",
-    "G": "Obchod G",
-    "J": "ICT J",
-    "K": "Finance K",
+    "C": "Průmysl (C)",
+    "G": "Obchod (G)",
+    "J": "ICT (J)",
+    "K": "Finance (K)",
 }
 
 # Global vmin/vmax across all four sectors for a shared colour scale
@@ -284,15 +253,8 @@ all_vals = pd.concat(
 vmin_global = all_vals.min()
 vmax_global = all_vals.max()
 
-# Keep canvas close to final LaTeX width to avoid aggressive downscaling
-# by \resizebox{\linewidth}{!}{...}, which would shrink text too much.
-fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(15, 12))
+fig_maps, axes = plt.subplots(2, 2, figsize=cm2in(28, 22))
 panel_labels = iter("abcd")
-
-STRINGS_MAP = {
-    "title": f"Hodinové náklady práce dle odvětví, \\acs{{geo-EU27}} ({ref_year})",
-    "colorbar_label": r"[\si{\pps\per\hour}]",
-}
 
 for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
     if sec_code not in lc_pps_all.columns:
@@ -317,87 +279,46 @@ for ax_i, (sec_code, sec_title) in zip(axes.flat, SECTOR_TITLES.items()):
         ds_map,
         year=int(ref_year),
         title="",
-        colorbar_label=r"[\si{\pps\per\hour}]",
+        colorbar_label="[PPS/h]",
         cmap="RdYlGn",
         vmin=vmin_global,
         vmax=vmax_global,
         ax=ax_i,
         label_countries=True,
-        country_label_size=MAP_COUNTRY_LABEL_SIZE,
-        show_colorbar=False,  # shared colorbar added centrally below
-    )
-    apply_geo_labels_pgf(
-        ax_i,
-        halo=True,
-        values=sector_series.to_dict(),
-        tooltip_fmt="{:.1f}",
+        show_colorbar=False,
     )
     lbl = next(panel_labels)
-    ax_i.set_title(
-        f"({lbl}) {sec_title}",
-        fontsize=FIGURE_COMPACT_TEXT_SIZE,
-        pad=5,
-    )
+    ax_i.set_title(f"({lbl}) {sec_title}", fontsize=FONT_SIZE, pad=4)
 
 fig_maps.suptitle(
-    STRINGS_MAP["title"],
-    fontsize=FIGURE_TITLE_SIZE,
-    y=1.007,
+    f"Hodinové náklady práce dle odvětví, EU27 ({ref_year})",
+    fontsize=plt.rcParams.get("axes.titlesize", 9),
+    y=0.98,
 )
 
-# Shared central colorbar — width=0.08 and CHOROPLETH_COLORBAR_HEIGHT_IN match
-# the standard EU single-map colorbars so the raster strip deduplicates to the
-# same _shared/ PNG as all other RdYlGn choropleths via content hash.
-# bbox_transform=transFigure lets bbox_to_anchor=(0.5, 0.5) mean "figure centre".
+# Shared colorbar for all four panels
 import matplotlib as mpl_lib
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
 norm_shared = mpl_lib.colors.Normalize(vmin=vmin_global, vmax=vmax_global)
-_base_cmap = mpl_lib.cm.get_cmap("RdYlGn")
-_rgba = _base_cmap(np.linspace(0.0, 1.0, 256))
-if CHOROPLETH_BLEND_WITH_WHITE:
-    _blend = min(1.0, max(0.0, float(CHOROPLETH_WHITE_BLEND_PCT) / 100.0))
-    _rgba[:, :3] = _rgba[:, :3] * (1.0 - _blend) + _blend
-_shared_cmap = mpl_lib.colors.LinearSegmentedColormap.from_list(
-    f"{_base_cmap.name}_wb{int(round(CHOROPLETH_WHITE_BLEND_PCT))}", _rgba, N=256
-)
-sm_shared = mpl_lib.cm.ScalarMappable(cmap=_shared_cmap, norm=norm_shared)
+sm_shared = mpl_lib.cm.ScalarMappable(cmap="RdYlGn", norm=norm_shared)
 sm_shared.set_array([])
-cax_center = _inset_axes(
-    axes[0, 0],                        # parent axes (positional anchor only)
-    width=0.08, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
-    loc="center",
-    bbox_to_anchor=(0.475, 0.47),      # slightly lower to center against the 2x2 map matrix
-    bbox_transform=fig_maps.transFigure,
-    borderpad=0,
-)
-cb_center = fig_maps.colorbar(sm_shared, cax=cax_center,
-                               label=STRINGS_MAP["colorbar_label"])
-cb_center.ax.tick_params(labelsize=FIGURE_COMPACT_LABEL_SIZE)
-cb_center.set_label(
-    STRINGS_MAP["colorbar_label"],
-    fontsize=FIGURE_COMPACT_LABEL_SIZE,
-)
+fig_maps.colorbar(sm_shared, ax=axes.ravel().tolist(), shrink=0.6,
+                  label="[PPS/h]", location="bottom", pad=0.04)
 
-# Subplot spacing — no large central gap needed; colorbar is an inset overlay.
-fig_maps.subplots_adjust(left=0.0, right=1.0, top=0.88, bottom=0.03,
-                         wspace=0.06, hspace=0.12)
-# Prevent savefig's tight_layout from clobbering the manual layout.
-fig_maps._tight_layout_kwargs = {"pad": 0.4}
-fig_maps._subplots_adjust_kwargs = {"left": 0.0, "right": 1.0,
-                                    "top": 0.88, "bottom": 0.03,
-                                    "wspace": 0.06, "hspace": 0.12}
+# Prevent savefig's tight_layout from clobbering the colorbar positioning
+fig_maps._tight_layout_kwargs = {"pad": 1.0, "rect": [0, 0.08, 1, 0.95]}
+fig_maps._subplots_adjust_kwargs = {"top": 0.93}
 
-savefig_pgf(fig_maps, "eu_odvetvove_mzdy_mapa", strings=STRINGS_MAP, nudge_labels=NUDGE_LABELS)
-save_figure_tex_pgf(
+savefig(fig_maps, "eu_odvetvove_mzdy_mapa", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
     "eu_odvetvove_mzdy_mapa",
     caption=(
-        f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~odvětvích Průmysl~(C), Obchod~(G), \\acs{{ICT}}~(J) a~Finance~(K), EU27, {ref_year}."
+        f"Hodinové náklady práce (PPS/h) v~odvětvích Průmysl~(C), Obchod~(G), ICT~(J) a~Finance~(K), EU27, {ref_year}. "
+        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná. "
+        f"Společná barevná škála umožňuje porovnání mezi panely."
     ),
     label="fig:eu_odvetvove_mzdy_mapa",
-    resizebox_width=r"\linewidth",
+    width=r"\linewidth",
     cite_key="eurostat_lc_lci_lev_D1D4MD5_PPS_h",
-    strings=STRINGS_MAP,
-    nudge_labels=NUDGE_LABELS,
 )
 print("Combined choropleth (2×2) saved.")
 

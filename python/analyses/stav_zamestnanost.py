@@ -65,7 +65,7 @@ fig = timeline(
     ds,
     countries=COUNTRIES,
     title="Míra zaměstnanosti (20–64 let)",
-    ylabel="Míra zaměstnanosti (% populace 20–64)",
+    ylabel="míra zaměstnanosti [%]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     background_eu=True,
@@ -79,7 +79,8 @@ savefig(fig, "stav_zamestnanost", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "stav_zamestnanost",
     caption=(
-        f"Míra zaměstnanosti (20--64 let), {ds.years[0]}--{ds.years[-1]}."
+        f"Míra zaměstnanosti (20--64 let), vybrané země EU, "
+        f"{ds.years[0]}--{ds.years[-1]}."
     ),
     label="fig:stav_zamestnanost",
     width=r"0.95\linewidth",

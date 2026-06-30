@@ -1,16 +1,16 @@
 r"""
 Gender wage stratification: EU pay-gap choropleth and percentile profiles.
 
-Figure A -- ``gender_pay_gap_map``
+Figure A – ``gender_pay_gap_map``
     EU NUTS0 choropleth of the unadjusted gender pay gap in 2023 (latest),
-    NACE B--S, in % of male hourly earnings.  Coloured by GPG value
+    NACE B–S, in % of male hourly earnings.  Coloured by GPG value
     (continuous RdBu_r scale); CZ labelled; EU27 average line annotated.
 
     Data: Eurostat ``earn_gr_gpgr2``
       Dimensions: freq · nace_r2 · unit · geo · time
       Filter: nace_r2=B-S (broadest economy-wide aggregate), unit=PC
 
-Figure B -- ``gender_wage_stratification``
+Figure B – ``gender_wage_stratification``
     Grouped percentile profile chart for 6 countries (CZ AT DE DK PL SK).
     For each country, shows the earnings distribution (P10/P25/P50/P75/P90)
     for males (blue) and females (red) as segments on a single axis.
@@ -25,7 +25,7 @@ Argumentation
 -------------
 Together these two figures show: (a) CZ has a persistently high gender pay
 gap compared to DK or BE; (b) the gap is not only in absolute levels but
-in the entire distribution --- the female P75 in CZ is below the male P50,
+in the entire distribution — the female P75 in CZ is below the male P50,
 indicating structural segmentation that collective bargaining with wage
 transparency could address.
 
@@ -46,29 +46,20 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
-from stattool.data_quality import warn_fallback, warn_non_target_year
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-    add_pgf_tooltips,
-    cm2in,
-)
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 COUNTRY_LABELS = {"CZ": "CZ", "AT": "AT", "DE": "DE", "DK": "DK", "PL": "PL", "SK": "SK"}
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
-apply_style_pgf()
+apply_style()
 
 # ==============================================================================
-# Figure A -- Gender Pay Gap choropleth (earn_gr_gpgr2)
+# Figure A – Gender Pay Gap choropleth (earn_gr_gpgr2)
 # ==============================================================================
 print("Downloading earn_gr_gpgr2 …")
 gpg_path = fetch_eurostat("earn_gr_gpgr2", start_period=2018)
@@ -121,7 +112,6 @@ gpg_snap = (
 )
 print(f"  GPG snapshot rows: {len(gpg_snap)}, median year: {gpg_snap['time'].median()}")
 snap_year = int(gpg_snap["time"].mode()[0]) if not gpg_snap.empty else 2022
-warn_non_target_year(source="Eurostat earn_gr_gpgr2", year=snap_year, context="Gender pay gap snapshot")
 
 # Build Dataset for choropleth
 gpg_df = (
@@ -132,46 +122,32 @@ gpg_df = (
 ds_gpg = Dataset(gpg_df, name="Gender Pay Gap", unit="%",
                  source_url="Eurostat/earn_gr_gpgr2")
 
-_values_gpg = (
-    ds_gpg.df[ds_gpg.df["time"] <= snap_year]
-    .sort_values("time").groupby("geo")["value"].last().to_dict()
-)
-_vmin_gpg = min(_values_gpg.values())
-_vmax_gpg = max(_values_gpg.values())
-
-STRINGS_GPG_MAP = {
-    "title": f"Rozdíl ve mzdách mužů a žen podle percentilu ({snap_year})",
-    "colorbar_label": r"nekorigovaný \acs{GPG} [\%]",
-}
-
 fig_a = choropleth(
     ds_gpg, year=snap_year,
-    title=STRINGS_GPG_MAP["title"],
-    # Sequential 0..vmax → use project-wide RdYlGn_r (matches other "more = worse"
-    # choropleths so the rasterised colourbar dedups via _shared/).
-    cmap="RdYlGn_r",
-    vmin=_vmin_gpg,
-    vmax=_vmax_gpg,
-    colorbar_label=STRINGS_GPG_MAP["colorbar_label"],
+    title=f"Nekorigovaný GPG v\u00a0EU ({snap_year})\nNACE B–S, v\u00a0% hodinové mzdy mužů",
+    cmap="RdBu_r",
+    vmin=0,
+    vmax=25,
+    colorbar_label="nekorigovaný GPG [%]",
     label_countries=True,
-    highlight_colorbar=COUNTRIES,
 )
-apply_geo_labels_pgf(fig_a.axes[0], halo=True, values=_values_gpg, tooltip_fmt="{:.1f}")
 
-savefig_pgf(fig_a, "problemy_gpg_mapa", strings=STRINGS_GPG_MAP, nudge_labels=NUDGE_LABELS)
-save_figure_tex_pgf(
+savefig(fig_a, "problemy_gpg_mapa", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
     "problemy_gpg_mapa",
-    caption=f"Rozdíl ve mzdách mužů a žen \\((M-F)\\) v~\\si{{\\pps\\per\\hour}} podle percentilu, vybrané země \\acs{{geo-EU}}, {snap_year}",
+    caption=(
+        f"Nekorigovaný gender pay gap (NACE B--S), EU27, {snap_year}. "
+        "Hodnota udává, o~kolik procent jsou průměrné hodinové výdělky žen nižší "
+        "než výdělky mužů"
+    ),
     cite_keys="eurostat_gpg",
     label="fig:problemy_gpg_mapa",
-    resizebox_width=r"\linewidth",
+    width=r"0.95\linewidth",
     cite_key="eurostat_gpg",
-    strings=STRINGS_GPG_MAP,
-    nudge_labels=NUDGE_LABELS,
 )
 
 # ==============================================================================
-# Figure B -- Earnings distribution by sex (earn_ses_hourly)
+# Figure B – Earnings distribution by sex (earn_ses_hourly)
 # Indicators: D1 (P10 / 1st decile), median, D9 (P90 / 9th decile)
 # ==============================================================================
 print("Downloading earn_ses_hourly …")
@@ -212,51 +188,19 @@ _pli.columns = ["_pli_geo", "_pli_time", "_pli"]
 _pli["_pli_time"] = _pli["_pli_time"].astype(str).str[:4].astype(int)
 _pli["_pli"] = pd.to_numeric(_pli["_pli"], errors="coerce") / 100.0  # EU27=1.0
 
-_pli_latest = (
-    _pli.sort_values("_pli_time")
-    .groupby("_pli_geo", dropna=False)["_pli"]
-    .last()
-    .rename("_pli_latest")
-)
-
 ses_raw = ses_raw.merge(
     _pli,
     left_on=[s_geo, "time"],
     right_on=["_pli_geo", "_pli_time"],
     how="left",
 )
-ses_raw = ses_raw.merge(_pli_latest, left_on=s_geo, right_index=True, how="left")
-
-_use_latest = ses_raw["_pli"].isna() & ses_raw["_pli_latest"].notna()
-if _use_latest.any():
-    _countries = sorted(set(ses_raw.loc[_use_latest, s_geo].astype(str)))
-    warn_fallback(
-        "PLI missing for exact SES year; latest available country PLI used for conversion "
-        + ", ".join(_countries),
-        source="Eurostat prc_ppp_ind",
-    )
-    ses_raw.loc[_use_latest, "_pli"] = ses_raw.loc[_use_latest, "_pli_latest"]
-
-_missing_pli = ses_raw["_pli"].isna()
-if _missing_pli.any():
-    _countries_missing = sorted(set(ses_raw.loc[_missing_pli, s_geo].astype(str)))
-    warn_fallback(
-        "PLI unavailable for some SES rows; dropping unconvertible EUR rows (no EUR fallback) for "
-        + ", ".join(_countries_missing),
-        source="Eurostat prc_ppp_ind",
-    )
-    ses_raw = ses_raw[~_missing_pli].copy()
-
-if ses_raw.empty:
-    warn_fallback(
-        "PLI unavailable for all SES rows; percentile profile omitted because EUR→PPS conversion is impossible",
-        source="Eurostat prc_ppp_ind",
-    )
-else:
+_has_pli = ses_raw["_pli"].notna().any()
+if _has_pli:
     ses_raw[s_val] = ses_raw[s_val] / ses_raw["_pli"]
     print("  EUR → PPS conversion applied")
-
-ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli", "_pli_latest"], errors="ignore")
+else:
+    print("  WARNING: PLI unavailable — keeping EUR values")
+ses_raw = ses_raw.drop(columns=["_pli_geo", "_pli_time", "_pli"], errors="ignore")
 
 # Map indicator to numeric x-position (P10=10, P50=50, P90=90)
 _INDIC_RANK = {"D1_E_EUR": 10, "MED_E_EUR": 50, "D9_E_EUR": 90}
@@ -277,90 +221,76 @@ ses_snap = (
 print(f"  SES snapshot rows: {len(ses_snap)}")
 ses_year = int(ses_snap["time"].mode()[0]) if not ses_snap.empty else 2022
 _HAS_SES_DATA = len(ses_snap) >= 4
-warn_non_target_year(source="Eurostat earn_ses_hourly", year=ses_year, context="SES percentile profile snapshot")
 
-fig_b, ax_b = plt.subplots(figsize=cm2in(15, 9))
+fig_b, ax_b = plt.subplots(figsize=cm2in(15, 10))
 
 ses_ok = False
 if _HAS_SES_DATA and s_indic and s_sex and s_geo:
     ses_ok = True
 
-# Compute per-country gap (M − F) / M · 100 [%] at each percentile rank.
-_gap_pivot_cols: dict[str, pd.Series] = {}
-_xmax_rank = max(_INDIC_RANK.values())
 for country in COUNTRIES:
     color = COUNTRY_COLORS.get(country, "#888888")
     sub = ses_snap[ses_snap[s_geo] == country].sort_values("_rank") if s_geo else pd.DataFrame()
-    if not (ses_ok and not sub.empty and s_sex):
-        continue
-    sub_f = sub[sub[s_sex].astype(str).str.upper() == "F"].set_index("_rank")[s_val]
-    sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"].set_index("_rank")[s_val]
-    common = sub_f.index.intersection(sub_m.index)
-    if len(common) == 0:
-        continue
-    gap = (sub_m.loc[common] - sub_f.loc[common]).sort_index()
-    ax_b.plot(gap.index, gap.values, color=color, linewidth=1.8, zorder=3)
-    # Line-end country label (nudgeable via \Nudge… macros in TeX).
-    last_rank = gap.index.max()
-    ax_b.annotate(
-        rf"\acs{{geo-{country}}}",
-        xy=(last_rank, gap.loc[last_rank]),
-        xytext=(4, 0),
-        textcoords="offset points",
-        fontsize=FIGURE_LABEL_SIZE,
-        ha="left",
-        va="center",
-        color=color,
-    )
-    _gap_pivot_cols[country] = gap
 
-if not ses_ok or not _gap_pivot_cols:
+    if ses_ok and not sub.empty and s_sex:
+        sub_f = sub[sub[s_sex].astype(str).str.upper() == "F"]
+        sub_m = sub[sub[s_sex].astype(str).str.upper() == "M"]
+
+        if not sub_f.empty:
+            ax_b.plot(sub_f["_rank"], sub_f[s_val],
+                      color=color, linewidth=1.8, linestyle="-",
+                      marker="o", markersize=5, zorder=3)
+        if not sub_m.empty:
+            ax_b.plot(sub_m["_rank"], sub_m[s_val],
+                      color=color, linewidth=1.8, linestyle="--",
+                      marker="o", markersize=5, zorder=3)
+
+if not ses_ok:
     ax_b.text(0.5, 0.5, "data\nnedostupná",
               ha="center", va="center",
-              transform=ax_b.transAxes, fontsize=FIGURE_LABEL_SIZE, color="grey")
+              transform=ax_b.transAxes, fontsize=FONT_SIZE, color="grey")
     ax_b.set_xticks([])
     ax_b.set_yticks([])
 
 ranks = sorted(_INDIC_RANK.values())
 ax_b.set_xticks(ranks)
-ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FIGURE_LABEL_SIZE)
-# Extend x-range slightly to accommodate line-end country labels.
-ax_b.set_xlim(min(ranks) - 5, max(ranks) + 10)
-ax_b.axhline(0, color="grey", linewidth=0.6, linestyle="--", alpha=0.7, zorder=1)
-ax_b.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-ax_b.grid(which="minor", axis="y", linewidth=0.3, alpha=0.4)
-ax_b.grid(which="major", axis="y", linewidth=0.6, alpha=0.7)
-ax_b.tick_params(axis="both", labelsize=FIGURE_LABEL_SIZE)
-STRINGS_STRAT = {
-    "title": rf"Mzdový rozdíl mužů nad ženami podle percentilu ({ses_year})",
-    "xlabel": "percentil mzdové distribuce",
-    "ylabel": r"rozdíl \((M-F)\) [\si{\pps\per\hour}]",
-}
-ax_b.set_xlabel(STRINGS_STRAT["xlabel"], fontsize=FIGURE_LABEL_SIZE)
-ax_b.set_ylabel(STRINGS_STRAT["ylabel"], fontsize=FIGURE_LABEL_SIZE)
-ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.1f}"))
+ax_b.set_xticklabels([_INDIC_LABEL[r] for r in ranks], fontsize=FONT_SIZE - 1)
+ax_b.set_xlabel("percentil mzdové distribuce", fontsize=FONT_SIZE - 1)
+ax_b.set_ylabel("hodinová mzda [PPS/h]", fontsize=FONT_SIZE - 1)
+ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.0f}"))
 ax_b.set_title(
-    STRINGS_STRAT["title"],
-    fontsize=FIGURE_TEXT_SIZE,
+    f"Mzdová distribuce podle pohlaví ({ses_year}): D1, medián, D9",
+    fontsize=FONT_SIZE,
 )
 
-# Invisible hover tooltips at every (rank, gap) point.
-if _gap_pivot_cols:
-    _gap_pivot = pd.DataFrame(_gap_pivot_cols).sort_index()
-    add_pgf_tooltips(ax_b, _gap_pivot, fmt="{:.2f}")
+country_handles = [
+    plt.Line2D([0], [0], color=COUNTRY_COLORS.get(c, "#888888"),
+               linewidth=1.8, marker="o", markersize=5, label=c)
+    for c in COUNTRIES
+]
+style_handles = [
+    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="-",
+               marker="o", markersize=4, label="ženy"),
+    plt.Line2D([0], [0], color="black", linewidth=1.8, linestyle="--",
+               marker="o", markersize=4, label="muži"),
+]
+ax_b.legend(handles=country_handles + style_handles,
+            ncol=len(COUNTRIES) + 2,
+            loc="lower center", bbox_to_anchor=(0.5, -0.18),
+            frameon=False, fontsize=FONT_SIZE - 1)
 
-savefig_pgf(fig_b, "problemy_gpg_stratifikace", strings=STRINGS_STRAT, nudge_labels=NUDGE_LABELS)
-save_figure_tex_pgf(
+savefig(fig_b, "problemy_gpg_stratifikace", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
     "problemy_gpg_stratifikace",
     caption=(
-        f"Mzdový rozdíl mužů nad ženami \\((M-F)\\) v~\\si{{\\pps\\per\\hour}} podle percentilu, vybrané země \\acs{{geo-EU}}, {ses_year}."
+        f"Hodinové mzdy podle pohlaví a~percentilu, vybrané země EU, {ses_year}. "
+        "Plná čára = ženy, přerušovaná = muži; barvy odlišují země. "
+        "Zobrazeny tři ukazatele: D1 (1.~decil), medián a~D9 (9.~decil)"
     ),
     cite_keys="eurostat_ses_hourly",
     label="fig:problemy_gpg_stratifikace",
-    resizebox_width=r"\linewidth",
+    width=r"\linewidth",
     cite_key="eurostat_ses_hourly",
-    strings=STRINGS_STRAT,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

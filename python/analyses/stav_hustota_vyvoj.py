@@ -43,8 +43,8 @@ print(f"Countries: {len(ds.countries)}  |  Years: {ds.years[0]}–{ds.years[-1]}
 fig = timeline(
     ds,
     countries=COUNTRIES,
-    title="Hustota odborových organizací – vývoj",
-    ylabel="Hustota odborů (% zaměstnaných)",
+    title="Hustota odborových organizací",
+    ylabel="hustota odborů [% zaměstnanců]",
     highlight=HIGHLIGHT,
     annotate_last=True,
     show_eu_avg=False,
@@ -59,8 +59,8 @@ savefig(fig, "stav_hustota_vyvoj", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "stav_hustota_vyvoj",
     caption=(
-        f"Vývoj hustoty odborových organizací, {START_YEAR}--{ds.years[-1]}. "
-        f"Šedé linie = ostatní evropské země."
+        f"Vývoj hustoty odborových organizací, vybrané země EU, "
+        f"{START_YEAR}--{ds.years[-1]}."
     ),
     label="fig:stav_hustota_vyvoj",
     width=r"0.95\linewidth",
@@ -88,9 +88,8 @@ savefig(fig2, "stav_hustota_vyvoj_2004", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "stav_hustota_vyvoj_2004",
     caption=(
-        f"Vývoj hustoty odborových organizací (podíl odborově organizovaných "
-        f"zaměstnanců, \\%), 2004--{ds.years[-1]}. "
-        f"Šedé linie = ostatní evropské země."
+        f"Vývoj hustoty odborových organizací, vybrané země EU, "
+        f"2004--{ds.years[-1]}."
     ),
     label="fig:stav_hustota_vyvoj_2004",
     width=r"0.95\linewidth",

@@ -231,7 +231,7 @@ for yr, (label, va) in _EVENTS.items():
                 color="grey", va="bottom", rotation=0)
 
 ax.set_xlabel("rok")
-ax.set_ylabel("Podíl \acs{KS} [\%]")
+ax.set_ylabel("podíl KS [%]")
 ax.set_xlim(START_YEAR, END_YEAR)
 ax.set_ylim(0, 100)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(2))

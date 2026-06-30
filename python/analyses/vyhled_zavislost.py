@@ -1,12 +1,12 @@
 r"""
-Old-age dependency ratio -- choropleth map of Europe.
+Old-age dependency ratio – choropleth map of Europe.
 
 Shows the share of people aged 65+ relative to the working-age population
-(20--64) across EU member states.  Underlines the demographic pressure on
+(20–64) across EU member states.  Underlines the demographic pressure on
 pension systems and the relevance of active labour-market policy.
 
 Data source: Eurostat, ``demo_pjanind``
-  Old-age dependency ratio I (65+ / 20--64), age group OLDDEP1.
+  Old-age dependency ratio I (65+ / 20–64), age group OLDDEP1.
   Annual population indicator.
 
 Output
@@ -27,12 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-)
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -40,12 +35,12 @@ from statout.map_europe import choropleth
 START_YEAR = 2010
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # demo_pjanind: population structure indicators
 # Dimensions: freq · indic_de · geo
-# indic_de=OLDDEP1 → old-age dependency ratio I (65+ / 20--64)
+# indic_de=OLDDEP1 → old-age dependency ratio I (65+ / 20–64)
 path = fetch_eurostat(
     "demo_pjanind",
     "A.OLDDEP1.",
@@ -60,51 +55,33 @@ ds = Dataset.from_sdmx_csv(
     source_url="Eurostat/demo_pjanind",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}--{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, {ds.years[0]}–{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
-_values = (
-    ds.df[ds.df["time"] <= ds.latest_year]
-    .sort_values("time").groupby("geo")["value"].last().to_dict()
-)
-_vmin = min(_values.values())
-_vmax = max(_values.values())
-
-COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
-
-STRINGS = {
-    "title": f"Index závislosti seniorů ({ds.latest_year})",
-    "colorbar_label": r"osoby 65+ / osoby 20--64 [\%]",
-}
-
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=STRINGS["title"],
-    colorbar_label=STRINGS["colorbar_label"],
+    title=f"Koeficient ekonomického zatížení seniory ({ds.latest_year})",
+    colorbar_label="osoby 65+ / osoby 20–64 [%]",
     cmap="RdYlGn_r",
-    vmin=_vmin,
-    vmax=_vmax,
+    vmin=20,
+    vmax=60,
     label_countries=True,
-    highlight_colorbar=COUNTRIES,
 )
 
-apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
-
-# ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "vyhled_zavislost_mapa", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+# ── 4. Save figure ────────────────────────────────────────────────────────────
+savefig(fig, "vyhled_zavislost_mapa", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
+save_figure_tex(
     "vyhled_zavislost_mapa",
-    caption=f"Index závislosti seniorů, \\acs{{EU}}, {ds.latest_year}",
+    caption=(
+        f"Koeficient ekonomického zatížení seniory, evropské země, {ds.latest_year}."
+    ),
     label="fig:vyhled_zavislost_mapa",
-    resizebox_width=r"\linewidth",
+    width=r"0.92\linewidth",
     cite_key="eurostat_demo_pjanind",
-    strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

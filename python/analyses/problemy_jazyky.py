@@ -1,13 +1,13 @@
 r"""
-Foreign language knowledge -- EU comparison (AES survey data).
+Foreign language knowledge – EU comparison (AES survey data).
 
 Three choropleth maps illustrating language capabilities relevant to
 brain drain: overall population, prime working-age, and tertiary-educated.
 
 Data sources: Eurostat Adult Education Survey (AES), ~5-year rounds (2007/2011/2016/2022).
-  edat_aes_l21 -- by number of foreign languages and sex
-  edat_aes_l22 -- by number of foreign languages and age
-  edat_aes_l23 -- by number of foreign languages and educational attainment (ISCED)
+  edat_aes_l21 – by number of foreign languages and sex
+  edat_aes_l22 – by number of foreign languages and age
+  edat_aes_l23 – by number of foreign languages and educational attainment (ISCED)
 
 Filter for all three: persons knowing >= 2 foreign languages (n_lang = GE2 or 2+).
 
@@ -17,10 +17,10 @@ A  ``language_skills_total_map``
     EU choropleth: % total population knowing 2+ foreign languages (edat_aes_l21, sex=T).
 
 B  ``language_skills_age_map``
-    EU choropleth: % of persons aged 25--54 knowing 2+ foreign languages (edat_aes_l22).
+    EU choropleth: % of persons aged 25–54 knowing 2+ foreign languages (edat_aes_l22).
 
 C  ``language_skills_isced_map``
-    EU choropleth: % of tertiary-educated (ISCED 5--8) knowing 2+ foreign languages
+    EU choropleth: % of tertiary-educated (ISCED 5–8) knowing 2+ foreign languages
     (edat_aes_l23). Key brain-drain indicator: high-skill workers who CAN leave CZ.
 
 Output
@@ -50,17 +50,12 @@ import pandas as pd
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-)
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-apply_style_pgf()
+apply_style()
 
 
 def _filter_aes(df: pd.DataFrame, dim_keywords: dict[str, list[str]]) -> pd.DataFrame:
@@ -107,46 +102,36 @@ def _make_choropleth(
     caption: str,
     label: str,
     year: int,
-    vmin: float | None = None,
+    vmin: float = 0,
     vmax: float | None = None,
-    nudge_labels: list | None = None,
 ) -> None:
     """Render a Europe choropleth via statout.map_europe."""
-    _values = snap.set_index("geo")["value"].to_dict()
-    if vmin is None:
-        vmin = float(min(_values.values()))
     if vmax is None:
-        vmax = float(max(_values.values()))
-
-    strings = {"title": title, "colorbar_label": cbar_label}
+        vmax = float(snap["value"].quantile(0.95))
 
     ds = Dataset(snap, name=cbar_label, unit="")
     fig = choropleth(
         ds, year=year,
         title=title,
-        cmap="RdYlGn_r",
+        cmap="YlOrRd",
         vmin=vmin,
         vmax=vmax,
         colorbar_label=cbar_label,
-        label_countries=True,
-        highlight_colorbar=["CZ", "DK", "AT", "DE", "PL", "SK"],
+        label_countries=False,
     )
-    apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
-    savefig_pgf(fig, stem, strings=strings, nudge_labels=nudge_labels)
-    save_figure_tex_pgf(
+    savefig(fig, stem, out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
         stem,
         caption=caption,
         label=label,
-        resizebox_width=r"\linewidth",
+        width=r"0.85\linewidth",
         cite_key="eurostat_edat_aes",
-        strings=strings,
-        nudge_labels=nudge_labels,
     )
     print(f"  {stem} done ({year}).")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A -- edat_aes_l21: total population knowing 2+ languages (sex=T)
+# Figure A – edat_aes_l21: total population knowing 2+ languages (sex=T)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure A: edat_aes_l21 (total population) …")
 try:
@@ -192,11 +177,15 @@ try:
     _make_choropleth(
         snap_l21,
         title=(
-            f"Znalost alespoň 2 cizích jazyků, populace 25--64 let ({latest_l21})"
+            f"Znalost alespoň 2 cizích jazyků — populace 25–64 let ({latest_l21})\n"
+            "% osob s\u00a02+ cizími jazyky"
         ),
-        cbar_label=r"\% populace 25--64",
+        cbar_label="% populace 25–64",
         stem="problemy_jazyky_celkem",
-        caption=f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, \\acs{{geo-EU27}}, 2022",
+        caption=(
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
+            f"{latest_l21}"
+        ),
         label="fig:problemy_jazyky_celkem",
         year=latest_l21,
     )
@@ -204,7 +193,7 @@ except Exception as exc:
     print(f"  Figure A skipped: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B -- edat_aes_l22: by age group, filter Y25-54
+# Figure B – edat_aes_l22: by age group, filter Y25-54
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure B: edat_aes_l22 (by age group, Y25-54) …")
 try:
@@ -256,12 +245,13 @@ try:
     _make_choropleth(
         snap_l22,
         title=(
-            f"Znalost ${{\\ge}}$\\,2 cizích jazyků, věková skupina 25--64 let ({latest_l22})"
+            f"Znalost ≥2 cizích jazyků — věková skupina 25–64 let ({latest_l22})\n"
+            "% věkové skupiny s\u00a02+ cizími jazyky"
         ),
-        cbar_label=r"\% věkové skupiny 25--64",
+        cbar_label="% věkové skupiny 25–64",
         stem="problemy_jazyky_vek",
         caption=(
-            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky podle věkové skupiny, \\acs{{geo-EU}}27, "
+            f"Podíl osob ve~věku 25--64 let znajících alespoň 2~cizí jazyky, EU27, "
             f"{latest_l22}"
         ),
         label="fig:problemy_jazyky_vek",
@@ -271,7 +261,7 @@ except Exception as exc:
     print(f"  Figure B skipped: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C -- edat_aes_l23: by ISCED level, filter tertiary (ED5-8)
+# Figure C – edat_aes_l23: by ISCED level, filter tertiary (ED5-8)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nFigure C: edat_aes_l23 (by ISCED, tertiary ED5-8) …")
 try:
@@ -328,17 +318,17 @@ try:
     _make_choropleth(
         snap_l23,
         title=(
-            f"Znalost ${{\\ge}}$\\,2 cizích jazyků, vysokoškolsky vzdělaní ({latest_l23})"
+            f"Znalost ≥2 cizích jazyků — vysokoškolsky vzdělaní ({latest_l23})\n"
+            "% osob s\u00a0ISCED\u00a05\u20138 znajících 2+ cizí jazyky"
         ),
-        cbar_label=r"\% terciárně vzdělané populace",
+        cbar_label="% terciárně vzdělané populace",
         stem="problemy_jazyky_isced",
         caption=(
             f"Podíl vysokoškolsky vzdělaných osob (ISCED 5--8) "
-            f"znajících alespoň 2~cizí jazyky, \\acs{{geo-EU}}27, {latest_l23}"
+            f"znajících alespoň 2~cizí jazyky, EU27, {latest_l23}"
         ),
         label="fig:problemy_jazyky_isced",
         year=latest_l23,
-        nudge_labels=[(c, rf"\acs{{geo-{c}}}") for c in ["CZ", "AT", "DE", "DK", "PL", "SK"]],
     )
 except Exception as exc:
     print(f"  Figure C skipped: {exc}")

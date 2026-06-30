@@ -3,7 +3,7 @@ Self-employment rate choropleth map of Europe.
 
 Data source: Eurostat lfsa_egaps (Employed persons by professional status)
   Computes: self-employed (wstatus=SELF) / total employed (wstatus=EMP) × 100
-  Sex: T (both), Age: Y15--74, Unit: THS_PER (thousands) → ratio computed here.
+  Sex: T (both), Age: Y15–74, Unit: THS_PER (thousands) → ratio computed here.
 
 Output
 ------
@@ -25,16 +25,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import (
-    apply_style_pgf,
-    savefig_pgf,
-    save_figure_tex_pgf,
-    apply_geo_labels_pgf,
-)
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.map_europe import choropleth
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 # Fetch both EMP (total employed) and SELF (self-employed) in thousands.
@@ -68,50 +63,31 @@ ds = Dataset(
     source_url="Eurostat lfsa_egaps",
 )
 
-print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}--{ds.years[-1]}")
+print(f"Loaded: {len(ds.countries)} countries, years {ds.years[0]}–{ds.years[-1]}")
 print(f"Display year: {ds.latest_year}")
 
 # ── 3. Choropleth map ─────────────────────────────────────────────────────────
-_values = (
-    ds.df[ds.df["time"] <= ds.latest_year]
-    .sort_values("time").groupby("geo")["value"].last().to_dict()
-)
-_vmin = min(_values.values())
-_vmax = max(_values.values())
-
-COUNTRIES = ["CZ", "DK", "AT", "DE", "PL", "SK"]
-NUDGE_LABELS = [(c, c) for c in COUNTRIES]
-
-STRINGS = {
-    "title": f"Podíl \\acs{{OSVČ}} na zaměstnanosti ({ds.latest_year})",
-    "colorbar_label": r"podíl \acp{OSVČ} [\%]",
-}
-
 fig = choropleth(
     ds,
     year=ds.latest_year,
-    title=STRINGS["title"],
-    colorbar_label=STRINGS["colorbar_label"],
+    title=f"Podíl OSVČ na zaměstnanosti ({ds.latest_year})",
+    colorbar_label="podíl OSVČ [%]",
     cmap="RdYlGn_r",
-    vmin=_vmin,
-    vmax=_vmax,
+    vmin=5,
+    vmax=35,
     label_countries=True,
-    highlight_colorbar=COUNTRIES,
 )
 
-apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.1f}")
-
-# ── 4. Save figure ───────────────────────────────────────────────────────────────
-savefig_pgf(fig, "eu_osvc_mapa", strings=STRINGS)
+# ── 4. Save figure ────────────────────────────────────────────────────────────
+savefig(fig, "eu_osvc_mapa", out_dir=LATEX_PICS_DIR)
 
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
-save_figure_tex_pgf(
+save_figure_tex(
     "eu_osvc_mapa",
-    caption=f"Podíl \\acs{{OSVČ}} na celkové zaměstnanosti, \\acs{{geo-EU27}} mapa, {ds.latest_year}",
+    caption=f"Podíl OSVČ na celkové zaměstnanosti, EU mapa, {ds.latest_year}.",
     label="fig:eu_osvc_mapa",
-    resizebox_width=r"\linewidth",
+    width=r"0.92\linewidth",
     cite_keys="eurostat_lfsa_egaps",
-    strings=STRINGS,
 )
 
 print("Done.")

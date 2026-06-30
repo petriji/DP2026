@@ -1,5 +1,5 @@
 r"""
-Ratio of hourly net personal income (PPS) to GDP per capita per avg hour -- timeline.
+Ratio of hourly net personal income (PPS) to GDP per capita per avg hour – timeline.
 
 Plots: (hourly net income in PPS) / (GDP PPS/cap / avg annual hours)
      = (annual net income in EUR / PLI) / GDP PPS/cap
@@ -36,7 +36,7 @@ from statout.timeline import EU27 as _EU27
 from config import LATEX_PICS_DIR
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
-from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
+from stattool.style import apply_style, savefig, save_figure_tex
 from statout.timeline import timeline
 
 # ── Parameters ────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ COUNTRIES = ["CZ", "SK", "PL", "AT", "DE", "DK"]
 START_YEAR = 2004
 
 # ── 0. Style ──────────────────────────────────────────────────────────────────
-apply_style_pgf()
+apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
 print("Downloading Eurostat data …")
@@ -58,7 +58,7 @@ path_net = fetch_eurostat(
     start_period=START_YEAR,
 )
 
-# GDP per capita in PPS (absolute, current prices) -- all geo
+# GDP per capita in PPS (absolute, current prices) – all geo
 path_gdp = fetch_eurostat(
     "nama_10_pc",
     "A.PC_EU27_2020_HAB_MPPS_CP.B1GQ.",
@@ -111,54 +111,31 @@ ds_ratio = Dataset(
 )
 
 print(f"Ratio data: {len(ds_ratio.countries)} countries, "
-      f"{ds_ratio.years[0] if ds_ratio.years else '?'}--{ds_ratio.years[-1] if ds_ratio.years else '?'}")
+      f"{ds_ratio.years[0] if ds_ratio.years else '?'}–{ds_ratio.years[-1] if ds_ratio.years else '?'}")
 
 # ── 5. Plot ───────────────────────────────────────────────────────────────────
-STRINGS = {
-    "title": r"Konvergence poměru čistého příjmu k~\acs{HDP} (na obyvatele, roční)",
-    "ylabel": r"čistý příjem / \acs{HDP} (\acs{PPS}, \acs{geo-EU}27 = 100) [\si{\percent}]",
-}
 fig = timeline(
     ds_ratio,
     countries=COUNTRIES,
-    title=STRINGS["title"],
-    ylabel=STRINGS["ylabel"],
+    title="Čistý příjem jako podíl HDP na obyvatele",
+    ylabel="čistý příjem / HDP na obyvatele [EU27 = 100]",
     background_eu=True,
     annotate_last=True,
 )
 
 fig.axes[0].set_xlim(START_YEAR, max(2025, ds_ratio.years[-1]))
-# ── PGF tooltips & geo labels ───────────────────────────────────────────
-_pivot_pp = (
-    ds_ratio.df[ds_ratio.df["geo"].isin(COUNTRIES)]
-    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-)
-add_pgf_tooltips(fig.axes[0], _pivot_pp, fmt="{:.2f}")
-_bg_pp = sorted(set(_EU27) - set(COUNTRIES))
-_pivot_pp_bg = (
-    ds_ratio.df[ds_ratio.df["geo"].isin(_bg_pp)]
-    .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-)
-add_pgf_tooltips(fig.axes[0], _pivot_pp_bg, fmt="{:.2f}")
-for _child in fig.axes[0].get_children():
-    if hasattr(_child, "get_text"):
-        _txt = _child.get_text().strip()
-        if _txt in COUNTRIES:
-            _child.set_text(f"\\acs{{geo-{_txt}}}")
+
 # ── 6. Save ───────────────────────────────────────────────────────────────────
-NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
-savefig_pgf(fig, "stav_prijem_pomer", strings=STRINGS, nudge_labels=NUDGE_LABELS)
+savefig(fig, "stav_prijem_pomer", out_dir=LATEX_PICS_DIR)
 
 # ── 7. LaTeX snippet ──────────────────────────────────────────────────────────
 last_year = ds_ratio.years[-1] if ds_ratio.years else "?"
-save_figure_tex_pgf(
+save_figure_tex(
     "stav_prijem_pomer",
-    caption=f"Konvergence poměru čistého příjmu k~\\acs{{HDP}} na obyvatele (\\acs{{geo-EU27}}\\,=\\,100), \\acs{{EU}}, 2004--{last_year}",
+    caption=f"Poměr čistého příjmu k~HDP na obyvatele (EU27\\,=\\,100), {START_YEAR}--{last_year}.",
     label="fig:stav_prijem_pomer",
-    resizebox_width=r"\linewidth",
+    width=r"0.95\linewidth",
     cite_keys=["eurostat_earn_nt_net_PPS_AW100", "eurostat_nama_10_pc_PPS_EU27eq100"],
-    strings=STRINGS,
-    nudge_labels=NUDGE_LABELS,
 )
 
 print("Done.")

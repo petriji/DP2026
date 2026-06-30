@@ -4,31 +4,34 @@ CZ public vs private sector wage comparison using ISPV 2025 data.
 ISPV publishes two parallel wage surveys:
 
 * **Mzdová sféra** (MZS, *podnikatelská sféra*): private / business sector
-  employees paid a *mzda* (wage) -- ~3 million workers.
+  employees paid a *mzda* (wage) – ~3 million workers.
 * **Platová sféra** (PLS, *nepodnikatelská sféra*): public / non-business sector
-  employees paid a *plat* (salary) -- ~700 thousand workers.
+  employees paid a *plat* (salary) – ~700 thousand workers.
 
 The 2025 annual workbooks use a new URL scheme (GUID-based) rather than the
 older ``/files/ISPV_25H2.xlsx`` pattern.  This script fetches them directly.
 
-Figure A -- ``rscp_public_private_sector``
+Figure A – ``rscp_public_private_sector``
     Grouped horizontal bar chart: median monthly wage by CZ-NACE section for
     both spheres (2025).  Where a sphere has no employees in a sector (too few
-    to publish or structurally absent), no bar is drawn.  IQR (P25--P75) shown
+    to publish or structurally absent), no bar is drawn.  IQR (P25–P75) shown
     as error markers.
 
-    Argumentation: The public--private wage gap is NOT uniform across sectors.
+    Argumentation: The public–private wage gap is NOT uniform across sectors.
     Public sector workers earn more in health (Q) and less in ICT (J) and
-    public administration (O) vs their private-sector counterparts ---
+    public administration (O) vs their private-sector counterparts —
     illustrating why blanket collective-agreement extension is more complex
     than a single economy-wide comparison suggests.
 
-Figure B -- ``rscp_public_private_distribution``
+Figure B – ``rscp_public_private_distribution``
     Dual box-and-whisker (P10/P25/P50/P75/P90) for the total MZS vs total PLS
     side-by-side, highlighting the overall wage distribution shape inequality.
 
-Data source: MPSV ISPV / TREXIMA (Mzdová sféra MZS, Platová sféra PLS, rok 2025)
-Filter: mediánová mzda podle odvětví CZ-NACE a celkové srovnání distribucí (podnikatelská vs. nepodnikatelská sféra ČR)
+Data sources
+------------
+MZS (2025): ISPV national workbook, mzdová sféra ČR, rok 2025
+PLS (2025): ISPV national workbook, platová sféra ČR, rok 2025
+Source: TREXIMA / MPSV, published 25. 3. 2026, https://www.ispv.cz
 
 Output
 ------
@@ -55,16 +58,16 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
+from config import FONT_SIZE, LATEX_PICS_DIR
 from stattool.fetch import fetch
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
 
-apply_style_pgf()
+apply_style()
 
 # ── Constants ────────────────────────────────────────────────────────────────
 ISPV_YEAR = 2025
 
-# 2025 national ISPV files --- GUID-based URLs (old /files/ scheme returns 2149-byte error page)
+# 2025 national ISPV files — GUID-based URLs (old /files/ scheme returns 2149-byte error page)
 _URL_MZS = (
     "https://www.ispv.cz/getattachment/b568f503-6978-4af7-9f8a-d5aef8e46619/"
     "CR_254_MZS-xlsx.aspx?disposition=attachment"
@@ -74,8 +77,8 @@ _URL_PLS = (
     "CR_254_PLS-xlsx.aspx?disposition=attachment"
 )
 
-_MZS_COLOR = "#E07B39"   # orange -- private/wage sphere
-_PLS_COLOR = "#5B8DB8"   # blue   -- public/salary sphere
+_MZS_COLOR = "#E07B39"   # orange – private/wage sphere
+_PLS_COLOR = "#5B8DB8"   # blue   – public/salary sphere
 
 # NACE section short labels (Czech)
 _NACE_LABEL: dict[str, str] = {
@@ -210,7 +213,7 @@ except Exception as exc:
     print(f"  PLS download failed: {exc}")
 
 if p_mzs is None and p_pls is None:
-    print("Both workbooks unavailable -- skipping figures.")
+    print("Both workbooks unavailable – skipping figures.")
     sys.exit(0)
 
 
@@ -218,8 +221,6 @@ if p_mzs is None and p_pls is None:
 # Parse data
 # ════════════════════════════════════════════════════════════════════════════
 df_mzs = df_pls = None
-overall_mzs: dict = {}
-overall_pls: dict = {}
 
 if p_mzs is not None:
     try:
@@ -247,7 +248,7 @@ if p_pls is not None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A -- Sector comparison (grouped horizontal bars)
+# Figure A – Sector comparison (grouped horizontal bars)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding Figure A: sector wage comparison …")
 
@@ -291,8 +292,7 @@ for i, row in df_plot.iterrows():
     # MZS bar
     if pd.notna(row["m_med"]):
         ax_a.barh(y[i] + bar_h / 2, row["m_med"], height=bar_h,
-                  color=_MZS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4,
-                  zorder=1)
+                  color=_MZS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4)
         # IQR error bar
         if pd.notna(row["m_p25"]) and pd.notna(row["m_p75"]):
             ax_a.errorbar(
@@ -303,8 +303,7 @@ for i, row in df_plot.iterrows():
     # PLS bar
     if pd.notna(row["p_med"]):
         ax_a.barh(y[i] - bar_h / 2, row["p_med"], height=bar_h,
-                  color=_PLS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4,
-                  zorder=1)
+                  color=_PLS_COLOR, alpha=0.85, edgecolor="white", linewidth=0.4)
         if pd.notna(row["p_p25"]) and pd.notna(row["p_p75"]):
             ax_a.errorbar(
                 row["p_med"], y[i] - bar_h / 2,
@@ -313,83 +312,180 @@ for i, row in df_plot.iterrows():
             )
 
 ax_a.set_yticks(y)
-ax_a.set_yticklabels([])
-for _i, _row in df_plot.iterrows():
-    ax_a.text(
-        0.005, y[_i],
-        f"{_row['code']} - {_row['label']}",
-        transform=ax_a.get_yaxis_transform(),
-        fontsize=FIGURE_LABEL_SIZE,
-        ha="left", va="center",
-        zorder=15,
-        clip_on=False,
-        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6, "pad": 1.2},
-    )
-ax_a.tick_params(axis="y", pad=6)
-ax_a.tick_params(axis="x", labelsize=FIGURE_LABEL_SIZE)
-ax_a.xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}")
+ax_a.set_yticklabels(
+    [f"{row['code']}  {row['label']}" for _, row in df_plot.iterrows()],
+    fontsize=FONT_SIZE - 0.5,
 )
-ax_a.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-STRINGS_A = {
-    "title": rf"\acs{{geo-CZ}}: mediánová mzda/plat podle odvětví \acs{{NACE}} ({ISPV_YEAR}); chybové úsečky P25--P75 (\acs{{IQR}})",
-    "xlabel": r"hrubá měsíční mzda/plat [tis.\,\si{\czk}]",
-}
-ax_a.set_xlabel(STRINGS_A["xlabel"], fontsize=FIGURE_LABEL_SIZE)
-fig_a.suptitle(STRINGS_A["title"], fontsize=FIGURE_TEXT_SIZE, y=0.995)
+ax_a.xaxis.set_major_formatter(
+    ticker.FuncFormatter(lambda x, _: f"{x / 1_000:.0f}\u00a0tis.\u00a0Kč")
+)
+ax_a.set_xlabel("hrubá měsíční mzda/plat – medián [tis.\u00a0Kč]", fontsize=FONT_SIZE)
+ax_a.set_title(
+    f"ČR: mediánová mzda/plat podle odvětví CZ-NACE ({ISPV_YEAR})\n"
+    "Chybové úsečky = mezikvartilový rozsah P25–P75",
+    fontsize=FONT_SIZE,
+)
 
-def _fmt_tis(v: float | None) -> str:
-    if v is None:
-        return "?"
-    return f"{v:,.0f}".replace(",", "\N{NO-BREAK SPACE}")
-
-# Employee counts: prefer M0 overall row; fall back to sum of NACE-sector rows
-# (both come from the same ISPV workbook, so the sum is the natural source of
-# truth when _parse_overall cannot locate the aggregate-row count column).
-_emp_mzs_raw = overall_mzs.get("emp_tis")
-if _emp_mzs_raw is None and df_mzs is not None:
-    _emp_mzs_raw = df_mzs["emp_tis"].sum()
-_emp_pls_raw = overall_pls.get("emp_tis")
-if _emp_pls_raw is None and df_pls is not None:
-    _emp_pls_raw = df_pls["emp_tis"].sum()
-
-_emp_mzs: float | None = _emp_mzs_raw if (
-    _emp_mzs_raw is not None and not np.isnan(float(_emp_mzs_raw))
-) else None
-_emp_pls: float | None = _emp_pls_raw if (
-    _emp_pls_raw is not None and not np.isnan(float(_emp_pls_raw))
-) else None
-
-_mzs_label = f"Mzdová sféra ({_fmt_tis(_emp_mzs)}\N{NO-BREAK SPACE}tis.\N{NO-BREAK SPACE}osob)"
-_pls_label = f"Platová sféra ({_fmt_tis(_emp_pls)}\N{NO-BREAK SPACE}tis.\N{NO-BREAK SPACE}osob)"
-print(f"  Legend: {_mzs_label} | {_pls_label}")
-patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label=_mzs_label)
-patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label=_pls_label)
+patch_mzs = mpatches.Patch(color=_MZS_COLOR, alpha=0.85, label="Mzdová sféra (soukromý sektor, ~3\u00a0010\u00a0tis.\u00a0osob)")
+patch_pls = mpatches.Patch(color=_PLS_COLOR, alpha=0.85, label="Platová sféra (veřejný sektor, ~684\u00a0tis.\u00a0osob)")
 ax_a.legend(handles=[patch_mzs, patch_pls], frameon=False,
-            fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="lower right", markerfirst=False)
-ax_a.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
-ax_a.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
-ax_a.tick_params(axis="y", which="minor", left=False)
+            fontsize=FONT_SIZE - 1, loc="lower right")
+ax_a.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
 ax_a.set_axisbelow(True)
 
-fig_a.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
-savefig_pgf(fig_a, "problemy_verejny_soukromy", strings=STRINGS_A)
-save_figure_tex_pgf(
+fig_a.tight_layout()
+savefig(fig_a, "problemy_verejny_soukromy", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
     "problemy_verejny_soukromy",
-    caption=f"Mediánová mzda a~plat podle sekce \\acs{{NACE}}, veřejný vs.\\ soukromý sektor, \\acs{{geo-CZ}}, {ISPV_YEAR}",
+    caption=(
+        f"Mediánová mzda a~plat podle sekce NACE, ČR, {ISPV_YEAR} "
+        r"(ISPV/RSCP, TREXIMA/MPSV). "
+        "Chybové úsečky znázorňují mezikvartilový rozsah P25–P75. "
+        "Celkový mediánový plat veřejného sektoru (48\u00a0064\u00a0Kč) převyšuje "
+        "mediánovou mzdu soukromého sektoru (43\u00a0241\u00a0Kč) o~11\u00a0\\,\\%, "
+        "avšak tato prémie je odvětvově heterogenní: veřejný sektor zaostává "
+        "v~ICT (J) a~veřejné správě (O), ale převyšuje soukromý v~zdravotnictví (Q) "
+        "a~dopravě (H)."
+    ),
     cite_keys="mpsv_ispv",
     label="fig:problemy_verejny_soukromy",
-    resizebox_width=r"\linewidth",
+    width=r"0.92\linewidth",
     cite_key="mpsv_ispv",
-    strings=STRINGS_A,
 )
 print("  Figure A done.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B -- Overall distribution comparison (P10/P25/P50/P75/P90)
-# Commented out per user request — commentary merged into
-# texparts/commentary/problemy_verejny_soukromy.tex.
+# Figure B – Overall distribution comparison (P10/P25/P50/P75/P90)
 # ════════════════════════════════════════════════════════════════════════════
-print("\nDone.")
+print("Building Figure B: overall distribution comparison …")
 
+# Overall distribution stats
+_overall_mzs = overall_mzs if "overall_mzs" in dir() else {}
+_overall_pls = overall_pls if "overall_pls" in dir() else {}
+
+# Values from directly-parsed data (fallback to hardcoded 2025 data)
+_stat_defaults = {
+    "mzs": {"p10": 24_919, "p25": 32_538, "median": 43_241, "p75": 58_801, "p90": 85_087, "mean": 52_239},
+    "pls": {"p10": 32_099, "p25": 39_252, "median": 48_064, "p75": 64_016, "p90": 97_225, "mean": 59_543},
+}
+
+def _stat(parsed: dict, key: str, default: float) -> float:
+    v = parsed.get(key)
+    return float(v) if v is not None and pd.notna(v) else default
+
+mzs_stat = {k: _stat(_overall_mzs, k, _stat_defaults["mzs"][k]) for k in _stat_defaults["mzs"]}
+pls_stat = {k: _stat(_overall_pls, k, _stat_defaults["pls"][k]) for k in _stat_defaults["pls"]}
+
+# Extract the actual P90 value from the M0 totals in the parsed files if available
+if p_mzs is not None:
+    try:
+        xl_m = pd.ExcelFile(p_mzs, engine="openpyxl")
+        m0_sheet = next(s for s in xl_m.sheet_names if s.endswith("-M0"))
+        df_m0 = pd.read_excel(p_mzs, sheet_name=m0_sheet, engine="openpyxl", header=None)
+        for _, row in df_m0.iterrows():
+            for j in range(df_m0.shape[1] - 1):
+                cell = str(row.iloc[j]).lower()
+                val = pd.to_numeric(row.iloc[j + 1], errors="coerce")
+                if pd.isna(val):
+                    continue
+                if "3. kvartil" in cell or "3.kvartil" in cell:
+                    mzs_stat["p75"] = float(val)
+                elif "9. decil" in cell or "9.decil" in cell:
+                    mzs_stat["p90"] = float(val)
+    except Exception:
+        pass
+
+if p_pls is not None:
+    try:
+        xl_p = pd.ExcelFile(p_pls, engine="openpyxl")
+        m0_sheet = next(s for s in xl_p.sheet_names if s.endswith("-M0"))
+        df_p0 = pd.read_excel(p_pls, sheet_name=m0_sheet, engine="openpyxl", header=None)
+        for _, row in df_p0.iterrows():
+            for j in range(df_p0.shape[1] - 1):
+                cell = str(row.iloc[j]).lower()
+                val = pd.to_numeric(row.iloc[j + 1], errors="coerce")
+                if pd.isna(val):
+                    continue
+                if "3. kvartil" in cell or "3.kvartil" in cell:
+                    pls_stat["p75"] = float(val)
+                elif "9. decil" in cell or "9.decil" in cell:
+                    pls_stat["p90"] = float(val)
+    except Exception:
+        pass
+
+fig_b, ax_b = plt.subplots(figsize=cm2in(14, 10))
+
+PERCENTILES_LABELS = ["P10\n(1. decil)", "P25\n(1. kvart.)", "Medián\n(P50)", "P75\n(3. kvart.)", "P90\n(9. decil)"]
+PERCENTILE_KEYS   = ["p10",             "p25",               "median",         "p75",              "p90"]
+
+x_pos = np.arange(len(PERCENTILE_KEYS))
+bar_w = 0.35
+
+mzs_vals = [mzs_stat[k] for k in PERCENTILE_KEYS]
+pls_vals = [pls_stat[k] for k in PERCENTILE_KEYS]
+
+bars_m = ax_b.bar(x_pos - bar_w / 2, [v / 1_000 for v in mzs_vals], bar_w,
+                  color=_MZS_COLOR, alpha=0.87, label="Mzdová sféra (soukromý)")
+bars_p = ax_b.bar(x_pos + bar_w / 2, [v / 1_000 for v in pls_vals], bar_w,
+                  color=_PLS_COLOR, alpha=0.87, label="Platová sféra (veřejný)")
+
+# Value labels on bars
+for bars, vals in [(bars_m, mzs_vals), (bars_p, pls_vals)]:
+    for bar, val in zip(bars, vals):
+        ax_b.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.4,
+            f"{val / 1_000:.1f}",
+            ha="center", va="bottom", fontsize=FONT_SIZE - 1.5,
+        )
+
+# Arrow annotations for premium at median
+med_m = mzs_stat["median"] / 1_000
+med_p = pls_stat["median"] / 1_000
+prem_pct = (med_p - med_m) / med_m * 100
+ax_b.annotate(
+    f"+{prem_pct:.1f}\u00a0%",
+    xy=(2 + bar_w / 2, med_p + 0.5),
+    xytext=(2 + bar_w * 1.2, med_p + 2.5),
+    fontsize=FONT_SIZE - 1,
+    arrowprops=dict(arrowstyle="->", color="gray", lw=0.9),
+    color="gray",
+)
+
+ax_b.set_xticks(x_pos)
+ax_b.set_xticklabels(PERCENTILES_LABELS, fontsize=FONT_SIZE - 0.5)
+ax_b.set_ylabel("hrubá měsíční mzda/plat [tis.\u00a0Kč]", fontsize=FONT_SIZE)
+ax_b.yaxis.set_major_formatter(
+    ticker.FuncFormatter(lambda y, _: f"{y:.0f}\u00a0tis.\u00a0Kč")
+)
+ax_b.set_title(
+    f"ČR: rozložení mezd a platů – soukromý vs. veřejný sektor ({ISPV_YEAR})",
+    fontsize=FONT_SIZE,
+)
+ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="upper left")
+ax_b.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
+ax_b.set_axisbelow(True)
+
+fig_b.tight_layout()
+savefig(fig_b, "problemy_verejny_soukromy_dist", out_dir=LATEX_PICS_DIR)
+save_figure_tex(
+    "problemy_verejny_soukromy_dist",
+    caption=(
+        f"Mzdové rozdělení: soukromý vs. veřejný sektor, ČR, {ISPV_YEAR} "
+        r"(ISPV/RSCP, TREXIMA/MPSV). "
+        "Veřejný sektor vykazuje výrazně vyšší hodnoty na všech percentilech díky "
+        "vyšší průměrné kvalifikaci (vzdělání, zdravotnictví) a~platovým tarifním "
+        "tabulkám. Nicméně větší mezikvartilový rozsah v~soukromém sektoru "
+        "od~P25~=~32\u00a0538\u00a0Kč do~P75~=~58\u00a0801\u00a0Kč odráží vyšší "
+        "mzdovou dispersi, což komplikuje jednotné nastavení kolektivněsmlouvního "
+        "mzdového dna."
+    ),
+    cite_keys="mpsv_ispv",
+    label="fig:problemy_verejny_soukromy_dist",
+    width=r"0.85\linewidth",
+    cite_key="mpsv_ispv",
+)
+print("  Figure B done.")
+
+print("\nDone.")

@@ -3,11 +3,11 @@ Regional, gender and sectoral wage stratification using ISPV / RSCP data.
 
 ISPV (*Informační systém o průměrném výdělku*) semi-annual Excel workbooks
 publish wage breakdowns by NACE sector, Czech region (kraj / NUTS3), and sex,
-with full percentile profiles (P10--P90).  This script extracts three
+with full percentile profiles (P10–P90).  This script extracts three
 argumentation figures that together illustrate the multi-dimensional structure
 of wage inequality in the Czech labour market.
 
-Figure A -- ``rscp_regional_wages``
+Figure A – ``rscp_regional_wages``
     Horizontal bar chart: CZ median monthly wage by region (kraj), indexed
     to the national median (100 = ČR celkem).
 
@@ -15,30 +15,30 @@ Figure A -- ``rscp_regional_wages``
     when available; falls back to Eurostat ``earn_rgnmhw`` (mean hourly wages,
     NUTS2) for AT, DE, DK, PL, SK cross-country context.
 
-    Argumentation: Persistent regional wage gaps (Prague 140--150 vs. rural
-    regions 80--90) illustrate why a single national wage floor / collective
-    agreement can mean very different things across regions --- and why regional
+    Argumentation: Persistent regional wage gaps (Prague 140–150 vs. rural
+    regions 80–90) illustrate why a single national wage floor / collective
+    agreement can mean very different things across regions — and why regional
     extension mechanisms matter for equality.
 
-Figure B -- ``rscp_gender_gap``
+Figure B – ``rscp_gender_gap``
     Dual panel:
-      Left  -- CZ unadjusted gender pay gap (%) by NACE sector (ISPV M/Ž
+      Left  – CZ unadjusted gender pay gap (%) by NACE sector (ISPV M/Ž
               median columns or Eurostat ``earn_gr_gpgr2``).
-      Right -- Cross-country unadjusted GPG trend 2010--2024 for 6 countries
+      Right – Cross-country unadjusted GPG trend 2010–2024 for 6 countries
               (Eurostat ``earn_gr_gpgr2``, economy-wide).
 
     Argumentation: The sectoral GPG panel shows that the gender wage gap is
-    not uniform --- it is smallest in sectors with strong collective agreements
+    not uniform — it is smallest in sectors with strong collective agreements
     (industry, finance) and largest in mixed/service sectors.  The
     cross-country trend shows CZ consistently above the EU average, providing
     a reform motivation.
 
-Figure C -- ``rscp_sector_percentiles``
+Figure C – ``rscp_sector_percentiles``
     Grouped horizontal bar (floating whisker) chart: P25 / P50 / P75 wage
     levels by NACE sector for CZ (ISPV percentile columns).  Bars run from
     P25 to P75; tick marks at P50.
 
-    Argumentation: Sectors with narrow P25--P75 bands (low within-sector
+    Argumentation: Sectors with narrow P25–P75 bands (low within-sector
     dispersion) are candidates for sector-wide collective agreements with
     tight wage grids; wide-band sectors have heterogeneous workforces where
     economy-wide KS floors are less effective.
@@ -77,16 +77,15 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_TITLE_SIZE, FIGURE_COMPACT_LABEL_SIZE
-from stattool.data_quality import warn_fallback, warn_non_target_year
+from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
-from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
-from statout.timeline import timeline, EU27 as _EU27
+from stattool.style import apply_style, cm2in, savefig, save_figure_tex
+from statout.timeline import timeline
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
-apply_style_pgf()
+apply_style()
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
@@ -95,7 +94,7 @@ END_YEAR   = 2024
 
 CZ_COLOR = COUNTRY_COLORS["CZ"]
 
-# Czech regions (kraje) --- canonical order (Prague first, then Bohemia, Moravia)
+# Czech regions (kraje) — canonical order (Prague first, then Bohemia, Moravia)
 CZ_REGIONS_ORDER = [
     "Hlavní město Praha",
     "Jihomoravský kraj",
@@ -332,10 +331,7 @@ def _parse_mzs_percentile_sheet(path: Path, sheet: str) -> pd.DataFrame | None:
         df = df[df[col_map["p50"]] > 1_000]
         if len(df) < 3:
             return None
-        out = pd.DataFrame({
-            "code": df[0].astype(str).str.strip().values,
-            "sector": df[label_col].values,
-        })
+        out = pd.DataFrame({"sector": df[label_col].values})
         for pname, col in col_map.items():
             out[pname] = df[col].values
         return out
@@ -448,41 +444,33 @@ print("Fetching ISPV data …")
 ispv_path: Path | None = None
 ispv_year: int | None = None
 
-# Try current GUID-based national workbook first (old /files/ endpoints are stale).
-try:
-    p = fetch(_ISPV_NAT_2025_URL, suffix=".xlsx")
-    with open(p, "rb") as _fh:
-        if _fh.read(2) == b"PK":
-            ispv_path, ispv_year = p, 2025
-            print(f"  ISPV 2025 GUID: {p.name}")
-        else:
-            print("  ISPV 2025 GUID: downloaded file is not XLSX")
-except Exception as exc:
-    print(f"  ISPV 2025 GUID fetch failed: {exc}")
+for yr in range(END_YEAR, 2014, -1):
+    try:
+        path_try = fetch_ispv(yr, half=2, sphere="podnikatelska")
+        # Quick sanity: at least parseable as Excel
+        pd.read_excel(path_try, sheet_name=0, nrows=5)
+        ispv_path = path_try
+        ispv_year = yr
+        print(f"  ISPV {yr}/H2 fetched: {path_try.name}")
+        break
+    except Exception as exc:
+        print(f"  ISPV {yr}/H2: skipped ({type(exc).__name__})")
 
-# Secondary: legacy half-year endpoints.
+# Fallback: 2025 national MZS workbook via GUID
 if ispv_path is None:
-    for yr in range(END_YEAR, 2014, -1):
-        try:
-            path_try = fetch_ispv(yr, half=2, sphere="podnikatelska")
-            # Quick sanity: at least parseable as Excel
-            pd.read_excel(path_try, sheet_name=0, nrows=5)
-            ispv_path = path_try
-            ispv_year = yr
-            print(f"  ISPV {yr}/H2 fetched: {path_try.name}")
-            break
-        except Exception as exc:
-            print(f"  ISPV {yr}/H2: skipped ({type(exc).__name__})")
-
-if ispv_year is not None:
-    warn_non_target_year(
-        source="MPSV/TREXIMA ISPV",
-        year=ispv_year,
-        context="Regional/sector stratification ISPV input",
-    )
+    try:
+        p = fetch(_ISPV_NAT_2025_URL, suffix=".xlsx")
+        with open(p, "rb") as _fh:
+            if _fh.read(2) == b"PK":
+                ispv_path, ispv_year = p, 2025
+                print(f"  ISPV 2025 GUID fallback: {p.name}")
+            else:
+                print("  ISPV 2025 GUID fallback: file is not a valid XLSX")
+    except Exception as exc:
+        print(f"  ISPV 2025 GUID fallback failed: {exc}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure A -- Regional wage levels
+# Figure A – Regional wage levels
 # ════════════════════════════════════════════════════════════════════════════
 regional_done = False
 
@@ -510,43 +498,39 @@ if ispv_path is not None:
         bar_colors = [CZ_COLOR if v >= 100 else "#4393C3" for v in reg_idx]
         ax_a.barh(reg_idx.index, reg_idx.values, color=bar_colors, alpha=0.82, height=0.7)
         ax_a.axvline(100, color="gray", linewidth=1.2, linestyle="--", zorder=5)
-        STRINGS_REG = {
-            "title": rf"\acs{{geo-CZ}}: mediánová mzda podle kraje (\acs{{ISPV}} {ispv_year}/H2)",
-            "xlabel": "Index (národní medián = 100)",
-        }
-        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+        ax_a.set_xlabel("Index (národní medián = 100)", fontsize=FONT_SIZE)
         ax_a.set_title(
-            STRINGS_REG["title"],
-            fontsize=FIGURE_TEXT_SIZE,
+            f"ČR: mediánová mzda podle kraje (ISPV {ispv_year}/H2)",
+            fontsize=FONT_SIZE,
         )
         ax_a.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a.legend(handles=[above, below], frameon=False, fontsize=FIGURE_LABEL_SIZE,
+        ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                     loc="lower right")
-        savefig_pgf(fig_a, "problemy_regiony", strings=STRINGS_REG)
-        save_figure_tex_pgf(
+        savefig(fig_a, "problemy_regiony", out_dir=LATEX_PICS_DIR)
+        save_figure_tex(
             "problemy_regiony",
             caption=(
-                r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, "
-                f"{ispv_year}"
+                f"ČR: mediánová hrubá mzda podle kraje (ISPV {ispv_year}/H2, "
+                "MPSV/TREXIMA), normovaná na národní medián\u00a0=\u00a0100. "
+                "Červené sloupce = regiony s~nadprůměrnou mzdou; modré = "
+                "podprůměrné kraje. Přetrvávající regionální mzdové nerovnosti "
+                "dokládají, proč celostátní minimální mzda a KS různě ovlivňují "
+                "reálnou kupní sílu zaměstnanců v~různých částech republiky."
             ),
             cite_keys="mpsv_ispv",
             label="fig:problemy_regiony",
-            resizebox_width=r"\linewidth",
+            width=r"0.95\linewidth",
             cite_key="mpsv_ispv",
-            strings=STRINGS_REG,
         )
         regional_done = True
+
+if not regional_done:
     # Fallback: download 14 regional ISPV workbooks (NUTS3)
     print("  ISPV regional data unavailable; trying 14 regional ISPV workbooks …")
-    warn_fallback(
-        "Regional table unavailable in national workbook, using 14 regional ISPV workbooks",
-        source="MPSV/TREXIMA ISPV",
-        year=2025,
-    )
     regional_medians = _fetch_ispv_regional_medians()
     if len(regional_medians) >= 4:
         nat_med = float(pd.Series(list(regional_medians.values())).median())
@@ -560,43 +544,44 @@ if ispv_path is not None:
         bar_colors2 = [CZ_COLOR if v >= 100 else "#4393C3" for v in s_idx.values]
         ax_a2.barh(s_idx.index, s_idx.values, color=bar_colors2, alpha=0.82, height=0.7)
         ax_a2.axvline(100, color="gray", linewidth=1.2, linestyle="--", zorder=5)
-        STRINGS_REG2 = {
-            "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1, \acs{MPSV}/TREXIMA)",
-            "xlabel": "Index (národní medián = 100)",
-        }
-        ax_a2.set_xlabel(STRINGS_REG2["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+        ax_a2.set_xlabel("Index (národní medián = 100)", fontsize=FONT_SIZE)
         ax_a2.set_title(
-            STRINGS_REG2["title"],
-            fontsize=FIGURE_TEXT_SIZE,
+            "ČR: mediánová mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA)",
+            fontsize=FONT_SIZE,
         )
         ax_a2.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FIGURE_LABEL_SIZE,
+        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE - 1,
                      loc="lower right")
-        savefig_pgf(fig_a2, "problemy_regiony", strings=STRINGS_REG2)
-        save_figure_tex_pgf(
+        savefig(fig_a2, "problemy_regiony", out_dir=LATEX_PICS_DIR)
+        save_figure_tex(
             "problemy_regiony",
             caption=(
-                r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025"
+                "ČR: mediánová hrubá mzda podle kraje (ISPV 2025/H1, MPSV/TREXIMA), "
+                "normovaná na národní medián\u00a0=\u00a0100. "
+                "Červené sloupce\u00a0= regiony s~nadprůměrnou mzdou; "
+                "modré\u00a0= podprůměrné kraje. "
+                "Přetrvávající regionální mzdové nerovnosti dokládají, "
+                "proč celostátní minimální mzda a KS různě ovlivňují "
+                "reálnou kupní sílu zaměstnanců v~různých částech republiky."
             ),
             label="fig:problemy_regiony",
-            resizebox_width=r"\linewidth",
+            width=r"0.95\linewidth",
             cite_key="mpsv_ispv",
-            strings=STRINGS_REG2,
         )
         regional_done = True
     else:
         print(f"  Only {len(regional_medians)} ISPV regional files parsed; skipping.")
 
 if not regional_done:
-    print("Figure A (regional wages) skipped -- no data available.")
+    print("Figure A (regional wages) skipped – no data available.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure B -- Gender pay gap: cross-country timeline (Eurostat earn_gr_gpgr2)
+# Figure B – Gender pay gap: cross-country timeline (Eurostat earn_gr_gpgr2)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding gender pay gap figure …")
 
@@ -608,26 +593,9 @@ try:
         start_period=START_YEAR,
     )
     from stattool.dataset import Dataset
-    ds_gpg_raw = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
-                                       source_url="Eurostat/earn_gr_gpgr2")
-    # Normalize each country's GPG to EU27_2020 GPG = 100 (per year).
-    _gpg_df = ds_gpg_raw.df.copy()
-    _eu_per_year = (
-        _gpg_df[_gpg_df["geo"] == "EU27_2020"]
-        .groupby("time")["value"].mean()
-        .rename("eu_gpg")
-    )
-    _gpg_df = _gpg_df.merge(_eu_per_year, left_on="time", right_index=True, how="inner")
-    _gpg_df = _gpg_df[_gpg_df["eu_gpg"] > 0].copy()
-    _gpg_df["value"] = _gpg_df["value"] / _gpg_df["eu_gpg"] * 100.0
-    _gpg_df = _gpg_df.drop(columns=["eu_gpg"])
-    ds_gpg = Dataset(_gpg_df, name="GPG vs EU27", unit="EU27=100",
-                     source_url="Eurostat/earn_gr_gpgr2")
+    ds_gpg = Dataset.from_sdmx_csv(path_gpg, name="GPG", unit="%",
+                                   source_url="Eurostat/earn_gr_gpgr2")
 
-    STRINGS_GPG = {
-        "title": rf"Nekorigovaný \acs{{GPG}} (\acs{{geo-EU}}27\,=\,100), {START_YEAR}--{END_YEAR}",
-        "ylabel": r"nekorigovaný \acs{GPG} (\acs{geo-EU}27\,=\,100) [\%]",
-    }
     fig_b = timeline(
         ds_gpg,
         countries=COUNTRIES,
@@ -635,8 +603,8 @@ try:
         background_eu=True,
         annotate_last=True,
         show_eu_avg=True,
-        ylabel=STRINGS_GPG["ylabel"],
-        title=STRINGS_GPG["title"],
+        ylabel="nekorigovaný GPG [%]",
+        title="",
     )
     ax_b = fig_b.axes[0]
     ax_b.set_xlim(right=2025)
@@ -644,43 +612,25 @@ try:
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
     )
 
-    # ── PGF tooltips & geo labels ───────────────────────────────────────────
-    _pivot_gpg = (
-        ds_gpg.df[ds_gpg.df["geo"].isin(COUNTRIES)]
-        .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-    )
-    add_pgf_tooltips(ax_b, _pivot_gpg, fmt="{:.1f}")
-    _bg_gpg = sorted(set(_EU27) - set(COUNTRIES))
-    _pivot_gpg_bg = (
-        ds_gpg.df[ds_gpg.df["geo"].isin(_bg_gpg)]
-        .pivot_table(index="time", columns="geo", values="value", aggfunc="mean")
-    )
-    add_pgf_tooltips(ax_b, _pivot_gpg_bg, fmt="{:.1f}")
-    for _child in ax_b.get_children():
-        if hasattr(_child, "get_text"):
-            _txt = _child.get_text().strip()
-            if _txt in COUNTRIES:
-                _child.set_text(f"\\acs{{geo-{_txt}}}")
-
-    NUDGE_LABELS_GPG = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
-    savefig_pgf(fig_b, "problemy_gpg_sektor", strings=STRINGS_GPG, nudge_labels=NUDGE_LABELS_GPG)
-    save_figure_tex_pgf(
+    savefig(fig_b, "problemy_gpg_sektor", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
         "problemy_gpg_sektor",
         caption=(
-            f"Nekorigovaný \\acs{{GPG}}, vybrané země \\acs{{geo-EU}}, "
-            f"{START_YEAR}--{END_YEAR}"),
+            f"Nekorigovaný GPG, vybrané země EU, "
+            f"{START_YEAR}--{END_YEAR}. "
+            "Šedé linie = ostatní členské státy EU; "
+            "přerušovaná černá = průměr EU27"
+        ),
         label="fig:problemy_gpg_sektor",
-        resizebox_width=r"\linewidth",
+        width=r"0.95\linewidth",
         cite_key="eurostat_gpg",
-        strings=STRINGS_GPG,
-        nudge_labels=NUDGE_LABELS_GPG,
     )
 except Exception as exc:
     print(f"Figure B (gender pay gap) failed: {exc}")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C -- Sector wage distribution (P25 / P50 / P75) from ISPV
+# Figure C – Sector wage distribution (P25 / P50 / P75) from ISPV
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding sector percentile figure …")
 pct_df: pd.DataFrame | None = None
@@ -692,28 +642,21 @@ if ispv_path is not None:
         print("  No percentile columns found in ISPV workbook")
 
 if pct_df is not None and "p50" in pct_df.columns:
-    # Use only top-level CZ-ISCO major groups (single-digit codes 1–9)
-    # to keep the chart readable; falls back to all rows if filter empties.
-    if "code" in pct_df.columns:
-        _major = pct_df[pct_df["code"].str.fullmatch(r"\d")]
-        if len(_major) >= 3:
-            pct_df = _major
     # Sort by median descending
     pct_df = pct_df.sort_values("p50", ascending=True).reset_index(drop=True)
     n = len(pct_df)
 
-    fig_c, ax_c = plt.subplots(figsize=cm2in(16, max(9, n * 0.75)))
+    fig_c, ax_c = plt.subplots(figsize=cm2in(16, max(9, n * 0.65)))
 
     y_pos = np.arange(n)
     labels = [str(s) for s in pct_df["sector"]]
 
-    # Draw IQR bar (P25--P75) if available
+    # Draw IQR bar (P25–P75) if available
     if "p25" in pct_df.columns and "p75" in pct_df.columns:
         widths = pct_df["p75"].values - pct_df["p25"].values
         ax_c.barh(
             y_pos, widths, left=pct_df["p25"].values,
-            color="#4393C3", alpha=0.55, height=0.6, label="P25--P75 (IQR)",
-            zorder=1,
+            color="#4393C3", alpha=0.55, height=0.6, label="P25–P75 (IQR)",
         )
 
     # P50 tick mark
@@ -733,49 +676,35 @@ if pct_df is not None and "p50" in pct_df.columns:
             ax_c.plot([p75, p90], [i, i], color="gray", linewidth=1.0, alpha=0.7)
 
     ax_c.set_yticks(y_pos)
-    ax_c.set_yticklabels(labels, fontsize=max(FIGURE_LABEL_SIZE, 10))
-    for _lbl in ax_c.get_yticklabels():
-        _lbl.set_zorder(10)
-        _lbl.set_bbox({"facecolor": "white", "edgecolor": "none", "alpha": 0.6, "pad": 1.2})
-    ax_c.tick_params(axis="x", labelsize=max(FIGURE_LABEL_SIZE, 10))
+    ax_c.set_yticklabels(labels, fontsize=FONT_SIZE - 1)
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
-    ax_c.set_xlim(0, 200_000)
-    ax_c.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-    ax_c.grid(which="major", axis="x", linestyle=":", linewidth=0.5, alpha=0.6)
-    ax_c.grid(which="minor", axis="x", linestyle=":", linewidth=0.3, alpha=0.4)
-    ax_c.tick_params(axis="y", which="minor", left=False)
-    ax_c.set_axisbelow(True)
-    STRINGS_PCT = {
-        "title": rf"\acs{{geo-CZ}}: rozložení mezd podle hlavních skupin CZ-ISCO (\acs{{ISPV}} {ispv_year}/H2); P25--P75 (\acs{{IQR}}) a~medián",
-        "xlabel": r"hrubá měsíční mzda [\si{\czk}]",
-    }
-    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=max(FIGURE_LABEL_SIZE, 10))
+    ax_c.set_xlabel("hrubá měsíční mzda [Kč]", fontsize=FONT_SIZE)
     ax_c.set_title(
-        STRINGS_PCT["title"],
-        fontsize=FIGURE_TITLE_SIZE,
+        f"ČR: rozložení mezd podle odvětví NACE (ISPV {ispv_year}/H2)\n"
+        "mezikvartilový rozsah P25–P75 a medián",
+        fontsize=FONT_SIZE,
     )
-    ax_c.legend(frameon=False, fontsize=max(FIGURE_LABEL_SIZE, 10), loc="lower right")
+    ax_c.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower right")
 
-    savefig_pgf(fig_c, "problemy_sektor_percentily", strings=STRINGS_PCT)
-    save_figure_tex_pgf(
+    savefig(fig_c, "problemy_sektor_percentily", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
         "problemy_sektor_percentily",
         caption=(
-            f"Mzdové rozdělení podle odvětví (CZ-ISCO), \\acs{{geo-CZ}}, {ispv_year}"
+            f"Mzdové rozdělení podle odvětví (CZ-ISCO), ČR, {ispv_year}"
         ),
         cite_keys="mpsv_ispv",
     label="fig:problemy_sektor_percentily",
-        resizebox_width=r"\linewidth",
+        width=r"0.95\linewidth",
         cite_key="mpsv_ispv",
-        strings=STRINGS_PCT,
     )
 else:
-    print("Figure C (sector percentiles) skipped -- no percentile data available.")
+    print("Figure C (sector percentiles) skipped – no percentile data available.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure D -- CZ NUTS3 regional wage choropleth (ISPV 14 regional workbooks)
+# Figure D – CZ NUTS3 regional wage choropleth (ISPV 14 regional workbooks)
 # ════════════════════════════════════════════════════════════════════════════
 print("\nBuilding CZ NUTS3 regional wage choropleth (ISPV) …")
 
@@ -795,55 +724,33 @@ try:
         dtype=float,
     )
 
-    # Data-driven colour scale; keep symmetry around 100 for readability.
-    _wmin = float(wage_series.min())
-    _wmax = float(wage_series.max())
-    _delta = max(100 - _wmin, _wmax - 100)
-    STRINGS_D = {
-        "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1) --- index (medián \acs{geo-CZ}~=~100)",
-        "colorbar_label": r"index (medián \acs{geo-CZ} = 100)",
-    }
-    # CZ NUTS3 region names (for PGF tooltips on region labels).
-    _CZ_NUTS3_NAMES = {
-        "CZ010": "Hlavní město Praha",
-        "CZ020": "Středočeský kraj",
-        "CZ031": "Jihočeský kraj",
-        "CZ032": "Plzeňský kraj",
-        "CZ041": "Karlovarský kraj",
-        "CZ042": "Ústecký kraj",
-        "CZ051": "Liberecký kraj",
-        "CZ052": "Královéhradecký kraj",
-        "CZ053": "Pardubický kraj",
-        "CZ063": "Kraj Vysočina",
-        "CZ064": "Jihomoravský kraj",
-        "CZ071": "Olomoucký kraj",
-        "CZ072": "Zlínský kraj",
-        "CZ080": "Moravskoslezský kraj",
-    }
     fig_d = choropleth_cz(
         wage_series,
         nuts_level_cz=3,
-        title=STRINGS_D["title"],
+        title="ČR: mediánová mzda podle kraje (ISPV 2025/H1) — index (medián ČR\u00a0=\u00a0100)",
         cmap="RdYlGn",
-        vmin=100 - _delta,
-        vmax=100 + _delta,
-        colorbar_label=STRINGS_D["colorbar_label"],
+        vmin=70,
+        vmax=150,
+        colorbar_label="Index (medián ČR = 100)",
         label_fmt="{:.0f}",
-        label_fontsize=FIGURE_TEXT_SIZE,
-        label_names=_CZ_NUTS3_NAMES,
-        label_tooltip_fmt="index {:.1f} (medián ČR = 100)",
     )
 
-    savefig_pgf(fig_d, "problemy_regiony_mapa", strings=STRINGS_D)
-    save_figure_tex_pgf(
+    savefig(fig_d, "problemy_regiony_mapa", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
         "problemy_regiony_mapa",
         caption=(
-            r"Mediánová hrubá mzda podle kraje (NUTS3), \acs{geo-CZ}, 2025"
+            "ČR: mediánová hrubá mzda podle kraje (NUTS3) (ISPV 2025/H1, "
+            "MPSV/TREXIMA), normovaná na národní medián\u00a0=\u00a0100. "
+            "Sousední regiony (AT, DE, PL, SK) zobrazeny šedě. "
+            "Praha (CZ010) a přilehlý Středočeský kraj (CZ020) dosahují "
+            "výrazně vyšších mezd než periferní regiony, "
+            "což zesiluje emigrační tlak a ztěžuje praktický dopad "
+            "celostátních kolektivních smluv."
         ),
-        label="fig:problemy_regiony_mapa",
-        resizebox_width=r"\linewidth",
+        cite_keys="mpsv_ispv",
+    label="fig:problemy_regiony_mapa",
+        width=r"0.85\linewidth",
         cite_key="mpsv_ispv",
-        strings=STRINGS_D,
     )
     print("  Figure D done.")
 
