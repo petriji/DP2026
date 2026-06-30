@@ -1,7 +1,8 @@
 ---
 name: "Formatuj LaTeX"
-description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries. Do NOT use for: generating new content, writing Python, building/compiling."
-tools: [read, search, edit]
+description: "Use when: formatting raw text or notes into CTUthesis LaTeX, applying acro macros (\\ac{}, \\acs{}, \\acp{}, \\acl{}, \\acgen{}, \\acdat{}, \\acacc{}, \\acloc{}, \\acins{}), inserting \\cite{} citations, writing \\label/\\ref cross-references, adding ~ non-breaking spaces, wrapping paragraphs with \\par, declaring new acronyms or variables. Use for: converting pasted paragraphs, fixing macro usage, structuring figures/tables/equations, adding \\DeclareAcronym entries, Czech declension of acronyms. Do NOT use for: generating new content, writing Python, building/compiling."
+tools: [read, search, edit, agent]
+agents: ["Citace a zkratky"]
 argument-hint: "Paste raw text or a .tex fragment to format"
 ---
 
@@ -20,6 +21,7 @@ Before formatting, consult these files when context is needed:
 |------|---------|
 | `latex/texparts/references/acro.tex` | `\DeclareAcronym` entries (tag `zkr`) — **edit here** to add abbreviations |
 | `latex/texparts/references/acro_variables.tex` | `\DeclareVariable` / `\DeclareIndex` entries (tag `vel`) — **edit here** to add variables |
+| `sources/scrape/_GLOSSARY_DP.md` | Thesis terminology glossary (KV, labour market, HRM, EU/ILO vocabulary + acro key suggestions); consult to ensure Czech/English term consistency and to find the correct `\ac{}` key for a given concept |
 | `latex/texparts/uvod.tex` | Reference body text with acro + cite + ref patterns |
 | `latex/texparts/zaver.tex` | Reference conclusion with itemize, samepage, ref |
 | `latex/texparts/python/*.tex` | Reference figure and table blocks |
@@ -29,6 +31,12 @@ Before formatting, consult these files when context is needed:
 ---
 
 ## Rules
+
+### 0. LaTeX compilation coordination — MANDATORY
+
+- Before running any LaTeX compilation command (`latexmk`, `pdflatex`, `xelatex`, `lualatex`, or wrappers that trigger them), ask the user for explicit permission in this chat.
+- Do not start compilation automatically, even for validation.
+- If permission is granted, run one compilation job at a time and report that compile was user-approved.
 
 ### 1. Acronyms — `acro` macros
 
@@ -42,9 +50,53 @@ Before formatting, consult these files when context is needed:
 | Forced full form | `\acf{ID}` | always "long form (SHORT)", use rarely |
 | Sentence-initial (capitalised) | `\Ac{ID}` | first word capitalised |
 | Mark as used without printing | `\acuse{ID}` | for variables used in math mode |
+| **Genitive** (2. pád) | `\acgen{ID}` | first use: declined long + (SHORT); then SHORT |
+| **Dative** (3. pád) | `\acdat{ID}` | same pattern |
+| **Accusative** (4. pád) | `\acacc{ID}` | same pattern |
+| **Locative** (6. pád) | `\acloc{ID}` | same pattern |
+| **Instrumental** (7. pád) | `\acins{ID}` | same pattern |
+| Genitive long only | `\aclgen{ID}` | always the declined long form |
+| Dative long only | `\acldat{ID}` | always the declined long form |
+| Accusative long only | `\aclacc{ID}` | always the declined long form |
+| Locative long only | `\aclloc{ID}` | always the declined long form |
+| Instrumental long only | `\aclins{ID}` | always the declined long form |
+| **Force-first** (acc, most common) | `\acaccf{ID}` | resets used-flag + accusative first-form: re-introduces "long-form (SHORT)" at start of dense-use block |
+| Force-first genitive | `\acgenf{ID}` | resets + genitive first-form |
+| Force-first dative | `\acdatf{ID}` | resets + dative first-form |
+| Force-first locative | `\aclocf{ID}` | resets + locative first-form |
+| Force-first instrumental | `\acinsf{ID}` | resets + instrumental first-form |
+| Force-first nominative | `\acf{ID}` | built-in acro; same role for nominative |
+| Country code in figures | `\acs{geo-CZ}` | renders "CZ"; figures/tables ONLY |
+| Country full name (rare) | `\acl{geo-XX}` | full Czech name; prefer plain Czech word in prose |
+| Czech Republic in prose | `\ac{ČR}` | separate acronym; renders "Česká republika (ČR)" first / "ČR" later |
+| ČR declined | `\acgen{ČR}` etc. | declined "České republiky" (gen), `\acacc{ČR}`, `\acdat{ČR}`, `\acloc{ČR}`, `\acins{ČR}` |
 
 **NEVER** write out the expanded form manually. Always use `\ac{ID}` etc.
 Check `acro.tex` for the correct ID; IDs are case-sensitive (e.g. `NC`, `FEM`, `ML`).
+
+**Czech declension**: When an acronym appears in an oblique case, use the appropriate
+declension command (`\acgen{}`, `\acdat{}`, etc.) instead of writing the declined long form by hand.
+Declension forms are set per-acronym via `\AcroPropertiesSet{ID}{long-genitive-form=..., ...}`.
+Currently declared: EU, HDP, TFR, KV, KS, KSVS, APZ, MPSV, ČR.
+**If a needed acronym lacks declension forms, invoke `Citace a zkratky` to add them BEFORE
+inserting the declension command.** Do not leave undefined cases — they expand to empty long
+forms and break the prose.
+
+**Force-first variants** (`\acaccf`, `\acgenf`, `\acdatf`, `\aclocf`, `\acinsf`, `\acf`):
+use at the start of a paragraph or section where an acronym repeats heavily and needs
+re-introducing in full. Resets the used-flag, then expands to "long-case-form (SHORT)"
+regardless of prior usage. Most common in Czech prose: `\acaccf{KEY}` (accusative).
+
+**Country codes — STRICT split**:
+- `\acs{geo-XX}` is reserved for **figure and table content only** (axis labels, legends,
+  cells, captions). Never write it in prose.
+- For Czech Republic in prose, use `\ac{ČR}` (separate acronym, with full declension).
+- For other countries in prose, write the plain Czech name (`Německo`, `Polsko`) or
+  `\acl{geo-XX}` for the formal long form.
+
+**Country codes**: Use `\acs{geo-XX}` for ISO country codes (tag `geo`, hidden from lists).
+All EU-27 codes are declared. Example: `\acs{geo-CZ}` → "CZ".
+Renders as a hover tooltip ("Česká republika") but is **not clickable** — tag=geo entries skip the GoTo Link wrapper because their target is never registered in the printed acronym list. This is intentional; do not add `\hypertarget{geo-XX}` workarounds.
 
 #### Adding a new abbreviation
 
@@ -62,14 +114,41 @@ If the input contains an acronym not yet in `acro.tex`, **add it** to `latex/tex
 	}
 ```
 
+**Tags**: `zkr` for abbreviations, `vel` for variables, `idx` for indices, `geo` for country codes.
+Printed lists: `zkr`, `vel`, `idx` (geo entries stay hidden).
+
 For a math variable, add to `latex/texparts/references/acro_variables.tex`:
 
 ```latex
-% simple symbol
-\DeclareVariable{var-id}{\ensuremath{X}}{description [unit]}
-% symbol with subscript index
-\DeclareIndex{var-id}{\ensuremath{X_0}}{\ensuremath{0}}{description}
+% simple symbol — entry tagged `vel`, printed in the variables list
+\DeclareVariable{var-w}{\ensuremath{w}}{mzda [\SI{}{\czk\per\hour}]}
+
+% subscript / superscript index — entry tagged `idx`, printed in the indices list
+%   #1 = key
+%   #2 = list display (placeholder form, square_*)
+%   #3 = inline display (bare token used in math, e.g. z, M, PPS)
+%   #4 = long description
+\DeclareIndex{idx-z}{\ensuremath{\square_z}}{\ensuremath{z}}{zaměstnanec}
+
+% accent index — declared for the list, applied via helper macro
+\DeclareIndex{idx-tilde}{\ensuremath{\tilde{\square}}}{\ensuremath{\tilde{\square}}}{medián veličiny}
+% applied as: \acidxtilde{\acs{var-w}}  →  \tilde{w}
 ```
+
+**Using indices in equations and prose** (always paired with a variable, never standalone):
+
+```latex
+% in math / equations
+\acs{var-N}_{\acs{idx-z},\acs{idx-M}}      % → N_{z,M}
+\acs{var-c}_{\acs{idx-SP},\acs{idx-Z}}     % → c_{SP,Z} (zaměstnavatel)
+\acs{var-y}^{\acs{idx-PPS}}                % → y^{PPS}
+\acidxbar{\acs{var-M}}                     % → \bar{M}  (auto-\acuse)
+
+% in prose: same pattern, wrapped in $...$
+počet zaměstnaných mužů $\acs{var-N}_{\acs{idx-z},\acs{idx-M}}$ vzrostl…
+```
+
+`\acs{idx-z}` renders only the bare token `z` inline; the placeholder form `\square_z` appears solely in the indices list (driven by the `index` property declared on each idx-* entry).
 
 After editing, use the new ID in the formatted text immediately.
 
@@ -80,7 +159,24 @@ After editing, use the new ID in the formatted text immediately.
 - If the citation key is unknown, write `\cite{TODO}` with a `% TODO: doplnit klíč` comment.
 - Multiple consecutive citations: `\cite{key1}\cite{key2}` (no space between).
 
+<<<<<<< HEAD
+**Citation density discipline (MANDATORY):**
+
+- **Sparse, not dense.** A typical paragraph carries at most **one** `\cite{}` block (which may chain `\cite{a}\cite{b}` if multiple sources back the same logical block).
+- **At the end of a logical block, never mid-paragraph.** Place the citation at the end of the paragraph or at the boundary of a logical sub-block — not after individual sentences inside flowing argumentation.
+- **Do not repeat the same key across consecutive paragraphs.** Once a source has been cited at the end of a paragraph, it can be assumed to back the surrounding discussion; cite it again only when introducing a clearly distinct claim from the same source much later in the text.
+- **Generic / textbook claims may go uncited.** Definitional sentences ("tripartita zahrnuje vládu, zaměstnavatele a~zaměstnance") and well-known facts ("MOP byla založena v~roce 1919") do not need citation if the supporting source is cited elsewhere in the section.
+- **One cite per law per paragraph.** When a paragraph names several paragraphs of the same law, cite the law once (at the end of the block discussing it), not after each `§`.
+- The opposite extreme (no citations at all) is also wrong — every block that makes a non-trivial empirical or interpretive claim must end with a `\cite{}`.
+
+=======
+>>>>>>> origin/py_stats
 **Finding citation keys**: Read `\addbibresource{…}` lines in `latex/main.tex` to discover which `.bib` files are active, then search those files for the relevant entry.
+
+**Citation integrity — MANDATORY:**
+- **Only `socialnidialog.bib` entries are permitted.** No external URLs, footnote-only attributions, or bare author-year strings may substitute for `\cite{}` in the final text.
+- **Every data point or statistic must be backed by a bib entry.** Data from databases (Eurostat, OECD, MPSV, ISPV, ETUI, etc.) is only allowed if a corresponding `@misc`/`@dataset` entry exists in `socialnidialog.bib`. If a required entry is missing, invoke `Citace a zkratky` to add it before inserting the data or claim.
+- Do NOT insert `\cite{TODO}` as a permanent placeholder — it must be resolved before the text is committed.
 
 ### 3. Cross-references — `\label` and `\ref`
 
@@ -127,16 +223,26 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 
 ### 6. Figures
 
+**Standard (PDF) figure:**
 ```latex
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\columnwidth]{../pics/python/filename}
+  \includegraphics[width=\columnwidth]{../python/figures/filename}
   \caption{Popis obrázku.\label{fig:filename}}
 \end{figure}
 ```
 - Caption ends with `.` before `\label{}`.
 - Use `[htbp]` placement unless section context requires `[H]` (forced position).
-- Reference image path relative to the `.tex` file location (usually `../pics/python/`).
+- Reference image path relative to the `.tex` file location (always `../python/figures/`).
+
+**PGF (LaTeX-native) figure:**
+```latex
+\inputpgffigure{figure_name}
+```
+- Defined in `CTUthesis.cls`. Checks if `.pgf` exists; shows yellow warning box if not.
+- Resolves to `\input{texparts/figures/figure_name}` which contains `\def` macros + `figure` env.
+- `texparts/figures/figure_name.tex` is git-tracked and hand-editable — change caption, annotations there.
+- Do NOT use `\begin{figure}` manually for PGF figures — the strings file already contains it.
 
 ### 7. Tables
 
@@ -168,6 +274,7 @@ Inside `enumerate`/`itemize` items, do **not** add `\par`.
 ```
 - In-line math: `$…$`
 - Variable symbols in text that correspond to `vel`-tagged acro entries: use `\acs{var-xxx}` or `\acuse{var-xxx}` to register usage.
+- Index symbols in equations and prose are always paired with a variable: `\acs{var-N}_{\acs{idx-z},\acs{idx-M}}` → `N_{z,M}`. `\acs{idx-X}` standalone is reserved for math/equations only — never as a free word in prose. Accents (`\bar`, `\tilde`, `\hat`) on a variable use the helper macros `\acidxbar{...}`, `\acidxtilde{...}`, `\acidxhat{...}` which auto-register the corresponding `idx-*` entry.
 
 ### 9. Units — `siunitx`
 
@@ -176,9 +283,60 @@ Always use `\SI{value}{unit}` for physical quantities with units:
 - Decimal separator in Czech: comma inside `\SI{}{}` is fine — siunitx handles it.
 - Bare percentages in text (without `\SI`): `11{,}4~\%` (note `{,}` for comma as decimal separator).
 
-### 10. Typography
+**Project-specific custom units** (defined in `latex/texparts/references/acro_variables.tex`):
 
-- Quotes via `csquotes`: `\enquote{text}` or `"text"` (outer quotes mapped to locale-correct form).
+| LaTeX command | Renders as | Usage example |
+|---------------|------------|---------------|
+| `\eur` | € | `\SI{1200}{\eur}` |
+| `\czk` | Kč | `\SI{45000}{\czk}` |
+| `\pps` | PPS | `\SI{12{,}5}{\pps}` |
+| `\week` | týd. | `\SI{40}{\week}` |
+| `\month` | měs. | `\SI{6}{\month}` |
+| `\person` | os. | `\SI{500}{\person}` |
+
+**Compound units** — combine with siunitx `\per` and built-in units (`\hour`, `\year`, `\metre`, etc.):
+
+| Pattern | LaTeX | Renders as |
+|---------|-------|------------|
+| PPS per hour | `\SI{12{,}5}{\pps\per\hour}` | `12,5 PPS/h` |
+| € per hour | `\SI{18}{\eur\per\hour}` | `18 €/h` |
+| Kč per month | `\SI{45000}{\czk\per\month}` | `45 000 Kč/měs.` |
+| persons per year | `\SI{200}{\person\per\year}` | `200 os./rok` |
+
+Slash rendering is active globally via `\sisetup{per-mode=symbol}` in `acro_variables.tex`.
+
+- Never use bare `€`, `Kč`, `EUR`, `PPS` as units next to numbers — always wrap with `\SI{}{}` using the custom command.
+- `\eur` not `\EUR` — the project defines lowercase.
+
+### 10. Typography & csquotes
+
+#### Czech quotation marks
+
+The project uses the `csquotes` package with Czech locale. Correct Unicode pairing:
+
+| Position | Character | Unicode | Name |
+|----------|-----------|---------|------|
+| Opening  | „         | U+201E  | double low-9 quotation mark |
+| Closing  | "         | U+201D  | right double quotation mark |
+
+**Common errors that cause `csquotes` "Unbalanced groups" compilation failure:**
+
+| Wrong closing | Unicode | How it looks | Fix |
+|---------------|---------|-------------|-----|
+| `"`           | U+0022  | straight/ASCII double quote | → `"` (U+201D) |
+| `"`           | U+201C  | left double quotation mark  | → `"` (U+201D) |
+
+Examples:
+- **Wrong:** `„kolektivní vyjednávání"` (ASCII `"` closing) → compilation error
+- **Wrong:** `„kolektivní vyjednávání"` (U+201C closing) → compilation error
+- **Correct:** `„kolektivní vyjednávání"` (U+201D closing)
+
+Preferred alternative: use `\enquote{text}` — csquotes picks the correct locale quotes automatically.
+
+When formatting pasted text, **always check** that every `„` is closed by `"` (U+201D), never by ASCII `"` or `"` (U+201C).
+
+#### Other typography rules
+
 - Non-standard dash: en-dash `--` for ranges, em-dash `---` for parenthetical.
 - Ellipsis: `\ldots` or `…` (UTF-8 accepted).
 - Czech decimal separator: `{,}` inside math or `\num{}` from siunitx (`11{,}4~\%`). English: plain `.`.

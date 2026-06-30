@@ -187,6 +187,8 @@
 % 12pt → \@ptsize=2; oneside → no mirrored even/odd margins.
 \ExecuteOptions{a4paper,12pt,oneside,onecolumn,final,openany}
 \ProcessOptions
+% Allow PDF 1.7 input files (thesis assignment, declaration) without version warnings.
+\pdfminorversion=7
 % size10.clo / size11.clo / size12.clo: defines \normalsize, \small, \large,
 %   \footnotesize etc. for the selected base point size.
 \input{size1\@ptsize.clo}
@@ -271,10 +273,17 @@
 %   Example: \facultylogo{logo/logo_MUVS_cb.pdf}
 \gdef\@facultylogo{}
 \newcommand{\facultylogo}[1]{\gdef\@facultylogo{#1}}
+% \remarksqrcode{url}: optional repository QR code shown at bottom-right of
+%   the remarks page.
+\gdef\@remarksqrcode{}
+\newcommand{\remarksqrcode}[1]{\gdef\@remarksqrcode{#1}}
 % \normostrana{N}: normostrana (standard-page) count for the citation page.
 %   N = total body character count / 1800 (ISO 690 / Czech thesis convention).
 %   Omit or leave commented to suppress the line entirely.
 \gdef\@normostrana{}
+\gdef\@CTUnfigures{0}
+\gdef\@CTUntables{0}
+\gdef\@CTUnattachments{0}
 \newcommand{\normostrana}[1]{\gdef\@normostrana{#1}}
 % Raw keyword text captured from the files passed to \CTUabstract; used for
 %   language-dependent PDF metadata.
@@ -282,20 +291,25 @@
 \gdef\CTU@pdfkeywordsen{}
 \gdef\CTU@pdfpagelayout{SinglePage}
 % \CTU@setpdfmetadata: populate the output PDF metadata from thesis metadata.
+%   Uses the \Author / \Title / \TitleSecond / \Course snapshot macros (set in
+%   \AtBeginDocument) instead of \@author / \@title / \@titlesecond / \@course,
+%   because \maketitle clears the \@... originals and \CTUabstract calls this
+%   command a second time (after \maketitle) to refresh keyword metadata.
+%   Do NOT pre-encode these fields with \pdfstringdef: hyperref already encodes
+%   PDF metadata when \hypersetup runs, so pre-encoding would UTF-16BE-encode
+%   the strings twice and produce garbled values in the PDF Info dictionary.
 \newcommand\CTU@setpdfmetadata{%
-  \pdfstringdef\CTU@pdftitle{\@title\ifx\@titlesecond\@empty\else: \@titlesecond\fi}%
-  \pdfstringdef\CTU@pdfauthor{\@author}%
-  \pdfstringdef\CTU@pdfsubject{\@course}%
   \ifCTUenglish
-    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordsen}%
+    \let\CTU@pdfkeywords\CTU@pdfkeywordsen
   \else
-    \pdfstringdef\CTU@pdfkeywords{\CTU@pdfkeywordscz}%
+    \let\CTU@pdfkeywords\CTU@pdfkeywordscz
   \fi
   \hypersetup{%
-    pdftitle={\CTU@pdftitle},%
-    pdfauthor={\CTU@pdfauthor},%
-    pdfsubject={\CTU@pdfsubject},%
-    pdfkeywords={\CTU@pdfkeywords}%
+    pdftitle={\Title\ifx\TitleSecond\@empty\else: \TitleSecond\fi},%
+    pdfauthor={\Author},%
+    pdfsubject={\Course},%
+    pdfkeywords={\CTU@pdfkeywords},%
+    pdflang={\ifCTUenglish en-GB\else cs-CZ\fi}%
   }%
 }
 % Quality-check counter macros --- populated from latexmkrc-generated tmp files.
@@ -399,8 +413,11 @@
   \ifCTUenglish List of Abbreviations\else
     Seznam pou\v{z}it\'ych zkratek\fi}
 \newcommand\CTUvelname{%
-  \ifCTUenglish List of Variables and Indices\else
-    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych a\nobreakspace{}index\r{u}\fi}
+  \ifCTUenglish List of Variables\else
+    Seznam pou\v{z}it\'ych prom\v{e}nn\'ych\fi}
+\newcommand\CTUidxname{%
+  \ifCTUenglish List of Indices\else
+    Seznam pou\v{z}it\'ych index\r{u}\fi}
 \newcommand\CTUbibname{%
   \ifCTUenglish Bibliography\else
     Seznam pou\v{z}it\'e literatury\fi}
@@ -697,6 +714,7 @@
   \ifx\@normostrana\@empty
     \InputIfFileExists{build/\jobname-normostrana.tmp}{}{}%
   \fi
+  \InputIfFileExists{build/\jobname-stats.tmp}{}{}%
   % Run quality checks: loads abstract/keyword/citcount tmp files and emits a
   %   ClassWarning to the .log for each violated threshold.  Debug-mode PDF
   %   highlights are accumulated in \CTU@debugwarnlist and rendered later by
@@ -766,6 +784,7 @@
   \if@titlepage
   \begin{titlepage}%
 \thispagestyle{empty}
+  \begingroup\sffamily
 
   \begin{flushright}
 	{\large
@@ -809,6 +828,7 @@
   {\normalsize \if@draftmode\@date\else\number\year\fi \par}%
   \end{center}\par
 %  \@thanks
+  \endgroup
   \end{titlepage}%
   \setcounter{footnote}{0}%
   \global\let\thanks\relax
@@ -852,7 +872,15 @@
 %     \chapter{T} → \secdef\@chapter\@schapter
 %               → \@chapter → \@makechapterhead (patched by titlesec)
 %   Without this, \chapter* (used in \tableofcontents etc.) is also broken.
-\newcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
+% Blank-page guard (oneside mode): after a list or chapter that ends exactly
+%   at the page bottom, the output routine ships that page and resets
+%   \pagetotal=0.  Then \end{flushleft} (inside the acro template) adds only
+%   \parskip glue (~0–6 pt).  A normal \clearpage would ship that glue-only
+%   page as a blank page.  The threshold \baselineskip (~14.5 pt at 12pt)
+%   reliably separates "residual glue on a fresh page" from "real content":
+%   even a single typeset line contributes at least \baselineskip to \pagetotal.
+\newcommand\chapter{\if@openright\cleardoublepage\else
+                    \ifdim\pagetotal>\baselineskip\clearpage\fi\fi
                     \thispagestyle{plain}%
                     \global\@topnum\z@
                     \@afterindentfalse
@@ -900,7 +928,7 @@
                                      {\normalfont\normalsize\bfseries}}
 \newcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
                                     {3.25ex \@plus1ex \@minus.2ex}%
-                                    {-1em}%
+                                    {-0.5em}%
                                     {\normalfont\normalsize\bfseries}}
 \newcommand\subparagraph{\@startsection{subparagraph}{5}{\parindent}%
                                        {3.25ex \@plus1ex \@minus .2ex}%
@@ -974,6 +1002,29 @@
       \bfseries #1%
       \@endparpenalty\@M
     \end{center}}
+% \CTU@abstractblock{heading}{abstract-file}{keywords-heading}{keywords-file}
+% One language block without page-level spacing control.
+\newcommand\CTU@abstractblock[4]{%
+  \@beginparpenalty\@lowpenalty
+  \begin{center}%
+    \bfseries #1%
+    \@endparpenalty\@M
+  \end{center}%
+  \input{#2}%
+  \CTU@abshead{#3}%
+  \begin{center}%
+    \textit{\input{#4}}%
+  \end{center}%
+}
+% \CTU@abstractpage{heading}{abstract-file}{keywords-heading}{keywords-file}
+% Typesets one language block on its own vertically centered page.
+\newcommand\CTU@abstractpage[4]{%
+  \clearpage
+  \thispagestyle{nonum}%
+  \null\vfil
+  \CTU@abstractblock{#1}{#2}{#3}{#4}%
+  \par\vfil\null\clearpage
+}
 % \CTUabstract{cz-abstract}{cz-keywords}{en-abstract}{en-keywords}
 % Convenience command: wraps the abstract environment and inserts the four
 % section headings automatically, language-aware (\ifCTUenglish).
@@ -981,47 +1032,46 @@
   \CatchFileDef\CTU@pdfkeywordscz{#2}{}%
   \CatchFileDef\CTU@pdfkeywordsen{#4}{}%
   \CTU@setpdfmetadata
-  \begin{abstract}%
+  % First measure both language blocks together; if they fit, keep one page.
+  % Otherwise split to two independently centered pages.
+  \setbox\z@=\vbox{%
+    \hsize=\textwidth
     \ifCTUenglish
-      % English thesis: EN block first (matches \abstractname = "Abstract"),
-      %   then CZ block with Czech headings.
-      \input{#3}%
-      \CTU@abshead{Keywords}%
-      \begin{center}%
-        \textit{\input{#4}}%
-      \end{center}%
-      \CTU@abshead{Abstrakt}%
-      \input{#1}%
-      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
-      \begin{center}%
-        \textit{\input{#2}}%
-      \end{center}%
+      \CTU@abstractblock{Abstract}{#3}{Keywords}{#4}%
+      \CTU@abstractblock{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
     \else
-      % Czech thesis: CZ block first (matches \abstractname = "Abstrakt"),
-      %   then EN block with English headings.
-      \input{#1}%
-      \CTU@abshead{Kl\'{\i}\v{c}ov\'{a} slova}%
-      \begin{center}%
-        \textit{\input{#2}}%
-      \end{center}%
-      \CTU@abshead{Abstract}%
-      \input{#3}%
-      \CTU@abshead{Keywords}%
-      \begin{center}%
-        \textit{\input{#4}}%
-      \end{center}%
+      \CTU@abstractblock{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+      \CTU@abstractblock{Abstract}{#3}{Keywords}{#4}%
     \fi
-  \end{abstract}}
-\newenvironment{abstract}{%
+  }%
+  \ifdim\dimexpr\ht\z@+\dp\z@\relax<\dimexpr\textheight-2\baselineskip\relax
     \clearpage
     \thispagestyle{nonum}%
     \null\vfil
+    \unvbox\z@
+    \par\vfil\null\clearpage
+  \else
+  \ifCTUenglish
+    % English thesis: EN block first, then CZ block.
+    \CTU@abstractpage{Abstract}{#3}{Keywords}{#4}%
+    \CTU@abstractpage{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+  \else
+    % Czech thesis: CZ block first, then EN block.
+    \CTU@abstractpage{Abstrakt}{#1}{Kl\'{\i}\v{c}ov\'{a} slova}{#2}%
+    \CTU@abstractpage{Abstract}{#3}{Keywords}{#4}%
+  \fi
+  \fi}
+\newenvironment{abstract}{%
+    \clearpage
+    \thispagestyle{nonum}%
+    % Keep abstract top-aligned; global vfill centering breaks multi-page layout.
+    \vspace*{\CTU@frontskip}%
     \@beginparpenalty\@lowpenalty
     \begin{center}%
       \bfseries \ifCTUenglish Abstract\else Abstrakt\fi
       \@endparpenalty\@M
     \end{center}}%
-   {\par\vfil\null\clearpage}
+   {\par\clearpage}
 % (verse, quotation, quote purged: unused in all CTUthesis projects.)
 % LaTeX2e titlepage: page counter starts at 1; twoside restores it after.
 \newenvironment{titlepage}
@@ -1056,14 +1106,52 @@
   \else
     \@normostrana
   \fi}
+% \CTU@czplural{N}{one}{two-four}{other}: Czech count-dependent noun form.
+% Uses the academic/publishing convention (not the literary last-digit rule):
+%   N=1       → singular   (#2)   e.g. "1 obrázek"
+%   N=2,3,4   → paucal     (#3)   e.g. "3 obrázky"
+%   N≥5       → gen.plural (#4)   e.g. "42 obrázků"
+% This matches the poster (which always uses genitive plural for real counts)
+% and avoids the unnatural "42 obrázky" produced by the literary last-digit rule.
+\newcommand\CTU@czplural[4]{%
+  \begingroup
+    \@tempcnta=#1\relax
+    \ifnum\@tempcnta=1
+      #2%
+    \else
+      \ifnum\@tempcnta<5
+        #3%
+      \else
+        #4%
+      \fi
+    \fi
+  \endgroup}
 % \CTU@citation@scope: "Rozsah práce" line shown below the citation text.
-%   Shows only the normostrana count (with debug highlight when below minimum).
+%   Shows normostrana count plus figure/table/attachment totals when available.
 %   Suppressed entirely when normostrana is not set (no latexmk run yet).
 \newcommand\CTU@citation@scope{%
   \ifx\@normostrana\@empty\else
     \ifCTUenglish Scope of thesis\else Rozsah pr\'{a}ce\fi:\space
     \CTU@normohighlight\space
-    \ifCTUenglish standard pages\else normostran\fi\@addpunct{.}%
+    \ifCTUenglish standard pages\else
+      \CTU@czplural{\@normostrana}{normostrana}{normostrany}{normostran}%
+    \fi%
+    \ifnum\@CTUnfigures>0
+      ;\space\@CTUnfigures\space\ifCTUenglish figures\else
+        \CTU@czplural{\@CTUnfigures}{obr\'{a}zek}{obr\'{a}zky}{obr\'{a}zk\r{u}}%
+      \fi%
+    \fi
+    \ifnum\@CTUntables>0
+      ;\space\@CTUntables\space\ifCTUenglish tables\else
+        \CTU@czplural{\@CTUntables}{tabulka}{tabulky}{tabulek}%
+      \fi%
+    \fi
+    \ifnum\@CTUnattachments>0
+      ;\space\@CTUnattachments\space\ifCTUenglish attachments\else
+        \CTU@czplural{\@CTUnattachments}{p\v{r}\'{\i}loha}{p\v{r}\'{\i}lohy}{p\v{r}\'{\i}loh}%
+      \fi%
+    \fi
+    \@addpunct{.}%
   \fi}%
 %
 % \CTUcitationpage[key]: isolated page containing the thesis self-citation.
@@ -1076,6 +1164,7 @@
 \newcommand\CTUcitationpage[1][]{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \noindent
   \@ifempty{#1}{\CTU@selfcite}{\fullcite{#1}}%
   \par\vspace{2\baselineskip}%
@@ -1085,6 +1174,7 @@
   \ifx\@facultylogo\@empty\else
     \noindent\includegraphics[height=2.5\baselineskip]{\@facultylogo}\par
   \fi
+  \endgroup
   \clearpage
 }
 %
@@ -1149,10 +1239,12 @@
 \newenvironment{declaration}{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \vspace*{\CTU@frontskip}%
   \noindent\ignorespaces
 }{%
   \CTU@declsig
+  \endgroup
   \clearpage
 }
 %
@@ -1171,10 +1263,17 @@
 \newenvironment{remarkspage}{%
   \clearpage
   \thispagestyle{empty}%
+  \begingroup\sffamily
   \vspace*{\CTU@frontskip}%
   \noindent\ignorespaces
 }{%
-  \par\clearpage
+  \par
+  \ifx\@remarksqrcode\@empty\else
+    \vspace*{\fill}%
+    \noindent\hfill\qrcode[height=2.5\baselineskip]{\@remarksqrcode}\par
+  \fi
+  \endgroup
+  \clearpage
 }
 %
 % \CTUassignment{file}: include the thesis assignment form as a full-page PDF.
@@ -1191,6 +1290,9 @@
 %   rendering; the loop uses \@tempcnta as the running page index.
 \newcommand\CTUassignment[1]{%
   \IfFileExists{#1}{%
+    % Suppress hyperref page-anchor generation for included pages to avoid
+    % duplicate name{page.I} destination warnings (pdfTeX warning ext4).
+    \hypersetup{pageanchor=false}%
     \if@twoside
       % Count pages in the PDF so we can loop page-by-page.
       \pdfximage{#1}%
@@ -1207,6 +1309,7 @@
     \else
       \includepdf[pages=-,pagecommand={\thispagestyle{empty}}]{#1}%
     \fi
+    \hypersetup{pageanchor=true}%
   }{%
     % File not found: emit a blank page with a visible warning.
     \clearpage
@@ -1340,24 +1443,10 @@
 \newcommand*\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
 \newcommand*\l@paragraph{\@dottedtocline{4}{10em}{5em}}
 \newcommand*\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
-% Global flags: true when at least one captioned figure / table exists in the
-% document.  Set by patching \addcontentsline so they reflect the current run
-% rather than the per-chapter \c@figure / \c@table counters (which reset).
-\newif\if@CTUhasfigures
-\newif\if@CTUhastables
-\let\CTU@orig@addcontentsline\addcontentsline
-\renewcommand\addcontentsline[3]{%
-  \CTU@orig@addcontentsline{#1}{#2}{#3}%
-  \begingroup
-    \def\CTU@temp{#1}%
-    \ifx\CTU@temp\CTU@lof@name\global\@CTUhasfigurestrue\fi
-    \ifx\CTU@temp\CTU@lot@name\global\@CTUhastablestrue\fi
-  \endgroup
-}%
-\def\CTU@lof@name{lof}%
-\def\CTU@lot@name{lot}%
+% Lists are always opened when back matter is enabled.  Calling \@starttoc is
+% what creates/refreshes .lof and .lot; guarding on the files' prior existence
+% makes a clean build self-blocking and prevents the lists from ever appearing.
 \newcommand\listoffigures{%
-    \if@CTUhasfigures
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1367,11 +1456,9 @@
       \chaptermark{\CTUlofname}%
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
 \newcommand\listoftables{%
-    \if@CTUhastables
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -1381,7 +1468,6 @@
       \chaptermark{\CTUlotname}%
     \@starttoc{lot}%
     \if@restonecol\twocolumn\fi
-    \fi
     }
 \let\l@table\l@figure
 % ==============================================================================
@@ -1702,6 +1788,8 @@
   exponent-product       = \cdot,
   product-units          = repeat,
   product-symbol         = \cdot,
+  range-phrase           = {--},
+  range-units            = single,
 }
 % Custom calligraphic font family for math mode: \xmcal{H}, \xmcal{L} etc.
 % (Integral/Laplace transform notation — @ is already a letter here.)
@@ -1716,6 +1804,10 @@
 % ==============================================================================
 % xcolor: color definitions — also required internally by tikz and pgfplots.
 \RequirePackage{xcolor}
+% contour: white outline around text for readability on coloured map backgrounds.
+%   Used via \contour{white}{...} on country-code labels in PGF figures.
+\RequirePackage[pdftex]{contour}
+\contourlength{0.6pt}
 % tikz: PGF/TikZ vector graphics engine.
 \RequirePackage{tikz}
 % pgfplots: data-driven plots (frequency responses, curves etc.).
@@ -1738,6 +1830,8 @@
   \usetikzlibrary{external}%
   \tikzexternalize
 \fi
+% Common TikZ libraries used by hand-drawn schemas in texparts/figures/.
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
 
 % ==============================================================================
 % Packages: Lists, Quotation Marks, And Inline Helpers
@@ -1747,6 +1841,7 @@
 % csquotes: context-sensitive quotation marks; mandatory biblatex companion.
 %   \MakeOuterQuote{"}: straight " in source auto-converts to „…" in Czech.
 \RequirePackage{csquotes}
+\RequirePackage{qrcode}
 \MakeOuterQuote{"}
 % \juv: inline mark-up for footnote-style quotes.
 \newcommand{\juv}[1]{,#1`}
@@ -1786,20 +1881,30 @@
 %   harmlessly gobbled by the stub.
 \ifCTUacro
   \RequirePackage{acro}
+  % Keep acro usage/page recording enabled.
+  % It is required for list/display=used when lists are printed before body
+  % chapters: the second and later LaTeX runs use these AUX records to decide
+  % which entries belong in the printed list and therefore get link targets.
+  \protected\def\CTUacroHyperlink#1#2{\hyperlink{#1}{#2}}%
+  \providecommand{\ctuauxout}{\@auxout}%
+  \newcommand{\CTUregisteracrodest}[1]{%
+    \global\@namedef{CTU@acrodest@#1}{1}%
+  }
   % --------------------------------------------------------------------------
   % Global options
-  % make-links=false: links and /Contents tooltips are created manually via
-  %   \CTU@tooltiplink in the renewed templates below.  acro's built-in link
-  %   mechanism only produces plain \hyperlink annotations with no /Contents,
-  %   so it cannot carry the hover tooltip needed for Acrobat Reader.
+  % make-links=false: links are created manually in the renewed display
+  %   templates below.  Acronym links intentionally use hyperref's robust
+  %   \hyperlink rather than low-level \pdfstartlink, because acronyms also
+  %   occur in math and moving arguments such as captions/list entries.
   % list/display=used: \printacronyms omits entries that never appear in text.
   % list/template=xltabular: custom two-column table template defined below.
   % list/heading=chapter*: printed list gets an unnumbered chapter heading.
   \acsetup{%
-    make-links     = false,%
-    list/display   = used,%
-    list/template  = xltabular,%
-    list/heading   = chapter*%
+    make-links          = false,%
+    list/display        = used,%
+    list/template       = xltabular,%
+    list/heading        = chapter*,%
+    short-plural-ending = {}%
   }
   % --------------------------------------------------------------------------
   % Per-page GoBack button for acro lists
@@ -1815,6 +1920,9 @@
       \end{ocg}}}
   \newcommand\CTUacrolisthead{%
     \multicolumn{2}{@{}l@{}}{\CTUacrolistbacklink}\\}
+  % Safe manual break inside acro long texts rendered in xltabular list cells.
+  % Falls back to a plain space in PDF strings/bookmarks.
+  \providecommand\CTUacrolistbreak{\texorpdfstring{\hfill\break}{ }}
   % --------------------------------------------------------------------------
   % Long-sort helper
   % Overwrites each entry's `sort` property with its long form so
@@ -1824,8 +1932,13 @@
     {
       \acronymsmapTF
         {
-          \acro_property_set:nne {\AcronymID} {sort}
-            {\acro_property_get:ne {\AcronymID} {long}}
+          \tl_set:Ne \l_tmpa_tl {\acro_property_get:ne {\AcronymID} {sort}}
+          \tl_if_blank:VTF \l_tmpa_tl
+            {
+              \acro_property_set:nne {\AcronymID} {sort}
+                {\acro_property_get:ne {\AcronymID} {long}}
+            }
+            {}
         }
         {}{}
     }
@@ -1844,6 +1957,14 @@
     }
   \NewDocumentCommand{\CTUifVariableListNonemptyTF}{mm}
     {\CTU_if_variable_list_nonempty:TF {#1}{#2}}
+  \cs_new_protected:Npn \CTU_if_index_list_nonempty:TF #1#2
+    {
+      \group_begin:
+        \keys_set:nn {acro/list} { include = idx , display = used }
+        \acronymsmapTF {} { \group_end: #1 } { \group_end: #2 }
+    }
+  \NewDocumentCommand{\CTUifIndexListNonemptyTF}{mm}
+    {\CTU_if_index_list_nonempty:TF {#1}{#2}}
   \ExplSyntaxOff
   % --------------------------------------------------------------------------
   % Index property
@@ -1865,7 +1986,8 @@
     \AcroNeedPackage{xltabular}%
     \acronymsmapF{%
       \AcroAddRow{%
-        \hypertarget{\AcronymID}{\textbf{\acrowrite{short}}}%
+        \pdfdest name{\AcronymID} xyz \textbf{\acrowrite{short}}%
+        \immediate\write\ctuauxout{\string\CTUregisteracrodest{\AcronymID}}%
         \acroifT{alt}{/\acrowrite{alt}}%
         &
         \acrowrite{list}%
@@ -1873,10 +1995,6 @@
         \acroifT{foreign}{\acrowrite{foreign}\acroifT{extra}{,}}%
         \acroifT{extra}{\acrowrite{extra}}%
         \acroifanyT{foreign,extra}{)}%
-        \acropagefill
-        \acropages
-          {\acrotranslate{page}\nobreakspace}
-          {\acrotranslate{pages}\nobreakspace}%
         \\}}
     {\AcroRerun}%
     \acroheading
@@ -1894,11 +2012,14 @@
   }
   % --------------------------------------------------------------------------
   % Display templates for \ac{} (long-short) and \acs{} (short).
-  %   make-links=false means acro creates no link annotations.  All links and
-  %   /Contents tooltips are created here via \CTU@tooltiplink (defined after
-  %   hyperref below), which wraps the text in a single GoTo Link annotation
-  %   that carries /Contents — the tooltip mechanism supported by Acrobat Reader,
-  %   Acrobat Pro, and PDF.js (LaTeX Workshop preview).
+  %   make-links=false means acro creates no link annotations.  Links for
+  %   printed acronym groups are created here with \hyperlink; hidden groups
+  %   (geo, nolist) remain tooltip-only because they have no printed target.
+  %
+  %   For entries with nonzero usage, \hyperlink targets are created in the
+  %   printed list template (xltabular).  For entries with zero usage but
+  %   referenced in prose (via display=all or referenced-only modes),
+  %   \hyperlink is skipped to avoid orphaned references.
   %
   %   The tooltip text is the long form of the acronym.  \acrowrite{long} is a
   %   non-expandable \NewDocumentCommand so it cannot be used directly inside
@@ -1912,21 +2033,43 @@
   %   name \acro_property_get:Vn and \AcronymID are tokenized with expl3
   %   catcodes (colon and underscore as letters).
   \ExplSyntaxOn
+  % Helper: emit visible text with a pdfcomment tooltip and no GoTo link.
+  % Used for hidden acronym groups (geo, nolist) that have no list destination.
+  % In PDF-string context \pdftooltip is disabled via DisableCommands → plain text.
+  \cs_new:Npn \CTU@acro_tooltip:nn #1#2
+    { \pdftooltip{#1}{#2} }
+  % Helper: link entries that are printed in an acronym/variable/index list;
+  % keep hidden entries tooltip-only to avoid missing destination warnings.
+  \cs_generate_variant:Nn \acro_boolean_property_if:nnTF { VnTF }
+  % Thin wrapper so we can generate an e-expanding variant for \AcronymID:
+  \cs_new:Npn \CTU@acro_link:nnn #1#2#3 { \CTU@tooltiplink{#1}{#2}{#3} }
+  \cs_generate_variant:Nn \CTU@acro_link:nnn { enn }
+  \cs_new:Npn \CTU@acro_display:nn #1#2
+    {
+      \cs_if_exist:cTF { CTU@acrodest@ \AcronymID }
+        { \CTU@acro_link:enn { \AcronymID } {#1}{#2} }
+        { \CTU@acro_tooltip:nn {#1}{#2} }
+    }
   \RenewAcroTemplate{long-short}{%
     \acroiffirstTF{%
-      \CTU@tooltiplink{\AcronymID}{%
+      \CTU@acro_display:nn {%
         \acrowrite{long}%
         \acspace(%
         \acrowrite{short}%
-        \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
         \acroifT{alt}{ \acrotranslate{or} \acrowrite{alt}}%
-        \acrogroupcite)%
+        )%
       }{ \acro_property_get:Vn \AcronymID { long } }%
+      \acroifT{foreign}{\footnote{\acrowrite{foreign}}}%
+      \acrogroupcite
     }%
     {%
-      \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+      \CTU@acro_display:nn {\acrowrite{short}}
         { \acro_property_get:Vn \AcronymID { long } }%
     }%
+  }
+  \RenewAcroTemplate{long}{%
+    \CTU@acro_display:nn {\acrowrite{long}}
+      { \acro_property_get:Vn \AcronymID { long } }%
   }
   % short template: when `index` is set (subscript/superscript index variable)
   %   show only the index part in text; otherwise show the normal short form.
@@ -1935,11 +2078,11 @@
   \RenewAcroTemplate{short}{%
     \tl_if_empty:eTF { \acro_property_get:Vn \AcronymID {index} }
       {%  no index property — normal short display
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{short}}
+        \CTU@acro_display:nn {\acrowrite{short}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
       {%  index property set — show only the index part in text
-        \CTU@tooltiplink{\AcronymID}{\acrowrite{index}}
+        \CTU@acro_display:nn {\acrowrite{index}}
           { \acro_property_get:Vn \AcronymID { long } }%
       }%
   }
@@ -1982,6 +2125,14 @@
 %   Used (e.g.) for \bookmarksetup{startatroot} to lift standalone chapters
 %   such as Závěr out of their enclosing \part in the bookmark panel.
 \RequirePackage{bookmark}
+% refcount: retrieve hyperref's stored anchor name for a label.  \ref{label}
+% cannot use the label key itself as a PDF destination; the real destination is
+% the fourth field in the .aux record (e.g. section.3.1 or figure.caption.7).
+\RequirePackage{refcount}
+% User-level alias used by Python-generated PGF labels.
+% Keep this tooltip-only (no GoTo destination) so geo labels in figures do
+% not emit unresolved name{geo-XX} warnings when geo acronyms use hyper=false.
+\newcommand{\CTUtooltiplink}[3]{\pdftooltip{#2}{#3}}
 % \CTU@tooltiplink{destination}{visible text}{tooltip text}
 %   Creates a single GoTo Link annotation whose /Contents entry is the tooltip.
 %   This is the standard PDF mechanism for hover tooltips on hyperlinks and is
@@ -1991,7 +2142,25 @@
 %   \pdfstringdef encodes the tooltip text via hyperref's Unicode-aware encoder.
 %   NOTE: \pdfstartlink/\pdfendlink must not be inside an \hbox or \vbox.
 \newcommand{\CTU@tooltiplink}[3]{%
-  \pdfstringdef\CTU@destname{\HyperDestNameFilter{#1}}%
+  % In PDF-string context (bookmark generation, \pdfstringdef for captions)
+  % output only the visible text — \pdfstartlink is not allowed there.
+  \ifHy@pdfstring
+    #2%
+  \else
+  % \pdfstringdef and \pdfstartlink are not allowed in math mode.  When called
+  % from \acs{var-X} or \acs{idx-Y} inside $...$, switch to restricted
+  % horizontal mode via \mbox and re-enter math mode for the visible glyphs so
+  % the link annotation is built around the math content.  This produces
+  % clickable, tooltipped acronym links inside equations.
+  \ifmmode
+    \mbox{\CTU@tooltiplink{#1}{$#2$}{#3}}%
+  \else
+  % NOTE: do NOT pass #1 through \HyperDestNameFilter / \pdfstringdef.
+  % With hyperref's [unicode=true], \pdfstringdef encodes the destination name
+  % as UTF-16BE (with BOM), which then no longer matches the raw ASCII names
+  % registered by biblatex (cite.<refsection>@<key>) and acro (<AcronymID>) in
+  % the PDF /Dests Names tree.  The resulting goto name{...} lookup falls back
+  % to the cover page in Acrobat.  Pass the destination tokens raw.
   \pdfstringdef\CTU@tip{#3}%
   \protected@edef\Hy@tempa{%
     \Hy@setpdfborder
@@ -1999,11 +2168,40 @@
     /Contents(\CTU@tip)%
   }%
   \leavevmode
-  \pdfstartlink attr{\Hy@tempa} goto name{\CTU@destname}\relax
-  \Hy@colorlink\@linkcolor
+  \pdfstartlink attr{\Hy@tempa} goto name{#1}\relax
   #2%
-  \Hy@endcolorlink
   \pdfendlink
+  \fi
+  \fi
+}
+\protected\def\CTUciteTooltipLink#1#2#3{\CTU@tooltiplink{#1}{#2}{#3}}%
+% Tooltip-text cache: \CTU@tip@<label> stores the pre-expanded nameref title.
+% Populated via .aux writes in the \label hook (installed at begindocument/end)
+% so the title is available from the very first token of each subsequent pass,
+% even when \ref{} precedes the figure's \input{} in document order.
+% \CTU@labeltipauxdef is written to .aux by the \label patch and executed when
+% the .aux is read back at \begin{document}.
+\newcommand{\CTU@labeltipauxdef}[2]{%
+  % \gdef (no expansion): stored tokens may contain \SI{}, \acs{} etc.,
+  % which are unexpandable; \pdfstringdef handles them via DisableCommands.
+  \expandafter\gdef\csname CTU@tip@#1\endcsname{#2}%
+}
+\newcommand{\CTU@tooltipref}[2]{%
+  \edef\CTU@dest{\getrefbykeydefault{#1}{anchor}{}}%
+  \ifx\CTU@dest\@empty
+    #2%
+  \else
+    % Look up the cached title.  Falls back to plain ref on cache miss (first
+    % ever pass with no aux, or labels such as equations that have no
+    % meaningful nameref title). Keep the hyperlink even when no tooltip text
+    % is available.
+    \expandafter\let\expandafter\CTU@tiplookup\csname CTU@tip@#1\endcsname
+    \ifx\CTU@tiplookup\relax
+      \hyperref[#1]{#2}%
+    \else
+      \expandafter\CTU@tooltiplink\expandafter{\CTU@dest}{#2}{\CTU@tiplookup}%
+    \fi
+  \fi
 }
 % Strip formatting and normalise dashes in PDF tooltip strings.
 % Also bypass the \exp_not:n (= \unexpanded) wrappers that acro3 and biblatex
@@ -2011,7 +2209,50 @@
 % pair 0xC3 0xAD for U+00ED í) can be processed by hyperref's UTF-8→UTF-16BE
 % machinery inside \pdfstringdef's \edef.  The change is local to each
 % \pdfstringdef call (the PreHook runs inside its \begingroup).
+% Citation commands are intentionally dropped in tooltip strings as a robust
+% fallback: this avoids exposing raw bib keys when hierarchical label mapping
+% is unavailable in the cached caption title path.
+\makeatletter
+\def\CTUpdfcite@stripopt{%
+  \@ifnextchar[%
+    {\CTUpdfcite@stripopt@i}%
+    {\CTUpdfcite@grab}%
+}
+\def\CTUpdfcite@stripopt@i[#1]{%
+  \@ifnextchar[%
+    {\CTUpdfcite@stripopt@ii}%
+    {\CTUpdfcite@grab}%
+}
+\def\CTUpdfcite@stripopt@ii[#1]{\CTUpdfcite@grab}
+\def\CTUpdfcite@grab#1{%
+  % Tooltip fallback: suppress citation text entirely.
+}
+\def\CTUpdfcite@formatlist#1{%
+  \CTUpdfcite@loop#1,\@nil,\@nil
+}
+\def\CTUpdfcite@loop#1,#2,#3{%
+  \CTUpdfcite@ifnil{#2}%
+    {\CTUpdfcite@onekey{#1}}%
+    {\CTUpdfcite@onekey{#1}, \CTUpdfcite@loop#2,#3,\@nil}%
+}
+\def\CTUpdfcite@ifnil#1{%
+  \ifx\@nil#1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi
+}
+\def\CTUpdfcite@onekey#1{%
+  \edef\CTUpdfcite@key{\zap@space#1 \@empty}%
+  \expandafter\ifx\csname CTU@displaylabel@\CTUpdfcite@key\endcsname\relax
+    ??%
+  \else
+    \csname CTU@displaylabel@\CTUpdfcite@key\endcsname
+  \fi
+}
+\makeatother
+
 \pdfstringdefDisableCommands{%
+  \def\cite{\CTUpdfcite@stripopt}%
+  \def\parencite{\CTUpdfcite@stripopt}%
+  \def\autocite{\CTUpdfcite@stripopt}%
+  \def\textcite{\CTUpdfcite@stripopt}%
   \def\textit#1{#1}%
   \def\emph#1{#1}%
   \def\textbf#1{#1}%
@@ -2020,6 +2261,15 @@
   % Make \exp_not:n a pass-through so storage wrappers don't block expansion.
   % \csname produces the expl3 cs regardless of the catcode of : in scope here.
   \expandafter\let\csname exp_not:n\endcsname\@firstofone%
+  % siunitx v3 commands use unexpandable expl3 internals; strip them to plain
+  % text so the cached caption tokens don't crash \pdfstringdef:
+  %   \SI{N}{unit} -> N   (number only; unit dropped)
+  %   \si{unit}    -> ()  (pure-unit call; drop silently)
+  \def\SI#1#2{#1}%
+  \def\si#1{}%
+  % pdfcomment \pdftooltip{visible}{tip} → plain visible text in PDF strings
+  % (called by \CTU@acro_tooltip:nn for geo/nolist acro entries in headings)
+  \def\pdftooltip#1#2{#1}%
 }
 % lastpage: sets the LastPage label at the end of the document; also stores
 %   \@abspage@last (a plain Arabic integer) in the .aux file so self-citation
@@ -2027,6 +2277,16 @@
 %   (back matter uses \Roman{page}, which would make \pageref*{LastPage} return
 %   a Roman numeral).
 \RequirePackage{lastpage}
+% pdfcomment: hover tooltip annotations in PDF viewers (Adobe Acrobat, Foxit).
+%   Must be loaded AFTER hyperref (it uses hyperref internally).
+%   Used via \pdftooltip{displayed}{tooltip text} in PGF figures.
+%   Annotations are invisible in non-interactive viewers and in print.
+\RequirePackage{pdfcomment}
+% hyperxmp: writes an XMP metadata packet into the PDF document catalog,
+%   satisfying ISO 32000-1 §14.3.2. Reads all fields already set via
+%   \hypersetup (title, author, subject, keywords, pdflang) and serialises
+%   them as RDF/XMP automatically. Must be loaded AFTER hyperref and pdfcomment.
+\RequirePackage{hyperxmp}
 
 % ==============================================================================
 % Packages: Bibliography
@@ -2041,6 +2301,263 @@
   autolang    = other,
   bibencoding = UTF8,
 ]{biblatex}
+
+% Dynamic dataset subindexing for grouped citation labels used in \cite.
+% Output format in text: [N_group.k], e.g. [35.1], [35.2] for eurostat_* keys.
+% Save \@auxout to \ctuauxout (without @) so it can be safely used inside \ExplSyntaxOn
+\makeatletter
+\let\ctuauxout\@auxout
+\AtBeginDocument{\let\ctuauxout\@auxout}
+\ExplSyntaxOn
+\seq_new:N \g_ctu_cite_subidx_prefixes_seq
+\seq_new:N \g_ctu_bib_sorted_seq     % items: {{sortint}{entrykey}} for bibliography sort
+\seq_new:N \g_ctu_bib_added_keys_seq % tracks added keys to avoid duplicates
+\prop_new:N \g_ctu_cite_subidx_by_key_prop
+\prop_new:N \g_ctu_cite_group_base_label_prop
+\prop_new:N \g_ctu_cite_subidx_group_counter_prop
+\tl_new:N \l_ctu_cite_subidx_group_tl
+\tl_new:N \l_ctu_cite_subidx_label_tl
+
+\cs_if_exist:NF \tl_to_str:e
+  {
+    \cs_new_nopar:Npn \tl_to_str:e #1 { \exp_args:Ne \tl_to_str:n { #1 } }
+  }
+
+\cs_new:Npn \ctu_cite_subidx_canon_literal:n #1
+  {
+    \tl_to_str:n {#1}
+  }
+
+\cs_new_protected:Npn \ctu_cite_subidx_set_prefixes:n #1
+  {
+    \seq_gclear:N \g_ctu_cite_subidx_prefixes_seq
+    \clist_map_inline:nn {#1}
+      {
+        \tl_set:Nx \l_tmpa_tl { \ctu_cite_subidx_canon_literal:n {##1} }
+        \tl_if_blank:VTF \l_tmpa_tl
+          {}
+          { \seq_gput_right:NV \g_ctu_cite_subidx_prefixes_seq \l_tmpa_tl }
+      }
+  }
+
+\cs_new_protected:Npn \ctu_cite_subidx_group_for_key:n #1
+  {
+    \tl_clear:N \l_ctu_cite_subidx_group_tl
+    \seq_map_inline:Nn \g_ctu_cite_subidx_prefixes_seq
+      {
+        \tl_if_blank:VTF \l_ctu_cite_subidx_group_tl
+          {
+            \int_set:Nn \l_tmpa_int { \str_count:n {##1} }
+            \str_if_eq:eeT
+              {
+                \str_range:nnn {#1} { 1 } { \l_tmpa_int }
+              }
+              {##1}
+              { \tl_set:Nn \l_ctu_cite_subidx_group_tl {##1} }
+          }
+          {}
+      }
+  }
+
+\ExplSyntaxOn
+\int_new:N \g_ctu_consec_major_int
+\int_new:N \l_ctu_sortnum_int
+
+\cs_new_protected:Nn \ctu_init_consec:
+  {
+    \int_gset:Nn \g_ctu_consec_major_int { 0 }
+    \seq_map_inline:Nn \g_ctu_cite_subidx_prefixes_seq
+      {
+        \cs_gset_eq:cN { g_ctu_grp_base_ ##1 } \tex_relax:D
+        \cs_gset_eq:cN { g_ctu_grp_sub_ ##1 } \tex_relax:D
+      }
+  }
+
+\cs_new_protected:Nn \ctu_assign_displaylabel:n
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \ctu_cite_subidx_group_for_key:n {#1}
+    \tl_set_eq:NN \l_tmpb_tl \l_ctu_cite_subidx_group_tl
+    \tl_if_blank:VTF \l_tmpb_tl
+      {
+        % Nongroup items advance the shared major sequence.
+        \int_gincr:N \g_ctu_consec_major_int
+        \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} } { \int_use:N \g_ctu_consec_major_int }
+        \int_set:Nn \l_ctu_sortnum_int { \g_ctu_consec_major_int * 1000 }
+      }
+      {
+        \cs_if_exist:cTF { g_ctu_grp_base_ \l_tmpb_tl }
+          {
+            \int_gincr:c { g_ctu_grp_sub_ \l_tmpb_tl }
+            \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+              {
+                \use:c { g_ctu_grp_base_ \l_tmpb_tl } . \int_use:c { g_ctu_grp_sub_ \l_tmpb_tl }
+              }
+            \int_set:Nn \l_ctu_sortnum_int
+              { \use:c { g_ctu_grp_base_ \l_tmpb_tl } * 1000 + \int_use:c { g_ctu_grp_sub_ \l_tmpb_tl } }
+          }
+          {
+            % First item of a grouped prefix takes the NEXT shared major label,
+            % so group majors and nongroup items share one consecutive sequence
+            % (prevents [N] vs [N.k] collisions, e.g. [1] and [1.1]).
+            \int_gincr:N \g_ctu_consec_major_int
+            \tl_gset:cx { g_ctu_grp_base_ \l_tmpb_tl } { \int_use:N \g_ctu_consec_major_int }
+            \int_new:c { g_ctu_grp_sub_ \l_tmpb_tl }
+            \int_gset:cn { g_ctu_grp_sub_ \l_tmpb_tl } { 1 }
+            \tl_gset:cx { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+              {
+                \int_use:N \g_ctu_consec_major_int . 1
+              }
+            \int_set:Nn \l_ctu_sortnum_int { \g_ctu_consec_major_int * 1000 + 1 }
+          }
+      }
+    % Record {sortnum}{key} so the printed bibliography can be ordered by the
+    % hierarchical label (major then minor) instead of biblatex's own order.
+    \seq_gput_right:Nx \g_ctu_bib_sorted_seq
+      { { \int_use:N \l_ctu_sortnum_int } { \tl_to_str:n {#1} } }
+    % Define the display label immediately (assignment runs at \AtDataInput,
+    % before the document body) so in-text \cite and PDF tooltips resolve.
+    \CTUsetdisplaylabel { \tl_to_str:n {#1} }
+      { \use:c { g_ctu_runtime_label_ \tl_to_str:n {#1} } }
+    % Mirror the label into the .aux as resilience: if a future biblatex
+    % version inputs reference data lazily, the previous run's .aux still
+    % supplies the label to in-text \cite rendered before the bibliography.
+    \iow_now:Nx \ctuauxout
+      {
+        \string \CTUsetdisplaylabel
+          { \tl_to_str:n {#1} }
+          { \tl_to_str:c { g_ctu_runtime_label_ \tl_to_str:n {#1} } }
+      }
+  }
+
+\cs_new:Npn \ctu_get_displaylabel:nn #1#2
+  {
+    % #2 is expanded ONCE (it is passed as \abx@field@entrykey, the raw key
+    % macro, matching how \ctu_assign_displaylabel:n built the csname) and then
+    % stringified.  \thefield{entrykey} must NOT be used here: it is \protected
+    % and would stringify to the literal tokens instead of the key value.
+    \exp_args:No \ctu_get_displaylabel_str:nn {#2} {#1}
+  }
+\cs_new:Npn \ctu_get_displaylabel_str:nn #1#2
+  {
+    \cs_if_exist:cTF { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+      {
+        \use:c { g_ctu_runtime_label_ \tl_to_str:n {#1} }
+      }
+      {
+        \cs_if_exist:cTF { g_ctu_displaylabel_ \tl_to_str:n {#1} }
+          {
+            \use:c { g_ctu_displaylabel_ \tl_to_str:n {#1} }
+          }
+          {#2}
+      }
+  }
+
+\newcommand{\CTUsetdisplaylabel}[2]{%
+  \tl_gset:cn { g_ctu_displaylabel_ \tl_to_str:n {#1} } {#2}%
+  \expandafter\gdef\csname CTU@displaylabel@#1\endcsname{#2}%
+}
+
+\newcommand{\CTUlabelnumberwithsubindexfrom}[2]{%
+  \ctu_get_displaylabel:nn{#1}{#2}%
+}
+
+\newcommand{\CTUSetCitationSubindexPrefixes}[1]{%
+  \ctu_cite_subidx_set_prefixes:n {#1}%
+}
+
+\AtBeginBibliography{%
+  \ctu_init_consec:%
+}
+
+\cs_generate_variant:Nn \ctu_assign_displaylabel:n { o }
+% Assign hierarchical labels once per entry at data-input time (before the
+% document body), in biblatex's entry order.  Doing this here rather than
+% \AtEveryBibitem decouples label numbering from the printed list order, so
+% \CTUprintbibliography can re-order the list by (major, minor) without
+% disturbing the assigned numbers.
+\AtDataInput{%
+  \ctu_assign_displaylabel:o { \abx@field@entrykey }%
+}
+\ExplSyntaxOff
+
+% Bibliography ordered by hierarchical label.  iso-numeric uses sorting=none,
+% so biber emits .bbl entries in citation order.  To group entries by their
+% [N] / [N.k] label, the sorted key order computed in one run is written to the
+% .aux; the NEXT run reads it (before the body) and \nocite's the keys in that
+% order, so biber re-emits entries already in hierarchical-label order and a
+% single plain \printbibliography prints them sorted.  The order is derived
+% from the {sortnum}{key} pairs accumulated by \ctu_assign_displaylabel:n at
+% data-input time (sortnum = major*1000 + minor).
+\ExplSyntaxOn
+\cs_new_protected:Npn \ctu_finalize_bibsort:
+  {
+    \seq_sort:Nn \g_ctu_bib_sorted_seq
+      {
+        \int_compare:nNnTF { \use_i:nn ##1 } > { \use_i:nn ##2 }
+          { \sort_return_swapped: }
+          { \sort_return_same: }
+      }
+  }
+\cs_new_protected:Npn \ctu_write_bibsort_order:
+  {
+    \ctu_finalize_bibsort:
+    \seq_if_empty:NF \g_ctu_bib_sorted_seq
+      {
+        \tl_clear:N \l_tmpa_tl
+        \seq_map_inline:Nn \g_ctu_bib_sorted_seq
+          {
+            \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
+            \tl_put_right:Nx \l_tmpa_tl { \use_ii:nn ##1 }
+          }
+        \iow_now:Nx \ctuauxout
+          { \string \CTUbibsortorder { \l_tmpa_tl } }
+      }
+  }
+\cs_new_eq:NN \CTUwritebibsortorder \ctu_write_bibsort_order:
+\ExplSyntaxOff
+
+% \CTUbibsortorder{key,key,...}: emitted to the .aux every run.  When the next
+% run reads the .aux (before the body) it \nocite's the keys in sorted order,
+% prepending them to biber's citation order so the sorting=none bibliography
+% follows the hierarchical labels.  Defined as a no-op-safe \nocite.
+\newcommand{\CTUbibsortorder}[1]{\nocite{#1}}
+\AtEndDocument{\CTUwritebibsortorder}
+
+\newcommand{\CTUprintbibliography}{%
+  \printbibliography[heading=none]%
+}
+
+% Bibliography list: render numeric labels as [N.k] (square brackets) to match
+%   the in-text \cite[N.k] format produced by \DeclareCiteCommand below.
+%   iso-numeric default is "N." (period); we override to "[N.k]".
+\DeclareFieldFormat{labelnumberwidth}{%
+  \mkbibbrackets{\CTUlabelnumberwithsubindexfrom{#1}{\abx@field@entrykey}}}
+\setlength{\biblabelsep}{1em}
+
+% biblatex-iso690 treats howpublished as a medium marker and wraps every
+% literal value in brackets.  This project also stores legal-source strings
+% such as "In: \emph{Zákony pro lidi} [online]. AION CS" there; only the
+% recognised medium string itself should be bracketed.
+\DeclareFieldFormat{howpublished}{%
+  \ifbibstring{#1}
+    {\mainlangbibstring[\mkbibbrackets]{#1}}
+    {#1}%
+}
+
+% Global bibliography output policy (keeps .bib content intact):
+%   - do not print the note field,
+%   - shorten long personal-author lists to "et al.",
+%   - keep full author lists for online/misc items
+%     (typically institutions or contract parties).
+\ExecuteBibliographyOptions{maxbibnames=2,minbibnames=1}
+\AtEveryBibitem{%
+  \clearfield{note}%
+  %\ifentrytype{online}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+  %\ifentrytype{misc}{\defcounter{maxnames}{99}\defcounter{minnames}{1}}{}%
+}
+\DefineBibliographyStrings{czech}{andothers = {et\addabbrvspace al\adddot}}
+\DefineBibliographyStrings{english}{andothers = {et\addabbrvspace al\adddot}}
 
 % \CTUaddtotoc{title}: conditionally add a back-matter entry to the TOC.
 %   When \ifCTUbackmattertoc is true, writes a dotted-leader (section-style)
@@ -2063,6 +2580,31 @@
   \chaptermark{#1}%
   \CTUaddtotoc{#1}}
 
+% ctubibinline: bib environment that emits \item[label] into an enclosing
+%   list without creating its own \list frame.  Used by \CTUprintbibliography
+%   to collect all sorted entries into a single outer ctu@biblist.
+\defbibenvironment{ctubibinline}
+  {}
+  {}
+  {\item[{\mkbibbrackets{%
+      \CTUlabelnumberwithsubindexfrom
+        {\thefield{labelnumber}}{\thefield{entrykey}}}}]}
+% ctubiblist: outer list frame for the [N.k]-sorted bibliography.
+%   Name has no @ so it can be used inside \ExplSyntaxOff without \makeatletter.
+%   Geometry mirrors iso-numeric; \topsep=0pt prevents extra vertical space
+%   when multiple \printbibliography calls share this single outer frame.
+\newenvironment{ctubiblist}
+  {\list{}
+    {\setlength\labelwidth\bibhang
+     \setlength\leftmargin\labelwidth
+     \addtolength\leftmargin\labelsep
+     \setlength\labelsep\biblabelsep
+     \setlength\itemsep\bibitemsep
+     \setlength\parsep\bibparsep
+     \setlength\topsep{0pt}}%
+   \renewcommand*\makelabel[1]{\hss##1}}
+  {\endlist}
+
 % \cite hover tooltips: each [N] in text gets a GoTo link with /Contents tooltip
 %   showing the entry's title (and year when present).
 %   \DeclareCiteCommand overrides iso-numeric's default \cite so every key in a
@@ -2080,11 +2622,98 @@
 \DeclareCiteCommand{\cite}[\mkbibbrackets]
   {\usebibmacro{prenote}}
   {\usebibmacro{citeindex}%
-   \CTU@tooltiplink{cite.\the\c@refsection @\thefield{entrykey}}
-     {\thefield{labelnumber}}
+   \CTUciteTooltipLink{cite.\the\c@refsection @\thefield{entrykey}}
+     {\iffieldundef{labelnumber}
+      {\thefield{entrykey}}
+      {\CTUlabelnumberwithsubindexfrom{\thefield{labelnumber}}{\abx@field@entrykey}}}
      {\thefield{title}\iffieldundef{year}{}{, \thefield{year}}}}
   {\addcomma\addspace}
   {\usebibmacro{postnote}}
+
+% \ref / \autoref hover tooltips: show the full name of the referenced label on
+%   hover using the PDF /Contents annotation mechanism (\CTU@tooltiplink).
+%   Tooltip text is produced by \nameref{label} (the section/caption title for
+%   the referenced label) and stripped of formatting by \pdfstringdef.
+%   Both commands are wrapped in the late begin-document hook so that the
+%   redefinitions run after hyperref/nameref and any package-level hooks have
+%   installed their own versions of \ref and \autoref.
+%   \ref* / \autoref* are hyperref's non-linking variants; they are used as the
+%   visible text inside \CTU@tooltiplink to avoid nested link annotations.
+%   Labels that are undefined at the time of rendering fall back to the original
+%   hyperref command so that missing-reference warnings remain visible.
+\makeatletter
+\AddToHook{begindocument/end}{%
+  \let\CTU@orig@ref\ref
+  \let\CTU@orig@autoref\autoref
+  \renewcommand{\ref}[1]{%
+    \CTU@tooltipref{#1}{\CTU@orig@ref*{#1}}%
+  }%
+  \renewcommand{\autoref}[1]{%
+    \CTU@tooltipref{#1}{\CTU@orig@autoref*{#1}}%
+  }%
+  % Patch \eqref (amsmath) to show a bare number like \ref instead of (N.n).
+  % amsmath's default wraps \ref in \tagform@ which adds the round brackets;
+  % we skip that wrapper so equation references are visually consistent with
+  % figure/table/section references.
+  \renewcommand{\eqref}[1]{%
+    \CTU@tooltipref{#1}{\CTU@orig@ref*{#1}}%
+  }%
+  % Patch \label to write the current nameref title to .aux as
+  % \CTU@labeltipauxdef{key}{title}.  Executed when the .aux is read back on
+  % subsequent passes: populates \CTU@tip@<key> before the document body
+  % starts so tooltips work even for \ref{} calls that precede the figure's
+  % \input{}.  \protected@write expands non-robust tokens (e.g. \strXCaption)
+  % to their text at write time, when they are already defined.
+  \let\CTU@orig@label\label
+  \renewcommand{\label}[1]{%
+    \CTU@orig@label{#1}%
+    \protected@write\@auxout{}{%
+      \string\CTU@labeltipauxdef{#1}{\@currentlabelname}%
+    }%
+  }%
+}
+
+% Redefine \paragraph and \subparagraph to call \phantomsection. This ensures
+% that any \label inside/following a paragraph or subparagraph generates a
+% unique hyperlink anchor to the paragraph's exact location, while its
+% printed reference resolves to the parent sectioning number (since
+% paragraph is unnumbered).
+\let\CTU@orig@paragraph\paragraph
+\newcommand{\CTU@starparagraph}[1]{%
+  \CTU@orig@paragraph*{#1}%
+  \phantomsection
+}
+\newcommand{\CTU@paragraph}[2][]{%
+  \ifx\\#1\\%
+    \CTU@orig@paragraph{#2}%
+  \else
+    \CTU@orig@paragraph[#1]{#2}%
+  \fi
+  \phantomsection
+}
+\renewcommand{\paragraph}{%
+  \@ifstar
+    {\CTU@starparagraph}%
+    {\CTU@paragraph}%
+}
+\let\CTU@orig@subparagraph\subparagraph
+\newcommand{\CTU@starsubparagraph}[1]{%
+  \CTU@orig@subparagraph*{#1}%
+  \phantomsection
+}
+\newcommand{\CTU@subparagraph}[2][]{%
+  \ifx\\#1\\%
+    \CTU@orig@subparagraph{#2}%
+  \else
+    \CTU@orig@subparagraph[#1]{#2}%
+  \fi
+  \phantomsection
+}
+\renewcommand{\subparagraph}{%
+  \@ifstar
+    {\CTU@starsubparagraph}%
+    {\CTU@subparagraph}%
+}
 
 % ==============================================================================
 % Back Matter Command
@@ -2112,8 +2741,11 @@
   \renewcommand{\thepage}{\Roman{page}}%
   \phantomsection
   \ifCTUbiblio
-    \printbibliography[heading=CTUbib]%
+    \chapter*{\CTUbibname}%
+    \chaptermark{\CTUbibname}%
+    \CTUaddtotoc{\CTUbibname}%
     \label{ch:bibliography}%
+    \CTUprintbibliography
   \fi
   \ifCTUsoftware
     \chapter*{\CTUsoftwarename}%
@@ -2135,6 +2767,50 @@
     \InputIfFileExists{\CTU@attachmentsfile.tex}{}{}%
     \label{ch:attachments}%
   \fi}
+
+
+
+% ==============================================================================
+% \inputpgffigure{name} — include a matplotlib PGF figure
+% ==============================================================================
+% \CTUfitpgf{<content>} scales down only when content exceeds \linewidth.
+% This keeps typography stable across figures with different intrinsic widths.
+\newsavebox{\CTU@pgfbox}
+\newcommand{\CTUfitpgf}[1]{%
+  \sbox{\CTU@pgfbox}{#1}%
+  \ifdim\wd\CTU@pgfbox>\linewidth
+    \resizebox{\linewidth}{!}{\usebox{\CTU@pgfbox}}%
+  \else
+    \makebox[\linewidth][c]{\usebox{\CTU@pgfbox}}%
+  \fi
+}
+
+% Includes the editable figure definition from texparts/figures/<name>.tex.
+% The PGF file is expected at ../python/figures/<name>.pgf (relative to the
+% latex/ directory, matching \graphicspath{{../python/figures/}}).
+%
+% If the .pgf file does not exist (script not yet run), a visible warning box
+% is shown in the PDF instead of a hard compilation error.
+%
+% Usage in commentary files:  \inputpgffigure{vyhled_porodnost_vyvoj}
+\newcommand{\inputpgffigure}[1]{%
+  % Ensure figure wrappers from texparts/figures/* start in outer paragraph mode.
+  \par
+  \IfFileExists{../python/figures/#1.pgf}{%
+    \input{texparts/figures/#1}%
+  }{%
+    \begin{center}
+      \fboxsep=8pt
+      \colorbox{yellow!40}{%
+        \parbox{0.85\linewidth}{%
+          \color{red!70!black}\bfseries
+          \texttt{[\detokenize{#1}.pgf]} chybí --- spusťte odpovídající Python skript.%
+        }%
+      }%
+    \end{center}%
+  }%
+  \par
+}
 
 \endinput
 %%
