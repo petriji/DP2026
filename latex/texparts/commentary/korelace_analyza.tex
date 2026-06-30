@@ -163,32 +163,14 @@ Predikovaná změna výstupních proměnných při tomto nárůstu se dle rov.~\
 kde $\hat{\beta}$ jsou panelové odhady dle rov.~\eqref{eq:ols} a~$x_0 = 30{,}7\,\%$, $x_1 = 80{,}0\,\%$.
 Výsledky jsou shrnuty v~tab.~\ref{tab:model_cz}.
 
-\begin{table}[htbp]
-\centering
-\caption{Modelový výpočet dle rov.~\eqref{eq:model_cz}: predikovaná změna ukazatelů ČR
-         při nárůstu pokrytí \ac{KS} na~80~\,\% (panelový $\hat{\beta}$, EU26, 2004--2024).}
-\label{tab:model_cz}
-\begin{tabular}{lrrrr}
-\toprule
-Ukazatel
-  & Aktuální $y_0$
-  & $\hat{\beta}$
-  & $\Delta\hat{y} = \hat{\beta}\cdot 49{,}3$
-  & Predikce $\hat{y}_1$ \\
-\midrule
-Průměrná skut.~prac.~doba (h/týden) & $37{,}5$ & $-0{,}042$ & $-2{,}1$  & $35{,}4$ \\
-Gender pay gap (\%)                  & $18{,}5$ & $-0{,}023$ & $-1{,}1$  & $17{,}4$ \\
-Čistý hod.~příjem (\si{\pps\per\hour})  & $9{,}91$ & $+0{,}079$ & $+3{,}90$ & $13{,}81$ \\
-Produktivita práce (EU27\,=\,100)    & $78{,}5$ & $+0{,}605$ & $+29{,}8$ & $108{,}3$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{texparts/python/korelace_model_cz}
 
 Výsledky je třeba interpretovat jako horní odhad korelovatelné části efektu, nikoliv jako kauzální predikci: $\hat{\beta}$ je odhadnut na průřezu zemí s~různými institucemi, historií a~ekonomickými strukturami a~nezachycuje zpětné vazby (general equilibrium) ani náklady přechodu.
-Přesto jsou závěry konzistentní s~tezí práce:
+Přesto jsou závěry konzistentní s~tezí práce a~predikovaný profil \acl{geo-CZ} po reformě pokrytí \ac{KV} odpovídá kombinaci charakteristik dvou současných států \ac{EU}:
 \begin{itemize}
-  \item nárůst čistého hodinového příjmu o~\SI{3,90}{\pps\per\hour} ($+39\,\%$) by ČR přiblížil aktuální úrovni Slovinska nebo Španělska;
-  \item zkrácení průměrné skutečné pracovní doby o~\SI{2,1}{\hour\per\week} při vyšším příjmu odpovídá přibližně jednomu dni volna za 14~dní;
-  \item snížení gender pay gap o~$1{,}1$~pp je malé, ale směr je konzistentní s~hypotézou o~standardizačním efektu \ac{KV} na mzdové tarify.
+  \item nárůst čistého hodinového příjmu o~\SI{3,90}{\pps\per\hour} ($+39\,\%$) by \acl{geo-CZ} posunul na aktuální úroveň \acl{geo-IT} (\SI{13,54}{\pps\per\hour} v~roce 2024), zatímco \acl{geo-SE} (\SI{17,15}{\pps\per\hour}) zůstává citelně výše;
+  \item zkrácení průměrné skutečné pracovní doby o~\SI{2,1}{\hour\per\week} by \acl{geo-CZ} přiblížilo \acl{geo-SE} (\SI{35,1}{\hour\per\week}), které kombinuje nejkratší pracovní dobu v~\ac{EU} s~produktivitou \num{107,4} bodu (EU27\,=\,100) --- hodnotou prakticky shodnou s~modelovou predikcí \num{108,3} pro \acl{geo-CZ};
+  \item snížení \ac{GPG} o~$1{,}1$~pp je malé a~predikovaná hodnota \SI{17,4}{\percent} zůstává nad úrovní obou referenčních zemí (\acl{geo-IT}~\SI{5,3}{\percent}, \acl{geo-SE}~\SI{11,2}{\percent}); směr efektu je však konzistentní s~hypotézou o~standardizačním efektu \ac{KV} na mzdové tarify, samotné pokrytí však nestačí -- ukazatel je v~\acl{geo-CZ} tažen i~strukturálními faktory (odvětvová segregace, rodičovství), které \ac{KV} neřeší přímo.
 \end{itemize}
-Reforma \ac{KV} pokrytí (zavedení mechanismu erga omnes, revize zákona o~kolektivním vyjednávání č.\,2/1991~Sb.~\cite{zakon_kv_1991}) je z~pohledu dat jednou z~nejméně nákladných dostupných politik: nevyžaduje přímé státní výdaje a~generuje distribuční efekty srovnatelné s~rozsáhlými fiskálními programy.
+Referenční profil tedy není jediná země, ale kombinace: příjmová úroveň \acl{geo-IT} při délce pracovní doby a~produktivitě odpovídající \acl{geo-SE}. Oba tyto státy jsou přitom charakterizovány vysokým pokrytím \ac{KV} (\acl{geo-SE}~\SI{87}{\percent} v~roce 2021, \acl{geo-IT}~\SI{100}{\percent}; dle ICTWSS \textit{AdjCov}), což odpovídá predikovanému cílovému pokrytí v~\acl{geo-CZ}.
+Reforma pokrytí \ac{KV} (zavedení mechanismu erga omnes, revize zákona o~kolektivním vyjednávání č.\,2/1991~Sb.~\cite{zakon_kv_1991}) je z~pohledu dat jednou z~nejméně nákladných dostupných politik: nevyžaduje přímé státní výdaje a~generuje distribuční efekty srovnatelné s~rozsáhlými fiskálními programy.
