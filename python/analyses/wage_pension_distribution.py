@@ -118,6 +118,9 @@ _X_GRID  = np.linspace(_X_MIN, _X_MAX, 2_000)
 
 # Reference constants (2026 / latest available)
 MIN_WAGE       = 20_800   # Kč/měsíc hrubá (nařízení vlády č.405/2025 Sb.)
+# Minimum pension = zákonná základní výměra + minimum procentní výměra
+# zákon č.155/1995 Sb. §29; 2026 values per NV č.365/2025 Sb.
+MIN_PENSION    =  5_340   # Kč/měsíc  (4 570 + 770 Kč)  zákon č.155/1995 Sb.
 
 # 2026 CZ employee statutory deductions (for gross-to-net conversion)
 _SP_EMPLOYEE_RATE = 0.065   # sociální pojistění zaměstnanec
@@ -183,6 +186,25 @@ def lognormal_cdf(x: np.ndarray, mu: float, sigma: float) -> np.ndarray:
     x_pos = np.maximum(x, 1e-12)
     z = (np.log(x_pos) - mu) / (sigma * np.sqrt(2.0))
     return 0.5 * (1.0 + _erf_approx(z))
+
+
+def truncated_lognormal_pdf(
+    x: np.ndarray, mu: float, sigma: float, x_min: float
+) -> np.ndarray:
+    """Left-truncated log-normal PDF with hard lower bound at *x_min*.
+
+    For a random variable X with X ∼ LN(μ, σ) conditioned on X ≥ x_min::
+
+        f(x | x ≥ x_min) = f_LN(x) / (1 − F_LN(x_min))   for x ≥ x_min
+        f(x | x ≥ x_min) = 0                                for x < x_min
+
+    This properly models the fact that no wage/pension can fall below its
+    legal minimum floor.
+    """
+    cdf_at_min = float(lognormal_cdf(np.array([x_min]), mu, sigma)[0])
+    normalizer = max(1.0 - cdf_at_min, 1e-15)
+    pdf = lognormal_pdf(x, mu, sigma)
+    return np.where(np.asarray(x) >= x_min, pdf / normalizer, 0.0)
 
 
 def fit_lognormal(quantile_dict: dict[float, float]) -> tuple[float, float]:
@@ -483,8 +505,8 @@ print(f"\nWage    fit (net): μ={mu_w:.4f}, σ={sig_w:.4f}  "
 print(f"Pension fit:       μ={mu_p:.4f}, σ={sig_p:.4f}  "
       f"→ medián≈{med_pension:,.0f} Kč")
 
-pdf_wage    = lognormal_pdf(_X_GRID, mu_w, sig_w)
-pdf_pension = lognormal_pdf(_X_GRID, mu_p, sig_p)
+pdf_wage    = truncated_lognormal_pdf(_X_GRID, mu_w, sig_w, min_wage_net)
+pdf_pension = truncated_lognormal_pdf(_X_GRID, mu_p, sig_p, MIN_PENSION)
 
 # Convert probability-density to absolute frequency density:
 #   freq(x) = N × pdf(x)      [osob / Kč]
@@ -536,12 +558,17 @@ ax.axvline(
     label=f"Medián důchodu {med_pension:,.0f} Kč",
 )
 
-# Minimum wage reference (net)
+# Minimum wage reference (net) and minimum pension reference
 ax.axvline(
     min_wage_net / 1_000,
-    color="gray", linewidth=0.9, linestyle=":", alpha=0.7,
+    color=_COLOR_WAGE, linewidth=0.9, linestyle=":", alpha=0.65,
     label=f"Minimální čistá mzda {min_wage_net:,.0f} Kč"
           f" (hrubá {MIN_WAGE:,} Kč)",
+)
+ax.axvline(
+    MIN_PENSION / 1_000,
+    color=_COLOR_PENSION, linewidth=0.9, linestyle=":", alpha=0.65,
+    label=f"Minimální důchod {MIN_PENSION:,} Kč",
 )
 
 ax.set_xlabel("Čistá mzda / výše důchodu (tis. Kč/měsíc)", fontsize=FONT_SIZE)
@@ -584,12 +611,16 @@ save_figure_tex(
         "odpovídají násobku 1{{,}}338 hrubé mzdy "
         f"(medián: {med_wage_total_cost:,.0f}\\,Kč). "
         "Starobní důchody jsou vypláceny jako čistá částka. "
-        "Obě distribuce jsou aproximovány log-normálním rozdělením "
-        "fitovaným metodou nejmenších čtverců na percentilové profily "
-        "(P10\\,--\\,P90). "
+        "Obě distribuce jsou modelovány jako \\emph{{zleva zkrácené}} "
+        "log-normální rozdělení: mzdová distribuce je zkrácena na "
+        f"minimální čistou mzdu ({min_wage_net:,.0f}\\,Kč, hrubá {MIN_WAGE:,}\\,Kč), "
+        f"penzijní distribuce na minimální důchod ({MIN_PENSION:,}\\,Kč; "
+        "zákon č.\\,155/1995\\,Sb.\\ §\\,29). "
+        "Parametry log-normálního rozdělení jsou fitovány metodou "
+        "nejmenších čtverců na percentilové profily (P10\\,--\\,P90). "
         "Osa y udává počet osob v intervalu šíře 1\\,tis.\\,Kč. "
         "Přerušované svislé čáry označují mediány; "
-        "tečkovaná čára čistou minimální mzdu."
+        "tečkované čáry zákonná minima."
     ),
     label="fig:wage_pension_distribution",
     width=r"0.95\linewidth",
