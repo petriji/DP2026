@@ -75,6 +75,7 @@ from cz_pension_model import (
     OSVC_HEALTH_RATE,
     OSVC_MIN_MONTHLY_BASE,
     OSVC_MIN_HEALTH_BASE,
+    OSVC_VYDAJOVY_CAP,
     PAUSALNI_DAN,
     PAUSALNI_DAN_TOTAL,
     MIN_WAGE_TOTAL_COST,
@@ -391,8 +392,15 @@ def _plot_osvc_lines(
     """
     for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
         y_osvc = fn_osvc(x, expense_rate)
-        ax.plot(x / 1_000, y_osvc,
-                color=color, linewidth=1.5, linestyle="--", zorder=3)
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        idx = int(np.searchsorted(x, cap, side='right'))
+        if idx > 0:
+            ax.plot(x[:idx] / 1_000, y_osvc[:idx],
+                    color=color, linewidth=1.5, linestyle="--", zorder=3)
+        if idx < len(x):
+            start = max(0, idx - 1)
+            ax.plot(x[start:] / 1_000, y_osvc[start:],
+                    color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = 0
         for i, ((max_inc_p, _monthly_base), (max_inc_t, total_pay)) in enumerate(
@@ -416,6 +424,9 @@ def _bottom_legend(fig: plt.Figure, c_emp: str) -> None:
     for _er, lbl, col, _mp in OSVC_TYPES:
         legend_handles.append(
             Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    legend_handles.append(
+        Line2D([0], [0], color="#888888", linewidth=1.5, linestyle="-.", alpha=0.45,
+               label="OSVČ výd.\u00a0paušál nad limitem příjmů"))
     for i in range(len(PAUSALNI_DAN)):
         legend_handles.append(
             Line2D([0], [0], color=PASMO_COLORS[i], linewidth=2.0, linestyle=":",
@@ -497,8 +508,8 @@ def plot_net_income_vs_income(
 
     _plot_osvc_lines(
         ax, x,
-        fn_osvc=lambda x_v, er: net_income_osvc_vydajovy(x_v, er),
-        fn_pausalni=lambda x_b, tp, _i: x_b - tp,
+        fn_osvc=lambda x_v, er: net_income_osvc_vydajovy(x_v, er) / 1_000,
+        fn_pausalni=lambda x_b, tp, _i: (x_b - tp) / 1_000,
         income_max=income_max,
     )
 
@@ -667,8 +678,16 @@ def plot_pension_sp_ratio_vs_income(
     for expense_rate, _label, color, max_pasmo in OSVC_TYPES:
         pen_o = pension_osvc_vydajovy(x, expense_rate, years)
         sp_o = sp_osvc_vydajovy(x, expense_rate)
-        ax.plot(x / 1_000, pen_o / sp_o,
-                color=color, linewidth=1.5, linestyle="--", zorder=3)
+        ratio_o = pen_o / sp_o
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        idx = int(np.searchsorted(x, cap, side='right'))
+        if idx > 0:
+            ax.plot(x[:idx] / 1_000, ratio_o[:idx],
+                    color=color, linewidth=1.5, linestyle="--", zorder=3)
+        if idx < len(x):
+            start = max(0, idx - 1)
+            ax.plot(x[start:] / 1_000, ratio_o[start:],
+                    color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = int(OSVC_MIN_MONTHLY_BASE * 2)
         for i, ((max_inc_t, monthly_base), (_max_inc_t2, _total_pay)) in enumerate(
@@ -735,8 +754,16 @@ def plot_tax_wedge_comparison(
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
         rr_osvc = pension_osvc_vydajovy(x, expense_rate, years) / x * 100
-        ax.plot(tw_osvc, rr_osvc,
-                color=color, linewidth=1.5, linestyle="--", zorder=3)
+        cap = OSVC_VYDAJOVY_CAP[expense_rate]
+        mask_below = x <= cap
+        mask_above = ~mask_below
+        if mask_below.any():
+            ax.plot(tw_osvc[mask_below], rr_osvc[mask_below],
+                    color=color, linewidth=1.5, linestyle="--", zorder=3)
+        if mask_above.any():
+            start = max(0, int(np.where(mask_above)[0][0]) - 1)
+            ax.plot(tw_osvc[start:], rr_osvc[start:],
+                    color=color, linewidth=1.5, linestyle="-.", alpha=0.45, zorder=3)
 
         prev_max = income_min
         for i, ((max_inc_p, monthly_base), (max_inc_t, total_pay)) in enumerate(
