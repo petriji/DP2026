@@ -1,16 +1,11 @@
 ---
-name: "audit-bibliography"
-description: "Use when: auditing latex/socialnidialog.bib for ČSN ISO 690:2022 compliance, URL liveness, duplicate/mergeable bib entries, missing urldate/online markers/publisher fields, type migration proposals, corporate author casing, or broken links. Use for: DP bibliography audit, bib lint, ISO 690, merge cite keys. Do NOT use for: routine citation insertion (use Citace a zkratky), prose formatting (use Formatuj LaTeX), source scraping (use Scrape Sources), or generic build triage."
-tools: [read, search, edit, run_in_terminal]
-agents: ["Citace a zkratky"]
-argument-hint: "Optional subset of bib keys/category, e.g. all, eurostat_*, zakon_*"
+description: 'Use when: auditing socialnidialog.bib for ČSN ISO 690:2022 compliance, checking URL liveness, finding duplicate/mergeable bib entries, fixing missing urldate / online markers / publisher / edition fields, migrating @misc → @online / @dataset / @report, normalising author casing (kapitálky), title casing, sjednocení formátu „Dostupné z:" / [cit. YYYY-MM-DD]. Use for: cite audit, bib lint, bibliography health, ISO 690 compliance, broken links, dead URLs, merge cite keys. Do NOT use for: writing new commentary (use Komentuj analýzu), routine \cite{} insertion (use Citace a zkratky / Formatuj LaTeX).'
+argumentHint: 'Optional: subset of bib keys / category to audit (e.g. "all", "eurostat_*", "zakon_*"). Default = all.'
 ---
 
 # Audit bibliografie — ČSN ISO 690:2022
 
-DP-specific audit subagent for `latex/socialnidialog.bib`. Produces a structured report; applies only safe, mechanical fixes automatically. All structural changes (merges, type migrations, author re-casing) are listed as proposals for user review.
-
-This agent owns bibliography health. It does not write prose and does not decide whether a claim belongs in the thesis.
+Read-only-first audit subagent for `latex/socialnidialog.bib`. Produces a structured report; applies only **safe, mechanical** fixes automatically. All structural changes (merges, type migrations, author re-casing) are listed as proposals for user review.
 
 ## Inputs
 
