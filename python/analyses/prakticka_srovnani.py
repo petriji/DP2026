@@ -114,7 +114,7 @@ def _row(label: str, values: dict[str, float], fmt: str = "{:.1f}",
 
 
 def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, float],
-                fmt: str = "{:.1f}", unit: str = "") -> dict:
+                fmt: str = "{:.1f}", idx_fmt: str = "{:.0f}", unit: str = "") -> dict:
     r"""Row with absolute value + CZ=100 index on a second line: ``val \newline (\SI{idx}{\percent})``.
 
     When the whole row is italic (derived indicator), the caller wraps via italic_rows
@@ -129,7 +129,7 @@ def _row_merged(label: str, values: dict[str, float], idx_values: dict[str, floa
         abs_str = rf"\SI{{{num}}}{{{unit}}}" if unit else rf"\num{{{num}}}"
         if idx is None or (isinstance(idx, float) and pd.isna(idx)):
             return abs_str
-        return abs_str + r" \newline " + rf"(\SI{{{idx:.1f}}}{{\percent}})"
+        return abs_str + r" \newline " + rf"(\SI{{{idx_fmt.format(idx)}}}{{\percent}})"
     return {"Indikátor": label, **{COUNTRY_LABELS[c]: _cell(c) for c in COUNTRIES}}
 
 
@@ -211,34 +211,41 @@ ds_emp = Dataset.from_sdmx_csv(
     source_url="Eurostat/lfsi_emp_a",
 )
 
-# Job vacancy rate (B--S excl. O) --- try several filter variants; graceful fallback to --
-# jvs_a_nace2 dimensions: freq · nace_r2 · sizeclas · indic_em · geo
+# Job vacancy rate (B--S excl. O) --- robust full-dataset extraction
+# jvs_a_nace2 dimensions usually include: freq · nace_r2 · sizeclas · indic_em · geo
 # Note: startPeriod causes 400 on this dataset --- omit it.
 ds_jvr: "Dataset | None" = None
-for _jvr_filter in (
-    f"A.B-S_X_O.GE10.JVR.{GEO}",      # freq.nace.size.indic.geo
-    f"A.B-S_X_O.JVR.GE10.{GEO}",      # freq.nace.indic.size.geo
-    f"A.B-S_X_O.TOTAL.JVR.{GEO}",     # all firms
-    f"A.B-S_X_O.JVR.TOTAL.{GEO}",     # all firms + alt order
-    f"A.TOTAL.GE10.JVR.{GEO}",        # nace_r2=TOTAL fallback
-):
-    try:
-        _candidate_jvr = Dataset.from_sdmx_csv(
-            fetch_eurostat("jvs_a_nace2", _jvr_filter),
-            name="Job vacancy rate", unit="%",
-            source_url="Eurostat/jvs_a_nace2",
-        )
-        _check = _candidate_jvr.df[
-            _candidate_jvr.df[_candidate_jvr.geo_col].isin(COUNTRIES)
-        ].dropna(subset=[_candidate_jvr.value_col])
-        if _check.empty:
-            print(f"  jvs_a_nace2/{_jvr_filter}: empty after parsing")
-            continue
-        ds_jvr = _candidate_jvr
-        print(f"  jvs_a_nace2: using filter={_jvr_filter}")
-        break
-    except Exception as _e:
-        print(f"  jvs_a_nace2/{_jvr_filter}: {_e}")
+try:
+    _jvr_path = fetch_eurostat("jvs_a_nace2", force=True)
+    _jvr_raw = pd.read_csv(_jvr_path, na_values=["", ":", ": "])
+    _jvr_raw = _jvr_raw.rename(columns={"TIME_PERIOD": "time", "OBS_VALUE": "value"})
+    _jvr_raw = _jvr_raw.drop(columns=[c for c in ("DATAFLOW", "LAST UPDATE", "OBS_FLAG", "CONF_STATUS") if c in _jvr_raw.columns])
+    _jvr_raw["value"] = pd.to_numeric(_jvr_raw["value"], errors="coerce")
+    _jvr_raw = _jvr_raw.dropna(subset=["value"])
+    _jvr_raw = _jvr_raw[_jvr_raw["geo"].isin(COUNTRIES)].copy()
+
+    if "freq" in _jvr_raw.columns:
+        _jvr_raw = _jvr_raw[_jvr_raw["freq"].isin(["A", "ANNUAL"]) ]
+    if "indic_em" in _jvr_raw.columns:
+        _jvr_raw = _jvr_raw[_jvr_raw["indic_em"].isin(["JVR", "JV_RATE", "JVAC_RATE"]) ]
+    if "nace_r2" in _jvr_raw.columns:
+        for _nace in ["B-S_X_O", "B-S", "TOTAL"]:
+            _tmp = _jvr_raw[_jvr_raw["nace_r2"] == _nace]
+            if not _tmp.empty:
+                _jvr_raw = _tmp
+                break
+    if "sizeclas" in _jvr_raw.columns:
+        for _sz in ["GE10", "TOTAL"]:
+            _tmp = _jvr_raw[_jvr_raw["sizeclas"] == _sz]
+            if not _tmp.empty:
+                _jvr_raw = _tmp
+                break
+
+    if not _jvr_raw.empty:
+        ds_jvr = Dataset(_jvr_raw[["geo", "time", "value"]], name="Job vacancy rate", unit="%", source_url="Eurostat/jvs_a_nace2")
+        print(f"  jvs_a_nace2: extracted {len(ds_jvr.df)} rows")
+except Exception as _e:
+    print(f"  jvs_a_nace2: {_e}")
 if ds_jvr is None:
     print("  WARNING: job vacancy rate unavailable --- row 9 will show --")
 
@@ -276,27 +283,31 @@ except Exception as _e:
     print(f"  WARNING: APZ data unavailable ({_e}) --- row 11 will show --")
 
 # Low-wage earners (% of all employees, < 2/3 national median gross hourly earnings)
-# earn_ses_pub1s dimensions: freq · sex · geo  (SES survey: latest round 2022)
+# earn_ses_pub1s is sparse (SES rounds), so parse full dataset and filter robustly.
 ds_lowwage: "Dataset | None" = None
-for _sex_key, _sex_val in (("T", "T"), ("M+F", "M+F"), ("TOTAL", "TOTAL")):
-    try:
-        _candidate_lowwage = Dataset.from_sdmx_csv(
-            fetch_eurostat("earn_ses_pub1s", f"A.{_sex_val}.{GEO}"),
-            name="Nízkopříjmoví zaměstnanci", unit="%",
-            source_url="Eurostat/earn_ses_pub1s",
-            filters={"sex": _sex_key},
-        )
-        _check = _candidate_lowwage.df[
-            _candidate_lowwage.df[_candidate_lowwage.geo_col].isin(COUNTRIES)
-        ].dropna(subset=[_candidate_lowwage.value_col])
-        if _check.empty:
-            print(f"  earn_ses_pub1s/{_sex_val}: empty after parsing")
-            continue
-        ds_lowwage = _candidate_lowwage
-        print(f"  earn_ses_pub1s: using sex={_sex_key}")
-        break
-    except Exception as _e:
-        print(f"  earn_ses_pub1s/{_sex_val}: {_e}")
+try:
+    _lw_path = fetch_eurostat("earn_ses_pub1s", force=True)
+    _lw_raw = pd.read_csv(_lw_path, na_values=["", ":", ": "])
+    _lw_raw = _lw_raw.rename(columns={"TIME_PERIOD": "time", "OBS_VALUE": "value"})
+    _lw_raw = _lw_raw.drop(columns=[c for c in ("DATAFLOW", "LAST UPDATE", "OBS_FLAG", "CONF_STATUS") if c in _lw_raw.columns])
+    _lw_raw["value"] = pd.to_numeric(_lw_raw["value"], errors="coerce")
+    _lw_raw = _lw_raw.dropna(subset=["value"])
+    _lw_raw = _lw_raw[_lw_raw["geo"].isin(COUNTRIES)].copy()
+
+    if "freq" in _lw_raw.columns:
+        _lw_raw = _lw_raw[_lw_raw["freq"].isin(["A", "ANNUAL"]) ]
+    if "sex" in _lw_raw.columns:
+        for _sx in ["T", "M+F", "TOTAL"]:
+            _tmp = _lw_raw[_lw_raw["sex"] == _sx]
+            if not _tmp.empty:
+                _lw_raw = _tmp
+                break
+
+    if not _lw_raw.empty:
+        ds_lowwage = Dataset(_lw_raw[["geo", "time", "value"]], name="Nízkopříjmoví zaměstnanci", unit="%", source_url="Eurostat/earn_ses_pub1s")
+        print(f"  earn_ses_pub1s: extracted {len(ds_lowwage.df)} rows")
+except Exception as _e:
+    print(f"  earn_ses_pub1s: {_e}")
 if ds_lowwage is None:
     print("  WARNING: earn_ses_pub1s unavailable --- low-wage row will show --")
 
@@ -414,8 +425,12 @@ v_disp = {
     if c in v_lc_pps and c in v_tax
 }
 
+# Convert annual GDP per capita → PPS/cap/hour by dividing by hours per year
+_HOURS_PER_YEAR = 365.25 * 24
+v_gdp_h = {c: v_gdp[c] / _HOURS_PER_YEAR for c in COUNTRIES if c in v_gdp}
+
 # CZ-normalised sub-rows
-v_gdp_idx  = _normed_cz100(v_gdp)
+v_gdp_idx  = _normed_cz100(v_gdp_h)
 v_hrs_idx  = _normed_cz100(v_hrs)
 v_lc_idx   = _normed_cz100(v_lc_pps)
 v_disp_idx = _normed_cz100(v_disp)
@@ -480,7 +495,7 @@ def _m(label: str, ind_key: str) -> str:
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
-L_GDP      = _m(r"HDP [\si{\pps\per\person\per\rok}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
+L_GDP      = _m(r"HDP [\si{\pps\per\person\per\hour}]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_LC       = _m(r"Úplné náklady práce [\si{\pps\per\hour}]~\cite{eurostat_lc_lci_lev}", "Náklady práce EUR")
 L_HRS      = _m(r"Odpracované hodiny \newline (průměr) [\si{\hour\per\week}]~\cite{eurostat_lfsa_ewhun2}", "Odprac. hodiny")
 L_TAX      = _m(r"Daňový klín \newline (\SI{67}{\percent} prům.)~\cite{eurostat_earn_nt_taxwedge}", "Daňový klín")
@@ -497,8 +512,8 @@ L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}"
 # ── 4. Build table DataFrame ──────────────────────────────────────────────────
 
 rows = [
-    # ── GDP (absolute + CZ=100 index) ────────────────────────────────────────
-    _row_merged(L_GDP, v_gdp, v_gdp_idx, fmt="{:.0f}", unit=r"\eur"),
+    # ── GDP per cap per hour (absolute + CZ=100 index) ───────────────────────
+    _row_merged(L_GDP, v_gdp_h, v_gdp_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Labour cost (absolute + CZ=100 index) ────────────────────────────────
     _row_merged(L_LC, v_lc_pps, v_lc_idx, fmt="{:.1f}", unit=r"\eur"),
     # ── Working hours (absolute + CZ=100 index) ──────────────────────────────
@@ -558,7 +573,7 @@ save_table_tex(
         r"Pokrytí \ac{KS}: \ac{OECD} (CZ, DK, AT, PL): \acs{ICTWSS}, DE a SK: ERB."
         + _deviation_note
     ),
-    col_format="@{}p{4.5cm}CCCCCC@{}",
+    col_format=r"@{}>{\raggedright\arraybackslash}p{5cm}*{6}{>{\centering\arraybackslash}m{1.65cm}}@{}",
     col_headers=COUNTRIES,
     index_name="Indikátor",
     italic_rows=italic_rows,
