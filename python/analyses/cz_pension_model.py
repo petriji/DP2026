@@ -677,17 +677,15 @@ def plot_pension_solidarity(
     rr_emp = p_emp_rr / _net_income_emp(x_rr) * 100
     ax_bot.plot(x_rr / 1_000, rr_emp, color=c_emp, linewidth=2.0)
 
-    _RR_CAP = 250.0  # clip extreme ratios at the start of each OSVČ series
+    _RR_CAP = 250.0  # y-axis upper limit; extreme values near min wage are hidden by ylim
     for expense_rate, label, color in OSVC_TYPES:
         p_osvc_rr = pension_osvc_vydajovy(x_rr, expense_rate, years)
         ni_osvc   = _net_income_osvc_vydajovy(x_rr, expense_rate)
-        # Mask points where net income ≤ 0 or ratio would exceed display cap
-        # (e.g. OSVČ 80 % has negative/tiny net income near min wage causing
-        # extreme replacement-rate spikes that distort the y-axis scale).
-        rr_raw  = np.where(ni_osvc > 0,
+        # Mask only where net income ≤ 0; extreme positive outliers are handled
+        # by the y-axis upper limit below (simpler than NaN-masking).
+        rr_osvc = np.where(ni_osvc > 0,
                            p_osvc_rr / np.maximum(ni_osvc, 1.0) * 100,
                            np.nan)
-        rr_osvc = np.where(rr_raw <= _RR_CAP, rr_raw, np.nan)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         idx = int(np.searchsorted(x_rr, cap, side='right'))
         if idx > 0:
