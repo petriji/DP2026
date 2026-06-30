@@ -1,8 +1,8 @@
 % Hand-drawn TikZ figure — hierarchie odborové reprezentace v ČR.
 % Konfederace (ČMKOS, ASO, …) → OS (odvětvové svazy) → ZO (základní organizace).
-% U jednoho zaměstnavatele se ZO koordinují v P~KOV (§24 ZákP).
+% U jednoho zaměstnavatele se ZO mohou koordinovat v P~KOV; §24 ZP řeší pluralitu OO.
 % Edit freely —  not generated.
-\def\strOOHierarchieCaption{Třístupňová hierarchie odborové reprezentace v~\acs{ČR}: zastřešující konfederace (\acs{ČMKOS}, \acs{ASO}, \ldots), odvětvové \acs{OS} a~podnikové či lokální \acs{ZO}; u~zaměstnavatele s~více \acs{ZO} jejich vyjednávání koordinuje \acs{PKOV}.}%
+\def\strOOHierarchieCaption{Třístupňová hierarchie odborové reprezentace v~\acs{geo-CZ}: zastřešující konfederace (\acs{ČMKOS}, \acs{ASO}, \ldots), odborové svazy a~podnikové či lokální \acs{ZO}; u~zaměstnavatele s~více \acs{ZO} může jejich vyjednávání koordinovat \acs{PKOV}.}%
 %
 \begin{figure}[H]
   \centering
@@ -29,10 +29,10 @@
     \node[topBox] (ASO)   at ( 3.2,3.0) {\textbf{\acs{ASO}}\\konfederace};
     \node[dots]           at ( 6.6,3.0) {\ldots};
 
-    % --- Střední úroveň: OS (odvětvové svazy) ---
-    \node[midBox] (OS1) at (-5.0,1.0) {\acs{OS} odvětví~A};
-    \node[midBox] (OS2) at (-1.5,1.0) {\acs{OS} odvětví~B};
-    \node[midBox] (OS3) at ( 3.0,1.0) {\acs{OS} odvětví~C};
+    % --- Střední úroveň: OS (odborové svazy) ---
+    \node[midBox] (OS1) at (-5.0,1.0) {\acs{OS}~A};
+    \node[midBox] (OS2) at (-1.5,1.0) {\acs{OS}~B};
+    \node[midBox] (OS3) at ( 3.0,1.0) {\acs{OS}~C};
     \node[dots]         at ( 6.6,1.0) {\ldots};
 
     % --- Spojení konfederace → OS ---
@@ -65,7 +65,7 @@
     \node[draw=black!60, dashed, rounded corners=2pt,
           text width=4.2cm, inner sep=4pt, font=\sffamily\fontsize{9}{10.5}\selectfont]
          (Note) at ( 5.0,-3.0)
-         {Více \acs{ZO} z~různých \acs{OS} u~jednoho zaměstnavatele jedná koordinovaně v~\acs{PKOV} (\mbox{§~24} \acs{ZP})};
+         {Více \acs{ZO} u~jednoho zaměstnavatele může jednat koordinovaně v~\acs{PKOV}; pluralitu \acs{OO} upravuje \mbox{§~24} \acs{ZP}};
     \draw[linkDashed] (Note.west) -- (PKOV.east);
   \end{tikzpicture}}
   \caption{\strOOHierarchieCaption}
