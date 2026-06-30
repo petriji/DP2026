@@ -8,6 +8,27 @@ Hustota odborů pochází z~téže databáze (ukazatel TUD~\cite{oecd_aias_ictws
 Výstupní proměnné pocházejí z~Eurostatu: průměrná skutečná týdenní pracovní doba (lfsa\_ewhan2~\cite{eurostat_lfsa_ewhan2_HR_weekly}), gender pay gap v~nefinančním sektoru (earn\_gr\_gpgr2~\cite{eurostat_gpg}), čistý hodinový příjem v~PPS odvozený podílem ročního příjmu a~skutečné roční pracovní doby (earn\_nt\_net~\cite{eurostat_earn_nt_net_PPS_AW100}, lfsa\_ewhan2), produktivita práce na hodinu v~PPS (nama\_10\_lp\_ulc~\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}) a~Giniho koeficient disponibilního příjmu (ilc\_di12~\cite{eurostat_ilc_di12_Gini}).
 Datová řada začíná rokem 2004 shodně ve všech souborech.
 
+\paragraph{Odvození hodinového čistého příjmu v PPS}\label{par:pps_hourly}
+
+Eurostatový soubor earn\_nt\_net~\cite{eurostat_earn_nt_net_PPS_AW100}
+poskytuje roční čistý příjem standardizované osoby ve výši
+\SI{100}{\percent} průměrné mzdy (\textit{average worker}, AW100) v~jednotkách
+\SI{}{\pps}, tj.~$\acs{var-y}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-AW100},\acs{idx-a}}$.
+Pro srovnání s~hodinovou produktivitou je nutný přepočet na hodinovou sazbu.
+Roční pracovní fond~$\acs{var-H}_{\acs{idx-a}}$ se odhaduje z~průměrné skutečné
+týdenní pracovní doby~$\acs{var-H}_{\acs{idx-w}}$ (Eurostat
+lfsa\_ewhan2~\cite{eurostat_lfsa_ewhan2_HR_weekly}) přepočtem na 52,18~týdne
+v~roce (průměrná délka roku $365{,}2425/7 \approx 52{,}18$):
+\begin{equation}\label{eq:pps_hourly}
+  \acs{var-w}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-h},\acs{idx-AW100}}
+    = \frac{\acs{var-y}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-AW100},\acs{idx-a}}}
+           {\acs{var-H}_{\acs{idx-w}} \cdot 52{,}18}.
+\end{equation}
+Výsledná veličina~$\acs{var-w}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-h},\acs{idx-AW100}}$
+[\SI{}{\pps\per\hour}] zohledňuje jak rozdíly v~čisté koupěschopnosti, tak
+v~délce skutečného pracovního fondu, a~je proto srovnatelnější napříč zeměmi
+než hrubá hodinová mzda nebo roční čistý příjem samostatně.
+
 Ze 27~členských zemí EU jsou do analýzy zahrnuty \textbf{čtyřiadvacet}; z~dat jsou vyjmuty tři:
 \begin{itemize}
   \item \textbf{Irsko~(IE)} je záměrně vyřazeno jako statistický outlier.
@@ -19,58 +40,70 @@ Ze 27~členských zemí EU jsou do analýzy zahrnuty \textbf{čtyřiadvacet}; z~
 \end{itemize}
 
 Zbývajících 24~zemí pokrývá všechny geografické a~institucionální skupiny EU27: nordické, kontinentální, středomořské, středoevropské a~balkánské (s~výjimkou EE a~LV).
-Panel není vyvážený: počet párových pozorování~$n_{\text{panel}}$ se liší dle dostupnosti výstupní proměnné (viz tabulku~\ref{tab:korelace_tabulka}).
+Panel není vyvážený: počet párových pozorování~$\acs{var-n}_{\text{panel}}$ se liší dle dostupnosti výstupní proměnné (viz tabulku~\ref{tab:korelace_tabulka}).
 
 \paragraph{Matematický aparát}\label{par:korelace_math}
 
 Jsou použity tři statistické míry asociace a~jeden predikční model.
 
-\emph{Pearsonův korelační koeficient} měří sílu a~směr lineárního vztahu mezi proměnnými~$x$ a~$y$:
+\emph{Pearsonův korelační koeficient} měří sílu a~směr lineárního vztahu mezi proměnnými~$\acs{var-x}$ a~$\acs{var-y}$:
 \begin{equation}\label{eq:pearson_r}
-  r_{xy}
-  = \frac{\displaystyle\sum_{i=1}^{n}(x_i - \bar{x})\,(y_i - \bar{y})}
-         {\displaystyle\sqrt{\sum_{i=1}^{n}(x_i-\bar{x})^2
-                             \cdot \sum_{i=1}^{n}(y_i-\bar{y})^2}}
+  \acs{var-r}_{\acs{idx-xy}}
+  = \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+            (\acs{var-x}_{\acs{idx-i}} - \bar{x})\,
+            (\acs{var-y}_{\acs{idx-i}} - \bar{y})}
+         {\displaystyle\sqrt{
+            \sum_{\acs{idx-i}=1}^{\acs{var-n}}
+              (\acs{var-x}_{\acs{idx-i}}-\bar{x})^2
+            \cdot
+            \sum_{\acs{idx-i}=1}^{\acs{var-n}}
+              (\acs{var-y}_{\acs{idx-i}}-\bar{y})^2}}
   \;\in\; [-1,\,1].
 \end{equation}
 Tento vztah je využit v~modelovém výpočtu pro ČR (viz~rov.~\eqref{eq:model_cz}).
-Síla korelací je hodnocena dle Evansovy (1996) škály: $|r| < 0{,}20$ velmi slabá;
+Síla korelací je hodnocena dle Evansovy (1996) škály: $|\acs{var-r}| < 0{,}20$ velmi slabá;
 $0{,}20$--$0{,}39$ slabá; $0{,}40$--$0{,}59$ střední; $0{,}60$--$0{,}79$ silná;
 $\geq 0{,}80$ velmi silná.
 
-\emph{Spearmanův koeficient~$\rho$} je Pearsonovo~$r$ aplikované na hodnosti (ranky) pozorování namísto původních hodnot:
+\emph{Spearmanův koeficient~$\acs{var-rho}$} je Pearsonovo~$\acs{var-r}$ aplikované na hodnosti (ranky) pozorování namísto původních hodnot:
 \begin{equation}\label{eq:spearman_rho}
-  \rho = r\!\bigl(R(x),\,R(y)\bigr)
-       = 1 - \frac{6\,\displaystyle\sum_{i=1}^{n} d_i^{\,2}}{n\,(n^2-1)},
-  \quad d_i = R(x_i) - R(y_i),
+  \acs{var-rho} = \acs{var-r}\!\bigl(R(\acs{var-x}),\,R(\acs{var-y})\bigr)
+       = 1 - \frac{6\,\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}} d_{\acs{idx-i}}^{\,2}}
+              {\acs{var-n}\,(\acs{var-n}^{2}-1)},
+  \quad d_{\acs{idx-i}} = R(\acs{var-x}_{\acs{idx-i}}) - R(\acs{var-y}_{\acs{idx-i}}),
 \end{equation}
 kde pravý výraz platí při absenci shodných hodnot (\textit{ties}); obecně platí levý tvar.
-Výrazná divergence~$|r - \rho|$ signalizuje přítomnost vlivných odlehlých pozorování, která posouvají lineární vztah.
+Výrazná divergence~$|\acs{var-r} - \acs{var-rho}|$ signalizuje přítomnost vlivných odlehlých pozorování, která posouvají lineární vztah.
 
 \emph{Prostá lineární regrese} metodou nejmenších čtverců (OLS):
 \begin{equation}\label{eq:ols}
-  \hat{y} = \hat{\alpha} + \hat{\beta}\,x,
+  \acs{var-yhat} = \hat{\alpha} + \hat{\beta}\,\acs{var-x},
   \qquad
   \hat{\beta}
-    = \frac{\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})\,(y_i-\bar{y})}
-           {\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})^2},
+    = \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+              (\acs{var-x}_{\acs{idx-i}}-\bar{x})\,
+              (\acs{var-y}_{\acs{idx-i}}-\bar{y})}
+           {\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+              (\acs{var-x}_{\acs{idx-i}}-\bar{x})^{2}},
   \quad
   \hat{\alpha} = \bar{y} - \hat{\beta}\,\bar{x}.
 \end{equation}
-Parametr~$\hat{\beta}$ udává průměrnou změnu $\hat{y}$ při nárůstu pokrytí \ac{KS} o~jeden procentní bod.
+Parametr~$\hat{\beta}$ udává průměrnou změnu $\acs{var-yhat}$ při nárůstu pokrytí \ac{KS} o~jeden procentní bod.
 
-\emph{Koeficient determinace}~$R^2$ vyjadřuje podíl rozptylu~$y$ vysvětlený regresním modelem:
+\emph{Koeficient determinace}~$\acs{var-Rdet}$ vyjadřuje podíl rozptylu~$\acs{var-y}$ vysvětlený regresním modelem:
 \begin{equation}\label{eq:r2}
-  R^2
-  = 1 - \frac{\displaystyle\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}
-             {\displaystyle\sum_{i=1}^{n}(y_i - \bar{y})^2}
-  = r^2 \;\in\; [0,\,1],
+  \acs{var-Rdet}
+  = 1 - \frac{\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+                (\acs{var-y}_{\acs{idx-i}} - \acs{var-yhat}_{\acs{idx-i}})^{2}}
+             {\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-n}}
+                (\acs{var-y}_{\acs{idx-i}} - \bar{y})^{2}}
+  = \acs{var-r}_{\acs{idx-xy}}^{\,2} \;\in\; [0,\,1],
 \end{equation}
-kde rovnost $R^2 = r^2$ platí pro prostou regresi s~konstantou.
+kde rovnost $\acs{var-Rdet} = \acs{var-r}_{\acs{idx-xy}}^{\,2}$ platí pro prostou regresi s~konstantou.
 
-\emph{Predikce dopadu změny pokrytí}~$\Delta x$ na výstupní proměnnou:
+\emph{Predikce dopadu změny pokrytí}~$\Delta \acs{var-x}$ na výstupní proměnnou:
 \begin{equation}\label{eq:delta_pred}
-  \Delta\hat{y} = \hat{\beta}\,\Delta x.
+  \Delta\acs{var-yhat} = \hat{\beta}\,\Delta \acs{var-x}.
 \end{equation}
 
 \paragraph{Kombinovaný pohled na asociace pokrytí KS s trhem práce}\label{par:scatter_combined}
@@ -87,53 +120,53 @@ Polysystémový argument je silnější než jakákoli dílčí korelace: holist
 Tabulka~\ref{tab:korelace_tabulka} shrnuje výsledky korelační analýzy za roky 2004--2024.
 Každý řádek reportuje dvě úrovně analýzy:
 \begin{enumerate}
-  \item \textbf{Panelový koeficient} (Pearsonovo~$r$, Spearmanovo~$\rho$): počítán na všech dostupných párech geo$\times$rok ($n_{\text{panel}}$).
+  \item \textbf{Panelový koeficient} (Pearsonovo~$\acs{var-r}$, Spearmanovo~$\acs{var-rho}$): počítán na všech dostupných párech geo$\times$rok ($\acs{var-n}_{\text{panel}}$).
     Tato metoda zachycuje jak \emph{mezi-zemní} (between), tak \emph{vnitro-zemní} (within) variaci --- tj.\ jak rozdíly \emph{mezi} zeměmi, tak změny \emph{v~čase v~rámci} jedné země.
     Pozorování však nejsou nezávislá: stejná země se v~panelu vyskytuje opakovaně, čímž vzniká autokorelace uvnitř klastru.
-    Sloupec~$n_{\text{geo}}$ udává počet odlišných zemí v~panelu.
-  \item \textbf{Průřezový koeficient} ($r_{\text{akt.}}$): Pearsonovo~$r$ pouze pro nejnovější společný rok ($n_{\text{akt.}}$~zemí).
+    Sloupec~$\acs{var-n}_{\text{geo}}$ udává počet odlišných zemí v~panelu.
+  \item \textbf{Průřezový koeficient} ($\acs{var-r}_{2024}$): Pearsonovo~$\acs{var-r}$ pouze pro nejnovější společný rok ($\acs{var-n}_{2024}$~zemí).
     Jde o~klasický průřez (cross-section), kde každá země vstupuje právě jednou --- pozorování jsou proto nezávislá.
-    Nižší $n$ vede k~menší statistické síle, ale výsledek netrpí vnitro-klastrovým opakováním.
+    Nižší $\acs{var-n}$ vede k~menší statistické síle, ale výsledek netrpí vnitro-klastrovým opakováním.
 \end{enumerate}
-Obě úrovně se doplňují: panelový koeficient má vyšší statistickou sílu díky většímu~$n$, průřezový koeficient zachycuje aktuální stav bez historické zátěže.
+Obě úrovně se doplňují: panelový koeficient má vyšší statistickou sílu díky většímu~$\acs{var-n}$, průřezový koeficient zachycuje aktuální stav bez historické zátěže.
 
 \input{texparts/python/korelace_tabulka}
 
 Výsledky jsou interpretovány po párech:
 \begin{description}
   \item[Pokrytí \ac{KV} vs.\ pracovní doba]
-    ($r = -0{,}554$; $\rho = -0{,}544$; $R^2 = 0{,}31$; $n = 257$):
+    ($\acs{var-r} = -0{,}554$; $\acs{var-rho} = -0{,}544$; $\acs{var-Rdet} = 0{,}31$; $\acs{var-n} = 257$):
     střední záporná asociace robustně potvrzená oběma metodami.
-    Pearsonovo~$r$ a~Spearmanovo~$\rho$ jsou prakticky shodné, což svědčí o~monotónním charakteru vztahu bez dominantních outlierů posouvajících lineární složku.
+    Pearsonovo~$\acs{var-r}$ a~Spearmanovo~$\acs{var-rho}$ jsou prakticky shodné, což svědčí o~monotónním charakteru vztahu bez dominantních outlierů posouvajících lineární složku.
     Oproti dříve používané obvyklé pracovní době (lfsa\_ewhun2) jsou zde využita data o~skutečné týdenní pracovní době (lfsa\_ewhan2), která zachycují přesčasy i~zkrácené úvazky; korelace je v~důsledku mírně silnější.
-    Průřezová korelace $r_{\text{akt.}} = -0{,}386$ je slabší než panelová hodnota, pravděpodobně vlivem strukturní konvergence pracovní doby v~rámci EU v~posledním desetiletí (zkracování doby v~CEE, stagnace na severu).
+    Průřezová korelace $\acs{var-r}_{2024} = -0{,}386$ je slabší než panelová hodnota, pravděpodobně vlivem strukturní konvergence pracovní doby v~rámci EU v~posledním desetiletí (zkracování doby v~CEE, stagnace na severu).
 
   \item[Pokrytí \ac{KV} vs.\ gender pay gap]
-    ($r = -0{,}116$; $\rho = -0{,}186$; $n_{\text{panel}} = 262$, $n_{\text{geo}} = 23$):
+    ($\acs{var-r} = -0{,}116$; $\acs{var-rho} = -0{,}186$; $\acs{var-n}_{\text{panel}} = 262$, $\acs{var-n}_{\text{geo}} = 23$):
     velmi slabá záporná asociace dle Evansovy škály.
     Slabý koeficient je pravděpodobně důsledkem heterogenity institucionálních mechanismů ovlivňujících gender pay gap (zákonné kvóty, rodičovské dávky, sektorová struktura zaměstnanosti žen) --- samotné pokrytí \ac{KS} zdaleka nepředstavuje dominantní determinant genderové mzdové disproporce.
     Směr korelace je však konzistentní s~hypotézou: koordinované \ac{KV} omezuje manažerskou diskréci při individuálním stanovování mezd a~standardizací mzdových tarifů může snižovat prostor pro genderově podmíněnou diferenciaci.
-    Průřezová korelace $r_{\text{akt.}} = -0{,}261$ je silnější než panelová, což naznačuje, že v~posledních letech se vztah mírně zpevňuje.
+    Průřezová korelace $\acs{var-r}_{2024} = -0{,}261$ je silnější než panelová, což naznačuje, že v~posledních letech se vztah mírně zpevňuje.
 
   \item[Pokrytí \ac{KV} vs.\ hodinový příjem (\si{\pps\per\hour})]
-    ($r = 0{,}543$; $\rho = 0{,}496$; $R^2 = 0{,}29$; $n_{\text{panel}} = 238$, $n_{\text{geo}} = 22$):
+    ($\acs{var-r} = 0{,}543$; $\acs{var-rho} = 0{,}496$; $\acs{var-Rdet} = 0{,}29$; $\acs{var-n}_{\text{panel}} = 238$, $\acs{var-n}_{\text{geo}} = 22$):
     střední kladná asociace dokládá, že vyšší pokrytí \ac{KS} je spojeno s~vyšším čistým hodinovým příjmem v~PPS.
     Hodinový příjem je odvozen jako podíl ročního čistého příjmu (earn\_nt\_net, standardizovaná osoba: svobodná, bezdětná, 100\,\% průměrné mzdy, po odečtení daně a~sociálních odvodů) a~skutečného ročního pracovního fondu ($\text{skutečná\_h/týden} \times 52{,}18$~týdnů/rok).
     Oproti ročnímu příjmu v~PPS zachycuje hodinová míra efektivnější koupěschopnost za odpracovanou hodinu; země s~vysokým pokrytím \ac{KS} nejen vyplácejí vyšší příjmy, ale dosahují jich při kratší pracovní době.
-    Průřezová hodnota $r_{\text{akt.}} = 0{,}380$ zůstává slabá až střední.
+    Průřezová hodnota $\acs{var-r}_{2024} = 0{,}380$ zůstává slabá až střední.
 
   \item[Pokrytí \ac{KV} vs.\ produktivita práce (\si{\pps\per\hour})]
-    ($r = 0{,}627$; $\rho = 0{,}542$; $R^2 = 0{,}39$; $n_{\text{panel}} = 313$, $n_{\text{geo}} = 23$):
+    ($\acs{var-r} = 0{,}627$; $\acs{var-rho} = 0{,}542$; $\acs{var-Rdet} = 0{,}39$; $\acs{var-n}_{\text{panel}} = 313$, $\acs{var-n}_{\text{geo}} = 23$):
     \emph{silná kladná} asociace --- nejsilnější ze všech čtyř párů pokrytí \ac{KV}.
-    Pearsonovo~$r$ je o~0,085 vyšší než Spearmanovo~$\rho$, divergence je pod varovným prahem.
-    Průřezová hodnota $r_{\text{akt.}} = 0{,}510$ zůstává střední.
+    Pearsonovo~$\acs{var-r}$ je o~0,085 vyšší než Spearmanovo~$\acs{var-rho}$, divergence je pod varovným prahem.
+    Průřezová hodnota $\acs{var-r}_{2024} = 0{,}510$ zůstává střední.
     Asociace je konzistentní s~teorií, podle níž koordinované mzdové vyjednávání vytváří tlak na růst produktivity: firmy pokryté odvětvovou \ac{KS} nemohou kompenzovat vyšší mzdové náklady snížením mezd, a~proto investují do kapitálové vybavenosti a~inovací.
     ČR se v~tomto panelu nachází pod průměrem EU27 jak v~produktivitě (index~$78{,}5$), tak v~pokrytí; hypotetické posílení \ac{KV} by mohlo působit jako institucionální páka pro produktivitní konvergenci.
 
   \item[Hustota odborů vs.\ Gini]
-    ($r = -0{,}458$; $\rho = -0{,}462$):
-    statisticky nejrobustnější pár v~celé tabulce: Pearsonovo~$r$ a~Spearmanovo~$\rho$ jsou prakticky totožné (rozdíl 0,004), což svědčí o~přibližně lineárním vztahu bez systematického vlivu odlehlých hodnot.
-    Průřezová korelace $r_{\text{akt.}} = -0{,}627$ dosahuje \emph{silné záporné} asociace a~je nejsilnějším institucionálním prediktorem nízkého Gini ze všech testovaných párů.
+    ($\acs{var-r} = -0{,}458$; $\acs{var-rho} = -0{,}462$):
+    statisticky nejrobustnější pár v~celé tabulce: Pearsonovo~$\acs{var-r}$ a~Spearmanovo~$\acs{var-rho}$ jsou prakticky totožné (rozdíl 0,004), což svědčí o~přibližně lineárním vztahu bez systematického vlivu odlehlých hodnot.
+    Průřezová korelace $\acs{var-r}_{2024} = -0{,}627$ dosahuje \emph{silné záporné} asociace a~je nejsilnějším institucionálním prediktorem nízkého Gini ze všech testovaných párů.
     Shoda panelových koeficientů a~jejich posílení v~průřezu zpětně potvrzuje, že kladná průřezová hodnota u~páru pokrytí~vs.~Gini je specifická pro pokrytí (kde státy jako Francie deformují průřezový vztah), nikoliv obecná vlastnost vztahu \ac{KV} institucí k~nerovnosti.
 \end{description}
 
@@ -152,15 +185,15 @@ Korelace v~tabulce tak plní funkci deskriptivního podkladu motivujícího inst
 \paragraph{Predikce vlivu na hospodářství ČR: hypotetické pokrytí~80~\%}\label{par:predikce}
 
 Směrnice Evropského parlamentu a~Rady (EU) 2022/2041 o~přiměřených minimálních mzdách ukládá členským státům s~pokrytím \ac{KS} pod hranicí 80~\% povinnost vypracovat akční plán pro jeho zvýšení.
-ČR se svým pokrytím $\approx 31\,\%$ (2023) patří k~zemím s~největším potenciálním nárůstem v~EU --- potřebný nárůst $\Delta x = 80{,}0 - 30{,}7 = +49{,}3$~pp je po Litvě a~Polsku třetím největším v~EU26.
+ČR se svým pokrytím $\approx 31\,\%$ (2023) patří k~zemím s~největším potenciálním nárůstem v~EU --- potřebný nárůst $\Delta\acs{var-x} = 80{,}0 - 30{,}7 = +49{,}3$~pp je po Litvě a~Polsku třetím největším v~EU26.
 
 Predikovaná změna výstupních proměnných při tomto nárůstu se dle rov.~\eqref{eq:delta_pred} vypočte jako:
 \begin{equation}\label{eq:model_cz}
-  \Delta\hat{y}_{\text{CZ}}
-    = \hat{\beta}\,(x_1 - x_0)
+  \Delta\acs{var-yhat}_{\text{CZ}}
+    = \hat{\beta}\,(\acs{var-x}_{1} - \acs{var-x}_{\acs{idx-0}})
     = \hat{\beta} \cdot 49{,}3\ \text{pp},
 \end{equation}
-kde $\hat{\beta}$ jsou panelové odhady dle rov.~\eqref{eq:ols} a~$x_0 = 30{,}7\,\%$, $x_1 = 80{,}0\,\%$.
+kde $\hat{\beta}$ jsou panelové odhady dle rov.~\eqref{eq:ols} a~$\acs{var-x}_{\acs{idx-0}} = 30{,}7\,\%$, $\acs{var-x}_{1} = 80{,}0\,\%$.
 Výsledky jsou shrnuty v~tab.~\ref{tab:model_cz}.
 
 \input{texparts/python/korelace_model_cz}

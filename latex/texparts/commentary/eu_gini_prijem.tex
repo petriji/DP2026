@@ -3,12 +3,18 @@ Tento trend nelze přičíst změnám transferového systému --- zákonná mini
 Polarizace tržních mezd je typickým symptomem decentralizovaného vyjednávání bez sektorového zakotvení: jednotliví zaměstnavatelé s~tržní silou mohou nabídnout výrazně nadprůměrné odměny top-pracovníkům, zatímco pracovníci bez vyjednávací síly zůstávají při spodní hranici.
 Stabilizace a~postupné snižování Giniho koeficientu vyžaduje kompresi tržních mezd prostřednictvím odvětvových tarifních smluv --- jde o~klasický „wage-setting” efekt \ac{KS}, který je v~literatuře doložen pro nordické i~kontinentální systémy (srov.~obr.~\ref{fig:korelace_scatter}).
 
-Giniho koeficient příjmové nerovnosti $g_y$ je formálně definován jako:
+Giniho koeficient příjmové nerovnosti $\acs{var-g}_{\acs{idx-y}}$ je formálně definován jako:
 \begin{equation}\label{eq:gini_y}
-  g_y = \frac{2\displaystyle\sum_{i=1}^{N} i\,y_i}{N\displaystyle\sum_{i=1}^{N} y_i} - \frac{N+1}{N},
+  \acs{var-g}_{\acs{idx-y}}
+    = \frac{2\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+              \acs{idx-i}\;\acs{var-y}_{\acs{idx-i}}}
+           {\acs{var-N}\displaystyle\sum_{\acs{idx-i}=1}^{\acs{var-N}}
+              \acs{var-y}_{\acs{idx-i}}}
+    \;-\; \frac{\acs{var-N}+1}{\acs{var-N}},
 \end{equation}
-kde $y_i$ jsou příjmy seřazené vzestupně ($y_1 \leq \cdots \leq y_N$),
-$i$~je pořadové číslo pozorování a~$N$~je celkový počet pozorování.
-\acs{var-g-y}\acs{var-y}\acs{var-N}\acs{idx-i}
+kde $\acs{var-y}_{\acs{idx-i}}$ jsou příjmy seřazené vzestupně
+($\acs{var-y}_{1} \leq \cdots \leq \acs{var-y}_{\acs{var-N}}$),
+$\acs{idx-i}$~je pořadové číslo pozorování a~$\acs{var-N}$~je celkový
+počet pozorování.
 
 \input{texparts/python/eu_gini_prijem}
