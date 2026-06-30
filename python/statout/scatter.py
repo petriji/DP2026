@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from config import COUNTRY_COLORS, FONT_SIZE
 from stattool.dataset import Dataset
 from stattool.style import cm2in
 
@@ -34,11 +35,14 @@ def scatter_xy(
     label_points: bool = True,
     trendline: bool = True,
     highlight: Optional[list[str]] = None,
+    x_min: Optional[float] = None,
+    countries: Optional[list[str]] = None,
     figsize: Optional[tuple[float, float]] = None,
     ax: Optional[plt.Axes] = None,
     color_col: Optional[str] = None,
     cmap: str = "tab10",
     alpha: float = 0.8,
+    year_tolerance: int = 2,
 ) -> plt.Figure:
     """Scatter plot of *ds_x* vs *ds_y* for a single year.
 
@@ -55,13 +59,24 @@ def scatter_xy(
     xlabel / ylabel:
         Axis labels.  Auto-generated from dataset metadata when omitted.
     label_points:
-        Annotate each point with its ISO-2 country code.
+        Annotate highlighted country codes on the plot (non-highlighted are
+        never labelled to avoid clutter).
     trendline:
         Draw an OLS regression line with R² annotation.
     highlight:
-        List of country codes to draw with a distinct marker.
+        Country codes to emphasise: drawn with per-country colour (from
+        COUNTRY_COLORS), star marker, and a country-code label.
+        All other countries are rendered as small grey dots with no label.
+    x_min:
+        If given, sets the left limit of the x-axis (e.g. 0 for rates starting
+        at zero).
+    year_tolerance:
+        For highlighted countries missing data at *year*, fall back to the most
+        recent available year within this many years (default 2). Prints a
+        notice when a fallback is used.
     color_col:
-        Column in ds_x for categorical group colouring.
+        Column in ds_x for categorical group colouring (applied to
+        non-highlighted points only).
     """
     common_years = set(ds_x.years) & set(ds_y.years)
     year = year or max(common_years)
@@ -74,59 +89,88 @@ def scatter_xy(
     )
     merged = pd.merge(px, py, on="geo").dropna(subset=["x", "y"])
 
+    # Optional geo filter (e.g. EU27 only)
+    if countries:
+        merged = merged[merged["geo"].isin(countries)]
+
+    _highlight = set(highlight or [])
+
+    # ── Year-tolerance fallback for missing highlighted countries ─────────────
+    if _highlight and year_tolerance > 0:
+        missing = _highlight - set(merged["geo"])
+        for geo in missing:
+            for fallback_yr in range(year - 1, year - year_tolerance - 1, -1):
+                px_geo = ds_x.df[ds_x.df[ds_x.geo_col] == geo]
+                py_geo = ds_y.df[ds_y.df[ds_y.geo_col] == geo]
+                px_val = px_geo[px_geo[ds_x.time_col] == fallback_yr][ds_x.value_col]
+                py_val = py_geo[py_geo[ds_y.time_col] == fallback_yr][ds_y.value_col]
+                if px_val.empty or py_val.empty:
+                    continue
+                fb = pd.DataFrame({"geo": [geo], "x": [px_val.iloc[0]], "y": [py_val.iloc[0]]})
+                merged = pd.concat([merged, fb], ignore_index=True)
+                print(f"  scatter_xy: {geo} missing at {year}, used fallback {fallback_yr}")
+                break
+
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize or cm2in(12, 9))
     else:
         fig = ax.figure  # type: ignore[assignment]
 
-    # --- Optional categorical colouring ---
+    # ── Grey background points (all non-highlighted countries) ────────────────
+    # --- Optional categorical colouring for grey points ---
     if color_col and color_col in merged.columns:
         groups = merged[color_col].unique()
         cmap_obj = plt.get_cmap(cmap, len(groups))
         color_map = {g: cmap_obj(i) for i, g in enumerate(groups)}
-        colors = merged[color_col].map(color_map)
+        bg_colors = merged[color_col].map(color_map)
     else:
-        colors = None
+        bg_colors = None
 
-    normal = merged[~merged["geo"].isin(highlight or [])]
-        
-    sc = ax.scatter(
+    normal = merged[~merged["geo"].isin(_highlight)]
+    ax.scatter(
         normal["x"],
         normal["y"],
-        c=colors.loc[normal.index] if colors is not None else None,
-        alpha=alpha,
-        zorder=3,
-        s=40,
+        c=(bg_colors.loc[normal.index].tolist() if bg_colors is not None
+           else ["#AAAAAA"] * len(normal)),
+        alpha=0.5,
+        zorder=2,
+        s=25,
+        linewidths=0,
     )
 
-    # Highlighted countries on top
-    if highlight:
-        hi = merged[merged["geo"].isin(highlight)]
-        ax.scatter(
-            hi["x"],
-            hi["y"],
-            marker="*",
-            s=120,
-            zorder=5,
-            edgecolors="black",
-            linewidth=0.5,
-            c=colors.loc[hi.index] if colors is not None else None,
-            label="Highlighted",
-        )
-
-    # --- Labels ---
-    if label_points:
-        for _, row in merged.iterrows():
-            ax.annotate(
-                row["geo"],
-                xy=(row["x"], row["y"]),
-                xytext=(4, 2),
-                textcoords="offset points",
-                fontsize=6,
-                alpha=0.8,
+    # ── Highlighted countries (colored circles, labelled) ────────────────────
+    if _highlight:
+        hi = merged[merged["geo"].isin(_highlight)]
+        for _, row in hi.iterrows():
+            color = COUNTRY_COLORS.get(row["geo"], "#333333")
+            ax.scatter(
+                row["x"],
+                row["y"],
+                marker="o",
+                s=50,
+                zorder=5,
+                color=color,
+                edgecolors="white",
+                linewidth=0.5,
             )
+            if label_points:
+                ax.annotate(
+                    row["geo"],
+                    xy=(row["x"], row["y"]),
+                    xytext=(5, 2),
+                    textcoords="offset points",
+                    fontsize=FONT_SIZE,
+                    color=color,
+                    fontweight="bold",
+                    va="center",
+                )
 
-    # --- Trend line (OLS) ---
+    # ── Minor grid ────────────────────────────────────────────────────────────
+    ax.minorticks_on()
+    ax.grid(which="major", linewidth=0.4, alpha=0.5, color="#AAAAAA", zorder=0)
+    ax.grid(which="minor", linewidth=0.2, alpha=0.35, color="#DDDDDD", zorder=0)
+
+    # ── Trend line (OLS) ─────────────────────────────────────────────────────
     if trendline and len(merged) >= 3:
         coeffs = np.polyfit(merged["x"], merged["y"], 1)
         x_line = np.linspace(merged["x"].min(), merged["x"].max(), 100)
@@ -135,12 +179,15 @@ def scatter_xy(
         r2 = corr**2
         ax.plot(x_line, y_line, color="gray", linewidth=1, linestyle="--",
                 label=f"OLS  $R^2={r2:.2f}$")
-        ax.legend(frameon=False, fontsize=7)
+        ax.legend(frameon=False, fontsize=FONT_SIZE - 1)
 
     ax.set_xlabel(xlabel or (f"{ds_x.name} [{ds_x.unit}]" if ds_x.unit else ds_x.name))
     ax.set_ylabel(ylabel or (f"{ds_y.name} [{ds_y.unit}]" if ds_y.unit else ds_y.name))
     if title:
-        ax.set_title(title)
+        ax.set_title(f"{title} ({year})")
+
+    if x_min is not None:
+        ax.set_xlim(left=x_min)
 
     return fig
 
