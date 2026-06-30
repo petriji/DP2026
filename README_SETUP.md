@@ -92,6 +92,9 @@ From inside the `latex/` directory:
 # Standard build
 latexmk -pdf -outdir=build main.tex
 
+# Standalone Python pipeline attachment
+latexmk -pdf -outdir=build python_pipeline_attachment.tex
+
 # With TikZ externalization (required for diagrams)
 latexmk -pdf -shell-escape -outdir=build main.tex
 
@@ -118,8 +121,49 @@ configured to auto-export the `.bib` files into `latex/`.
 
 ## Step 8 — Python data analysis
 
-> **Not yet finalized.** This section will be completed once the `python/`
-> sub-project is ready.
+The `python/` sub-project generates all PDF figures and LaTeX table snippets
+used in the thesis.
+
+### 8.1 — Create a virtual environment
+
+```bash
+cd python
+bash setup_venv.sh        # creates .venv with --copies (NTFS-safe)
+```
+
+> **WSL 2 + Windows drive (9p/drvfs):** Python `venv` requires symlinks which
+> are not supported on NTFS mounts.  Create the venv on a native Linux
+> filesystem instead:
+> ```bash
+> python3 -m venv /tmp/dp_venv
+> /tmp/dp_venv/bin/pip install -r requirements.txt
+> ```
+> Run scripts via `/tmp/dp_venv/bin/python`.
+> Note: `/tmp/dp_venv` does **not** survive a WSL restart — recreate as needed.
+
+### 8.2 — Run the pipeline
+
+```bash
+bash run.sh stats_analytics.py              # regenerate all missing outputs
+bash run.sh stats_analytics.py --force all  # force-regenerate everything
+bash run.sh analyses/gdp_ppp_timeline.py    # single script
+```
+
+Outputs land in `pics/python/` (PDF figures) and `latex/texparts/python/`
+(`.tex` fragments); both are gitignored and auto-created on first run.
+The standalone attachment `latex/python_pipeline_attachment.tex` documents this
+flow as a brief PDF built to `latex/build/python_pipeline_attachment.pdf`.
+
+### 8.3 — LaTeX integration
+
+The pipeline runs automatically before every LaTeX build:
+
+- **VS Code / LaTeX Workshop:** use the recipe
+  *`stats_analytics → pdflatex → biber → pdflatex×2`*
+- **`latexmk` (CLI):** `latexmkrc` invokes `stats_analytics.py` as a pre-build
+  step.  Set `SKIP_PYTHON_ANALYTICS=1` to skip it.
+
+Both hooks are no-ops when all outputs already exist.
 
 ---
 

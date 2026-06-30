@@ -18,297 +18,1386 @@
   and        = a,%
   or         = nebo%
 }
+
+\DeclareAcronym{EU}{
+	short       = EU,
+	long        = Evropská unie,
+	foreign     = European Union,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{ČR}{
+	short       = ČR,
+	long        = Česká republika,
+	single      = false,
+	single-style = long-short,
+	tag         = geo
+}
+
+% ---------------------------------------------------------------------------
+%  Mezinárodní statistické a ekonomické zkratky
+% ---------------------------------------------------------------------------
+\DeclareAcronym{HDP}{
+	short       = HDP,
+	long        = hrubý domácí produkt,
+	foreign     = Gross Domestic Product,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{PPS}{
+	short       = PPS,
+	long        = standard kupní síly,
+	foreign     = Purchasing Power Standard,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{EUR}{
+	short       = EUR,
+	long        = euro,
+	foreign     = euro,
+	single      = false,
+	single-style = long-short,
+	tag         = nolist
+}
+\DeclareAcronym{PPP}{
+	short       = PPP,
+	long        = parita kupní síly,
+	foreign     = purchasing power parity,
+	single      = false,
+	single-style = long-short,
+	tag         = nolist
+}
+\DeclareAcronym{PLI}{
+	short       = PLI,
+	long        = index cenové hladiny,
+	foreign     = Price Level Index,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{HICP}{
+	short       = HICP,
+	long        = harmonizovaný index spotřebitelských cen,
+	foreign     = Harmonised Index of Consumer Prices,
+	single      = false,
+	single-style = long-short,
+	tag         = nolist
+}
+\DeclareAcronym{ICT}{
+	short            = ICT,
+	long             = informační a~komunikační technologie,
+	long-plural-form = informační a~komunikační technologie,
+	list             = informační a~komunikační technologie\CTUacrolistbreak,
+	foreign          = Information and Communication Technology,
+	single           = false,
+	single-style     = long-short,
+	tag              = zkr
+}
+\DeclareAcronym{ISCED}{
+	short        = ISCED,
+	long         = Mezinárodní standardní klasifikace vzdělávání,
+	foreign      = International Standard Classification of Education,
+	single       = false,
+	single-style = long-short,
+	tag          = nolist
+}
+\DeclareAcronym{AES}{
+	short        = AES,
+	long         = šetření vzdělávání dospělých,
+	foreign      = Adult Education Survey,
+	single       = false,
+	single-style = long-short,
+	tag          = nolist
+}
+\DeclareAcronym{CZ-ISCO}{
+	short        = CZ-ISCO,
+	long         = Klasifikace zaměstnání,
+	foreign      = International Standard Classification of Occupations,
+	single       = false,
+	single-style = long-short,
+	tag          = nolist
+}
+\DeclareAcronym{LCI}{
+	short       = LCI,
+	long        = index mzdových nákladů,
+	foreign     = Labour Cost Index,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{NACE}{
+	short       = NACE,
+	long        = statistická klasifikace ekonomických činností,
+	foreign     = {Nomenclature statistique des activités économiques dans la Communauté européenne},
+	list        = statistická klasifikace ekonomických činností,%\CTUacrolistbreak,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{NUTS}{
+	short       = NUTS,
+	long        = klasifikace územních statistických jednotek,
+	foreign     = {Nomenclature of Territorial Units for Statistics},
+	list        = klasifikace územních statistických jednotek\CTUacrolistbreak,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{SES}{
+	short       = SES,
+	long        = strukturální šetření o~mzdách,
+	foreign     = Structure of Earnings Survey,
+	single      = false,
+	tag         = zkr
+}
+\DeclareAcronym{V4}{
+	short       = V4,
+	long        = Visegrádská čtyřka,
+	foreign     = Visegrád Group,
+	single      = false,
+	tag         = nolist
+}
+\DeclareAcronym{AROPE}{
+  short        = AROPE,
+  long         = ohrožení chudobou nebo sociálním vyloučením,
+  list         = ohrožení chudobou nebo sociálním vyloučením\CTUacrolistbreak,
+  foreign      = At Risk of Poverty or Exclusion,
+  single       = false,
+  single-style = long-short,
+  tag          = zkr
+}
+\DeclareAcronym{GPG}{
+	short       = GPG,
+	long        = mzdový rozdíl mezi pohlavími,
+	foreign     = Gender Pay Gap,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+\DeclareAcronym{TFR}{
+	short       = TFR,
+	long        = úhrnná plodnost,
+	foreign     = Total Fertility Rate,
+	single      = false,
+	single-style = long-short,
+	tag         = nolist
+}
+\DeclareAcronym{IQR}{
+	short       = IQR,
+	long        = mezikvartilové rozpětí,
+	foreign     = Interquartile Range,
+	single      = false,
+	single-style = long-short,
+	tag         = zkr
+}
+
+% ---------------------------------------------------------------------------
+%  Kolektivní vyjednávání a pracovní právo
+% ---------------------------------------------------------------------------
+\DeclareAcronym{KV}{
+	short = KV,
+	long  = kolektivní vyjednávání,
+	tag   = zkr
+}
+\DeclareAcronym{KS}{
+	short            = KS,
+	long             = kolektivní smlouva,
+	long-plural-form = kolektivní smlouvy,
+	tag              = zkr
+}
+\DeclareAcronym{KSVS}{
+	short            = KSVS,
+	long             = kolektivní smlouva vyššího stupně,
+	long-plural-form = kolektivní smlouvy vyššího stupně,
+	tag              = zkr
+}
+\DeclareAcronym{APZ}{
+	short = APZ,
+	long  = aktivní politika zaměstnanosti,
+	tag   = zkr
+}
+\DeclareAcronym{SP}{
+	short = SP,
+	long  = sociální pojištění,
+	tag   = nolist
+}
+\DeclareAcronym{SZ}{
+	short = SZ,
+	long  = sociální zabezpečení,
+	tag   = zkr
+}
+\DeclareAcronym{ZdrP}{
+	short = ZdrP,
+	long  = zdravotní pojištění,
+	tag   = zkr
+}
+\DeclareAcronym{ZP}{
+	short = ZP,
+	long  = zákoník práce,
+	tag   = zkr
+}
+\DeclareAcronym{DPH}{
+	short = DPH,
+	long  = daň z přidané hodnoty,
+	tag   = zkr
+}
+\DeclareAcronym{DPFO}{
+	short = DPFO,
+	long  = daň z příjmů fyzických osob,
+	single = false,
+	single-style = long-short,
+	tag   = zkr
+}
+\DeclareAcronym{DPPO}{
+	short = DPPO,
+	long  = daň z příjmů právnických osob,
+	single = false,
+	single-style = long-short,
+	tag   = zkr
+}
+\DeclareAcronym{OSVČ}{
+	short            = {OSVČ},
+	long             = osoba samostatně výdělečně činná,
+	long-plural-form = osoby samostatně výdělečně činné,
+	tag              = zkr
+}
+\DeclareAcronym{ZO}{
+	short            = ZO,
+	long             = základní odborová organizace,
+	long-plural-form = základní odborové organizace,
+	tag              = zkr
+}
+\DeclareAcronym{PKS}{
+	short            = PKS,
+	long             = podniková kolektivní smlouva,
+	long-plural-form = podnikové kolektivní smlouvy,
+	tag              = zkr
+}
+\DeclareAcronym{OO}{
+	short            = OO,
+	long             = odborová organizace,
+	long-plural-form = odborové organizace,
+	tag              = zkr
+}
+\DeclareAcronym{BOZP}{
+	short            = BOZP,
+	long             = bezpečnost a ochrana zdraví při práci,
+	long-plural-form = bezpečnost a ochrana zdraví při práci,
+	tag              = zkr
+}
+\DeclareAcronym{PP}{
+	short = PP,
+	long  = pracovní poměr,
+	tag   = zkr
+}
+\DeclareAcronym{PV}{
+	short = PV,
+	long  = průměrný výdělek,
+	tag   = zkr
+}
+\DeclareAcronym{DPS}{
+	short = DPS,
+	long  = doplňkové penzijní spoření,
+	tag   = nolist
+}
+\DeclareAcronym{DIP}{
+	short = DIP,
+	long  = dlouhodobý investiční produkt,
+	tag   = nolist
+}
+\DeclareAcronym{ZKV}{
+	short = ZKV,
+	long  = zákon o kolektivním vyjednávání,
+	tag   = zkr
+}
+\DeclareAcronym{ZákZ}{
+	short = zák.\,o\,zam.,
+	long  = zákon o zaměstnanosti,
+	tag   = nolist
+}
+\DeclareAcronym{ROH}{
+	short = ROH,
+	long  = Revoluční odborové hnutí,
+	tag   = zkr
+}
+% ---------------------------------------------------------------------------
+%  Instituce a databáze
+% ---------------------------------------------------------------------------
+\DeclareAcronym{ČMKOS}{
+	short = {ČMKOS},
+	long  = Českomoravská konfederace odborových svazů,
+	sort  = Ceskomoravska konfederace odborovych svazu,
+	tag   = zkr
+}
+\DeclareAcronym{ETUC}{
+	short = {ETUC},
+	long  = Evropská odborová konfederace,
+	foreign = European Trade Union Confederation,
+	tag   = nolist
+}
+\DeclareAcronym{ITUC}{
+	short = {ITUC},
+	long  = Mezinárodní odborová konfederace,
+	foreign = International Trade Union Confederation,
+	tag   = nolist
+}
+\DeclareAcronym{OS ZPTNS}{
+	short            = OS~ZPTNS,
+	long             = {Odborový svaz zaměstnanců poštovních, telekomunikačních a~novinových služeb},
+	tag              = nolist
+}
+\DeclareAcronym{OSPPP}{
+	short            = OSPPP,
+	long             = {Odborový svaz pracovníků peněžnictví a~pojišťovnictví},
+	tag              = nolist
+}
+\DeclareAcronym{SBP}{
+	short            = SBP,
+	long             = {Svaz bank a~pojišťoven},
+	tag              = nolist
+}
+\DeclareAcronym{OS KOVO}{
+	short            = OS~KOVO,
+	long             = Odborový svaz KOVO,
+	list             = {Odborový svaz KOVO (metalurgie, těžký průmysl)},
+	tag              = nolist
+}
+\DeclareAcronym{OSZSP ČR}{
+	short            = OSZSP~ČR,
+	long             = Odborový svaz zdravotnictví a~sociální péče České republiky,
+	sort             = Odborovy svaz zdravotnictvi a socialni pece Ceske republiky,
+	tag              = nolist
+}
+\DeclareAcronym{ČMOS PŠ}{
+	short            = ČMOS~PŠ,
+	long             = Českomoravský odborový svaz pracovníků školství,
+	sort             = Ceskomoravsky odborovy svaz pracovniku skolstvi,
+	tag              = nolist
+}
+\DeclareAcronym{OSSOO}{
+	short            = OSSOO,
+	long             = Odborový svaz státních orgánů a organizací,
+	tag              = nolist
+}
+\DeclareAcronym{OS ECHO}{
+	short            = OS~ECHO,
+	long             = {Odborový svaz ECHO (energetika, chemie)},
+	tag              = nolist
+}
 \DeclareAcronym{OS}{
-	short 	= OS,
-	long 	= obráběcí stroj,
-	tag		= zkr
-	}
-\DeclareAcronym{AAF}{
-	short		= AAF,
-	long 		= antialiasingový filtr,
-	foreign 	= Anti-Aliasing Filter,
-	single = false,
+	short            = OS,
+	long             = odborový svaz,
+	long-plural-form = odborové svazy,
+	tag              = zkr
+}
+\DeclareAcronym{ASO}{
+	short = {ASO},
+	long  = Asociace samostatných odborů,
+	tag   = zkr
+}
+\DeclareAcronym{ČBA}{
+	short = {ČBA},
+	long  = Česká bankovní asociace,
+	tag   = nolist
+}
+\DeclareAcronym{ČMSZP}{
+	short = {ČMSZP},
+	long  = Českomoravský svaz zemědělských podnikatelů,
+	tag   = nolist
+}
+\DeclareAcronym{ZS ČR}{
+	short = {ZS~ČR},
+	long  = Zemědělský svaz České republiky,
+	tag   = nolist
+}
+\DeclareAcronym{PKOV}{
+	short            = P~KOV,
+	long             = podnikový koordinační odborový výbor,
+	long-plural-form = podnikové koordinační odborové výbory,
+	tag              = zkr
+}
+\DeclareAcronym{OSPZV}{
+	short = OSPZV,
+	long  = Odborový svaz pracovníků zemědělství a výživy,
+	tag   = nolist
+}
+\DeclareAcronym{ČP}{
+	short = {ČP},
+	long  = Česká pošta,
+	sort  = Ceska posta,
+	tag   = nolist
+}
+\DeclareAcronym{HRM}{
+	short   = HRM,
+	long    = řízení lidských zdrojů,
+	foreign = Human Resource Management,
+	tag     = zkr
+}
+\DeclareAcronym{ÖGB}{
+	short        = {ÖGB},
+	long         = Rakouská odborová konfederace,
+	foreign      = Österreichischer Gewerkschaftsbund,
+	single       = false,
 	single-style = long-short,
-	tag = zkr
-	}
-\DeclareAcronym{ANN}{
-	short		= ANN,
-	long 		= umělá neuronová síť,
-	long-plural-form = umělé neuronové sítě,
-	foreign 	= Artificial Neural Network,
-	single = false,
+	tag          = nolist
+}
+\DeclareAcronym{ČSSZ}{
+	short = {ČSSZ},
+	long  = Česká správa sociálního zabezpečení,
+	sort  = Ceska sprava socialniho zabezpeceni,
+	tag   = zkr
+}
+\DeclareAcronym{MPSV}{
+	short = MPSV,
+	long  = Ministerstvo práce a sociálních věcí České republiky,
+	tag   = zkr
+}
+\DeclareAcronym{IPP}{
+	short = IPP,
+	long  = Informace o pracovních podmínkách \acs{MPSV},
+	tag   = zkr
+}
+\DeclareAcronym{ISPV}{
+	short = ISPV,
+	long  = Informační systém o průměrném výdělku \acs{MPSV},
+	tag   = zkr
+}
+\DeclareAcronym{JMHZ}{
+	short = JMHZ,
+	long  = jednotné měsíční hlášení zaměstnavatele,
+	tag   = zkr
+}
+\DeclareAcronym{MOP}{
+	short       = MOP,
+	long        = Mezinárodní organizace práce,
+	foreign     = International Labour Organization,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{AR}{
-	short		= AR,
-	long 		= autoregresní,
-	foreign 	= Auto Regressive,
-	single = false,
+	tag         = zkr
+}
+\DeclareAcronym{ILO}{
+	short       = ILO,
+	long        = Mezinárodní organizace práce,
+	foreign     = International Labour Organization,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{ARX}{
-	short		= ARX,
-	long 		= antialiasingový filtr,
-	foreign 	= Auto Regressive with eXogenous Input,
-	single = false,
+	tag         = nolist
+}
+\DeclareAcronym{IOE}{
+	short       = IOE,
+	long        = Mezinárodní organizace zaměstnavatelů,
+	foreign     = International Organisation of Employers,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{ARMAX}{
-	short		= ARMAX,
-	long 		= autoregresní klouzavý průměr s~vnějším vstupem,
-	foreign 	= Auto Regressive Moving Average with eXogenous Input,
-	single = false,
+	tag         = nolist
+}
+\DeclareAcronym{OSN}{
+	short       = OSN,
+	long        = Organizace spojených národů,
+	foreign     = United Nations,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{A/D}{
-	short		= A/D,
-	long 		= analogově digitální převodník,
-	single = false,
+	tag         = nolist
+}
+\DeclareAcronym{SDG}{
+	short       = SDG,
+	long        = Cíle udržitelného rozvoje,
+	foreign     = Sustainable Development Goals,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{BIBO}{
-	short		= BIBO,
-	long 		= Bounded Input Bounded Output,
-	single = false,
-	single-style = footnote,
-	first-style = footnote,
-	tag			= zkr
-	}	
-\DeclareAcronym{BJ}{
-	short		= BJ,
-	long 		= Box-Jenkins,
-	tag			= zkr
-	}
-\DeclareAcronym{BN}{
-	short		= BN,
-	long 		= Bayesovská síť,
-	long-plural-form = Bayesovské sítě,
-	foreign 	= Bayesian Network,
-	single = false,
+	tag         = nolist
+}
+\DeclareAcronym{OECD}{
+	short       = OECD,
+	long        = Organizace pro hospodářskou spolupráci a rozvoj,
+	foreign     = Organisation for Economic Co-operation and Development,
+	list        = Organizace pro hospodářskou spolupráci a rozvoj\CTUacrolistbreak,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}	
-\DeclareAcronym{CFD}{
-	short		= CFD,
-	long 		= počítačová dynamika tekutin,
-	long-plural-form		= počítačové dynamiky tekutin,
-	foreign 	= Computational Fluid Dynamics,
-	single = false,
+	tag         = zkr
+}
+\DeclareAcronym{AIAS}{
+	short       = AIAS,
+	long        = Amsterdam Institute for Advanced Labour Studies,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{DFT}{
-	short		= DFT,
-	long 		= diskrétní Fourierova transformace,
-	single = false,
+	tag         = nolist
+}
+\DeclareAcronym{LLM}{
+	short        = LLM,
+	long         = velký jazykový model,
+	foreign      = Large Language Model,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{ETVE}{
-	short		= ETVE,
-	long 		= chyba v~důsledku kolísání teploty okolí,
-	foreign 	= Environmental Temperature Variation Error,
-	tag			= zkr
-	}
-\DeclareAcronym{ESD}{
-	short		= ESD,
-	long 		= energetická spektrální hustota,
-	foreign 	= Energy Spectral Density,
-	single = false,
+	tag          = nolist
+}
+\DeclareAcronym{JVR}{
+	short   = JVR,
+	long    = míra volných pracovních míst \acs{LFS} Eurostat,
+	foreign = job vacancy rate,
+	tag     = nolist
+}
+\DeclareAcronym{LFS}{
+	short   = LFS,
+	long    = Labour Force Survey Eurostat,
+	tag     = nolist
+}
+\DeclareAcronym{LMP}{
+	short   = LMP,
+	long    = Labour Market Policy \acs{OECD},
+	tag     = zkr
+}
+\DeclareAcronym{HFCS}{	
+	short   = HFCS,
+	long    = Household Finance and Consumption Survey \acs{OECD},
+	tag     = zkr
+}
+\DeclareAcronym{ICTWSS}{
+	short       = ICTWSS,
+	long        = {databáze institucionálních charakteristik odborů, mzdového vyjednávání, státních intervencí a sociálních paktů \acs{OECD}},
+	foreign     = {Database on Institutional Characteristics of Trade Unions, Wage Setting, State Intervention and Social Pacts},
+	list        = {databáze institucionálních charakteristik odborů, mzdového vyjednávání, státních intervencí a sociálních paktů \acs{OECD}}\CTUacrolistbreak,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{FDEM}{
-	short		= FDEM,
-	long 		= metoda konečných prvků s~konečnými diferencemi pro šíření tepla,
-	foreign 	= Finite Difference Element Method,
-	single = false,
+	tag         = zkr
+}
+\DeclareAcronym{ED}{
+	short       = ED,
+	long        = zaměstnavatelská organizovanost,
+	foreign     = employer organisation density,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}	
-\DeclareAcronym{FEM}{
-	short		= FEM,
-	alt			= MKP,
-	long 		= metoda konečných prvků,
-	foreign 	= Finite Element Method,
-	single = false,
+	tag         = zkr
+}
+\DeclareAcronym{MNČ}{
+	short       = {MNČ},
+	long        = metoda nejmenších čtverců,
+	foreign     = Ordinary Least Squares,
+	single      = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{FFT}{
-	short		= FFT,
-	long 		= rychlá Fourierova transformace,
-	foreign 	= Fast Fourier Transform,
-	single = false,
+	tag         = zkr
+}
+\DeclareAcronym{RHSD}{
+	short = RHSD,
+	long  = Rada hospodářské a sociální dohody,
+	list  = Rada hospodářské a sociální dohody (tripartita),
+	tag   = zkr
+}
+\DeclareAcronym{ČSÚ}{
+	short = {ČSÚ},
+	long  = Český statistický úřad,
+	tag   = nolist
+}
+\DeclareAcronym{Eurofound}{
+	short        = Eurofound,
+	long         = Evropská nadace pro zlepšení životních a pracovních podmínek,
+	foreign      = European Foundation for the Improvement of Living and Working Conditions,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{FIR}{
-	short		= FIR,
-	long 		= konečná impulní odezva,
-	foreign 	= Finite Impulse Response,
-	single = false,
+	tag          = zkr
+}
+\DeclareAcronym{VÚPSV}{
+	short = {VÚPSV},
+	long  = Výzkumný ústav práce a sociálních věcí,
+	tag   = nolist
+}
+\DeclareAcronym{ETUI}{
+	short        = ETUI,
+	long         = Evropský odborový institut,
+	foreign      = European Trade Union Institute,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{FS~ČVUT}{
-	short		= FS~ČVUT,
-	first-style = short,
-	long 		= {České vysoké učení technické v~Praze, Fakulta strojní},
-	tag			= zkr
-	}
-\DeclareAcronym{FT}{
-	short		= FT,
-	long 		= Fourierova transformace,
-	single = false,
-	tag			= zkr
-	}
-\DeclareAcronym{IIR}{
-	short		= IIR,
-	long 		= nekonečná impulní odezva,
-	foreign 	= Infinite Impulse Response,
-	single = false,
+	tag          = zkr
+}
+\DeclareAcronym{WSI}{
+	short        = WSI,
+	long         = Hospodářský a sociálněvědní institut nadace Hanse Böcklera,
+	foreign      = Wirtschafts- und Sozialwissenschaftliches Institut,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{LT}{
-	short		= LT,
-	long 		= Laplaceova transformace,
-	single = false,
-	tag			= zkr
-	}
-\DeclareAcronym{LTI}{
-	short		= LTI,
-	long 		= {lineární, časově invariantní},
-	foreign 	= Linear Time Invariant,
-	single = false,
+	tag          = nolist
+}
+% ---------------------------------------------------------------------------
+%  Czech declension support (acro endings)
+% ---------------------------------------------------------------------------
+% Czech has 7 grammatical cases.  We define custom endings for the 4 most
+% common oblique cases needed in economic/legal prose.  The default ending
+% is empty because each acronym sets its own full form via the -form property.
+%
+% Usage:  \acgen{EU}   → "Evropské unie"  (genitive)
+%         \acdat{EU}   → "Evropské unii"  (dative)
+%         \acloc{EU}   → "Evropské unii"  (locative)
+%         \acacc{EU}   → "Evropskou unii" (accusative)
+%         \acins{EU}   → "Evropskou unií" (instrumental)
+%
+% The short form is always the same abbreviation; only the long form changes.
+% On first use: "long-<case>-form (SHORT)" — subsequent: just "SHORT".
+%
+% Force-first variants (reset + case):
+%         \acfacc{APZ} → "aktivní politiku zaměstnanosti (APZ)" regardless of prior usage
+%         \acfgen, \acfdat, \acfloc, \acfins — same for other cases
+%         \acf{KEY}    → nominative force-first (built-in acro command)
+%
+% Alt form (built-in acro \aca):
+%         \aca{geo-CZ} → "ČR"   (alt= field; valid in Czech prose)
+%         \acl{geo-CZ} → "Česko" (full long form; for formal/first mentions)
+%         \acs{geo-CZ} → "CZ"   (ISO short; figures and tables ONLY)
+% ---------------------------------------------------------------------------
+\DeclareAcroEnding{genitive}{}{}
+\DeclareAcroEnding{dative}{}{}
+\DeclareAcroEnding{accusative}{}{}
+\DeclareAcroEnding{locative}{}{}
+\DeclareAcroEnding{instrumental}{}{}
+
+% Commands for each case — first occurrence shows "long-case (SHORT)"
+\NewAcroCommand\acgen{m}{\acrogenitive\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acdat{m}{\acrodative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acacc{m}{\acroaccusative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acloc{m}{\acrolocative\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acins{m}{\acroinstrumental\UseAcroTemplate{first}{#1}}
+
+% Capitalized first-use variants (sentence start).
+\NewAcroCommand\Acgen{m}{\acrogenitive\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acdat{m}{\acrodative\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acacc{m}{\acroaccusative\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acloc{m}{\acrolocative\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acins{m}{\acroinstrumental\UseAcroTemplate{First}{#1}}
+
+% Force-first variants — reset used-flag then show "long-case (SHORT)" unconditionally.
+% Use at the start of a paragraph/block where the acronym will repeat frequently and
+% needs re-introducing in full.  Nominative force-first = built-in \acf{KEY}.
+%   \acfgen{KEY}  → resets + genitive first-form
+%   \acfdat{KEY}  → resets + dative first-form
+%   \acfacc{KEY}  → resets + accusative first-form   ← most common in Czech prose
+%   \acfloc{KEY}  → resets + locative first-form
+%   \acfins{KEY}  → resets + instrumental first-form
+\NewDocumentCommand\acfgen{m}{\acreset{#1}\acgen{#1}}
+\NewDocumentCommand\acfdat{m}{\acreset{#1}\acdat{#1}}
+\NewDocumentCommand\acfacc{m}{\acreset{#1}\acacc{#1}}
+\NewDocumentCommand\acfloc{m}{\acreset{#1}\acloc{#1}}
+\NewDocumentCommand\acfins{m}{\acreset{#1}\acins{#1}}
+
+% Legacy suffix-style aliases kept for backward compatibility.
+\NewDocumentCommand\acgenf{m}{\acfgen{#1}}
+\NewDocumentCommand\acdatf{m}{\acfdat{#1}}
+\NewDocumentCommand\acaccf{m}{\acfacc{#1}}
+\NewDocumentCommand\aclocf{m}{\acfloc{#1}}
+\NewDocumentCommand\acinsf{m}{\acfins{#1}}
+
+% Capitalized force-first singular-case variants.
+\NewDocumentCommand\Acfgen{m}{\acreset{#1}\Acgen{#1}}
+\NewDocumentCommand\Acfdat{m}{\acreset{#1}\Acdat{#1}}
+\NewDocumentCommand\Acfacc{m}{\acreset{#1}\Acacc{#1}}
+\NewDocumentCommand\Acfloc{m}{\acreset{#1}\Acloc{#1}}
+\NewDocumentCommand\Acfins{m}{\acreset{#1}\Acins{#1}}
+
+% Long-only variants (always expand to the long form in given case)
+\NewAcroCommand\aclgen{m}{\acrogenitive\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\acldat{m}{\acrodative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclacc{m}{\acroaccusative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclloc{m}{\acrolocative\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclins{m}{\acroinstrumental\UseAcroTemplate{long}{#1}}
+
+% Compatibility aliases used in some texparts.
+% Keep these as thin wrappers so prose can stay unchanged.
+\NewDocumentCommand\Acgenf{m}{\Acfgen{#1}}
+\NewDocumentCommand\Acdatf{m}{\Acfdat{#1}}
+\NewDocumentCommand\Acaccf{m}{\Acfacc{#1}}
+\NewDocumentCommand\Aclocf{m}{\Acfloc{#1}}
+\NewDocumentCommand\Acinsf{m}{\Acfins{#1}}
+\NewDocumentCommand\Aclgen{m}{\aclgen{#1}}
+\NewDocumentCommand\aclen{m}{\aclgen{#1}}
+\NewDocumentCommand\acsgen{m}{\acs{#1}}
+\NewDocumentCommand\acsloc{m}{\acs{#1}}
+\NewDocumentCommand\ascloc{m}{\acs{#1}}
+
+% ---------------------------------------------------------------------------
+%  Plural oblique-case endings and commands
+% ---------------------------------------------------------------------------
+% Each ending is a COMPOSITE — it represents plural + case together.
+% This avoids the problem of two active endings competing in the template
+% resolver (which stops at the first match).
+%
+% Property set in \AcroPropertiesSet:   long-pgen-form, long-pdat-form, …
+%
+% Long-only commands (always expand to the long form):
+%   \aclpgen{KEY}  → "odborových organizací"   (gen pl of OO)
+%   \aclpdat{KEY}  → "odborovým organizacím"   (dat pl)
+%   \aclpacc{KEY}  → "odborové organizace"      (acc pl)
+%   \aclploc{KEY}  → "odborových organizacích" (loc pl)
+%   \aclpins{KEY}  → "odborovými organizacemi" (ins pl)
+%
+% First-use commands (long+short on first use, short thereafter):
+%   \acpgen{KEY}, \acpdat{KEY}, \acpacc{KEY}, \acploc{KEY}, \acpins{KEY}
+% ---------------------------------------------------------------------------
+\DeclareAcroEnding{pgen}{}{}
+\DeclareAcroEnding{pdat}{}{}
+\DeclareAcroEnding{pacc}{}{}
+\DeclareAcroEnding{ploc}{}{}
+\DeclareAcroEnding{pins}{}{}
+
+\NewAcroCommand\acpgen {m}{\acropgen\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acpdat {m}{\acropdat\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acpacc {m}{\acropacc\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acploc {m}{\acroploc\UseAcroTemplate{first}{#1}}
+\NewAcroCommand\acpins {m}{\acropins\UseAcroTemplate{first}{#1}}
+
+\NewAcroCommand\Acpgen {m}{\acropgen\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acpdat {m}{\acropdat\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acpacc {m}{\acropacc\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acploc {m}{\acroploc\UseAcroTemplate{First}{#1}}
+\NewAcroCommand\Acpins {m}{\acropins\UseAcroTemplate{First}{#1}}
+
+\NewAcroCommand\aclpgen{m}{\acropgen\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclpdat{m}{\acropdat\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclpacc{m}{\acropacc\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclploc{m}{\acroploc\UseAcroTemplate{long}{#1}}
+\NewAcroCommand\aclpins{m}{\acropins\UseAcroTemplate{long}{#1}}
+
+% Force-first plural-case variants.
+\NewDocumentCommand\acfpgen{m}{\acreset{#1}\acpgen{#1}}
+\NewDocumentCommand\acfpdat{m}{\acreset{#1}\acpdat{#1}}
+\NewDocumentCommand\acfpacc{m}{\acreset{#1}\acpacc{#1}}
+\NewDocumentCommand\acfploc{m}{\acreset{#1}\acploc{#1}}
+\NewDocumentCommand\acfpins{m}{\acreset{#1}\acpins{#1}}
+
+% Capitalized force-first plural-case variants.
+\NewDocumentCommand\Acfpgen{m}{\acreset{#1}\Acpgen{#1}}
+\NewDocumentCommand\Acfpdat{m}{\acreset{#1}\Acpdat{#1}}
+\NewDocumentCommand\Acfpacc{m}{\acreset{#1}\Acpacc{#1}}
+\NewDocumentCommand\Acfploc{m}{\acreset{#1}\Acploc{#1}}
+\NewDocumentCommand\Acfpins{m}{\acreset{#1}\Acpins{#1}}
+
+% ---------------------------------------------------------------------------
+%  Declension forms for existing acronyms
+% ---------------------------------------------------------------------------
+% EU – Evropská unie (f.)
+\acsetup{} % reset context
+\AcroPropertiesSet{EU}{
+	long-genitive-form      = Evropské unie,
+	long-dative-form        = Evropské unii,
+	long-accusative-form    = Evropskou unii,
+	long-locative-form      = Evropské unii,
+	long-instrumental-form  = Evropskou unií
+}
+% HDP – hrubý domácí produkt (m.)
+\AcroPropertiesSet{HDP}{
+	long-genitive-form      = hrubého domácího produktu,
+	long-dative-form        = hrubému domácímu produktu,
+	long-accusative-form    = hrubý domácí produkt,
+	long-locative-form      = hrubém domácím produktu,
+	long-instrumental-form  = hrubým domácím produktem
+}
+% TFR – úhrnná plodnost (f.)
+\AcroPropertiesSet{TFR}{
+	long-genitive-form      = úhrnné plodnosti,
+	long-dative-form        = úhrnné plodnosti,
+	long-accusative-form    = úhrnnou plodnost,
+	long-locative-form      = úhrnné plodnosti,
+	long-instrumental-form  = úhrnnou plodností
+}
+% KV – kolektivní vyjednávání (n.)
+\AcroPropertiesSet{KV}{
+	long-genitive-form      = kolektivního vyjednávání,
+	long-dative-form        = kolektivnímu vyjednávání,
+	long-accusative-form    = kolektivní vyjednávání,
+	long-locative-form      = kolektivním vyjednávání,
+	long-instrumental-form  = kolektivním vyjednáváním
+}
+% KS – kolektivní smlouva (f.)
+\AcroPropertiesSet{KS}{
+	long-genitive-form      = kolektivní smlouvy,
+	long-dative-form        = kolektivní smlouvě,
+	long-accusative-form    = kolektivní smlouvu,
+	long-locative-form      = kolektivní smlouvě,
+	long-instrumental-form  = kolektivní smlouvou
+}
+% KSVS – kolektivní smlouva vyššího stupně (f.)
+\AcroPropertiesSet{KSVS}{
+	long-genitive-form      = kolektivní smlouvy vyššího stupně,
+	long-dative-form        = kolektivní smlouvě vyššího stupně,
+	long-accusative-form    = kolektivní smlouvu vyššího stupně,
+	long-locative-form      = kolektivní smlouvě vyššího stupně,
+	long-instrumental-form  = kolektivní smlouvou vyššího stupně
+}
+\AcroPropertiesSet{SP}{
+	long-genitive-form      = sociálního pojištění,
+	long-dative-form        = sociálnímu pojištění,
+	long-accusative-form    = sociální pojištění,
+	long-locative-form      = sociálním pojištění,
+	long-instrumental-form  = sociálním pojištěním
+}
+\AcroPropertiesSet{SZ}{
+	long-genitive-form      = sociálního zabezpečení,
+	long-dative-form        = sociálnímu zabezpečení,
+	long-accusative-form    = sociální zabezpečení,
+	long-locative-form      = sociálním zabezpečení,
+	long-instrumental-form  = sociálním zabezpečením
+}
+\AcroPropertiesSet{ZdrP}{
+	long-genitive-form      = zdravotního pojištění,
+	long-dative-form        = zdravotnímu pojištění,
+	long-accusative-form    = zdravotní pojištění,
+	long-locative-form      = zdravotním pojištění,
+	long-instrumental-form  = zdravotním pojištěním
+}
+% APZ – aktivní politika zaměstnanosti (f.)
+\AcroPropertiesSet{APZ}{
+	long-genitive-form      = aktivní politiky zaměstnanosti,
+	long-dative-form        = aktivní politice zaměstnanosti,
+	long-accusative-form    = aktivní politiku zaměstnanosti,
+	long-locative-form      = aktivní politice zaměstnanosti,
+	long-instrumental-form  = aktivní politikou zaměstnanosti
+}
+% MPSV – Ministerstvo práce a sociálních věcí (n.)
+\AcroPropertiesSet{MPSV}{
+	long-genitive-form      = Ministerstva práce a sociálních věcí,
+	long-dative-form        = Ministerstvu práce a sociálních věcí,
+	long-accusative-form    = Ministerstvo práce a sociálních věcí,
+	long-locative-form      = Ministerstvu práce a sociálních věcí,
+	long-instrumental-form  = Ministerstvem práce a sociálních věcí
+}
+% ČR – Česká republika (f.)
+\AcroPropertiesSet{ČR}{
+	long-genitive-form      = České republiky,
+	long-dative-form        = České republice,
+	long-accusative-form    = Českou republiku,
+	long-locative-form      = České republice,
+	long-instrumental-form  = Českou republikou
+}
+% ÖGB – Rakouská odborová konfederace (f.)
+\AcroPropertiesSet{ÖGB}{
+	long-genitive-form      = Rakouské odborové konfederace,
+	long-dative-form        = Rakouské odborové konfederaci,
+	long-accusative-form    = Rakouskou odborovou konfederaci,
+	long-locative-form      = Rakouské odborové konfederaci,
+	long-instrumental-form  = Rakouskou odborovou konfederací
+}
+\AcroPropertiesSet{ZP}{
+	long-genitive-form      = zákoníku práce,
+	long-dative-form        = zákoníku práce,
+	long-accusative-form    = zákoník práce,
+	long-locative-form      = zákoníku práce,
+	long-instrumental-form  = zákoníkem práce
+}
+\AcroPropertiesSet{ZKV}{
+	long-genitive-form      = zákona o kolektivním vyjednávání,
+	long-dative-form        = zákonu o kolektivním vyjednávání,
+	long-accusative-form    = zákon o kolektivním vyjednávání,
+	long-locative-form      = zákonu o kolektivním vyjednávání,
+	long-instrumental-form  = zákonem o kolektivním vyjednávání
+}
+\AcroPropertiesSet{PP}{
+	long-genitive-form      = pracovního poměru,
+	long-dative-form        = pracovnímu poměru,
+	long-accusative-form    = pracovní poměr,
+	long-locative-form      = pracovním poměru,
+	long-instrumental-form  = pracovním poměrem
+}
+\AcroPropertiesSet{PV}{
+	long-genitive-form      = průměrného výdělku,
+	long-dative-form        = průměrnému výdělku,
+	long-accusative-form    = průměrný výdělek,
+	long-locative-form      = průměrném výdělku,
+	long-instrumental-form  = průměrným výdělkem
+}
+
+% BOZP — bezpečnost a ochrana zdraví při práci (f.)
+\AcroPropertiesSet{BOZP}{
+	long-genitive-form     = bezpečnosti a ochrany zdraví při práci,
+	long-dative-form       = bezpečnosti a ochraně zdraví při práci,
+	long-accusative-form   = bezpečnost a ochranu zdraví při práci,
+	long-locative-form     = bezpečnosti a ochraně zdraví při práci,
+	long-instrumental-form = bezpečností a ochranou zdraví při práci
+}
+
+\AcroPropertiesSet{PKS}{
+	long-genitive-form      = podnikové kolektivní smlouvy,
+	long-dative-form        = podnikové kolektivní smlouvě,
+	long-accusative-form    = podnikovou kolektivní smlouvu,
+	long-locative-form      = podnikové kolektivní smlouvě,
+	long-instrumental-form  = podnikovou kolektivní smlouvou
+}
+\AcroPropertiesSet{PPS}{
+	long-genitive-form      = standardu kupní síly,
+	long-dative-form        = standardu kupní síly,
+	long-accusative-form    = standard kupní síly,
+	long-locative-form      = standardu kupní síly,
+	long-instrumental-form  = standardem kupní síly
+}
+\AcroPropertiesSet{DPFO}{
+	long-genitive-form      = daně z příjmů fyzických osob,
+	long-dative-form        = dani z příjmů fyzických osob,
+	long-accusative-form    = daň z příjmů fyzických osob,
+	long-locative-form      = dani z příjmů fyzických osob,
+	long-instrumental-form  = daní z příjmů fyzických osob
+}
+\AcroPropertiesSet{DPH}{
+	long-genitive-form      = daně z přidané hodnoty,
+	long-dative-form        = dani z přidané hodnoty,
+	long-accusative-form    = daň z přidané hodnoty,
+	long-locative-form      = dani z přidané hodnoty,
+	long-instrumental-form  = daní z přidané hodnoty
+}
+\AcroPropertiesSet{DPPO}{
+	long-genitive-form      = daně z příjmů právnických osob,
+	long-dative-form        = dani z příjmů právnických osob,
+	long-accusative-form    = daň z příjmů právnických osob,
+	long-locative-form      = dani z příjmů právnických osob,
+	long-instrumental-form  = daní z příjmů právnických osob
+}
+\AcroPropertiesSet{RHSD}{
+	long-genitive-form      = Rady hospodářské a sociální dohody,
+	long-dative-form        = Radě hospodářské a sociální dohody,
+	long-accusative-form    = Radu hospodářské a sociální dohody,
+	long-locative-form      = Radě hospodářské a sociální dohody,
+	long-instrumental-form  = Radou hospodářské a sociální dohody
+}
+\AcroPropertiesSet{OSVČ}{
+	long-genitive-form      = osoby samostatně výdělečně činné,
+	long-dative-form        = osobě samostatně výdělečně činné,
+	long-accusative-form    = osobu samostatně výdělečně činnou,
+	long-locative-form      = osobě samostatně výdělečně činné,
+	long-instrumental-form  = osobou samostatně výdělečně činnou
+}
+\AcroPropertiesSet{OECD}{
+	long-genitive-form      = Organizace pro hospodářskou spolupráci a rozvoj,
+	long-dative-form        = Organizaci pro hospodářskou spolupráci a rozvoj,
+	long-accusative-form    = Organizaci pro hospodářskou spolupráci a rozvoj,
+	long-locative-form      = Organizaci pro hospodářskou spolupráci a rozvoj,
+	long-instrumental-form  = Organizací pro hospodářskou spolupráci a rozvoj
+}
+\AcroPropertiesSet{MOP}{
+	long-genitive-form      = Mezinárodní organizace práce,
+	long-dative-form        = Mezinárodní organizaci práce,
+	long-accusative-form    = Mezinárodní organizaci práce,
+	long-locative-form      = Mezinárodní organizaci práce,
+	long-instrumental-form  = Mezinárodní organizací práce
+}
+\AcroPropertiesSet{SDG}{
+	long-genitive-form      = Cílů udržitelného rozvoje,
+	long-dative-form        = Cílům udržitelného rozvoje,
+	long-accusative-form    = Cíle udržitelného rozvoje,
+	long-locative-form      = Cílech udržitelného rozvoje,
+	long-instrumental-form  = Cíli udržitelného rozvoje
+}
+\AcroPropertiesSet{NACE}{
+	long-genitive-form      = statistické klasifikace ekonomických činností,
+	long-dative-form        = statistické klasifikaci ekonomických činností,
+	long-accusative-form    = statistickou klasifikaci ekonomických činností,
+	long-locative-form      = statistické klasifikaci ekonomických činností,
+	long-instrumental-form  = statistickou klasifikací ekonomických činností
+}
+\AcroPropertiesSet{NUTS}{
+	long-genitive-form      = klasifikace územních statistických jednotek,
+	long-dative-form        = klasifikaci územních statistických jednotek,
+	long-accusative-form    = klasifikaci územních statistických jednotek,
+	long-locative-form      = klasifikaci územních statistických jednotek,
+	long-instrumental-form  = klasifikací územních statistických jednotek
+}
+\AcroPropertiesSet{ČMKOS}{
+	long-genitive-form      = Českomoravské konfederace odborových svazů,
+	long-dative-form        = Českomoravské konfederaci odborových svazů,
+	long-accusative-form    = Českomoravskou konfederaci odborových svazů,
+	long-locative-form      = Českomoravské konfederaci odborových svazů,
+	long-instrumental-form  = Českomoravskou konfederací odborových svazů
+}
+\AcroPropertiesSet{ETUC}{
+	long-genitive-form      = Evropské odborové konfederace,
+	long-dative-form        = Evropské odborové konfederaci,
+	long-accusative-form    = Evropskou odborovou konfederaci,
+	long-locative-form      = Evropské odborové konfederaci,
+	long-instrumental-form  = Evropskou odborovou konfederací
+}
+\AcroPropertiesSet{ITUC}{
+	long-genitive-form      = Mezinárodní odborové konfederace,
+	long-dative-form        = Mezinárodní odborové konfederaci,
+	long-accusative-form    = Mezinárodní odborovou konfederaci,
+	long-locative-form      = Mezinárodní odborové konfederaci,
+	long-instrumental-form  = Mezinárodní odborovou konfederací
+}
+\AcroPropertiesSet{ČP}{
+	long-genitive-form      = České pošty,
+	long-dative-form        = České poště,
+	long-accusative-form    = Českou poštu,
+	long-locative-form      = České poště,
+	long-instrumental-form  = Českou poštou
+}
+\AcroPropertiesSet{ČSSZ}{
+	long-genitive-form      = České správy sociálního zabezpečení,
+	long-dative-form        = České správě sociálního zabezpečení,
+	long-accusative-form    = Českou správu sociálního zabezpečení,
+	long-locative-form      = České správě sociálního zabezpečení,
+	long-instrumental-form  = Českou správou sociálního zabezpečení
+}
+\AcroPropertiesSet{ČSÚ}{
+	long-genitive-form      = Českého statistického úřadu,
+	long-dative-form        = Českému statistickému úřadu,
+	long-accusative-form    = Český statistický úřad,
+	long-locative-form      = Českém statistickém úřadu,
+	long-instrumental-form  = Českým statistickým úřadem
+}
+\AcroPropertiesSet{ISPV}{
+	long-genitive-form      = Informačního systému o průměrném výdělku \acs{MPSV},
+	long-dative-form        = Informačnímu systému o průměrném výdělku \acs{MPSV},
+	long-accusative-form    = Informační systém o průměrném výdělku \acs{MPSV},
+	long-locative-form      = Informačním systému o průměrném výdělku \acs{MPSV},
+	long-instrumental-form  = Informačním systémem o průměrném výdělku \acs{MPSV}
+}
+\AcroPropertiesSet{Eurofound}{
+	long-genitive-form      = Evropské nadace pro zlepšení životních a pracovních podmínek,
+	long-dative-form        = Evropské nadaci pro zlepšení životních a pracovních podmínek,
+	long-accusative-form    = Evropskou nadaci pro zlepšení životních a pracovních podmínek,
+	long-locative-form      = Evropské nadaci pro zlepšení životních a pracovních podmínek,
+	long-instrumental-form  = Evropskou nadací pro zlepšení životních a pracovních podmínek
+}
+\AcroPropertiesSet{GPG}{
+	long-genitive-form      = mzdového rozdílu mezi pohlavími,
+	long-dative-form        = mzdovému rozdílu mezi pohlavími,
+	long-accusative-form    = mzdový rozdíl mezi pohlavími,
+	long-locative-form      = mzdovém rozdílu mezi pohlavími,
+	long-instrumental-form  = mzdovým rozdílem mezi pohlavími
+}
+\AcroPropertiesSet{HRM}{
+	long-genitive-form      = řízení lidských zdrojů,
+	long-dative-form        = řízení lidských zdrojů,
+	long-accusative-form    = řízení lidských zdrojů,
+	long-locative-form      = řízení lidských zdrojů,
+	long-instrumental-form  = řízením lidských zdrojů
+}
+\AcroPropertiesSet{ROH}{
+	long-genitive-form      = Revolučního odborového hnutí,
+	long-dative-form        = Revolučnímu odborovému hnutí,
+	long-accusative-form    = Revoluční odborové hnutí,
+	long-locative-form      = Revolučním odborovém hnutí,
+	long-instrumental-form  = Revolučním odborovým hnutím
+}
+% ---------------------------------------------------------------------------
+%  ISO country codes  (tag = geo — NOT printed in abbreviation/variable lists)
+% ---------------------------------------------------------------------------
+% These entries allow \acs{geo-CZ} in figures/tables for consistent rendering.
+% The tag "geo" is not included in any \printacronyms call, so they stay hidden.
+% ---------------------------------------------------------------------------
+\DeclareAcronym{geo-CZ}{short=CZ, alt=ČR, long=Česko, tag=geo}
+\DeclareAcronym{geo-AT}{short=AT, long=Rakousko, tag=geo}
+\DeclareAcronym{geo-DE}{short=DE, long=Německo, tag=geo}
+\DeclareAcronym{geo-DK}{short=DK, long=Dánsko, tag=geo}
+\DeclareAcronym{geo-SK}{short=SK, long=Slovensko, tag=geo}
+\DeclareAcronym{geo-PL}{short=PL, long=Polsko, tag=geo}
+\DeclareAcronym{geo-FR}{short=FR, long=Francie, tag=geo}
+\DeclareAcronym{geo-SE}{short=SE, long=Švédsko, tag=geo}
+\DeclareAcronym{geo-FI}{short=FI, long=Finsko, tag=geo}
+\DeclareAcronym{geo-HU}{short=HU, long=Maďarsko, tag=geo}
+\DeclareAcronym{geo-LV}{short=LV, long=Lotyšsko, tag=geo}
+\DeclareAcronym{geo-LT}{short=LT, long=Litva, tag=geo}
+\DeclareAcronym{geo-ES}{short=ES, long=Španělsko, tag=geo}
+\DeclareAcronym{geo-SI}{short=SI, long=Slovinsko, tag=geo}
+\DeclareAcronym{geo-NL}{short=NL, long=Nizozemsko, tag=geo}
+\DeclareAcronym{geo-IE}{short=IE, long=Irsko, tag=geo}
+\DeclareAcronym{geo-IT}{short=IT, long=Itálie, tag=geo}
+\DeclareAcronym{geo-BE}{short=BE, long=Belgie, tag=geo}
+\DeclareAcronym{geo-PT}{short=PT, long=Portugalsko, tag=geo}
+\DeclareAcronym{geo-EL}{short=EL, long=Řecko, tag=geo}
+\DeclareAcronym{geo-GR}{short=GR, long=Řecko, tag=geo}
+\DeclareAcronym{geo-RO}{short=RO, long=Rumunsko, tag=geo}
+\DeclareAcronym{geo-BG}{short=BG, long=Bulharsko, tag=geo}
+\DeclareAcronym{geo-HR}{short=HR, long=Chorvatsko, tag=geo}
+\DeclareAcronym{geo-CY}{short=CY, long=Kypr, tag=geo}
+\DeclareAcronym{geo-LU}{short=LU, long=Lucembursko, tag=geo}
+\DeclareAcronym{geo-EE}{short=EE, long=Estonsko, tag=geo}
+\DeclareAcronym{geo-MT}{short=MT, long=Malta, tag=geo}
+\DeclareAcronym{geo-EU27}{short=EU27, long=Evropská unie (27), tag=geo}
+\DeclareAcronym{geo-EU}{short=EU, long=Evropská unie, tag=geo}
+\DeclareAcronym{geo-IS}{short=IS, long=Island, tag=geo}
+\DeclareAcronym{geo-NO}{short=NO, long=Norsko, tag=geo}
+\DeclareAcronym{geo-CH}{short=CH, long=Švýcarsko, tag=geo}
+\AcroPropertiesSet{geo-EU}{
+	long-genitive-form      = Evropské unie,
+	long-dative-form        = Evropské unii,
+	long-accusative-form    = Evropskou unii,
+	long-locative-form      = Evropské unii,
+	long-instrumental-form  = Evropskou unií
+}
+\AcroPropertiesSet{geo-EU27}{
+	long-genitive-form      = Evropské unie (27),
+	long-dative-form        = Evropské unii (27),
+	long-accusative-form    = Evropskou unii (27),
+	long-locative-form      = Evropské unii (27),
+	long-instrumental-form  = Evropskou unií (27)
+}
+\AcroPropertiesSet{geo-SK}{
+	long-genitive-form      = Slovenska,
+	long-dative-form        = Slovensku,
+	long-accusative-form    = Slovensko,
+	long-locative-form      = Slovensku,
+	long-instrumental-form  = Slovenskem
+}
+\AcroPropertiesSet{geo-AT}{
+	long-genitive-form      = Rakouska,
+	long-dative-form        = Rakousku,
+	long-accusative-form    = Rakousko,
+	long-locative-form      = Rakousku,
+	long-instrumental-form  = Rakouskem
+}
+\AcroPropertiesSet{geo-DE}{
+	long-genitive-form      = Německa,
+	long-dative-form        = Německu,
+	long-accusative-form    = Německo,
+	long-locative-form      = Německu,
+	long-instrumental-form  = Německem
+}
+\AcroPropertiesSet{geo-DK}{
+	long-genitive-form      = Dánska,
+	long-dative-form        = Dánsku,
+	long-accusative-form    = Dánsko,
+	long-locative-form      = Dánsku,
+	long-instrumental-form  = Dánskem
+}
+\AcroPropertiesSet{geo-PL}{
+	long-genitive-form      = Polska,
+	long-dative-form        = Polsku,
+	long-accusative-form    = Polsko,
+	long-locative-form      = Polsku,
+	long-instrumental-form  = Polskem
+}
+
+% ---------------------------------------------------------------------------
+%  Bare ISO country-code keys — used in prose with \acgen{XX}, \Acgen{XX} etc.
+%  Mirrors the geo-XX entries but without prefix, for compatibility with text
+%  that predates the geo- naming convention.
+% ---------------------------------------------------------------------------
+\DeclareAcronym{AT}{short=AT, long=Rakousko, tag=nolist}
+\AcroPropertiesSet{AT}{
+	long-genitive-form     = Rakouska,
+	long-dative-form       = Rakousku,
+	long-accusative-form   = Rakousko,
+	long-locative-form     = Rakousku,
+	long-instrumental-form = Rakouskem
+}
+\DeclareAcronym{DE}{short=DE, long=Německo, tag=nolist}
+\AcroPropertiesSet{DE}{
+	long-genitive-form     = Německa,
+	long-dative-form       = Německu,
+	long-accusative-form   = Německo,
+	long-locative-form     = Německu,
+	long-instrumental-form = Německem
+}
+\DeclareAcronym{DK}{short=DK, long=Dánsko, tag=nolist}
+\AcroPropertiesSet{DK}{
+	long-genitive-form     = Dánska,
+	long-dative-form       = Dánsku,
+	long-accusative-form   = Dánsko,
+	long-locative-form     = Dánsku,
+	long-instrumental-form = Dánskem
+}
+\DeclareAcronym{PL}{short=PL, long=Polsko, tag=nolist}
+\AcroPropertiesSet{PL}{
+	long-genitive-form     = Polska,
+	long-dative-form       = Polsku,
+	long-accusative-form   = Polsko,
+	long-locative-form     = Polsku,
+	long-instrumental-form = Polskem
+}
+\DeclareAcronym{SK}{short=SK, long=Slovensko, tag=nolist}
+\AcroPropertiesSet{SK}{
+	long-genitive-form     = Slovenska,
+	long-dative-form       = Slovensku,
+	long-accusative-form   = Slovensko,
+	long-locative-form     = Slovensku,
+	long-instrumental-form = Slovenskem
+}
+
+% ---------------------------------------------------------------------------
+%  Additional organization / concept abbreviations used in thesis text
+% ---------------------------------------------------------------------------
+\DeclareAcronym{AI}{
+	short        = AI,
+	long         = umělá inteligence,
+	foreign      = Artificial Intelligence,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{MA}{
-	short		= MA,
-	long 		= klouzavý průměr,
-	foreign 	= Moving Average,
-	single = false,
+	tag          = zkr
+}
+\DeclareAcronym{SD}{
+	short = SD,
+	long  = sociální dialog,
+	tag   = zkr
+}
+\AcroPropertiesSet{SD}{
+	long-genitive-form     = sociálního dialogu,
+	long-dative-form       = sociálnímu dialogu,
+	long-accusative-form   = sociální dialog,
+	long-locative-form     = sociálním dialogu,
+	long-instrumental-form = sociálním dialogem
+}
+\DeclareAcronym{SDEU}{
+	short        = SDEU,
+	long         = Soudní dvůr Evropské unie,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{MIMO}{
-	short		= MIMO,
-	long 		= {více vstupů, více výstupů},
-	foreign 	= Multiple Input Multiple Output,
-	single = false,
-	single-style = footnote,
-	tag			= zkr
-	}
-\DeclareAcronym{ML}{
-	short		= ML,
-	long 		= strojové učení,
-	foreign 	= Machine Learning,
-	tag			= zkr
-	}
-\DeclareAcronym{MLR}{
-	short		= MLR,
-	long 		= vícenásobná lineární regrese,
-	plural-form		= vícenásobné lineární regrese,
-	foreign 	= Multiple Linear Regression,
-	tag			= zkr
-	}
-\DeclareAcronym{NC}{
-	short		= NC,
-	long 		= číslicové řízení,
-	long-plural-form = číslicovým řízením, %instrumental
-	foreign 	= Numerical Control,
-	tag			= zkr
-	}
-\DeclareAcronym{NDF}{
-	short		= NDF,
-	long 		= není definováno,
-	tag			= zkr
-	}
-\DeclareAcronym{OE}{
-	short		= OE,
-	long 		= výstupní chyba,
-	foreign 	= Output Error,
-	single = false,
+	tag          = nolist
+}
+\AcroPropertiesSet{SDEU}{
+	long-genitive-form     = Soudního dvora Evropské unie,
+	long-dative-form       = Soudnímu dvoru Evropské unie,
+	long-accusative-form   = Soudní dvůr Evropské unie,
+	long-locative-form     = Soudním dvoře Evropské unie,
+	long-instrumental-form = Soudním dvorem Evropské unie
+}
+\DeclareAcronym{SPČR}{
+	short = {SP~ČR},
+	long  = Svaz průmyslu a dopravy České republiky,
+	tag   = nolist
+}
+\DeclareAcronym{KZPS}{
+	short = KZPS~ČR,
+	long  = Konfederace zaměstnavatelských a podnikatelských svazů \acs{ČR},
+	tag   = nolist
+}
+\DeclareAcronym{NERV}{
+	short = NERV,
+	long  = Národní ekonomická rada vlády,
+	tag   = nolist
+}
+\AcroPropertiesSet{NERV}{
+	long-genitive-form     = Národní ekonomické rady vlády,
+	long-dative-form       = Národní ekonomické radě vlády,
+	long-accusative-form   = Národní ekonomickou radu vlády,
+	long-locative-form     = Národní ekonomické radě vlády,
+	long-instrumental-form = Národní ekonomickou radou vlády
+}
+% SÚIP
+\DeclareAcronym{SÚIP}{
+	short = {SÚIP},
+	long  = Státní úřad inspekce práce,
+	tag   = nolist
+}
+\AcroPropertiesSet{SÚIP}{
+	long-genitive-form     = Státního úřadu inspekce práce,
+	long-dative-form       = Státnímu úřadu inspekce práce,
+	long-accusative-form   = Státní úřad inspekce práce,
+	long-locative-form     = Státním úřadu inspekce práce,
+	long-instrumental-form = Státním úřadem inspekce práce
+}
+
+\DeclareAcronym{ÚP ČR}{
+	short = {ÚP~ČR},
+	long  = Úřad práce,
+	tag   = nolist
+}
+\AcroPropertiesSet{ÚP ČR}{
+	long-genitive-form     = Úřadu práce,
+	long-dative-form       = Úřadu práce,
+	long-accusative-form   = Úřad práce,
+	long-locative-form     = Úřadu práce,
+	long-instrumental-form = Úřadem práce
+}
+
+% ---------------------------------------------------------------------------
+%  Plural oblique-case forms (for \aclpgen, \aclpdat, \aclpins, … commands)
+% ---------------------------------------------------------------------------
+% Each entry adds only the cases actually needed by the thesis prose.
+% Add further cases per-entry as new ones appear.
+%
+% Czech plural declension cheat-sheet (needed case → suffix pattern):
+%   gen: -ích / -ů / -í   dat: -ím / -ům   acc: -e / -y / -é
+%   loc: -ích / -ech      ins: -imi / -ými / -ami
+
+% ICT — informační a komunikační technologie (f. pl., -e type)
+\AcroPropertiesSet{ICT}{
+	long-pgen-form  = informačních a~komunikačních technologií,
+	long-pdat-form  = informačním a~komunikačním technologiím,
+	long-pacc-form  = informační a~komunikační technologie,
+	long-ploc-form  = informačních a~komunikačních technologiích,
+	long-pins-form  = informačními a~komunikačními technologiemi
+}
+
+% KS — kolektivní smlouva (f.)
+\AcroPropertiesSet{KS}{
+	long-pgen-form  = kolektivních smluv,
+	long-pdat-form  = kolektivním smlouvám,
+	long-pacc-form  = kolektivní smlouvy,
+	long-ploc-form  = kolektivních smlouvách,
+	long-pins-form  = kolektivními smlouvami
+}
+
+% KSVS — kolektivní smlouva vyššího stupně (f.)
+\AcroPropertiesSet{KSVS}{
+	long-pgen-form  = kolektivních smluv vyššího stupně,
+	long-pdat-form  = kolektivním smlouvám vyššího stupně,
+	long-pacc-form  = kolektivní smlouvy vyššího stupně,
+	long-ploc-form  = kolektivních smlouvách vyššího stupně,
+	long-pins-form  = kolektivními smlouvami vyššího stupně
+}
+
+% PKS — podniková kolektivní smlouva (f.)
+\AcroPropertiesSet{PKS}{
+	long-pgen-form  = podnikových kolektivních smluv,
+	long-pdat-form  = podnikovým kolektivním smlouvám,
+	long-pacc-form  = podnikové kolektivní smlouvy,
+	long-ploc-form  = podnikových kolektivních smlouvách,
+	long-pins-form  = podnikovými kolektivními smlouvami
+}
+
+% OO — odborová organizace (f.)
+\AcroPropertiesSet{OO}{
+	long-pgen-form  = odborových organizací,
+	long-pdat-form  = odborovým organizacím,
+	long-pacc-form  = odborové organizace,
+	long-ploc-form  = odborových organizacích,
+	long-pins-form  = odborovými organizacemi
+}
+
+% OS — odborový svaz (m. inan.)
+\AcroPropertiesSet{OS}{
+	long-pgen-form  = odborových svazů,
+	long-pdat-form  = odborovým svazům,
+	long-pacc-form  = odborové svazy,
+	long-ploc-form  = odborových svazech,
+	long-pins-form  = odborovými svazy
+}
+
+% ZO — základní odborová organizace (f.)
+\AcroPropertiesSet{ZO}{
+	long-pgen-form  = základních odborových organizací,
+	long-pdat-form  = základním odborovým organizacím,
+	long-pacc-form  = základní odborové organizace,
+	long-ploc-form  = základních odborových organizacích,
+	long-pins-form  = základními odborovými organizacemi
+}
+
+% OSVČ — osoba samostatně výdělečně činná (f.)
+\AcroPropertiesSet{OSVČ}{
+	long-pgen-form  = osob samostatně výdělečně činných,
+	long-pdat-form  = osobám samostatně výdělečně činným,
+	long-pacc-form  = osoby samostatně výdělečně činné,
+	long-ploc-form  = osobách samostatně výdělečně činných,
+	long-pins-form  = osobami samostatně výdělečně činnými
+}
+
+% PKOV — podnikový koordinační odborový výbor (m. inan.)
+\AcroPropertiesSet{PKOV}{
+	long-pgen-form  = podnikových koordinačních odborových výborů,
+	long-pdat-form  = podnikovým koordinačním odborovým výborům,
+	long-pacc-form  = podnikové koordinační odborové výbory,
+	long-ploc-form  = podnikových koordinačních odborových výborech,
+	long-pins-form  = podnikovými koordinačními odborovými výbory
+}
+\AcroPropertiesSet{SDG}{
+	long-pgen-form  = Cílů udržitelného rozvoje,
+	long-pdat-form  = Cílům udržitelného rozvoje,
+	long-pacc-form  = Cíle udržitelného rozvoje,
+	long-ploc-form  = Cílech udržitelného rozvoje,
+	long-pins-form  = Cíli udržitelného rozvoje
+}
+\DeclareAcronym{WID}{
+	short        = WID,
+	long         = World Inequality Database,
+	single       = false,
 	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{PF}{
-	short		= TF,
-	alt			= PF,
-	long 		= {přenosová funkce, přenos},
-	foreign 	= Transfer Function,
-	single = false,
-	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{PSD}{
-	short		= PSD,
-	long 		= výkonová spektrální hustota,
-	foreign 	= Power Spectral Density,
-	single = false,
-	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{RBF}{
-	short		= RBF,
-	long 		= radiální bázová funkce,
-	long-plural-form = radiální bázové funkce,
-	foreign 	= Radial Basis Function,
-	tag			= zkr
-	}
-\DeclareAcronym{RCMT}{
-	short		= RCMT,
-	long 		= Ústav výrobních strojů a zařízení,
-	foreign 	= Research Center of Manufacturing Technology,
-	tag			= zkr
-	}
-\DeclareAcronym{SISO}{
-	short		= SISO,
-	long 		= {jediný vstup, jediný výstup},
-	foreign 	= Single Input Single Output,
-	single = false,
-	single-style = footnote,
-	tag			= zkr
-	}
-\DeclareAcronym{STFT}{
-	short		= STFT,
-	long 		= Krátkodobá Fourierova transformace,
-	foreign 	= Short-Time Fourier Transform,
-	single = false,
-	single-style = long-short,
-	tag			= zkr
-	}
-\DeclareAcronym{SVM}{
-	short		= SVM,
-	long 		= metoda podpůrných vektorů,
-	foreign 	= Support Vector Machines,
-	tag			= zkr
-	}
-\DeclareAcronym{TCP}{
-	short		= TCP,
-	long 		= špičce nástroje, %lokál špička nástroje
-	long-plural-form = špičky nástroje,
-	foreign 	= Tool Center Point,
-	tag			= zkr
-	}
-\DeclareAcronym{TDF}{
-	short		= TDF,
-	long 		= teplotně-deformační chování,
-	foreign	= teplotně-deformační funkcionál,
-	tag			= zkr
-	}
-\DeclareAcronym{WH}{
-	short		= WH,
-	long 		= upnutí,
-	foreign 	= Workpiece Holder,
-	single = false,
-	single-style = long-short,
-	tag			= zkr
-	}
+	tag          = zkr
+}
+\DeclareAcronym{geo-UK}{short=UK, long=Spojené království, tag=geo}
