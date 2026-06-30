@@ -1,16 +1,6 @@
-Index cenové hladiny (\ac{PLI}) v~porovnání s~průměrem EU27 ukazuje, že ČR dosahuje přibližně \SIrange{70}{75}{\percent} průměrné unijní cenové hladiny, což je paradoxní: pokud jsou ceny výrazně nižší, pak reálná kupní síla pracovníků není tak vzdálena od \acgen{EU} průměru, jak naznačují nominální čísla.
-Formálně se převod nominální veličiny~$\acs{var-Y}^{\acs{idx-EUR}}_{\acs{idx-z}}$ (v~eurech) na reálnou hodnotu v~paritě kupní síly~$\acs{var-Y}^{\acs{idx-PPS}}_{\acs{idx-z}}$ (\acs{EU}27\,=\,100) provádí dělením indexem cenové hladiny:
-\begin{equation}\label{eq:eur_to_pps}
-  \acs{var-Y}^{\acs{idx-PPS}}_{\acs{idx-z}}
-    = \frac{\acs{var-Y}^{\acs{idx-EUR}}_{\acs{idx-z}}}
-           {\acs{PLI}_{\acs{idx-z}} / 100},
-\end{equation}
-kde~$\acs{PLI}_{\acs{idx-z}}$ je index cenové hladiny země~$\acs{idx-z}$ vztažený k~průměru \acs{EU}27 (Eurostat \texttt{prc\_ppp\_ind}).
-Na rozdíl od kurzového převodu mezi měnami odráží \ac{PLI} skutečné cenové rozdíly v~koši zboží a~služeb, nikoliv pouze měnový kurz; je to proto preferovaný nástroj pro mezinárodní srovnání reálné kupní síly.
-Per-capita ukazatele typu \ac{HDP}/ob.\ se analogicky počítají dělením populací~$\acs{var-N}_{\acs{idx-z}}$:
-$\acs{var-Y}_{\acs{idx-pc},\acs{idx-z}} = \acs{var-Y}_{\acs{idx-z}} / \acs{var-N}_{\acs{idx-z}}$.
-Tento argument o~„nízké cenové hladině jako kompenzaci nízké mzdy” je ale krátkozraký: ceny spotřebního zboží v~ČR konvergují k~\acgen{EU} průměru rychleji než mzdy --- zejména v~kategoriích neobchodovatelného zboží a~služeb (nájmy, energie, potraviny) --- takže reálná výhoda nízkých cen eroduje.
-Výsledkem je progresivní ztráta cenové výhody: pracovníci platí stále více „za ceny \acgen{EU}”, ale dostávají stále méně „jako mzdy \acgen{EU}” (srov.~obr.~\ref{fig:stav_prijem_pomer}).
+Index cenové hladiny (\ac{PLI}) v~porovnání s~průměrem EU27 ukazuje, že ČR dosahuje přibližně \SIrange{70}{75}{\percent} průměrné unijní cenové hladiny, což je paradoxní: pokud jsou ceny výrazně nižší, pak reálná kupní síla pracovníků není tak vzdálena od \ac{EU} průměru, jak naznačují nominální čísla~\cite{eurostat_prc_ppp_ind_PLI_GDP}.
+Tento argument o~„nízké cenové hladině jako kompenzaci nízké mzdy” je ale krátkozraký: ceny spotřebního zboží v~ČR konvergují k~\ac{EU} průměru rychleji než mzdy --- zejména v~kategoriích neobchodovatelného zboží a~služeb (nájmy, energie, potraviny) --- takže reálná výhoda nízkých cen eroduje.
+Výsledkem je progresivní ztráta cenové výhody: pracovníci platí stále více „za ceny \ac{EU}”, ale dostávají stále méně „jako mzdy \ac{EU}” (srov.~obr.~\ref{fig:eu_konvergence}).
 Tento trend posiluje argument, že mzdová konvergence nemůže být odložena na neurčito s~odvoláním na nižší cenovou hladinu: zvyšování reálné kupní síly prostřednictvím kolektivního vyjednávání je systémovou nutností, nikoliv privilegiem.
 
 \input{texparts/python/eu_cenova_hladina}
