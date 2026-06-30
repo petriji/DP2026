@@ -185,7 +185,7 @@ savefig(fig1, "eu_odvetvove_mzdy_bar", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_odvetvove_mzdy_bar",
     caption=(
-        f"Hodinové náklady práce (PPS/h) v~klíčových odvětvích NACE, "
+        f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~klíčových odvětvích NACE, "
         f"vybrané země EU, {ref_year}. "
         f"Plná čára se~zarážkami~= průměr EU27."
     ),
@@ -229,7 +229,7 @@ if "EU27_2020" in lc_pps.index:
         "eu_odvetvove_mzdy_odchylka",
         caption=(
             f"Odchylka nákladů práce od průměru EU27, {ref_year}. "
-            f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}. "
+            f"\\si{{\\eur\\per\\hour}} přepočteno na \\si{{\\pps\\per\\hour}} pomocí \\texttt{{prc\\_ppp\\_ind}}. "
             f"Záporné hodnoty = nižší náklady práce než průměr EU27."
         ),
         label="fig:eu_odvetvove_mzdy_odchylka",
@@ -312,8 +312,8 @@ savefig(fig_maps, "eu_odvetvove_mzdy_mapa", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "eu_odvetvove_mzdy_mapa",
     caption=(
-        f"Hodinové náklady práce (PPS/h) v~odvětvích Průmysl~(C), Obchod~(G), ICT~(J) a~Finance~(K), EU27, {ref_year}. "
-        f"EUR/h přepočteno na PPS/h pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná. "
+        f"Hodinové náklady práce (\\si{{\\pps\\per\\hour}}) v~odvětvích Průmysl~(C), Obchod~(G), ICT~(J) a~Finance~(K), EU27, {ref_year}. "
+        f"\\si{{\\eur\\per\\hour}} přepočteno na \\si{{\\pps\\per\\hour}} pomocí \\texttt{{prc\\_ppp\\_ind}}; šedá~= data nedostupná. "
         f"Společná barevná škála umožňuje porovnání mezi panely."
     ),
     label="fig:eu_odvetvove_mzdy_mapa",
