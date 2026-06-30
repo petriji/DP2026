@@ -273,6 +273,10 @@
 %   Example: \facultylogo{logo/logo_MUVS_cb.pdf}
 \gdef\@facultylogo{}
 \newcommand{\facultylogo}[1]{\gdef\@facultylogo{#1}}
+% \remarksqrcode{url}: optional repository QR code shown at bottom-right of
+%   the remarks page.
+\gdef\@remarksqrcode{}
+\newcommand{\remarksqrcode}[1]{\gdef\@remarksqrcode{#1}}
 % \normostrana{N}: normostrana (standard-page) count for the citation page.
 %   N = total body character count / 1800 (ISO 690 / Czech thesis convention).
 %   Omit or leave commented to suppress the line entirely.
@@ -1248,7 +1252,12 @@
   \vspace*{\CTU@frontskip}%
   \noindent\ignorespaces
 }{%
-  \par\clearpage
+  \par
+  \ifx\@remarksqrcode\@empty\else
+    \vspace*{\fill}%
+    \noindent\hfill\qrcode[height=2.5\baselineskip]{\@remarksqrcode}\par
+  \fi
+  \clearpage
 }
 %
 % \CTUassignment{file}: include the thesis assignment form as a full-page PDF.
@@ -1816,6 +1825,7 @@
 % csquotes: context-sensitive quotation marks; mandatory biblatex companion.
 %   \MakeOuterQuote{"}: straight " in source auto-converts to „…" in Czech.
 \RequirePackage{csquotes}
+\RequirePackage{qrcode}
 \MakeOuterQuote{"}
 % \juv: inline mark-up for footnote-style quotes.
 \newcommand{\juv}[1]{,#1`}

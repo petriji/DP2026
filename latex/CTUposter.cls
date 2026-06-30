@@ -167,6 +167,7 @@
 \setlist{nosep,leftmargin=*}
 
 \RequirePackage{csquotes}
+\RequirePackage{qrcode}
 
 % Two-column body
 \RequirePackage{multicol}
@@ -473,35 +474,80 @@
 % The tag does NOT need to exist at compile time; the URL becomes valid as
 % soon as the tag is pushed to the remote.
 % ----------------------------------------------------------------------------
+\newsavebox{\CTUP@contacttextbox}
+\newsavebox{\CTUP@contactfullbox}
+\newlength\CTUP@contacttextheight
 \newcommand{\postercontactblock}{%
-  % Keep contact details at the bottom of the current column.
-  \par\vspace*{\fill}%
-  \par\vspace{4mm}%
-  {\color{CTUgrey}\hrule height 0.3mm}\vspace{3mm}%
-  \begingroup
-  \sffamily\small
-  \textbf{\CTUP@lbl@contact:}\\
-  \CTUP@author
-  \ifx\CTUP@emailx\@empty\else
-    \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
-  \fi
-  \ifx\CTUP@phone\@empty\else
-    \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
-  \fi
-  \par
-  \ifx\CTUP@supervisor\@empty\else
-    \medskip\textit{\CTUP@supervisor}\par
-  \fi
-  \edef\CTUP@tmpurl{\CTU@posterurl}%
-  \ifx\CTUP@tmpurl\@empty\else
-    \medskip
-    \textbf{\CTUP@lbl@repo:}\\
-    \href{\CTUP@tmpurl}{\nolinkurl{\CTUP@tmpurl}}\par
-  \fi
-  \ifx\CTUP@year\@empty\else
-    \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
-  \fi
-  \endgroup
+  % Render the whole contact block (rule + text + QR) into ONE unbreakable box
+  % so that \vspace*{\fill} can sit its BOTTOM exactly on the column bottom
+  % without the loose lines overflowing past the page edge.
+  \sbox{\CTUP@contactfullbox}{%
+    \begin{minipage}[t]{\linewidth}
+      {\color{CTUgrey}\hrule height 0.3mm}\vspace{3mm}%
+      \begingroup
+      \sffamily\small
+      \edef\CTUP@tmpurl{\CTU@posterurl}%
+      \ifx\CTUP@tmpurl\@empty
+        \textbf{\CTUP@lbl@contact:}\\
+        \CTUP@author
+        \ifx\CTUP@emailx\@empty\else
+          \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
+        \fi
+        \ifx\CTUP@phone\@empty\else
+          \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
+        \fi
+        \par
+        \ifx\CTUP@supervisor\@empty\else
+          \medskip\textit{\CTUP@supervisor}\par
+        \fi
+        \ifx\CTUP@year\@empty\else
+          \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
+        \fi
+      \else
+        \sbox{\CTUP@contacttextbox}{%
+          \begin{minipage}[t]{0.68\linewidth}
+            \vspace{0pt}% ensure top baseline anchor
+            \textbf{\CTUP@lbl@contact:}\\
+            \CTUP@author
+            \ifx\CTUP@emailx\@empty\else
+              \space\textbar\space \href{mailto:\CTUP@emailx}{\CTUP@emailx}%
+            \fi
+            \ifx\CTUP@phone\@empty\else
+              \space\textbar\space \CTUP@lbl@phone~\CTUP@phone
+            \fi
+            \par
+            \ifx\CTUP@supervisor\@empty\else
+              \medskip\textit{\CTUP@supervisor}\par
+            \fi
+            \medskip
+            \textbf{\CTUP@lbl@repo:}\\
+            \href{\CTUP@tmpurl}{\nolinkurl{\CTUP@tmpurl}}\par
+            \ifx\CTUP@year\@empty\else
+              \medskip\textbf{\CTUP@lbl@year:}~\CTUP@year\par
+            \fi
+          \end{minipage}%
+        }%
+        \setlength\CTUP@contacttextheight{\ht\CTUP@contacttextbox}%
+        \addtolength\CTUP@contacttextheight{\dp\CTUP@contacttextbox}%
+        \leavevmode
+        \noindent\usebox{\CTUP@contacttextbox}%
+        \hfill
+        \begin{minipage}[t]{0.28\linewidth}
+          \vspace{0pt}% ensure top baseline anchor
+          \raggedleft
+          \qrcode[height=\CTUP@contacttextheight]{\CTUP@tmpurl}\par
+        \end{minipage}%
+      \fi
+      \endgroup
+    \end{minipage}%
+  }%
+  % Push the boxed block to the column bottom. The boxed minipage[t] has a
+  % large DEPTH (content below its top baseline); \raisebox by that depth makes
+  % the box depth zero (bottom edge = baseline), so after \vspace*{\fill} the
+  % baseline lands on the column bottom and the whole block sits ABOVE it
+  % without spilling past the page edge.
+  \par\vspace*{\fill}\nopagebreak
+  \noindent\raisebox{\dp\CTUP@contactfullbox}{\usebox{\CTUP@contactfullbox}}\par
 }
 
 % ----------------------------------------------------------------------------
