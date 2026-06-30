@@ -17,6 +17,7 @@ from typing import Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from config import (
     CMAP_DIVERGING,
@@ -256,3 +257,94 @@ def save_figure_tex(
     out.write_text(tex, encoding="utf-8")
     print(f"Saved TeX: {out}")
     return out
+
+
+# ── CZ figure annotation helpers ─────────────────────────────────────────────
+
+def _fmt_czk(amount: int) -> str:
+    """Formátuje celé číslo jako CZK s úzkými mezerami jako oddělovači tisíců."""
+    return f"{amount:,}".replace(",", "\u202f") + "\u202fKč"
+
+
+def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
+                      color: str, alpha: float = 0.7,
+                      linestyle: tuple = (0, (3, 4))) -> None:
+    """Přidá svislou referenční čáru s anotací do grafu ax.
+
+    Anotace je umístěna nad osou (axes fraction pro y = 1) aby byla
+    jasně viditelná a nepřekrývala data.
+    """
+    ax.axvline(x_kczk, color=color, linewidth=0.8, linestyle=linestyle,
+               alpha=alpha, zorder=1)
+    ann = ax.annotate(
+        label,
+        xy=(x_kczk, 1),
+        xycoords=("data", "axes fraction"),
+        xytext=(0, 8), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color=color, va="bottom", ha="center",
+    )
+    ann.set_clip_on(False)
+
+
+def _add_linestyle_key(ax: plt.Axes, *, hspace: float | None = None,
+                       title_pad: float = 33,
+                       svarc_linestyle: tuple = (0, (6, 1))) -> None:
+    """Přidá legendu typů čar pod osu x (zarovnanou na střed obrázku).
+
+    Barva (typ OSVČ / zaměstnanec) je vysvětlena inline popisky přímo u křivek;
+    legenda vysvětluje, co zobrazuje každý linestyle.
+    """
+    fig = ax.get_figure()
+    key = [
+        Line2D([0], [0], color="#444444", linewidth=1.5, linestyle="--",
+               label="výdaje\u00a0dle\u00a0paušálu"),
+        Line2D([0], [0], color="#444444", linewidth=1.5, linestyle="-.", alpha=0.6,
+               label="výdajový\u00a0paušál"),
+        Line2D([0], [0], color="#444444", linewidth=2.0, linestyle=":",
+               label="paušální\u00a0daň"),
+        Line2D([0], [0], color="#888888", linewidth=1.0, linestyle=(0, (3, 1.5)), alpha=0.7,
+               label="bez\u00a0výdajů"),
+        Line2D([0], [0], color="#888888", linewidth=1.2, linestyle=svarc_linestyle, alpha=0.85,
+               label="16\u202f%\u00a0výdaje\u00a0(PAQ)"),
+    ]
+    fig._tight_layout_kwargs = {"pad": 1.5}
+    spa = {"right": 0.78}
+    if hspace is not None:
+        spa["hspace"] = hspace
+    fig._subplots_adjust_kwargs = spa
+    # Place at figure bottom, horizontally centred on the figure (not axes).
+    fig_h = fig.get_figheight()            # inches
+    gap_in = (7 + FONT_SIZE) / 72          # ~xlabel height + small gap
+    y_frac = gap_in / fig_h                # fraction of figure height
+    fig.legend(handles=key, frameon=False, fontsize=FONT_SIZE - 2,
+               loc="upper center", bbox_to_anchor=(0.5, y_frac),
+               ncols=5, handlelength=1.2, handletextpad=0.4, columnspacing=0.8)
+    # Move the axes title → fig.suptitle so it is centred on the figure
+    # (not on the axes, which are shifted left by right=0.78).
+    ax_top = fig.axes[0]
+    title_text = ax_top.get_title()
+    if title_text:
+        ax_top.set_title("")               # remove the axes-level title
+        fig.suptitle(title_text, y=1.0, fontsize=FONT_SIZE,
+                     va="bottom")
+
+
+def _bottom_legend(fig: plt.Figure, c_emp: str,
+                   osvc_types: list[tuple[float, str, str]],
+                   ax: plt.Axes | None = None) -> None:
+    """Přidá sdílenou legendu barev dole mimo osy.
+
+    Pokud je předána `ax`, přidá také interní linestyle key (typ čáry).
+    """
+    fig.subplots_adjust(bottom=0.20)
+    legend_handles = [
+        Line2D([0], [0], color=c_emp, linewidth=2.0,
+               label="Zaměstnanec (celk.\u00a0nákl.)"),
+    ]
+    for _er, lbl, col in osvc_types:
+        legend_handles.append(
+            Line2D([0], [0], color=col, linewidth=1.5, linestyle="--", label=lbl))
+    fig.legend(handles=legend_handles, frameon=False, fontsize=FONT_SIZE - 2,
+               loc="lower center", bbox_to_anchor=(0.5, -0.01), ncols=2)
+    if ax is not None:
+        _add_linestyle_key(ax)
