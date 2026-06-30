@@ -804,19 +804,42 @@ def plot_tax_wedge_vs_income(
     )
 
     # Referenční svislé čáry
+    # Poster-only nudges keep top x-line labels from colliding in the compact
+    # half-column layout. Thesis layout stays unchanged.
+    _ref_nudges = {
+        "min": (0, 0),
+        "median": (0, 0),
+        "it": (0, 0),
+        "dph": (0, 0),
+    }
+    if IS_POSTER_RUN:
+        _ref_nudges = {
+            "min": (0, 0),
+            "median": (14, 0),
+            "it": (12, 0),
+            "dph": (44, 0),
+        }
     _add_vertical_ref(ax, MIN_WAGE_TOTAL_COST / 1_000,
                       f"min.~mzda\n{_fmt_czk(MIN_WAGE_TOTAL_COST)}",
-                      color="#cc6600", linestyle=(0, (4, 3)))
+                      color="#cc6600", linestyle=(0, (4, 3)),
+                      x_offset_pt=_ref_nudges["min"][0],
+                      y_offset_pt=_ref_nudges["min"][1])
     _add_vertical_ref(ax, MEDIAN_EMP_TOTAL_COST / 1_000,
                       f"medián~\n{_fmt_czk(MEDIAN_EMP_TOTAL_COST)}",
-                      color="#888888")
+                      color="#888888",
+                      x_offset_pt=_ref_nudges["median"][0],
+                      y_offset_pt=_ref_nudges["median"][1])
     _add_vertical_ref(ax, IT_MEDIAN_TOTAL_COST / 1_000,
                       f"medián~ICT~(ISCO~25)\n{_fmt_czk(IT_MEDIAN_TOTAL_COST)}",
-                      color="#1a7abf")
+                      color="#1a7abf",
+                      x_offset_pt=_ref_nudges["it"][0],
+                      y_offset_pt=_ref_nudges["it"][1])
     if DPH_THRESHOLD_MONTHLY <= income_max:
         _add_vertical_ref(ax, DPH_THRESHOLD_MONTHLY / 1_000,
                           f"práh~DPH\n{_fmt_czk(DPH_THRESHOLD_MONTHLY)}",
-                          color="#cc0000", linestyle=(0, (5, 3)))
+                          color="#cc0000", linestyle=(0, (5, 3)),
+                          x_offset_pt=_ref_nudges["dph"][0],
+                          y_offset_pt=_ref_nudges["dph"][1])
 
     ax.set_xlabel("celkové náklady zaměstnavatele / příjmy OSVČ [tis.~Kč/měsíc]")
     ax.set_ylabel("daňový klín [%]")
@@ -869,6 +892,33 @@ def plot_tax_wedge_vs_income(
                 xytext=(3, 0), textcoords="offset points",
                 fontsize=cz_label_fs, color="#888888", va="center")
     _apply_cz_model_layout(ax)
+    if IS_POSTER_RUN:
+        # Poster-only: reserve extra top/bottom room so top reference labels,
+        # title, ticks and x-label do not collide in the compact layout.
+        _spa = dict(getattr(fig, "_subplots_adjust_kwargs", {}))
+        _spa["top"] = 0.79
+        _spa["bottom"] = 0.14
+        fig._subplots_adjust_kwargs = _spa
+        # Poster-only: move suptitle 12pt upward in the final PGF recenter pass.
+        fig._suptitle_gap_pt = getattr(fig, "_suptitle_gap_pt", 5) + 12
+        # Poster-only: move y-label 4pt inward toward the axis.
+        ax.yaxis.labelpad -= 4
+
+        _st = getattr(fig, "_suptitle", None)
+        _xlabel = ax.get_xlabel()
+        if _xlabel:
+            _xlabel_fs = ax.xaxis.label.get_fontsize()
+            ax.set_xlabel("")
+            fig.supxlabel(_xlabel, x=0.5, y=0.016, ha="center", va="bottom", fontsize=_xlabel_fs)
+        if _st is not None:
+            _st_text = _st.get_text().strip()
+            if _st_text and not _st_text.startswith(r"\makebox[0pt][c]{\shortstack{"):
+                _lines = [ln.strip() for ln in _st_text.split("\n") if ln.strip()]
+                _st.set_text(r"\makebox[0pt][c]{\shortstack{" + r"\\[-1pt]".join(_lines) + r"}}")
+            _st.set_x(0.5)
+            _st.set_horizontalalignment("left")
+            _st.set_y(0.992)
+            _st.set_verticalalignment("top")
     return fig
 
 

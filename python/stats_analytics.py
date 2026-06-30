@@ -87,6 +87,10 @@ _DEF_STR_RE = re.compile(r'\\def\\str([A-Za-z0-9_]+)\{')
 _YEAR_RE = re.compile(r'\b(?:19|20)\d{2}\b')
 _LABEL_RE = re.compile(r'\\label\{([^}]+)\}')
 _AUX_LABEL_RE = re.compile(r'\\newlabel\{([^}]+)\}\{\{([^}]+)\}')
+_DQ_FALLBACK_RE = re.compile(
+    r'^\[data-quality\]\[WARNING\]\[fallback\]\s*\|\s*(?P<msg>.*?)\s*(?:\|\s*(?P<meta>.*))?$'
+)
+_DQ_LINE_RE = re.compile(r'\bline=(\d+)\b')
 
 
 def _latex_escape(text: str) -> str:
@@ -193,18 +197,61 @@ def _any_missing(entry: dict, referenced: set[str]) -> bool:
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def _run(key: str, entry: dict, *, target_year: int) -> None:
+def _parse_runtime_fallbacks(output: str) -> list[dict[str, int | str | None]]:
+    """Parse runtime fallback warnings from subprocess output text."""
+    rows: list[dict[str, int | str | None]] = []
+    for raw in output.splitlines():
+        m = _DQ_FALLBACK_RE.match(raw.strip())
+        if not m:
+            continue
+        msg = (m.group("msg") or "").strip()
+        meta = m.group("meta") or ""
+        line: int | None = None
+        lm = _DQ_LINE_RE.search(meta)
+        if lm:
+            try:
+                line = int(lm.group(1))
+            except ValueError:
+                line = None
+        rows.append({"message": msg, "line": line})
+
+    # Stable de-dup by (line, message)
+    seen: set[tuple[int | None, str]] = set()
+    out: list[dict[str, int | str | None]] = []
+    for row in rows:
+        key = (row["line"], str(row["message"]))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+    return out
+
+
+def _run(key: str, entry: dict, *, target_year: int) -> list[dict[str, int | str | None]]:
     script = entry["script"]
     print(f"[stats_analytics] running: {script}", flush=True)
     env = os.environ.copy()
     env["DP_TARGET_YEAR"] = str(target_year)
-    result = subprocess.run([sys.executable, script], cwd=PYTHON_DIR, env=env)
+    result = subprocess.run(
+        [sys.executable, script],
+        cwd=PYTHON_DIR,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+    if result.stdout:
+        print(result.stdout, end="", flush=True)
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr, flush=True)
+
+    runtime_fallbacks = _parse_runtime_fallbacks((result.stdout or "") + "\n" + (result.stderr or ""))
     if result.returncode != 0:
         print(
             f"[stats_analytics] ERROR: {script} exited with code {result.returncode}",
             flush=True,
         )
         sys.exit(result.returncode)
+    return runtime_fallbacks
 
 
 def _covered_stems(referenced: set[str]) -> set[str]:
@@ -420,7 +467,13 @@ def _collect_script_quality_metadata(script_relpath: str) -> dict:
 
     script_path = PYTHON_DIR / script_relpath
     if not script_path.exists():
-        return {"datasets": [], "filters": [], "fallbacks": [], "fallbacks_by_stem": {}}
+        return {
+            "datasets": [],
+            "filters": [],
+            "fallbacks": [],
+            "fallbacks_by_stem": {},
+            "fallback_line_to_stem": {},
+        }
 
     source = script_path.read_text(encoding="utf-8", errors="replace")
     try:
@@ -428,7 +481,13 @@ def _collect_script_quality_metadata(script_relpath: str) -> dict:
             warnings.simplefilter("ignore", SyntaxWarning)
             tree = ast.parse(source)
     except SyntaxError:
-        return {"datasets": [], "filters": [], "fallbacks": [], "fallbacks_by_stem": {}}
+        return {
+            "datasets": [],
+            "filters": [],
+            "fallbacks": [],
+            "fallbacks_by_stem": {},
+            "fallback_line_to_stem": {},
+        }
 
     datasets: list[str] = []
     filters: list[str] = []
@@ -503,6 +562,7 @@ def _collect_script_quality_metadata(script_relpath: str) -> dict:
     # If a fallback appears after all saves (e.g. post-loop clean-up), assign
     # it to the last save stem instead.
     fallbacks_by_stem: dict[str, list[str]] = {}
+    fallback_line_to_stem: dict[int, str] = {}
     for fb_line, fb_msg in fallback_calls:
         target_stem: str | None = None
         for save_line, save_stem in save_calls:
@@ -513,6 +573,7 @@ def _collect_script_quality_metadata(script_relpath: str) -> dict:
             target_stem = save_calls[-1][1]
         if target_stem:
             fallbacks_by_stem.setdefault(target_stem, []).append(fb_msg)
+            fallback_line_to_stem[fb_line] = target_stem
 
     # Keep order stable while deduplicating.
     def _uniq(values: list[str]) -> list[str]:
@@ -534,6 +595,7 @@ def _collect_script_quality_metadata(script_relpath: str) -> dict:
         "filters": _uniq(filters),
         "fallbacks": _uniq([msg for _, msg in fallback_calls]),
         "fallbacks_by_stem": fallbacks_by_stem,
+        "fallback_line_to_stem": fallback_line_to_stem,
     }
 
 
@@ -542,6 +604,7 @@ def _write_pipeline_quality_table(
     audit_rows: list[dict],
     *,
     target_year: int,
+    runtime_fallbacks_by_script: dict[str, list[dict[str, int | str | None]]] | None = None,
 ) -> None:
     """Create a TeX table for pipeline attachment with dataset/filter metadata."""
     audit_by_stem = {row["stem"]: row for row in audit_rows}
@@ -574,6 +637,37 @@ def _write_pipeline_quality_table(
                 if stem_label in label_to_no:
                     figure_ref = label_to_no[stem_label]
         script_display = script.replace("analyses/", "")
+
+        runtime_rows = (runtime_fallbacks_by_script or {}).get(script, [])
+        runtime_by_stem: dict[str, list[str]] = {}
+        line_to_stem: dict[int, str] = meta.get("fallback_line_to_stem", {})
+        for rec in runtime_rows:
+            msg = str(rec.get("message", "")).strip()
+            if not msg:
+                continue
+            line = rec.get("line")
+            target_stem: str | None = None
+            if isinstance(line, int):
+                target_stem = line_to_stem.get(line)
+            if target_stem is None:
+                # Conservatively attribute unmatched warnings to all stems
+                # produced by this script, so runtime-triggered fallbacks are
+                # visible even when callsite line can't be resolved.
+                for s in meta.get("fallbacks_by_stem", {}).keys():
+                    runtime_by_stem.setdefault(s, []).append(msg)
+            else:
+                runtime_by_stem.setdefault(target_stem, []).append(msg)
+
+        # De-dup runtime messages per stem while preserving order.
+        for s, msgs in list(runtime_by_stem.items()):
+            seen_msg: set[str] = set()
+            deduped: list[str] = []
+            for m in msgs:
+                if m in seen_msg:
+                    continue
+                seen_msg.add(m)
+                deduped.append(m)
+            runtime_by_stem[s] = deduped
 
         # Merge dataset + filter info into one column.
         # Format per dataset: "DatasetCode (filter_string)" when filter available.
@@ -613,7 +707,7 @@ def _write_pipeline_quality_table(
                 remarks_parts.append("Popisek nenalezen")
             else:
                 remarks_parts.append(msg)
-        stem_fallbacks = meta.get("fallbacks_by_stem", {}).get(stem, [])
+        stem_fallbacks = runtime_by_stem.get(stem, [])
         if stem_fallbacks:
             remarks_parts.append("Fallback vetve: " + "; ".join(stem_fallbacks))
         remarks_txt = " | ".join(remarks_parts)
@@ -861,6 +955,7 @@ def main() -> None:
             parser.error(f"Unknown key '{args.force}'. Valid keys: {', '.join(valid_keys)}, all.")
 
     ran_any = False
+    runtime_fallbacks_by_script: dict[str, list[dict[str, int | str | None]]] = {}
     for key, entry in REGISTRY.items():
         # Is this entry referenced in the .tex project?
         active = any(
@@ -872,7 +967,10 @@ def main() -> None:
             continue
 
         if key in forced or _any_missing(entry, referenced):
-            _run(key, entry, target_year=args.target_year)
+            script = entry["script"]
+            runtime_rows = _run(key, entry, target_year=args.target_year)
+            if runtime_rows:
+                runtime_fallbacks_by_script.setdefault(script, []).extend(runtime_rows)
             ran_any = True
 
     if not ran_any:
@@ -880,7 +978,12 @@ def main() -> None:
 
     _sync_strings_from_tex(referenced)
     audit_rows = _audit_target_year(referenced, target_year=args.target_year)
-    _write_pipeline_quality_table(referenced, audit_rows, target_year=args.target_year)
+    _write_pipeline_quality_table(
+        referenced,
+        audit_rows,
+        target_year=args.target_year,
+        runtime_fallbacks_by_script=runtime_fallbacks_by_script,
+    )
 
 
 if __name__ == "__main__":

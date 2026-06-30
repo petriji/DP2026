@@ -47,6 +47,7 @@ def scatter_xy(
     year_tolerance: int = 2,
     label_angle_nudges: Optional[dict[str, float]] = None,
     label_radius_pts: float = 5.39,
+    trendline_stat: str = "r2",
 ) -> plt.Figure:
     """Scatter plot of *ds_x* vs *ds_y* for a single year.
 
@@ -83,6 +84,9 @@ def scatter_xy(
         Applies only to highlighted labels.
     label_radius_pts:
         Label anchor radius in points for highlighted labels.
+    trendline_stat:
+        Statistic shown next to the trendline. Supported values: "r2"
+        (default) and "r".
     color_col:
         Column in ds_x for categorical group colouring (applied to
         non-highlighted points only).
@@ -199,15 +203,20 @@ def scatter_xy(
         y_line = np.polyval(coeffs, x_line)
         corr = np.corrcoef(merged["x"], merged["y"])[0, 1]
         r2 = corr**2
+        if trendline_stat == "r":
+            stat_label = f"$r={corr:.2f}$"
+        else:
+            stat_label = f"$R^2={r2:.2f}$"
         ax.plot(x_line, y_line, color="gray", linewidth=1, linestyle="--",
-            label=f"$R^2={r2:.2f}$")
+            label=stat_label)
         if IS_POSTER_RUN:
-            # Poster: render R^2 as right-anchored axes-fraction text instead of
+            # Poster: render the selected trend statistic as right-anchored
+            # axes-fraction text instead of
             # a legend. Anchored at the bottom-right corner (empty in all four
             # korelace panels) with ha="right" so the LaTeX-inflated text grows
             # leftward and never overflows the right spine or collides with the
             # highlighted country points clustered in the upper corners.
-            ax.text(0.97, 0.04, f"$R^2={r2:.2f}$",
+            ax.text(0.97, 0.04, stat_label,
                     transform=ax.transAxes, ha="right", va="bottom",
                     fontsize=POSTER_FIGURE_LABEL_SIZE, color="#555555")
         else:

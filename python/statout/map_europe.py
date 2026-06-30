@@ -72,7 +72,7 @@ _EU_DEFAULT_HEIGHT_CM = (
 # Shared colorbar height used by all choropleth backends (map_europe, map_cz,
 # composite panels) so the rasterised colorbar strip deduplicates to the same
 # _shared/ PNG via content hash regardless of the enclosing figure height.
-CHOROPLETH_COLORBAR_HEIGHT_IN: float = _EU_DEFAULT_HEIGHT_CM / 2.54 * 0.76
+CHOROPLETH_COLORBAR_HEIGHT_IN: float = _EU_DEFAULT_HEIGHT_CM / 2.54 * 0.68
 
 # Malta centroid in EPSG:3035; used when 110m Natural Earth omits MT geometry.
 _MT_FALLBACK_XY = (4_719_360, 1_442_124)
@@ -144,6 +144,7 @@ def choropleth(
     show_colorbar: bool = True,
     malta_fallback_marker: bool = True,
     country_label_size: Optional[float] = None,
+    colorbar_labelpad_pt: Optional[float] = None,
 ) -> plt.Figure:
     # Default markers on every choropleth colorbar (key reference economies).
     if highlight_colorbar is None:
@@ -216,6 +217,14 @@ def choropleth(
     else:
         fig = ax.figure  # type: ignore[assignment]
 
+    # Keep EU choropleths on a unified label-placement baseline.
+    # Timeline and line/scatter figures may still use nudge macros,
+    # but map labels should stay at map_europe centroid positions.
+    fig._apply_label_nudges = False
+    # When analyses pass country-code nudge labels ("CZ", "DK", ...),
+    # constrain matching to colorbar-side geo labels only.
+    fig._nudge_geo_colorbar_only = True
+
     chosen_cmap = cmap or (CMAP_DIVERGING if diverging else CMAP_SEQUENTIAL)
     # Resample to n_colors levels when requested (improves visual gradation)
     if n_colors != 256:
@@ -250,12 +259,14 @@ def choropleth(
     sm = mpl.cm.ScalarMappable(cmap=chosen_cmap, norm=norm)
     sm.set_array([])
     cbar = None
+    cbar_extra_right_ax = 0.0
+    title_center_x = 0.5
     if show_colorbar:
         cb_label = colorbar_label or (f"{ds.name} [{ds.unit}]" if ds.unit else ds.name)
         # Wrap colorbar label in \NoHyper so that hyperref boxes (from \acs{})
         # do not float horizontally next to a vertically-rotated label.
         if mpl.get_backend() == "pgf" and cb_label and "\\acs" in cb_label:
-            cb_label = r"\NoHyper " + cb_label + r" \endNoHyper"
+            cb_label = r"\NoHyper " + cb_label + r"\endNoHyper"
         # Fixed-size colourbar in inches (independent of axes aspect) so the
         # rasterised strip pixel dimensions are identical to map_cz output
         # and dedups to python/figures/_shared/ via content hash.
@@ -264,7 +275,9 @@ def choropleth(
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         cb_width_ax = 0.08
         gap_4pt_ax = (4.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
-        cb_anchor_ax = 1.045 + gap_4pt_ax
+        gap_2pt_ax = (2.0 / 72.0) / (fig.get_figwidth() * ax.get_position().width)
+        # Keep the existing 8pt separation and add another 2pt as requested.
+        cb_anchor_ax = 1.020 + gap_4pt_ax + gap_4pt_ax + gap_2pt_ax
         cax = inset_axes(
             ax, width=cb_width_ax, height=CHOROPLETH_COLORBAR_HEIGHT_IN,
             loc="center left",
@@ -280,7 +293,23 @@ def choropleth(
             cbar.ax.tick_params(labelsize=_cbar_fs)
             cbar.ax.yaxis.label.set_fontsize(_cbar_fs)
             cbar.ax.yaxis.label.set_rotation(90)
-            cbar.ax.yaxis.labelpad = 10
+            cbar.ax.yaxis.labelpad = 10 if colorbar_labelpad_pt is None else float(colorbar_labelpad_pt)
+
+        # Estimate right-side content width purely from typographic metrics.
+        # Agg pixel measurements in PGF mode overestimate LaTeX/CM glyph widths
+        # by ~2×, producing an over-wide block_factor and empty right space.
+        # Strategy: char_count × 0.50 em (CM tabular digit) + labelpad + 1 em label.
+        fig.canvas.draw()  # populate tick label text
+        _tick_strs = [
+            t.get_text() for t in cbar.ax.get_yticklabels() if t.get_text().strip()
+        ]
+        _max_chars = max((len(s) for s in _tick_strs), default=2)
+        _fs = float(IS_POSTER_RUN and POSTER_FIGURE_LABEL_SIZE or FIGURE_LABEL_SIZE)
+        # right-side content in pt: compact estimate tuned to LaTeX output
+        # (digits in CM are narrower than Agg reports for PGF previews).
+        _right_content_pt = _max_chars * _fs * 0.38 + 2.0 + (_fs * 0.45)
+        # Convert to figure fraction (pt → inches → fraction)
+        _right_content_frac = _right_content_pt / 72.0 / fig.get_figwidth()
 
     if highlight_colorbar and cbar is not None:
         import matplotlib.transforms as _mtx
@@ -309,7 +338,7 @@ def choropleth(
             )
             # In PGF/main.tex context, acro labels render as \acs{geo-XX}.
             # For standalone PDF exports, callers can force plain ISO labels.
-            lbl = geo if plain_highlight_labels else (rf"\acs{{geo-{geo}}}" if _pgf else geo)
+            lbl = geo if plain_highlight_labels else (rf"\acs{{geo-{geo}}}\relax" if _pgf else geo)
             # Place label 3pt to the left of the marker using an offset transform.
             _label_trans = _mtx.offset_copy(trans, fig=fig, x=-3, y=0, units="points")
             cbar.ax.text(
@@ -367,6 +396,10 @@ def choropleth(
                     linewidths=0.5,
                     zorder=8,
                 )
+                import matplotlib.transforms as _mtx
+                _mt_label_trans = _mtx.offset_copy(
+                    ax.transData, fig=fig, x=0, y=3, units="points"
+                )
                 ax.text(
                     mx + _MT_LABEL_DX,
                     my,
@@ -376,6 +409,7 @@ def choropleth(
                     va="center",
                     color="black",
                     fontweight="bold",
+                    transform=_mt_label_trans,
                     path_effects=[
                         __import__("matplotlib.patheffects", fromlist=["withStroke"])
                         .withStroke(linewidth=1.5, foreground="white")
@@ -401,26 +435,62 @@ def choropleth(
     # Title centred over the full figure (axes + colourbar) with compact padding.
     # _subplots_adjust_kwargs is read by savefig() to re-apply this after
     # tight_layout() (which would otherwise clobber the margins).
+    auto_figsize = figsize is None and ax is None
+
     if show_colorbar:
-        side_margin = 0.03
-        block_factor = cb_anchor_ax + cb_width_ax
-        axes_width = (1.0 - 2.0 * side_margin) / block_factor
-        axes_left = side_margin
+        # Fit the whole block (map + colorbar + right label content), then center it
+        # and nudge slightly right so optical alignment matches surrounding text.
+        side_margin = 0.01
+        axes_width = (
+            (1.0 - (2.0 * side_margin) - _right_content_frac)
+            / (cb_anchor_ax + cb_width_ax)
+        )
+        block_width = axes_width * (cb_anchor_ax + cb_width_ax) + _right_content_frac
+        # Previous +4pt shift was still visually left; add +20pt more.
+        center_shift_right = (24.0 / 72.0) / fig.get_figwidth()
+        axes_left = ((1.0 - block_width) / 2.0) + center_shift_right
+        max_left = 1.0 - block_width
+        axes_left = min(max_left, max(0.0, axes_left))
+        title_center_x = axes_left + (block_width / 2.0)
         axes_right = axes_left + axes_width
-        layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": 0.01}
+        layout_kwargs = {"left": axes_left, "right": axes_right, "bottom": _EU_BOT_FRAC}
     else:
-        layout_kwargs = {"left": 0.03, "right": 0.97, "bottom": 0.01}
+        layout_kwargs = {"left": 0.03, "right": 0.97, "bottom": _EU_BOT_FRAC}
     if title:
-        layout_kwargs["top"] = 0.88
+        layout_kwargs["top"] = _EU_TOP_FRAC
         fig.subplots_adjust(**layout_kwargs)
         fig._subplots_adjust_kwargs = layout_kwargs
-        fig._tight_layout_kwargs = {"pad": 0.15}
+        fig._tight_layout_kwargs = {"pad": 0.1}
+        # Keep exactly the intended gap to map content; savefig_pgf trims the
+        # vertical canvas while preserving column width.
         fig._suptitle_gap_pt = 4
-        fig.suptitle(title, fontsize=FIGURE_TITLE_SIZE,
-             y=0.92, ha="center")
+        fig._pgf_trim_vertical = True
+        fig.suptitle(
+            title,
+            fontsize=FIGURE_TITLE_SIZE,
+            y=0.940,
+            x=title_center_x,
+            ha="center",
+        )
     else:
         fig.subplots_adjust(**layout_kwargs)
         fig._subplots_adjust_kwargs = layout_kwargs
         fig._tight_layout_kwargs = {"pad": 0.15}
+
+    if auto_figsize:
+        top_frac = float(layout_kwargs.get("top", 0.88))
+        bottom_frac = float(layout_kwargs.get("bottom", 0.01))
+        axes_width_frac = float(layout_kwargs["right"] - layout_kwargs["left"])
+        y_span = eu_ylim[1] - eu_ylim[0]
+        if y_span > 0 and top_frac > bottom_frac:
+            data_aspect = (_EU_XLIM[1] - _EU_XLIM[0]) / y_span
+            target_h_in = (
+                (fig.get_figwidth() * axes_width_frac / data_aspect)
+                / (top_frac - bottom_frac)
+            )
+            if target_h_in > 0 and abs(target_h_in - fig.get_figheight()) > 0.02:
+                fig.set_size_inches(fig.get_figwidth(), target_h_in, forward=True)
+                fig.subplots_adjust(**layout_kwargs)
+                fig._subplots_adjust_kwargs = layout_kwargs
 
     return fig

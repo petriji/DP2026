@@ -136,7 +136,7 @@ savefig_pgf(fig, "stav_hdp_vyvoj", strings=STRINGS, nudge_labels=NUDGE_LABELS)
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "stav_hdp_vyvoj",
-    caption=f"Vývoj konvergence \\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU27}}\\,=\\,100), \\acs{{geo-EU27}}, 2004--2025",
+    caption=f"Konvergence \\acs{{HDP}} na obyvatele v~\\acs{{PPS}} (\\acs{{geo-EU27}}\\,=\\,100), \\acs{{geo-EU27}}, 2004--2025",
     label="fig:stav_hdp_vyvoj",
     resizebox_width=r"\linewidth",
     cite_key="eurostat_nama_10_pc_PPS_EU27eq100",

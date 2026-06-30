@@ -69,6 +69,7 @@ fig = choropleth(
     vmax=_vmax,
     label_countries=True,
     highlight_colorbar=COUNTRIES,
+    colorbar_labelpad_pt=(3 if IS_POSTER_RUN else None),
 )
 
 apply_geo_labels_pgf(fig.axes[0], halo=True, values=_values, tooltip_fmt="{:.0f}")

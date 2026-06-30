@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.transforms import Bbox
 
 from config import (
     CMAP_DIVERGING,
@@ -855,45 +856,50 @@ def _apply_label_nudges_pgf(
         import re as _re
 
         variants: list[str] = []
+        strict_geo_match = raw_needle.endswith(r"\relax")
+        normalized_needle = raw_needle[:-len(r"\relax")] if strict_geo_match else raw_needle
 
         def _add(s: str) -> None:
             s2 = s.strip()
             if s2 and s2 not in variants:
                 variants.append(s2)
 
-        _add(raw_needle)
+        _add(normalized_needle)
 
-        # Common scenario: label text has been materialized from \acs{geo-XX}
-        # into plain two-letter code in PGF (e.g. CZ), so include both forms.
-        geo_match = _re.search(r"\\acs\{geo-([A-Za-z]{2})\}", raw_needle)
+        # Geo acro labels should prefer explicit acro needles so map-internal
+        # plain ISO labels (tooltip/contour overlays) are not matched.
+        geo_match = _re.search(r"\\acs\{geo-([A-Za-z]{2})\}", normalized_needle)
+        is_geo_acs = bool(geo_match)
         if geo_match:
             code = geo_match.group(1).upper()
-            _add(code)
             _add(rf"\acs{{geo-{code}}}")
 
         # If a caller passed a plain label id (e.g. Cz or CZ), try the most
         # likely rendered forms conservatively.
-        _add(label_id)
-        if label_id.isalpha() and len(label_id) <= 3:
+        if not strict_geo_match:
+            _add(label_id)
+        if (not is_geo_acs) and label_id.isalpha() and len(label_id) <= 3:
             code = label_id.upper()
             _add(code)
             if len(code) == 2:
                 _add(rf"\acs{{geo-{code}}}")
 
         # Fallback: strip simple wrappers from the raw needle.
-        stripped = _strip_acro_markup(raw_needle)
-        _add(stripped)
+        if not strict_geo_match:
+            stripped = _strip_acro_markup(normalized_needle)
+            _add(stripped)
 
         return variants
 
     def _line_has_needle(line: str, needle: str) -> bool:
+        normalized_line = line.replace(r"\relax", "")
         checks = [
             "{" + needle + "}",
             "{" + needle + "}}",
             needle + "}",
             needle + "}}",
         ]
-        return any(tok in line for tok in checks)
+        return any(tok in normalized_line for tok in checks)
 
     prefix = _macro_prefix(name)
     items: list[tuple[str, list[str], str]] = []
@@ -1155,10 +1161,25 @@ def savefig_pgf(
             fig.subplots_adjust(**_spa)
         _recenter_on_visual(fig)
 
+    bbox_inches = None
+    if getattr(fig, "_pgf_trim_vertical", False):
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        tight_bbox = fig.get_tightbbox(renderer)
+        if tight_bbox is not None:
+            pad_pt = float(getattr(fig, "_pgf_trim_vertical_pad_pt", 0.5))
+            pad_in = pad_pt / 72.0
+            bbox_inches = Bbox.from_extents(
+                0.0,
+                tight_bbox.y0 - pad_in,
+                fig.get_figwidth(),
+                tight_bbox.y1 + pad_in,
+            )
+
     directory = Path(out_dir) if out_dir else FIGURES_DIR
     directory.mkdir(parents=True, exist_ok=True)
     out = directory / f"{name}.pgf"
-    fig.savefig(out, bbox_inches=None, pad_inches=0.0)
+    fig.savefig(out, bbox_inches=bbox_inches, pad_inches=0.0)
     plt.close(fig)
     print(f"Saved PGF: {out}")
 
@@ -1174,6 +1195,27 @@ def savefig_pgf(
         # Fallback for older analyses: if wrapper declares nudge knobs,
         # infer label ids from macro names and wire them automatically.
         labels_to_nudge = _extract_figure_tex_nudge_label_ids(name)
+
+    if getattr(fig, "_nudge_geo_colorbar_only", False) and labels_to_nudge:
+        scoped: list = []
+        for entry in labels_to_nudge:
+            if isinstance(entry, str):
+                label_id = entry
+                raw = entry
+            else:
+                label_id, raw = entry
+
+            code = ""
+            if isinstance(label_id, str) and len(label_id) == 2 and label_id.isalpha():
+                code = label_id.upper()
+            elif isinstance(raw, str) and len(raw) == 2 and raw.isalpha():
+                code = raw.upper()
+
+            if code:
+                scoped.append((label_id, rf"\acs{{geo-{code}}}\relax"))
+            else:
+                scoped.append(entry)
+        labels_to_nudge = scoped
 
     if labels_to_nudge:
         used = _apply_label_nudges_pgf(out, name, labels_to_nudge)
@@ -1504,7 +1546,9 @@ def _fmt_czk(amount: int) -> str:
 
 def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
                       color: str, alpha: float = 0.7,
-                      linestyle: tuple = (0, (3, 4))) -> None:
+                      linestyle: tuple = (0, (3, 4)),
+                      x_offset_pt: float = 0,
+                      y_offset_pt: float = 0) -> None:
     """Přidá svislou referenční čáru s anotací do grafu ax.
 
     Anotace je umístěna nad osou (axes fraction pro y = 1) aby byla
@@ -1516,7 +1560,7 @@ def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
         label,
         xy=(x_kczk, 1),
         xycoords=("data", "axes fraction"),
-        xytext=(0, 0), textcoords="offset points",
+        xytext=(x_offset_pt, y_offset_pt), textcoords="offset points",
         fontsize=POSTER_FIGURE_COMPACT_LABEL_SIZE if IS_POSTER_RUN else FIGURE_COMPACT_LABEL_SIZE,
         color=color,
         va="bottom",

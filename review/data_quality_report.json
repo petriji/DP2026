@@ -64,18 +64,6 @@
     "message": ""
   },
   {
-    "stem": "eu_hustota_mapa",
-    "status": "warning",
-    "target_year": 2025,
-    "years": [
-      2024
-    ],
-    "wrapper_years": [
-      2024
-    ],
-    "message": "caption years [2024] do not include target year 2025"
-  },
-  {
     "stem": "eu_ict_gender",
     "status": "ok",
     "target_year": 2025,

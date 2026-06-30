@@ -94,12 +94,12 @@
 
 \section*{Účel a hranice roury \textit{(pipeline)}}
 Python část repozitáře vytváří reprodukovatelné obrázky, tabulky a krátké
-\LaTeX{}ové vstupy používané v hlavním textu práce. Roura \textit{(pipeline)} není obecný datový
-sklad: je to řízený řetězec sestavení \textit{(build)}, který spojuje zdrojová
+\LaTeX{}ové vstupy používané v hlavním textu práce. Roura stahuje data z~otevřených databází
+a~připravuje výstupy pro řetězec sestavení \textit{(build)} dokumentu práce. Spojuje zdrojová
 data, lokální mezipaměť \textit{(cache)}, jednotlivé analýzy, registr výstupů
-a \LaTeX{}ový dokument. Ruční zásahy patří do komentářů a do git-tracked
-obalů \textit{(wrappers)} PGF obrázků, nikoli do generovaných souborů
-v \texttt{latex/texparts/python/}.
+a~\LaTeX{}ový dokument. Ruční zásahy patří do verzovaných komentářů a~obalů
+\textit{(wrappers)} PGF obrázků, nikoli do generovaných souborů
+v~\texttt{latex/texparts/python/}.
 
 \begin{center}
 \resizebox{\linewidth}{!}{%
@@ -112,7 +112,7 @@ v \texttt{latex/texparts/python/}.
   \node[pipebox,below=of analysis] (style) {\texttt{stattool.style}\\PDF/PGF export};
   \node[storebox,left=of style] (outputs) {\texttt{python/figures/}\\\texttt{texparts/python/}};
   \node[pipebox,left=of outputs] (quality) {\texttt{stats\_analytics.py}\\data-quality audit};
-  \node[storebox,left=of quality] (reports) {\texttt{review/data\_quality\_report.*}};
+  \node[storebox,left=of quality] (reports) {\texttt{review/\\data\_quality\_report.*}};
   \node[pipebox,below=of quality] (latex) {\texttt{main.tex}\\commentary};
 
   \draw[flow] (sources) -- (fetch);
@@ -126,22 +126,22 @@ v \texttt{latex/texparts/python/}.
 \end{tikzpicture}}
 \end{center}
 
-Každý analytický skript dodržuje tři základní pravidla: data stahuje přes
-projektové helpery, výstupy zapisuje do cest z \texttt{config.py} a před
+Každý analytický skript stahuje data přes projektové pomocné funkce (\textit{helpery}),
+výstupy zapisuje do cest z~\texttt{config.py} a~před
 vykreslováním aplikuje jednotný styl. Tím je zajištěno, že změna šablony,
-barevné palety nebo způsobu exportu nevyžaduje úpravy v hlavním textu.
+barevné palety nebo způsobu exportu nevyžaduje úpravy v~jednotlivých souborech nebo hlavním textu.
 
 \section*{Řízení generování}
-Orchestrátor \textit{(orchestrator)} \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
-\texttt{latex/main.tex} a všechny aktivní \texttt{\textbackslash input} soubory.
-Zachytává jen výstupy vložené jako \texttt{texparts/python/STEM} nebo
-\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené kořeny \textit{(stems)}
-s registrem \texttt{python/analytics\_registry.toml}; spustí pouze ty skupiny,
-které jsou v textu skutečně použité a kterým chybí očekávaný výstup, případně
+Orchestrátor \texttt{python/stats\_analytics.py} nejprve rekurzivně prochází
+\texttt{latex/main.tex} a~vyhledává v~něm aktivní \texttt{\textbackslash input} souborů.
+Zachytává kořeny \textit{(stems)} vložené jako \texttt{texparts/python/STEM} nebo
+\texttt{\textbackslash inputpgffigure\{STEM\}}. Potom porovná nalezené stemmy 
+s~registrem \texttt{python/analytics\_registry.toml}; spustí pouze ty skupiny,
+které jsou v~textu skutečně použité, a~kterým chybí očekávaný výstup, případně
 ty, které byly vynuceny volbou \texttt{--force}. Po dokončení generování navíc
-provede audit datové kvality: zkontroluje explicitnost roku v popiscích,
-vypíše varování pro fallback cesty a upozorní na použití jiného roku než je
-cílový rok dat.
+provede audit datové kvality -- vypíše varování pro záložní (\textit{fallback}) cesty,
+zkontroluje uvedený rok v~popiscích a~datech, a~upozorní na použití jiného roku než je
+cílový.
 
 \begin{center}
 \resizebox{0.92\linewidth}{!}{%
@@ -174,13 +174,13 @@ bash run.sh stats_analytics.py --target-year 2025  # explicitni audit proti cili
 Datová kvalita je od května 2026 součástí stejného kroku, nikoli samostatná
 ruční kontrola. Výchozí cílový rok je 2025; lze jej změnit volbou
 \texttt{--target-year} nebo proměnnou prostředí \texttt{DP\_TARGET\_YEAR}.
-Analytické skripty mají používat helpery \texttt{warn\_fallback(...)} a
-\texttt{warn\_non\_target\_year(...)} z modulu \texttt{stattool.data\_quality},
+Analytické skripty mají používat helpery \texttt{warn\_fallback(...)}
+a~\texttt{warn\_non\_target\_year(...)} z~modulu \texttt{stattool.data\_quality},
 takže se do logu promítne každý sekundární zdroj, hardcoded hodnota, expertní
-odhad i použití jiného roku než 2025.
+odhad i~použití jiného roku než 2025.
 
-Výstupem tohoto kroku nejsou jen varovné řádky v terminálu, ale i dva soubory
-pro transparentní deklaraci v popiscích a komentářích:
+Výstupem jsou varování v~terminálu, \LaTeX{} tabulka (vložená níže) a~dva soubory
+pro transparentní deklaraci v~popiscích a komentářích:
 
 \begin{itemize}
   \item \texttt{review/data\_quality\_report.json}: strojově čitelný přehled auditovaných stemmů.
@@ -189,11 +189,11 @@ pro transparentní deklaraci v popiscích a komentářích:
 
 \section*{Smlouva mezi Pythonem a LaTeXem}
 Registr je jediným místem, kde se analytický skript mapuje na výstupy. Klíč
-seskupuje logicky související grafy nebo tabulky; položka \texttt{texparts}
-určuje stemmy hledané v \LaTeX{}u a položka \texttt{pics} slouží pro kontrolu
-PDF výstupu. PGF výstupy mají navíc git-tracked soubor
-\texttt{latex/texparts/figures/STEM.tex}, v němž lze upravovat popisek a
-řetězce uvnitř grafu bez přepisu při dalším běhu Pythonu.
+seskupuje logicky související grafy nebo tabulky; atribut \texttt{texparts}
+určuje stemmy hledané v~\LaTeX{}u a~atribut \texttt{pics} slouží pro kontrolu
+PDF výstupu. PGF výstupy mají navíc v~git verzovaný \LaTeX{} soubor
+\texttt{latex/texparts/figures/STEM.tex}, v~němž lze upravovat řetězce uvnitř grafu
+a~posouvat popisky bez přepisu při dalším běhu Pythonu.
 
 \begin{pipelinecode}[Příklad z registru]
 [income_pps]
@@ -202,12 +202,12 @@ texparts = ["eu_prijem_pps"]
 pics     = ["eu_prijem_pps"]
 \end{pipelinecode}
 
-Minimální analýza má stejnou kostru bez ohledu na zdroj dat: import cest a
-stylu, stažení dat přes pomocnou funkci \textit{(helper)}, zpracování v pandas,
-vykreslení a zápis obalu \textit{(wrapper)} v \LaTeX{}u. Při PGF podložce
-\textit{(backend)} se text v grafu renderuje až v hlavním dokumentu, takže
-v popiscích fungují makra jako \texttt{\textbackslash SI\{\}\{\}}
-nebo \texttt{\textbackslash acs\{geo-CZ\}}.
+Každá analýza má stejnou kostru bez ohledu na zdroj dat: import cest
+a~stylu, stažení dat přes pomocnou funkci, jejich zpracování balíčkem pandas,
+vykreslení PDF nebo PGF a~zápis obalu v~\LaTeX{}u. V~PGF podložce
+\textit{(backend)} se text v~grafu vykresluje až v~hlavním dokumentu, takže
+v~popiscích fungují \LaTeX{}makra jako jsou jednotky \texttt{\textbackslash SI\{\}\{\}}
+nebo zkratky \texttt{\textbackslash acs\{geo-CZ\}}.
 
 \begin{pipelinecode}[Kostra analytického skriptu]
 from config import LATEX_TEXPARTS_DIR
@@ -231,31 +231,30 @@ save_figure_tex_pgf(
 \end{pipelinecode}
 
 \section*{Výstupy a ruční úpravy}
-Podložka \textit{(backend)} PDF vytváří hotový graf a obal \textit{(wrapper)},
-který jej vkládá přes \texttt{\textbackslash includegraphics}. Podložka
-\textit{(backend)} PGF vytváří zdrojový \texttt{.pgf} fragment
-v \texttt{python/figures/}, jednořádkový kompatibilní obal \textit{(wrapper)}
-v \texttt{latex/texparts/python/} a editovatelný soubor
-v \texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
-deduplikují do \texttt{python/figures/\_shared/}. Výsledkem je, že velké
-mapy mohou zůstat datově generované, ale jejich titulky a textové řetězce lze
-ladit v \LaTeX{}u.
+Podložka PDF vytváří hotový graf a~\LaTeX{} obal,
+který PDF vkládá přes \texttt{\textbackslash includegraphics}. Podložka
+PGF vytváří zdrojový \texttt{.pgf} grafický soubor
+v~\texttt{python/figures/}, jednořádkový obal
+v~\texttt{latex/texparts/python/} a~editovatelný soubor s~přepisovatelnými řetězci
+v~\texttt{latex/texparts/figures/}. Binární doprovodné obrázky PGF exportu se
+deduplikují do sdílených bitmap v~\texttt{python/figures/\_shared/}. Výsledkem je, že velké
+mapy mohou zůstat datově generované, ale jejich titulky a~textové řetězce lze
+ladit v~\LaTeX{}u a~velikost na disku je minimální.
 
 \begin{itemize}
   \item \texttt{python/data/}: lokální cache stažených dat, mimo git.
   \item \texttt{python/figures/}: generované PDF/PGF výstupy, mimo git.
   \item \texttt{latex/texparts/python/}: generované vstupy, mimo git.
-  \item \texttt{latex/texparts/figures/}: ručně doladitelné PGF wrappery, v gitu.
-  \item \texttt{latex/texparts/commentary/}: metodické a interpretační odstavce.
+  \item \texttt{latex/texparts/figures/}: ručně doladitelné PGF wrappery, v~gitu.
+  \item \texttt{latex/texparts/commentary/}: metodologická a~interpretační próza.
 \end{itemize}
 
 \section*{Sestavení \textit{(build)} a kontrola}
-Ve VS Code je běžný postup zachycen v receptech LaTeX Workshopu: recept s
-analytics nejprve spustí \texttt{setup\_venv}, poté \texttt{stats\_analytics.py}
-a až potom sestavení \textit{(build)} v \LaTeX{}u. Při ručním sestavení
-\textit{(build)} lze rouru \textit{(pipeline)} spustit explicitně nebo nastavit
-\texttt{RUN\_PYTHON\_ANALYTICS=1} pro háček před sestavením \textit{(pre-build hook)}
-v \texttt{latexmkrc}.
+Ve VS Code je běžný postup zprostředkován recepty LaTeX Workshopu: recepty
+s~analýzami nejprve vytvoří python prostředí \texttt{setup\_venv}, poté spustí orchestrátor
+\texttt{stats\_analytics.py} a~poté sestavení dokumentu v~\LaTeX{}u. Při ručním sestavení
+lze rouru spustit explicitně nebo nastavit \texttt{RUN\_PYTHON\_ANALYTICS=1} jako
+háček před sestavením \textit{(pre-build hook)} přes \texttt{latexmk}.
 
 \begin{pipelinecode}[Ruční build]
 cd latex
@@ -263,20 +262,18 @@ RUN_PYTHON_ANALYTICS=1 latexmk -pdf -interaction=nonstopmode -file-line-error -o
 pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=build python_pipeline_attachment.tex
 \end{pipelinecode}
 
-Je-li recept spuštěn z VS Code, analytics log se současně ukládá do
-\texttt{latex/build/stats-analytics.log} (případně
-\texttt{stats-analytics-force.log}). To je důležité právě pro datovou kvalitu:
-fallback varování a upozornění na použití jiného roku než 2025 jsou dohledatelná
-jak v terminálovém výstupu, tak ve stálém logu a v reportech v adresáři
-\texttt{review/}.
+Je-li recept spuštěn z~VS Code, zápis (\textit{log}) z~orchestrace se současně
+ukládá do \texttt{latex/build/stats-analytics.log} (případně
+\texttt{stats-analytics-force.log}). Jsou v~něm zachyceny všechny varování a~chyby, včetně
+záložních datových cest a~upozornění na použitý rok. Stejná upozornění jsou za běhu
+vytištěna v~terminálu nebo uložena ve zprávách v~adresáři \texttt{review/}.
 
-Při triage chyb platí jednoduché pravidlo: chybějící \texttt{.pgf} nebo
-\texttt{texparts/python} výstup se řeší během Pythonu, chyba v citaci nebo makru
-se řeší v \LaTeX{}u a ručně upravený generovaný texpart se nefixuje na místě,
-ale vrací se do příslušného skriptu nebo do editovatelného obalu \textit{(wrapper)} PGF.
+Chybějící \texttt{.pgf} nebo \texttt{texparts/python} výstup je třeba řešit spuštěním orchestrátoru,
+chyba v~citaci nebo makru se řeší v~\texttt{texparts/figures}. Ruční úprava řetězců se za běhu orchestrátoru
+zapíše do příslušného python skriptu z~editovatelného obalu PGF.
 
-\section*{Tabulka datové kvality (auto)}
-Následující přehled je generovaný při běhu \texttt{stats\_analytics.py}.
+\section*{Tabulka datové kvality}
+Následující přehled byl vygenerován při běhu \texttt{stats\_analytics.py} při sestavení práce.
 
 \IfFileExists{../review/data_quality_pipeline_table.tex}{%
   \input{../review/data_quality_pipeline_table.tex}

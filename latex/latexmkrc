@@ -48,10 +48,11 @@ sub ctu_roottex {
 $pdf_mode = 1;       # use pdflatex
 $bibtex_use = 2;     # use biber (not bibtex); 2 = delete .bbl on clean too
 $biber = 'biber --input-directory=. %O %S';  # biber resolves .bib from source dir, not build/
+$max_repeat = 7;     # biblatex needs up to 3 pdflatex passes after biber; allow 2 extra for convergence
 # Pass synctex, nonstopmode, and file-line-error to every pdflatex invocation.
 # The -shell-escape flag is needed only when the tikzextern option is active;
 # uncomment the second line below and comment the first when required.
-$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -cnf-line=extra_mem_bot=8000000 -cnf-line=extra_mem_top=8000000 %O %S';
+$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -cnf-line=main_memory=8000000 -cnf-line=extra_mem_top=2000000 -cnf-line=extra_mem_bot=2000000 %O %S';
 # $pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -shell-escape %O %S';
 
 # Write generated TeX inputs only when their byte content changes.  latexmk

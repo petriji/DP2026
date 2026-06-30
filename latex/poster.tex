@@ -31,6 +31,7 @@
 %\posterauthor{Jméno Příjmení}        % default: \@author from git
 %\posteremail{prijmeni@cvut.cz}       % default: \@email from git
 \posteraffiliation{ČVUT v~Praze \textbar{} MÚVS \textbar{} Institut manažerských studií}
+\posterthesistype{}
 \postersupervisor{Vedoucí: prof. Ing. Zuzana Dvořáková, CSc.}
 \posteryear{2026}
 %\posterphone{+420 000 000 000}       % OPTIONAL — omit to suppress the line
@@ -42,7 +43,8 @@
 \posterrepotag{poster-2026}
 \posterrepo{https://github.com/petriji/DP2026}  % override repo URL if needed
 \posterlogo{logo/logo_MUVS_cb.pdf}
-\posterbibliographymaxheight{92mm}
+\posterbibliographymaxheight{135mm}
+\posterbibliographyfont{\fontsize{6.9}{7.4}\selectfont}
 
 % ---------------------------------------------------------------------------
 % String and nudge macros for PGF figures — values taken from texparts/figures.
@@ -51,33 +53,33 @@
 % eu_pokryti_kv_mapa (all nudges 0 per wrapper)
 \def\strEuPokrytiKvMapaTitle{Pokrytí \aclins{KS} (2024)}%
 \def\strEuPokrytiKvMapaColorbarLabel{pokrytí \acs{KS} [\% zaměstnanců]}%
-\def\strEuPokrytiKvMapaCaption{Pokrytí \aclins{KS}, mapa Evropy, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
-\providecommand\NudgeEuPokrytiKvMapaCz{0pt}%
+\def\strEuPokrytiKvMapaCaption{Pokrytí \aclins{KS}, mapa Evropy, 2024. Zdroj~dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}%
+\providecommand\NudgeEuPokrytiKvMapaCz{2pt}%
 \providecommand\NudgeEuPokrytiKvMapaAt{0pt}%
 \providecommand\NudgeEuPokrytiKvMapaDe{0pt}%
 \providecommand\NudgeEuPokrytiKvMapaDk{0pt}%
 \providecommand\NudgeEuPokrytiKvMapaPl{0pt}%
-\providecommand\NudgeEuPokrytiKvMapaSk{0pt}%
+\providecommand\NudgeEuPokrytiKvMapaSk{-2pt}%
 % eu_hustota_mapa (nudges from wrapper: Cz=-3pt At=1pt De=3pt Pl=-13pt)
 \def\strEuHustotaMapaTitle{Odborová organizovanost (2024)}%
 \def\strEuHustotaMapaColorbarLabel{odborová organizovanost [\% zaměstnanců]}%
-\def\strEuHustotaMapaCaption{Odborová organizovanost, \acs{geo-EU27} mapa, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_TUD_pct}.}%
+\def\strEuHustotaMapaCaption{Odborová organizovanost, mapa Evropy, 2024. Zdroj~dat: \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_TUD_pct}.}%
 \providecommand\NudgeEuHustotaMapaCz{-3pt}%
 \providecommand\NudgeEuHustotaMapaAt{1pt}%
-\providecommand\NudgeEuHustotaMapaDe{3pt}%
-\providecommand\NudgeEuHustotaMapaSk{0pt}%
+\providecommand\NudgeEuHustotaMapaDe{6pt}%
+\providecommand\NudgeEuHustotaMapaSk{1pt}%
 \providecommand\NudgeEuHustotaMapaPl{-13pt}%
 \providecommand\NudgeEuHustotaMapaDk{0pt}%
 % eu_apz_vydaje (all nudges 0 per wrapper)
 \def\strEuApzVydajeTitle{Výdaje na aktivní politiku zaměstnanosti}%
 \def\strEuApzVydajeYlabel{výdaje na \acs{APZ} [\% \acs{HDP}]}%
-\def\strEuApzVydajeCaption{Výdaje na \acs{APZ} (\% \acs{HDP}), vybrané země \acs{EU}, 2004--2023. Zdroj dat: \acs{OECD} \acs{LMP}~\cite{oecd_lmpexp_PC_GDP}.}%
-\providecommand\NudgeEuApzVydajeCz{0pt}%
+\def\strEuApzVydajeCaption{Výdaje na \acs{APZ} (\% \acs{HDP}), \acs{EU}, 2004--2023. Zdroj~dat: \acs{OECD}~\acs{LMP}~\cite{oecd_lmpexp_PC_GDP}.}%
+\providecommand\NudgeEuApzVydajeCz{1pt}%
 \providecommand\NudgeEuApzVydajeAt{0pt}%
 \providecommand\NudgeEuApzVydajeDe{15pt}%
 \providecommand\NudgeEuApzVydajeDk{0pt}%
-\providecommand\NudgeEuApzVydajePl{10pt}%
-\providecommand\NudgeEuApzVydajeSk{-10pt}%
+\providecommand\NudgeEuApzVydajePl{11pt}%
+\providecommand\NudgeEuApzVydajeSk{-11pt}%
 \providecommand\NudgeEuApzVydajeCovid{0pt}%
 % problemy_danovy_klin_cz (no nudges; str values from wrapper)
 \def\strProblemyDanovyKlinCzXlabel{celkové náklady zaměstnavatele/příjmy \acs{OSVČ} [tis.~Kč/měsíc]}%
@@ -103,20 +105,22 @@
 \providecommand\NudgeAnglePracticalTernarySocialDialogDk{40}%
 \providecommand\NudgeAnglePracticalTernarySocialDialogDe{22}%
 \providecommand\NudgeAnglePracticalTernarySocialDialogSk{0}%
-\providecommand\NudgeAnglePracticalTernarySocialDialogPl{8}%
+\providecommand\NudgeAnglePracticalTernarySocialDialogPl{60}%
 \providecommand\NudgeAnglePracticalTernarySocialDialogAt{160}%
 
 % Poster-only typography layer for reusable hand-written TikZ figures.
 % Naming is explicit on purpose: DPPoster* are configured here and then
 % mapped to shared figure macros used inside texparts/figures/*.tex.
 \providecommand\DPPosterFigureTextSize{\normalsize}
-\providecommand\DPPosterFigureLabelSize{\normalsize}
-\providecommand\DPPosterFigureDenseSize{\small}
+\providecommand\DPPosterFigureLabelSize{\small}
+\providecommand\DPPosterFigureDenseSize{\footnotesize}
 \providecommand\DPPosterEquityBaseSize{\DPPosterFigureLabelSize}
 \providecommand\DPPosterEquityArrowSize{\large}
 \providecommand\DPPosterOOBaseSize{\DPPosterFigureTextSize}
 \providecommand\DPPosterOONoteSize{\DPPosterFigureLabelSize}
 % Keep this hand-drawn schema one step denser on poster; otherwise labels look out of context.
+% The TikZ figure now uses coordinate-based scaling without \resizebox, so we
+% raise its font size to \small to match the prose scale and optimize legibility.
 \providecommand\DPPosterWorkBaseSize{\small}
 \providecommand\DPPosterKVLoopBaseSize{\DPPosterFigureLabelSize}
 \providecommand\DPPosterKolSporyBaseSize{\DPPosterFigureLabelSize}
@@ -149,19 +153,17 @@
 \section{Úvod}
 Český model sociálního dialogu patří spolu s~dalšími postkomunistickými zeměmi
 k~modelům s~nízkou odborovou organizovaností a~slabším pokrytím kolektivními
-smlouvami. Technologický posun, automatizace a~subdodavatelský model levné práce
-zvyšují tlak na zaměstnance. Práce ověřuje, zda širší pokrytí kolektivními
-smlouvami pomáhá trhu práce absorbovat technologické a~mzdové šoky a~omezuje
-přenos rizik na jednotlivce.
+smlouvami (KS). Technologický posun, automatizace a~subdodavatelský model levné práce
+zvyšují tlak na zaměstnance. Pracovník je v~práci nahlížen jako makroekonomický uzel (viz schéma níže), jehož vstupy i~výstupy propojují zájmy firem, státu a~celkového potenciálu práce. Práce diskutuje, zda širší pokrytí KS pomáhá trhu práce absorbovat technologické a~mzdové šoky a~omezuje přenos rizik na jednotlivce.
 
 \input{texparts/figures/pracovnik_system.tex}
 
 \section{Metodika}
 Kombinovaný přístup spojuje tři analytické roviny s~kontrolou konkrétních smluv:
 \begin{itemize}
-  \item deskripce trhu práce \acgen{ČR} (Eurostat, \acs{OECD} \acs{ICTWSS},
+  \item deskripce trhu práce \acs{ČR} (Eurostat, \acs{OECD} \acs{ICTWSS},
     \acs{OECD} \acs{LMP}, \acs{MPSV} \acs{ISPV}/\acs{IPP});
-  \item komparace pěti referenčních modelů: Dánsko, Rakousko, Německo, Polsko, Slovinsko;
+  \item komparace pěti referenčních modelů: Dánsko, Rakousko, Německo, Polsko, Slovensko;
   \item panel EU27, korelace/regrese a~model scénáře 80\,\% pokrytí \acs{KS};
   \item čtyři případové studie smluv: Penny Market, Česká pošta, zemědělství, bankovnictví.
 \end{itemize}
@@ -171,16 +173,17 @@ Kombinovaný přístup spojuje tři analytické roviny s~kontrolou konkrétních
   {Pokrytí \aclins{KS}, mapa Evropy, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}.}
       {eu-pokryti-kv-mapa}
       {eu_hustota_mapa_poster}
-  {Odborová organizovanost, \acs{geo-EU27} mapa, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_TUD_pct}.}
+  {Odborová organizovanost, mapa Evropy, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_TUD_pct}.}
       {eu-hustota-mapa}
 
 \section{Výsledky}
 \begin{itemize}
-  \item odborová organizovanost v~\acloc{ČR} je pod 12\,\%, pokrytí \acs{KS} kolem 35\,\% (proti prahu 80\,\% ve směrnici \acs{EU});
-  \item výdaje na \acs{APZ} dosahují 0,3\,\% \acs{HDP}, tedy řádově méně než v~Dánsku i~pod průměrem EU27;
+  \item Odborová organizovanost v~\acloc{ČR} je pod 10\,\%, pokrytí \acs{KS} kolem 30\,\% (proti prahu 80\,\% ve směrnici \acs{EU});
+  \item výdaje na aktivní politiku zaměstnanosti (APZ) dosahují 0,2\,\% \acs{HDP}, pod průměrem EU27 a~doporučením OECD;
+  \item systém zdanění práce nahrává dalšímu oslabování rozvojem švarcsystému a~platformové práce;
   \item pokrytí \acs{KS} statisticky souvisí s~pracovní dobou a~produktivitou práce;
-  \item rozšíření závaznosti \acs{KSVS} (\S\,7 zák.\ č.\ 2/1991 Sb.) zůstává výjimečné: v~roce 2026 dvě smlouvy;
-  \item případové studie odlišují podnikové vyjednávání bez odvětvové opory od \acs{KSVS}, které překračují zákonné minimum.
+  \item \acs{KS} jsou uzavírány především na podnikové úrovni, odvětvové málo, rozšíření závaznosti smluv v~odvětví (\S\,7~zák.~č.~2/1991~Sb.) zůstává výjimečné;
+  \item případové studie ukazují, že míra vyjednané ochrany a~nadstandardů se liší mezi podniky a~odvětvími.
 \end{itemize}
 
 % ===== RIGHT COLUMN — explicit break is optional; multicol balances itself =
@@ -188,23 +191,43 @@ Kombinovaný přístup spojuje tři analytické roviny s~kontrolou konkrétních
 
 % Quantitative evidence base: 2x2 grid of key figures (equal widths, aligned horizontally)
 % occupying approximately 30 % of the column height with generous vertical spacing.
+\newlength{\PosterTopRowCaptionAlignPad}
+\setlength{\PosterTopRowCaptionAlignPad}{5.5mm}
+\newlength{\PosterTopRowApzDownShift}
+\setlength{\PosterTopRowApzDownShift}{15pt}
+\newlength{\PosterTopRowApzCaptionUpShift}
+\setlength{\PosterTopRowApzCaptionUpShift}{6pt}
+\newlength{\PosterTopRowCzCaptionDownShift}
+\setlength{\PosterTopRowCzCaptionDownShift}{6pt}
 \par\noindent
 \begin{minipage}[t]{0.485\linewidth}
-  \postercompactpgf{eu_apz_vydaje_poster}%
-    {Výdaje na \acs{APZ} (\% \acs{HDP}), vybrané země \acs{EU}, 2004--2023. Zdroj dat: \acs{OECD} \acs{LMP}~\cite{oecd_lmpexp_PC_GDP}.}%
-    {eu-apz-vydaje}%
+  \begingroup
+  \captionsetup{type=figure,font=CTUPpostercaption,labelfont=bf,justification=raggedright,singlelinecheck=false,skip=1pt}%
+  \vspace*{\PosterTopRowApzDownShift}%
+  \centering
+  \resizebox{\linewidth}{!}{\posterpgfinput{eu_apz_vydaje_poster}}\par\vspace{-0.5mm}%
+  \vspace*{\PosterTopRowCaptionAlignPad}%
+  \vspace*{-\PosterTopRowApzCaptionUpShift}%
+  \captionof{figure}{Výdaje na \acs{APZ} (\% \acs{HDP}), \acs{EU}, 2004--2023. Zdroj~dat: \acs{OECD} \acs{LMP}~\cite{oecd_lmpexp_PC_GDP}.}%
+  \label{fig:poster-eu-apz-vydaje}%
+  \endgroup
 \end{minipage}%
 \hfill%
 \begin{minipage}[t]{0.485\linewidth}
-  \postercompactpgf{problemy_danovy_klin_cz_poster}%
-    {Zdanění práce v~\acs{ČR}, zaměstnanec vs.\ \acs{OSVČ}, 2026. Zdroj dat: Model podle legislativy \aca{geo-CZ}~\cite{zakon_zdp_1992}\cite{zakon_sp_1992}\cite{zakon_zp_1992}\cite{nv_365_2025}.}%
-    {danovy-klin-cz}%
+  \begingroup
+  \captionsetup{type=figure,font=CTUPpostercaption,labelfont=bf,justification=raggedright,singlelinecheck=false,skip=1pt}%
+  \centering
+  \resizebox{\linewidth}{!}{\posterpgfinput{problemy_danovy_klin_cz_poster}}\par\vspace{-0.5mm}%
+  \vspace*{\PosterTopRowCzCaptionDownShift}%
+  \captionof{figure}{Zdanění práce v~\acs{ČR}, zaměstnanec a~\acs{OSVČ}, 2026. Zdroj~dat: Model podle legislativy \aca{geo-CZ}~\cite{zakon_zdp_1992} \cite{zakon_sp_1992} \cite{zakon_zp_1992} \cite{nv_365_2025}.}%
+  \label{fig:poster-danovy-klin-cz}%
+  \endgroup
 \end{minipage}%
-\par\vspace{5mm}% % Vertical spacing below the first figure row (space under the APZ + tax-wedge plots)
+\par\vspace{2mm}% % Vertical spacing below the first figure row (space under the APZ + tax-wedge plots)
 \noindent
 \begin{minipage}[t]{0.485\linewidth}
   \postercompactpgf{korelace_scatter_poster}%
-    {Korelace pokrytí \acs{KS} a~veličin trhu práce, \acs{EU}, 2024. Zdroj dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}; Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}~\cite{eurostat_gpg}~\cite{eurostat_earn_nt_net_PPS_AW100}~\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}.}%
+    {Korelace pokrytí \acs{KS} a~veličin trhu práce, \acs{EU}, 2024. Zdroj~dat: \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}; Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly} \cite{eurostat_gpg} \cite{eurostat_earn_nt_net_PPS_AW100} \cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}.}%
     {korelace-scatter}%
 \end{minipage}%
 \hfill%
@@ -217,37 +240,40 @@ Kombinovaný přístup spojuje tři analytické roviny s~kontrolou konkrétních
     {Rovnováha naplnění potřeb aktérů sociálního dialogu, \acs{geo-EU27}, 2025. Model vážených veličin. Zdroj dat: Eurostat~[8]\,[9]\,[12]--[19]; \acs{OECD}~[20]; expertní skóre sociálního smíru~[21]\,[22].}%
     {ternary-social-dialog}%
 \end{minipage}%
-\par\vspace{4mm}
+\par\vspace{2mm}
 
 \section{Pět návrhů inovací}
 \begin{enumerate}
-  \item aktivace \S\,7 zák.\ č.\ 2/1991 Sb.\ a~snížení prahu reprezentativity;
-  \item ghentský model: odbory jako spolu-správci APZ, navýšení na 1\,\% HDP;
-  \item mzdová transparentnost nad rámec směrnice 2023/970;
-  \item vyrovnání postavení OSVČ a~platformových pracovníků na trhu práce;
-  \item veřejný digitální registr kolektivních smluv (vzor Belgie, Nizozemsko).
+  \item Aktivace \S\,7 zák.\ č.\ 2/1991 Sb.\ a~snížení prahu reprezentativity (rozšiřovní závaznosti odvětvových smluv);
+  \item ghentský model: odbory jako spolu-správci APZ, navýšení k~1\,\% HDP;
+  \item mzdová transparentnost nad rámec minimální implementace směrnice EU~2023/970;
+  \item vyrovnání postavení OSVČ a~platformových pracovníků na trhu práce a~v~sociálním dialogu;
+  \item veřejný digitální registr kolektivních smluv a~jejich obsahu (vzor Belgie, Nizozemsko).
 \end{enumerate}
 
 \section{Závěr}
-Hypotéza práce byla podpořena empirickými zjištěními (deskripcí, komparací, korelací i~případovými studiemi): \emph{Posílení sociálního dialogu a~kolektivního vyjednávání v~České republice by přispělo k~udržitelnému hospodářskému rozvoji.} Pět
+Hypotéza práce byla podpořena empirickými zjištěními (deskripcí, komparací, korelací i~případovými studiemi): \emph{posílení sociálního dialogu a~kolektivního vyjednávání v~České republice by přispělo k~udržitelnému hospodářskému rozvoji.} Pět
 navržených opatření je proveditelných bez velkých zásahů do legislativy
 a~vychází z~přenositelných zahraničních modelů.
 
 % ===== END-OF-BODY: English summary + contact block =========================
 \postersummary{%
-  This thesis assesses the condition of social dialogue in the Czech
-  Republic in a~European comparative perspective. Three independent lines
-  of evidence (descriptive analysis, comparison with five reference models,
-  and EU27 panel correlation) document the structural weakness of Czech
-  collective bargaining: union density below 10\,\%, collective bargaining coverage around
-  30\,\%, and active labour-market policy expenditure of only 0.2\,\% of
-  GDP. The thesis hypothesis is: \emph{Weak social dialogue is associated with a limited capacity to share the costs of structural changes in the labour market collectively and with a higher risk that those costs are shifted onto individual workers.}
-  It is empirically supported and yields five institutional innovations: erga
-  omnes extension of sector-level agreements, Ghent-style delegation of
-  active labour-market policy to trade unions, pay transparency beyond the
-  minimum transposition of Directive EI~2023/970, alignment of the position
-  of solo self-employed and platform workers, and a~public digital
-  registry of collective agreements.%
+  This poster presents the empirical and structural core of the thesis,
+  mapping the institutional friction points of the social dialogue in Czech Republic
+  model against European benchmarks. The macro-level evidence displays low levels of
+  collective bargaining coverage (\SI{30}{\percent}) and trade union density
+  (\SI{10}{\percent}), minimal active labour-market policy (\acs{APZ}) and an unequal
+  tax wedge on labour that fuels non-standard employment like platform work and
+  economically dependent self-employment.
+  The correlation analysis hints that high collective bargaining coverage is not an
+  economic drag but actively correlates with elevated productivity and sustainable
+  work-life balance arrangements across the EU. Model of tripartite balance shows
+  that countries with stronger social dialogue mechanisms tend to achieve better
+  economic and social outcomes. Building on comparative European models and verified
+  via sector- and enterprise-level case studies, the thesis advances five innovations
+  which aim to elevate collective bargaining coverage toward the \ac{EU} target of
+  \SI{80}{\percent} to secure adequate protection and transition the Czech labour market
+  from sub-contracted low-wage vulnerability to high-performance security.%
 }
 
 % Optional References section — typeset with [1] [2] … numbering matching

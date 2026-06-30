@@ -46,6 +46,7 @@ import pandas as pd
 
 from config import (
     COUNTRY_COLORS,
+    FONT_SIZE,
     FIGURE_COMPACT_LABEL_SIZE,
     FIGURE_TEXT_SIZE,
     FIGURE_COMPACT_TEXT_SIZE,
@@ -210,30 +211,30 @@ _SCATTER_SPECS = [
         "name": "coverage_hours",
         "ds_x": ds_cbc,
         "ds_y": ds_hours,
-        "xlabel": "pokrytí KV [%]",
-        "ylabel": "průměrná skutečná týdenní\npracovní doba [h]",
+        "xlabel": "pokrytí KS [%]",
+        "ylabel": "průměrná skutečná týdenní\nodpracovaná doba [h]",
     },
     # Right column: positive correlations
     {
         "name": "coverage_netincome",
         "ds_x": ds_cbc,
         "ds_y": ds_netpps,
-        "xlabel": "pokrytí KV [%]",
+        "xlabel": "pokrytí KS [%]",
         "ylabel": "čistý hodinový příjem [PPS/h]",
     },
     {
         "name": "coverage_gpg",
         "ds_x": ds_cbc,
         "ds_y": ds_gpg,
-        "xlabel": "pokrytí KV [%]",
+        "xlabel": "pokrytí KS [%]",
         "ylabel": "gender pay gap [%]",
     },
     {
         "name": "coverage_productivity",
         "ds_x": ds_cbc,
         "ds_y": ds_prod,
-        "xlabel": "pokrytí KV [%]",
-        "ylabel": "produktivita práce [PPS/h, EU27 = 100]",
+        "xlabel": "pokrytí KS [%]",
+        "ylabel": "produktivita práce [PPS/h, EU27=100]",
     },
 ]
 
@@ -257,6 +258,12 @@ _POSTER_TITLE = (
     "Korelace pokrytí kolektivní smlouvou\n"
     "s\\,vybranými ukazateli trhu práce (2024)"
 )
+_POSTER_TITLE_LATEX = (
+    r"\makebox[0pt][c]{\shortstack{"
+    r"Korelace pokrytí kolektivní smlouvou\\[-1pt]"
+    r"s\,vybranými ukazateli trhu práce (2024)"
+    r"}}"
+)
 _scatter_angle_nudges_by_panel = {
     panel: load_angle_nudges_from_figure_tex("korelace_scatter", LABEL_ANGLE_NUDGES, scope=panel)
     for panel in PANEL_KEYS
@@ -267,11 +274,21 @@ _scatter_angle_nudges_by_panel = {
 # 16×16 grid.
 _KOR_FIGSIZE = cm2in(16, 16 * 14.1 / 15.0) if IS_POSTER_RUN else cm2in(16, 16)
 fig_all, axes = plt.subplots(2, 2, figsize=_KOR_FIGSIZE, sharex=True)
+if IS_POSTER_RUN:
+    # Poster-only: shift suptitle 12pt upward in final PGF recenter pass.
+    fig_all._suptitle_gap_pt = getattr(fig_all, "_suptitle_gap_pt", 1) + 12
+else:
+    fig_all._suptitle_gap_pt = 4
+fig_all._pgf_trim_vertical = True
 fig_all.suptitle(
-    _POSTER_TITLE if IS_POSTER_RUN else STRINGS["title"],
+    _POSTER_TITLE_LATEX if IS_POSTER_RUN else STRINGS["title"],
     fontsize=FIGURE_TEXT_SIZE,
+    x=0.5,
     y=0.998,
 )
+if IS_POSTER_RUN and getattr(fig_all, "_suptitle", None) is not None:
+    # Keep anchor fixed at x=0.5 and let TeX center content around that point.
+    fig_all._suptitle.set_horizontalalignment("left")
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     panel_key = PANEL_KEYS[idx]
     row_bottom = idx >= 2
@@ -282,6 +299,7 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         xlabel=spec["xlabel"] if row_bottom else "",
         ylabel=spec["ylabel"],
         trendline=True,
+        trendline_stat="r",
         label_points=True,
         highlight=HIGHLIGHT_COUNTRIES,
         x_min=0,
@@ -290,6 +308,8 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
         year_tolerance=9,
         label_angle_nudges=_scatter_angle_nudges_by_panel[panel_key],
     )
+    if idx == 0 and not IS_POSTER_RUN:
+        ax.legend(frameon=False, fontsize=FONT_SIZE - 1, loc="lower left")
     for _schild in ax.get_children():
         if hasattr(_schild, "get_text"):
             _stxt = _schild.get_text().strip()
@@ -315,6 +335,28 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     for item in ax.get_xticklabels() + ax.get_yticklabels():
         item.set_fontsize(max(item.get_fontsize(), FIGURE_COMPACT_TEXT_SIZE))
     ax.yaxis.labelpad = 1.5
+    if "\n" in spec["ylabel"]:
+        # Poster: increase readability of the only multiline y-label
+        # (top-left panel) and force centered multiline alignment.
+        if IS_POSTER_RUN and idx == 0:
+            _yl_parts = [p.strip() for p in spec["ylabel"].split("\n") if p.strip()]
+            if len(_yl_parts) == 2:
+                ax.set_ylabel(
+                    r"\makebox[0pt][c]{\shortstack{"
+                    + _yl_parts[0]
+                    + r"\\"
+                    + _yl_parts[1]
+                    + r"}}"
+                )
+            ax.yaxis.label.set_linespacing(1.65)
+            ax.yaxis.label.set_multialignment("center")
+            ax.yaxis.label.set_horizontalalignment("center")
+            ax.yaxis.label.set_verticalalignment("center")
+            ax.yaxis.label.set_rotation_mode("anchor")
+            ax.yaxis.labelpad += 12
+        else:
+            ax.yaxis.label.set_linespacing(1.5)
+            ax.yaxis.label.set_multialignment("center")
     if IS_POSTER_RUN:
         # Poster: axis labels two tiers smaller (7pt → ultra remap) so the long
         # multi-word x/y labels fit the compact half-column 2×2 layout without
@@ -326,7 +368,8 @@ if IS_POSTER_RUN:
     # The two-line poster title (real newline) is measured correctly by
     # matplotlib and snugged just above the panels; keep the standard top.
     # Extra bottom room so the (LaTeX-inflated) x-axis labels are not clipped.
-    _left, _right, _top, _bottom = 0.155, 0.985, 0.89, 0.10
+    # Use balanced side margins so the 2x2 panel block is visually centered.
+    _left, _right, _top, _bottom = 0.12, 0.95, 0.89, 0.10
     _wspace, _hspace = 0.30, 0.18
 else:
     _left, _right, _top, _bottom = 0.11, 0.985, 0.86, 0.075
@@ -484,13 +527,13 @@ save_table_tex(
     table_df,
     "korelace_tabulka",
     caption=(
-        r"Korelace pokrytí \acs{KV} (hustoty odborů) s~vybranými veličinami "
+        r"Korelace pokrytí \acs{KV} (odborové organizovanosti) s~vybranými veličinami "
         rf"pracovního trhu v~letech {START_YEAR}--{_year_label} a průřezovém roce "
         rf"{_year_label}. "
-        r"Zdroj dat: Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly}\cite{eurostat_gpg}"
-        r"\cite{eurostat_earn_nt_net_PPS_AW100}\cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}"
-        r"\cite{eurostat_ilc_di12}; \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}"
-        r"\cite{oecd_aias_ictwss_TUD_pct}; ETUI~\cite{etui_cba}."
+        r"Zdroj dat: Eurostat~\cite{eurostat_lfsa_ewhan2_HR_weekly} \cite{eurostat_gpg}"
+        r" \cite{eurostat_earn_nt_net_PPS_AW100} \cite{eurostat_nama_10_lp_ulc_NLPR_HW_EU27eq100}"
+        r" \cite{eurostat_ilc_di12}; \acs{OECD} \acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}"
+        r" \cite{oecd_aias_ictwss_TUD_pct}."
     ),
     label="tab:korelace_tabulka",
     note=_EXCL_NOTE_TAB,
@@ -632,7 +675,7 @@ save_table_tex(
     ),
     label="tab:model_cz",
     note=(
-        r"Predikce je horním odhadem korelovatelné části efektu --- "
+        r"Predikce je horním odhadem korelovatelné části efektu -- "
         r"nezachycuje zpětné vazby ani náklady přechodu."
     ),
     position="H",

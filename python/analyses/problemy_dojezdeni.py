@@ -58,7 +58,7 @@ import matplotlib.patheffects as mpe
 import pandas as pd
 import geopandas as gpd
 
-from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, FIGURE_LABEL_SIZE, LATEX_PICS_DIR, PALETTE
 from stattool.data_quality import warn_non_target_year, warn_years
 from stattool.fetch import fetch, fetch_eurostat
 from stattool.dataset import Dataset
@@ -311,7 +311,8 @@ try:
         label_cz=True,
         label_nbr=True,
         label_fmt="{:.1f}",
-        label_nudges={"CZ020": (55_000, -42_000)},
+        label_fontsize=FIGURE_LABEL_SIZE,
+        label_nudges={"CZ02": (45_000, -35_000)},
         label_names=label_names,
         label_tooltip_fmt=r"{:.2f}\,\%",
     )

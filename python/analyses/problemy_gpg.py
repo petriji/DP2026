@@ -342,7 +342,10 @@ ax_b.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:.1f}"))
 ax_b.set_title(
     STRINGS_STRAT["title"],
     fontsize=FIGURE_TEXT_SIZE,
+    pad=4,
 )
+fig_b._tight_layout_kwargs = {"pad": 0.15}
+fig_b._pgf_trim_vertical = True
 
 # Invisible hover tooltips at every (rank, gap) point.
 if _gap_pivot_cols:
