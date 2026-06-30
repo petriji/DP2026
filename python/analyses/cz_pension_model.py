@@ -18,15 +18,19 @@ Reduction (§ 15 ZPDS):
          + max(min(OVZ, RH2) − RH1, 0) × 0.26
          + max(OVZ − RH2, 0) × 0.22
 
-The solidarity figure (plot_pension_solidarity) uses two panels:
-  • Top panel:    monthly pension (tis. Kč/month) vs gross income – absolute values
-  • Bottom panel: replacement rate (%) = pension / income – shows the progressive
-                  (solidarity) nature of the system; higher replacement for lower earners
+Figures
+-------
+  plot_pension_comparison() – single panel: monthly pension vs gross income.
+      Output: pics/python/cz_pension_income.pdf
 
-Output
-------
-  pics/python/cz_pension_solidarity.pdf
-  latex/texparts/python/cz_pension_solidarity.tex
+  plot_pension_solidarity()  – two panels:
+      Top:    monthly pension (tis. Kč) vs gross income – absolute values
+      Bottom: replacement rate (%) = pension / income – the declining slope shows
+              the solidarity mechanism; lower earners receive proportionally more.
+      The x-axis starts from OSVC_MIN_MONTHLY_BASE × 2 (income crossover where
+      50 % of OSVČ profit equals the statutory minimum assessment base), so both
+      employee and OSVČ replacement rates begin at economically meaningful values.
+      Output: pics/python/cz_pension_solidarity.pdf
 
 Run
 ---
@@ -199,9 +203,97 @@ def _add_vertical_ref(ax: plt.Axes, x_kczk: float, label: str,
     )
 
 
+def plot_pension_comparison(
+    income_max: int = 200_000,
+    years: int = INSURANCE_YEARS,
+) -> plt.Figure:
+    """Vykreslí srovnání výše starobního důchodu v závislosti na hrubém příjmu.
+
+    Parameters
+    ----------
+    income_max:
+        Horní mez osy x [Kč/měsíc].
+    years:
+        Předpokládaná pojistná doba [roky] pro výpočet procentní výměry.
+
+    Returns
+    -------
+    matplotlib Figure objekt.
+    """
+    income = np.linspace(0, income_max, 2_000)  # Kč/měsíc
+
+    p_emp  = pension_employee(income, years)
+    p_osvc = pension_osvc(income, years)
+
+    fig, ax = plt.subplots(figsize=cm2in(16, 10))
+
+    c_emp, c_osvc = PALETTE[0], PALETTE[1]
+    c_pausalni    = [PALETTE[2], PALETTE[3], PALETTE[4]]
+    band_labels   = [
+        "Paušální daň – pásmo\u00a01",
+        "Paušální daň – pásmo\u00a02",
+        "Paušální daň – pásmo\u00a03",
+    ]
+
+    ax.plot(income / 1_000, p_emp  / 1_000,
+            color=c_emp,  linewidth=2.0, label="Zaměstnanec")
+    ax.plot(income / 1_000, p_osvc / 1_000,
+            color=c_osvc, linewidth=2.0, linestyle="--",
+            label="OSVČ – standardní odvody")
+
+    prev_max = 0
+    for i, (max_income, monthly_base) in enumerate(PAUSALNI_DAN):
+        p_val = _pension(monthly_base, years)
+        x_seg = [prev_max / 1_000, max_income / 1_000]
+        y_seg = [p_val / 1_000, p_val / 1_000]
+        ax.plot(x_seg, y_seg,
+                color=c_pausalni[i], linewidth=2.5, linestyle=":",
+                label=band_labels[i])
+        if i < len(PAUSALNI_DAN) - 1:
+            ax.axvline(max_income / 1_000, color=c_pausalni[i],
+                       linewidth=0.5, linestyle=":", alpha=0.4)
+        prev_max = max_income
+
+    # Minimální výše důchodu
+    min_pension_kczk = MIN_TOTAL_PENSION / 1_000
+    ax.axhline(min_pension_kczk, color="#555555", linewidth=0.8,
+               linestyle=(0, (5, 5)), alpha=0.7, zorder=1)
+    ax.annotate(
+        f"Min. důchod ({_fmt_czk(MIN_TOTAL_PENSION)})",
+        xy=(income_max * 0.01 / 1_000, min_pension_kczk),
+        xytext=(3, 4), textcoords="offset points",
+        fontsize=FONT_SIZE - 2, color="#555555", va="bottom",
+    )
+
+    _add_vertical_ref(ax, AVG_WAGE / 1_000,
+                      f"Prům.\u00a0mzda\n({_fmt_czk(AVG_WAGE)})",
+                      color="#888888")
+    _add_vertical_ref(ax, RH1 / 1_000,
+                      f"1.\u00a0RH\n({_fmt_czk(RH1)})",
+                      color="#AAAAAA", alpha=0.6, linestyle=(0, (2, 6)))
+    if RH2 <= income_max:
+        _add_vertical_ref(ax, RH2 / 1_000,
+                          "2.\u00a0RH",
+                          color="#BBBBBB", alpha=0.5, linestyle=(0, (2, 6)))
+
+    ax.set_xlabel("Hrubý měsíční příjem [tis.\u00a0Kč]")
+    ax.set_ylabel("Měsíční starobní důchod [tis.\u00a0Kč]")
+    ax.set_title(
+        f"Výše starobního důchodu v závislosti na příjmu\n"
+        f"(pojistná doba\u00a0{years}\u00a0let, parametry\u00a02024)",
+        loc="center",
+    )
+    ax.set_xlim(0, income_max / 1_000)
+    ax.set_ylim(bottom=0)
+    ax.legend(frameon=False, fontsize=FONT_SIZE - 1,
+               loc="upper left", borderaxespad=0.5)
+
+    return fig
+
+
 def plot_pension_solidarity(
     income_max: int = 200_000,
-    income_min_rr: int = 5_000,
+    income_min_rr: int = OSVC_MIN_MONTHLY_BASE * 2,
     years: int = INSURANCE_YEARS,
 ) -> plt.Figure:
     """Dvoupanelový obrázek znázorňující solidární charakter důchodového systému.
@@ -216,7 +308,10 @@ def plot_pension_solidarity(
         Horní mez osy x [Kč/měsíc].
     income_min_rr:
         Spodní mez příjmu pro dolní panel (náhradový poměr) [Kč/měsíc].
-        Slouží k vyloučení dělení nulou při velmi nízkých příjmech.
+        Výchozí hodnota = OSVC_MIN_MONTHLY_BASE × 2: při nižším příjmu tvoří
+        zákonný minimální základ OSVČ víc než 50 % příjmu, takže náhradový
+        poměr by byl umělě nadhodnocen. Od tohoto bodu obě křivky vycházejí
+        z ekonomicky srovnatelného základu.
     years:
         Předpokládaná pojistná doba [roky] pro výpočet procentní výměry.
 
@@ -363,9 +458,26 @@ def plot_pension_solidarity(
 if __name__ == "__main__":
     apply_style()
 
-    fig = plot_pension_solidarity()
-    savefig(fig, "cz_pension_solidarity", out_dir=LATEX_PICS_DIR)
+    # ── Obrázek 1: přehledové srovnání (single-panel) ─────────────────────────
+    fig_cmp = plot_pension_comparison()
+    savefig(fig_cmp, "cz_pension_income", out_dir=LATEX_PICS_DIR)
+    save_figure_tex(
+        "cz_pension_income",
+        caption=(
+            r"Výše starobního důchodu v závislosti na hrubém měsíčním příjmu "
+            r"pro zaměstnance, OSVČ se standardními odvody a OSVČ v~paušálním "
+            r"daňovém režimu (odvodový paušál). "
+            r"Parametry roku~2024, předpokládaná pojistná doba 40~let. "
+            r"Výpočet dle zákona č.\,155/1995~Sb. "
+            r"(zákon o~důchodovém pojištění), nařízení vlády č.\,286/2023~Sb."
+        ),
+        label="fig:cz_pension_income",
+        width=r"0.95\linewidth",
+    )
 
+    # ── Obrázek 2: solidární přerozdělení (two-panel) ─────────────────────────
+    fig_sol = plot_pension_solidarity()
+    savefig(fig_sol, "cz_pension_solidarity", out_dir=LATEX_PICS_DIR)
     save_figure_tex(
         "cz_pension_solidarity",
         caption=(
