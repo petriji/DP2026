@@ -79,7 +79,7 @@ _vmax = max(_values.values())
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
 STRINGS = {
-    "title": f"Účast žen v ICT školení ({ds.latest_year})",
+    "title": f"Podíl žen na zaměstnanosti v ICT ({ds.latest_year})",
     "colorbar_label": r"podíl žen (16--74 let) [\%]",
 }
 

@@ -78,7 +78,7 @@ savefig_pgf(fig, "eu_pokryti_kv_mapa", strings=STRINGS, nudge_labels=NUDGE_LABEL
 # ── 5. Write LaTeX snippet ────────────────────────────────────────────────────
 save_figure_tex_pgf(
     "eu_pokryti_kv_mapa",
-    caption=f"Pokrytí \\aclins{{KS}}, mapa Evropy, {ds.latest_year}",
+    caption=f"Pokrytí \\acpins{{KS}}, mapa Evropy, {ds.latest_year}",
     label="fig:eu_pokryti_kv_mapa",
     resizebox_width=r"\linewidth",
     cite_key="oecd_aias_ictwss_CBC_ERB_pct",
