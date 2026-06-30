@@ -176,7 +176,7 @@ ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
 ax.set_xlabel("rok")
-ax.set_ylabel("index (EU27 = 100)")
+ax.set_ylabel("index (EU27 = 100) [%]")
 ax.set_title(
     "Konvergence produktivity práce a čistého disponibilního příjmu (obě v PPS)"
 )

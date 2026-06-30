@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from shapely.geometry import box as shapely_box
+from shapely.ops import unary_union
 
 from config import CMAP_SEQUENTIAL, CMAP_DIVERGING, FONT_SIZE
 from stattool.dataset import Dataset
@@ -48,6 +49,18 @@ def _get_world() -> gpd.GeoDataFrame:
         else:
             world["iso_a2"] = world["ISO_A2"]
         world.loc[world["iso_a2"] == "-99", "iso_a2"] = None
+        # Reassign Crimea from Russia to Ukraine — all Natural Earth resolutions
+        # incorrectly assign Crimea to RU; fix at WGS84 level before reprojection.
+        crimea_box = shapely_box(32.0, 44.3, 36.8, 46.5)
+        ru_mask = world["iso_a2"] == "RU"
+        ua_mask = world["iso_a2"] == "UA"
+        if ru_mask.any() and ua_mask.any():
+            ru_geom = world.loc[ru_mask, "geometry"].iloc[0]
+            ua_geom = world.loc[ua_mask, "geometry"].iloc[0]
+            crimea = ru_geom.intersection(crimea_box)
+            if not crimea.is_empty:
+                world.loc[ru_mask, "geometry"] = ru_geom.difference(crimea_box)
+                world.loc[ua_mask, "geometry"] = unary_union([ua_geom, crimea])
         _WORLD = world.to_crs(_LAEA)
     return _WORLD
 
@@ -202,9 +215,9 @@ def choropleth(
     ax.set_axis_off()
 
     # Title centred over the full figure (axes + colourbar)
-    # top=0.88 + y=0.95 pushes the title a bit higher away from the map.
+    # top=0.85 leaves ~5 pt more space between map and title than default.
     if title:
-        fig.subplots_adjust(top=0.88)
+        fig.subplots_adjust(top=0.85)
         fig.suptitle(title, fontsize=plt.rcParams.get("axes.titlesize", 9),
                      y=0.95, ha="center")
 

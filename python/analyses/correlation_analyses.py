@@ -179,7 +179,7 @@ _SCATTER_SPECS = [
         "ds_y": ds_hours,
         "title": "Korelace: pokrytí KV a průměrná pracovní doba",
         "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "průměrný týdenní úvazek [h/týden]",
+        "ylabel": "průměrná týdenní pracovní doba [h]",
         "caption": (
             "Pokrytí kolektivního vyjednávání (\\%, osa x) a průměrná "
             "týdenní pracovní doba zaměstnanců (h/týden, osa y) pro státy EU27. "
@@ -192,9 +192,9 @@ _SCATTER_SPECS = [
         "name": "coverage_income_scatter",
         "ds_x": ds_cbc,
         "ds_y": ds_gdp_idx,
-        "title": "Korelace: pokrytí KV a HDP na obyvatele",
+        "title": "Korelace: pokrytí KV a HDP na obyvatele v PPS",
         "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "HDP na obyvatele (EU27 = 100)",
+        "ylabel": "HDP na obyvatele v PPS (EU27 = 100)",
         "caption": (
             "Pokrytí kolektivního vyjednávání (\\%, osa x) a HDP na obyvatele "
             "v\,paritě kupní síly (EU27\\,=\\,100, osa y) pro státy EU27. "
@@ -223,9 +223,9 @@ _SCATTER_SPECS = [
         "name": "coverage_ratio_scatter",
         "ds_x": ds_cbc,
         "ds_y": ds_ratio,
-        "title": "Korelace: pokrytí KV a čistý příjem / HDP na obyvatele",
+        "title": "Korelace: pokrytí KV a disponibilní příjem / produktivita (po zdanění a odvod.)",
         "xlabel": "pokrytí kolektivního vyjednávání [%]",
-        "ylabel": "čistý příjem / HDP na ob. [%]",
+        "ylabel": "disponibilní příjem / produktivita [%]",
         "caption": (
             "Pokrytí kolektivního vyjednávání (\\%, osa x) a podíl čistého "
             "příjmu pracovníka (PPS, 100\\,\\% prům.~mzdy) na HDP na obyvatele "
@@ -273,8 +273,8 @@ _SUBCAPTIONS = ["(a)", "(b)", "(c)", "(d)"]
 
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
-    "Korelace: pokrytí kolektivního vyjednávání a vybrané veličiny trhu práce",
-    fontsize=FONT_SIZE,
+    "Korelace pokrytí KV s vybranými ukazateli trhu práce (2024)",
+    fontsize=max(FONT_SIZE, 10),
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     row_bottom = idx >= 2
@@ -296,9 +296,18 @@ for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     ax.text(
         0.03, 0.97, _SUBCAPTIONS[idx],
         transform=ax.transAxes,
-        fontsize=FONT_SIZE, fontweight="bold",
+        fontsize=max(FONT_SIZE, 10), fontweight="bold",
         va="top", ha="left",
     )
+    # Apply "tis." (thousands) formatter where y-values reach 1000+
+    import matplotlib.ticker as _ticker
+    ax.yaxis.set_major_formatter(
+        _ticker.FuncFormatter(
+            lambda val, _: f"{val/1000:.0f}\u202ftis." if abs(val) >= 1000 else f"{val:.4g}"
+        )
+    )
+    for item in ax.get_xticklabels() + ax.get_yticklabels():
+        item.set_fontsize(max(item.get_fontsize(), 10))
 fig_all.tight_layout(pad=1.5, rect=[0, 0, 1, 0.96])
 savefig(fig_all, "scatter_combined", out_dir=LATEX_PICS_DIR)
 save_figure_tex(

@@ -268,7 +268,7 @@ for sec_code, sec_title in SECTOR_TITLES.items():
     fig_map = choropleth(
         ds_map,
         year=int(ref_year),
-        title=f"hodinové náklady práce [PPS/h] – {sec_title} ({ref_year})",
+        title=f"Hodinové náklady práce – {sec_title} ({ref_year})",
         colorbar_label="[PPS/h]",
         cmap="RdYlGn",
         vmin=None,
