@@ -12,8 +12,7 @@ korelační analýzou; pro účely predikce dopadu hypotetické změny pokrytí 
 je následně k~jednomu páru přiložen jednoduchý regresní model
 \acgen{KV}\,$\to$\,výstup.
 
-\paragraph{Datová základna a~výběr zemí}\label{par:korelace_data}
-Korelační analýza pracuje s~párovým panelem (\textit{geo\,$\times$\,rok})
+\paragraph{Datová základna korelační analýzy}\label{par:korelace_data} je tvořena párovým panelem (\textit{geo\,$\times$\,rok})
 sestaveným z~následujících zdrojů. Pokrytí \acs{KS} pochází z~databáze \acs{OECD}~\acs{ICTWSS}~\cite{oecd_aias_ictwss_CBC_ERB_pct}:
 pro 21~zemí EU-27 je použita upravená míra \textit{AdjCov} zachycující podíl
 zaměstnanců pokrytých jakoukoli kolektivní smlouvou bez ohledu na~odborové
@@ -53,8 +52,7 @@ Zbývajících 24~zemí pokrývá všechny geografické a~modelové skupiny \acs
 a~balkánské. Panel není vyvážený: počet párových pozorování
 $\acs{var-n}_{\text{panel}}$ se liší dle dostupnosti výstupní proměnné (viz tab.~\ref{tab:korelace_tabulka}).
 
-\paragraph{Odvození hodinového čistého příjmu v~\acs{PPS}}\label{par:pps_hourly}
-Eurostatový soubor earn\_nt\_net~\cite{eurostat_earn_nt_net_PPS_AW100}
+\paragraph{Odvození hodinového čistého příjmu v~\acs{PPS}}\label{par:pps_hourly} vychází z~eurostatového souboru earn\_nt\_net~\cite{eurostat_earn_nt_net_PPS_AW100}, který
 poskytuje roční čistý příjem standardizované osoby ve~výši \SI{100}{\percent}
 průměrné mzdy (\textit{average worker}, \acs{idx-AW100}) v~jednotkách \acs{PPS},
 tj.\ $\acs{var-y}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-AW100},\acs{idx-a}}$.
@@ -73,8 +71,7 @@ Výsledná veličina~$\acs{var-w}^{\acs{idx-PPS}}_{\acs{idx-n},\acs{idx-h},\acs{
 v~délce skutečného pracovního fondu, a~je proto srovnatelnější napříč zeměmi
 než hrubá hodinová mzda nebo roční čistý příjem samostatně.
 
-\paragraph{Statistický aparát}\label{par:korelace_math}
-Jsou použity dvě míry asociace, jeden predikční model a~jedna míra
+\paragraph{Statistický aparát}\label{par:korelace_math} používá dvě míry asociace, jeden predikční model a~jednu míru
 vysvětleného rozptylu.
 
 \subparagraph{Pearsonův párový korelační koeficient}\label{spar:pearson}
@@ -151,8 +148,7 @@ Predikovaná změna výstupní proměnné při změně pokrytí o~$\Delta \acs{v
   \Delta\hat{\acs{var-y}} = \hat{\beta}\,\Delta \acs{var-x}.
 \end{equation}
 
-\paragraph{Testování závislosti a~status statistické inference}\label{par:testovani}
-Klasický oboustranný test významnosti formuluje hypotézy
+\paragraph{Testování závislosti}\label{par:testovani} vychází v~klasickém oboustranném testu významnosti z~hypotéz
 \(\mathrm{H}_{0}\!:\acs{var-r}=0\) (proměnné jsou nezávislé) proti
 \(\mathrm{H}_{1}\!:\acs{var-r}\neq 0\); testovou statistikou je
 \(t = \acs{var-r}\sqrt{(\acs{var-n}-2)/(1-\acs{var-r}^{2})}\)
@@ -169,8 +165,7 @@ inference předpokládá nezávislost a~náhodný výběr; obě podmínky jsou n
 robustnost podle shody Pearsonova~$\acs{var-r}$ a~Spearmanova~$\acs{var-rho}$
 a~podle stability mezi panelovým a~průřezovým koeficientem.
 
-\paragraph{Kombinovaný pohled na asociace pokrytí \acs{KS} s~trhem práce}\label{par:scatter_combined}
-Rozptylový diagram (obr.~\ref{fig:korelace_scatter}) zachycuje simultánně
+\paragraph{Kombinovaný pohled na asociace pokrytí \acs{KS} s~trhem práce}\label{par:scatter_combined} zprostředkovává rozptylový diagram (obr.~\ref{fig:korelace_scatter}), který simultánně zachycuje
 vztah pokrytí \acs{KS} ke čtyřem výstupním proměnným.
 Každý dílčí panel potvrzuje parciální asociaci, kombinovaný pohled odhaluje
 soustavný vzorec: státy s~vysokým pokrytím \acs{KS} (Rakousko, Dánsko, Belgie, Francie)
@@ -181,8 +176,7 @@ pokrytí, ač absolutně není na~dně EU-27.
 
 \input{texparts/python/korelace_scatter}
 
-\paragraph{Výsledky korelační analýzy}\label{par:korelace_vysledky}
-Tab.~\ref{tab:korelace_tabulka} shrnuje výsledky za~roky~2004--2024.
+\paragraph{Výsledky korelační analýzy}\label{par:korelace_vysledky} jsou shrnuty v~tab.~\ref{tab:korelace_tabulka} za~roky~2004--2024.
 Každý řádek reportuje dvě úrovně analýzy:
 \begin{enumerate}
   \item \emph{Panelový koeficient} (Pearsonovo~$\acs{var-r}$,
@@ -276,9 +270,8 @@ Výsledky jsou interpretovány po~párech:
     vlastnost vztahu kolektivního vyjednávání k~nerovnosti.
 \end{description}
 
-\paragraph{Odborová organizovanost a~příjmová nerovnost}\label{par:union_gini}
-Záporná korelace odborové organizovanosti a~Giniho koeficientu (pokles Gini s~rostoucí
-organizovaností) je jedním z~nejcitovanějších statistických argumentů v~debatě
+\paragraph{Odborová organizovanost a~příjmová nerovnost}\label{par:union_gini} vykazují zápornou korelaci: pokles Giniho koeficientu s~rostoucí
+organizovaností je jedním z~nejcitovanějších statistických argumentů v~debatě
 o~pravidlech trhu práce a~je robustní i~po~kontrole
 o~výši \acgen{HDP} a~sociálních transferů. \Ac{ČR} se~řadí
 do~skupiny zemí s~relativně nízkým Gini, ale také s~nízkou a~klesající
@@ -302,9 +295,8 @@ studii \acgen{ČR} --- jako konzistentní mezinárodní vzorec, v~němž \Ac{ČR
 se~svým pokrytím $\approx 31\,\%$ systematicky vykazuje horší výsledky než
 srovnatelné ekonomiky s~vyšším pokrytím.
 
-\paragraph{Predikce dopadu na~hospodářství \acgen{ČR}: hypotetické pokrytí 80~\%}\label{par:predikce}
-Směrnice Evropského parlamentu a~Rady (\acs{EU}) 2022/2041 o~přiměřených
-minimálních mzdách ukládá členským státům
+\paragraph{Predikce dopadu na~hospodářství \acgen{ČR}: hypotetické pokrytí 80~\%}\label{par:predikce} vychází z~rámce směrnice Evropského parlamentu a~Rady (\acs{EU}) 2022/2041 o~přiměřených
+minimálních mzdách, která ukládá členským státům
 s~pokrytím \acs{KS} pod hranicí 80~\% povinnost vypracovat akční plán
 pro~jeho zvýšení. \Ac{ČR} se~svým pokrytím $\approx 31\,\%$ (2023) patří
 k~zemím s~největším potenciálním nárůstem v~\acs{EU}: potřebné navýšení
