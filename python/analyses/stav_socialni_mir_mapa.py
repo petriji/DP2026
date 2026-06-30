@@ -1,9 +1,6 @@
 r"""
 Social-peace benchmark choropleths (B4): score map + strike-days map.
 
-Data source: ETUI, ILOSTAT a expertni odhady (Social-peace benchmark, 2025)
-Filter: srovnání kategorií sociálního míru (skóre) a počtu dní stávek na 1 000 zaměstnanců v Evropě
-
 Purpose
 -------
 Provide a transparent visual basis for the expert B4 variable used in the
@@ -31,16 +28,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from analyses.stav_socialni_mir_data import (
-    build_b4_scores,
-    get_b4_benchmark_year,
-    get_b4_strike_days_per_1000,
-)
+from analyses._ternary_calc import _B4_STRIKE_DAYS_PER_1000, _build_b4_scores
 from stattool.dataset import Dataset
 from stattool.style import (
     apply_style_pgf,
@@ -51,7 +43,7 @@ from stattool.style import (
 from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
-YEAR = get_b4_benchmark_year()
+YEAR = 2025
 COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 NUDGE_LABELS = [(c, rf"\acs{{geo-{c}}}") for c in COUNTRIES]
 
@@ -60,15 +52,13 @@ apply_style_pgf()
 
 # ── 1. Build benchmark datasets ───────────────────────────────────────────────
 rows: list[dict[str, float | int | str]] = []
-_score_series = build_b4_scores()
-_strike_days = get_b4_strike_days_per_1000()
-for geo in sorted(_score_series.index):
-    days = _strike_days.get(geo)
+_score_series = _build_b4_scores()
+for geo, days in sorted(_B4_STRIKE_DAYS_PER_1000.items()):
     rows.append(
         {
             "geo": geo,
             "time": YEAR,
-            "days_per_1000": float(days) if days is not None else np.nan,
+            "days_per_1000": float(days),
             "score": float(_score_series.get(geo, 50.0)),
         }
     )
@@ -93,7 +83,7 @@ _ds_days = Dataset(
 
 # ── 2. Score choropleth ───────────────────────────────────────────────────────
 STRINGS_SCORE = {
-    "title": f"Sociální smír, kvalitativní skóre ({YEAR})",
+    "title": f"Sociální mír (B4): semikvantitativní skóre ({YEAR})",
     "colorbar_label": r"skóre sociálního míru [0/25/50/75/100]",
 }
 
@@ -106,7 +96,7 @@ fig_score = choropleth(
     vmin=0,
     vmax=100,
     label_countries=True,
-    highlight_colorbar=[],
+    highlight_colorbar=COUNTRIES,
 )
 
 _values_score = {row["geo"]: float(row["score"]) for _, row in _df.iterrows()}
@@ -121,7 +111,11 @@ savefig_pgf(
 
 save_figure_tex_pgf(
     "stav_socialni_mir_skore_mapa",
-    caption=f"Expertní skóre sociálního smíru, \\acs{{geo-EU27}}, {YEAR}",
+    caption=(
+        f"Semikvantitativní skóre sociálního míru (B4), \\acs{{geo-EU27}}, {YEAR}. "
+        "Kategorizace: 0/25/50/75/100 podle benchmarku ztracených dnů práce "
+        "a institucionálního kontextu kolektivního vyjednávání."
+    ),
     label="fig:stav_socialni_mir_skore_mapa",
     resizebox_width=r"\linewidth",
     cite_keys=["ilostat_STR_DAYS_ECO_RT_A", "etui_cba", "CMKOS_ZpravaKV2025"],
@@ -142,16 +136,12 @@ fig_days = choropleth(
     colorbar_label=STRINGS_DAYS["colorbar_label"],
     cmap="RdYlGn_r",
     vmin=0,
-    vmax=max(1.0, float(_df["days_per_1000"].dropna().max())),
+    vmax=max(float(v) for v in _df["days_per_1000"]),
     label_countries=True,
-    highlight_colorbar=[],
+    highlight_colorbar=COUNTRIES,
 )
 
-_values_days = {
-    row["geo"]: float(row["days_per_1000"])
-    for _, row in _df.iterrows()
-    if pd.notna(row["days_per_1000"])
-}
+_values_days = {row["geo"]: float(row["days_per_1000"]) for _, row in _df.iterrows()}
 apply_geo_labels_pgf(fig_days.axes[0], halo=True, values=_values_days, tooltip_fmt="{:.1f}")
 
 savefig_pgf(
