@@ -748,7 +748,11 @@ def plot_tax_wedge_comparison(
 
     for expense_rate, label, color, max_pasmo in OSVC_TYPES:
         tw_osvc = tax_wedge_osvc_vydajovy(x, expense_rate)
-        rr_osvc = pension_osvc_vydajovy(x, expense_rate, years) / np.maximum(net_income_osvc_vydajovy(x, expense_rate), 1) * 100
+        ni_osvc = net_income_osvc_vydajovy(x, expense_rate)
+        # Mask points where net income ≤ 0 (OSVČ 80 % at low income has
+        # negative net income due to minimum SP/ZP bases exceeding profit).
+        valid   = ni_osvc > 0
+        rr_osvc = np.where(valid, pension_osvc_vydajovy(x, expense_rate, years) / np.maximum(ni_osvc, 1.0) * 100, np.nan)
         cap = OSVC_VYDAJOVY_CAP[expense_rate]
         mask_below = x <= cap
         mask_above = ~mask_below
