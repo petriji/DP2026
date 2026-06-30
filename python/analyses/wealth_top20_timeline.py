@@ -1,12 +1,11 @@
 r"""
-Top 20 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
+Top 5 % wealth share timeline – CZ, AT, DE, DK, SK, FI.
 
-Shows changes in the top 20 % net wealth share (% of total household net
-wealth) from OECD HFCS survey waves.  The top quintile captures the broad
-wealthy class rather than just the ultra-rich top decile, making concentration
-trends more interpretable in policy terms.
+Shows changes in the top 5 % net wealth share (% of total household net
+wealth) from OECD HFCS survey waves.  The top 5 % captures the broadest
+concentration trend, making it suitable for cross-country comparison.
 
-Data source: OECD Wealth Distribution database (WEALTH dataset, SH_TOP20)
+Data source: OECD Wealth Distribution database (WEALTH dataset, SH_TOP5)
 
 Output
 ------
@@ -39,7 +38,7 @@ START_YEAR = 2008
 apply_style()
 
 # ── 1. Download ───────────────────────────────────────────────────────────────
-# WEALTH dataset: SH_TOP20 = top 20 % net wealth share (% of total)
+# WEALTH dataset: SH_TOP5 = top 5 % net wealth share (% of total)
 path = fetch_oecd("WEALTH", start_period=START_YEAR)
 
 ds = Dataset.from_oecd_csv(
@@ -121,13 +120,13 @@ savefig(fig, "wealth_top20_timeline", out_dir=LATEX_PICS_DIR)
 save_figure_tex(
     "wealth_top20_timeline",
     caption=(
-        f"Podíl top 5\,\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
+        f"Podíl top 5\\,\\% na čistém jmění domácností, HFCS {START_YEAR}--{ds_all.years[-1] if ds_all.years else ''}. "
         "Přerušovaná spojnice propojuje průzkumné vlny (data nejsou roční). "
         "Šedé linie = ostatní země v~datové sadě."
     ),
     label="fig:wealth_top20_timeline",
     width=r"0.95\linewidth",
-    cite_key="oecd_hfcs_wealth_top10_PC",
+    cite_key="oecd_hfcs_wealth_top5_PC",
 )
 
 print("Done.")
