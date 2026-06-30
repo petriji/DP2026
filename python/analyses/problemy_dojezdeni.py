@@ -206,7 +206,7 @@ if not ds_nat.df.empty and len(ds_nat.countries) >= 2:
         show_eu_avg=False,
         background_eu=True,
     )
-    fig_a.axes[0].set_ylim(0, 8)
+    fig_a.axes[0].set_ylim(0, 6)
     # Tooltips: foreground countries + grey EU-27 background lines.
     _ax_a = fig_a.axes[0]
     _pivot_a_fg = nat[nat["geo"].isin(COUNTRIES)].pivot_table(
@@ -306,8 +306,8 @@ try:
         title=STRINGS_NUTS2["title"],
         colorbar_label=STRINGS_NUTS2["colorbar_label"],
         cmap="RdYlGn_r",
-        vmin=float(data_series.min()),
-        vmax=float(data_series.max()),
+        vmin=0,# float(data_series.min()),
+        vmax=15,# float(data_series.max()),
         label_cz=True,
         label_nbr=True,
         label_fmt="{:.1f}",

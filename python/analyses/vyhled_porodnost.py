@@ -41,8 +41,8 @@ from statout.map_europe import choropleth
 
 # ── Parameters ────────────────────────────────────────────────────────────────
 
-COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "FR", "SE"]
-START_YEAR = 1960
+COUNTRIES = ["CZ", "AT", "DE", "SK", "PL", "DK"]
+START_YEAR = 1990
 
 HIGHLIGHT = ["CZ"]
 
@@ -53,7 +53,7 @@ REPLACEMENT = 2.1
 STRINGS_TIMELINE = {
     "title": r"\ac{TFR} -- úhrnná plodnost",
     "ylabel": "živě narozených na ženu",
-    "annot_replacement": f"hladina prosté reprodukce (\\SI{{{REPLACEMENT}}}{{}})",
+    "annot_replacement": f"hladina prosté reprodukce ({REPLACEMENT})",
 }
 STRINGS_MAP = {
     "title_tpl": r"\ac{{TFR}} v~zemích \ac{{EU}} ({year})",
@@ -109,6 +109,7 @@ fig = timeline(
 
 ax = fig.axes[0]
 ax.set_xlim(START_YEAR, max(ds.years[-1], 2025))
+ax.set_ylim(1.0, 2.5)
 
 # Tooltip on every data point (hover in Acrobat/Foxit shows country, year, value)
 _pivot = (
