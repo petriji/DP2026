@@ -169,7 +169,7 @@ cz_min_val = cz.min()
 ax.annotate(
     f"\\acs{{geo-CZ}}\u00a0{cz_min_yr}: {cz_min_val:.2f}",
     xy=(cz_min_yr, cz_min_val),
-    xytext=(10, -18),
+    xytext=(10, -14),
     textcoords="offset points",
     fontsize=FONT_SIZE,
     arrowprops=dict(arrowstyle="-", color="#888888", lw=0.7),
