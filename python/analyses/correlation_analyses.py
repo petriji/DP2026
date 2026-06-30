@@ -59,6 +59,22 @@ from statout.timeline import EU27
 HIGHLIGHT_COUNTRIES = ["CZ", "AT", "DE", "DK", "PL", "SK"]
 START_YEAR = 2004
 
+# Ireland is excluded from all analyses: its GDP/cap (EU27=100 ≈ 237) is heavily
+# distorted by large multinationals domiciled in IE for EU tax purposes (transfer
+# pricing, IP relocation), making it a statistical outlier unrepresentative of
+# actual living standards or labour-market conditions.
+EXCLUDE_COUNTRIES = ["IE"]
+
+# Footnote used in all figure/table captions explaining excluded and missing countries.
+_EXCL_NOTE = (
+    "Irsko (IE) vyřazeno: HDP/ob.~v~PPS $\\approx 237$ (EU27\\,=\\,100) "
+    "je zkresleno přesunem zisků nadnárodních korporací se sídlem v~Irsku "
+    "(transfer pricing, relokace~IP) --- nereprezentuje skutečnou životní "
+    "úroveň ani podmínky trhu práce. "
+    "Data nedostupná: EE, LV --- chybějící hodnoty v~ICTWSS~\\textit{AdjCov}; "
+    "LU --- data dostupná pouze před rokem 2004."
+)
+
 # ── 0. Style ──────────────────────────────────────────────────────────────────
 apply_style()
 
@@ -103,12 +119,62 @@ print("Download complete.")
 
 # ── 2. Parse ──────────────────────────────────────────────────────────────────
 
-ds_cbc = Dataset.from_oecd_csv(
+# CB coverage: AdjCov from ICTWSS CSV (all EU27 exc. DE and SK)
+#              + ERB from OECD CBC (DE and SK — AdjCov stalls before 2015/1990)
+import csv as _csv, urllib.request as _urllib_req
+from io import StringIO as _StringIO
+_ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
+_ISO3_TO_ISO2_COR: dict[str, str] = {
+    "AUT": "AT", "BEL": "BE", "BGR": "BG", "HRV": "HR", "CYP": "CY",
+    "CZE": "CZ", "DNK": "DK", "EST": "EE", "FIN": "FI", "FRA": "FR",
+    "DEU": "DE", "GRC": "GR", "HUN": "HU", "IRL": "IE", "ITA": "IT",
+    "LVA": "LV", "LTU": "LT", "LUX": "LU", "MLT": "MT", "NLD": "NL",
+    "POL": "PL", "PRT": "PT", "ROU": "RO", "SVK": "SK", "SVN": "SI",
+    "ESP": "ES", "SWE": "SE",
+}
+_EU27_ISO3_COR = set(_ISO3_TO_ISO2_COR.keys())
+
+print("Downloading ICTWSS v2 CSV (AdjCov) …")
+_adjcov_rows: list[dict] = []
+try:
+    with _urllib_req.urlopen(_ICTWSS_URL, timeout=60) as _resp:
+        _reader = _csv.DictReader(_StringIO(_resp.read().decode("utf-8-sig")))
+        for _r in _reader:
+            _iso3 = _r.get("iso3", "").strip().upper()
+            _iso2 = _ISO3_TO_ISO2_COR.get(_iso3)
+            if not _iso2 or _iso2 in ("DE", "SK"):
+                continue
+            _val = _r.get("AdjCov", "").strip()
+            _yr  = _r.get("year", "").strip()
+            if _val and _yr:
+                _adjcov_rows.append({"geo": _iso2, "time": int(_yr), "value": float(_val)})
+except Exception as _e:
+    print(f"  WARNING: ICTWSS AdjCov unavailable ({_e}) — CBC ERB used for all countries")
+
+_df_adjcov = pd.DataFrame(_adjcov_rows) if _adjcov_rows else pd.DataFrame(columns=["geo","time","value"])
+if not _df_adjcov.empty:
+    _df_adjcov = _df_adjcov[_df_adjcov["time"] >= START_YEAR]
+print(f"  AdjCov: {_df_adjcov['geo'].nunique()} EU27 countries (exc. DE, SK), "
+      f"years {_df_adjcov['time'].min() if not _df_adjcov.empty else '?'}–"
+      f"{_df_adjcov['time'].max() if not _df_adjcov.empty else '?'}")
+
+# ERB from OECD CBC for DE and SK
+ds_cbc_erb = Dataset.from_oecd_csv(
     path_cbc,
-    name="Pokrytí KV",
+    name="Pokrytí KV (ERB)",
     unit="%",
     source_url="OECD AIAS ICTWSS / CBC",
     filters={"MEASURE": "ERB"},
+)
+_df_erb = ds_cbc_erb.df[ds_cbc_erb.df["geo"].isin(["DE", "SK"])][["geo", "time", "value"]].copy()
+print(f"  CBC ERB/DE+SK: years {_df_erb['time'].min() if not _df_erb.empty else '?'}–"
+      f"{_df_erb['time'].max() if not _df_erb.empty else '?'}")
+
+ds_cbc = Dataset(
+    pd.concat([_df_adjcov, _df_erb], ignore_index=True),
+    name="Pokrytí KV",
+    unit="%",
+    source_url="ICTWSS AdjCov + OECD CBC ERB (DE, SK)",
 )
 
 ds_hours = Dataset.from_sdmx_csv(
@@ -219,7 +285,7 @@ _SCATTER_SPECS = [
     },
 ]
 
-EU27_LIST = sorted(EU27)
+EU27_LIST = sorted(c for c in EU27 if c not in EXCLUDE_COUNTRIES)
 
 for spec in _SCATTER_SPECS:
     print(f"Plotting {spec['name']} …")
@@ -245,6 +311,7 @@ for spec in _SCATTER_SPECS:
         label=spec["label"],
         width=r"0.85\linewidth",
         cite_key=spec["cite"],
+        footnote=_EXCL_NOTE,
     )
     print(f"  saved {spec['name']} ({display_year})")
 
@@ -300,6 +367,7 @@ save_figure_tex(
     cite_keys=["oecd_aias_ictwss_CBC_ERB_pct", "eurostat_lfsa_ewhun2_HR_weekly",
                "eurostat_nama_10_pc_PPS_EU27eq100", "eurostat_ilc_di12_Gini",
                "eurostat_earn_nt_net_PPS_AW100"],
+    footnote=_EXCL_NOTE,
 )
 print("  saved scatter_combined")
 
@@ -349,6 +417,7 @@ def _merge_for_corr(ds_x: Dataset, ds_y: Dataset) -> pd.DataFrame:
         columns={ds_y.geo_col: "geo", ds_y.time_col: "time", ds_y.value_col: "y"}
     )
     merged = df_x.merge(df_y, on=["geo", "time"], how="inner").dropna(subset=["x", "y"])
+    merged = merged[~merged["geo"].isin(EXCLUDE_COUNTRIES)]
     return merged
 
 
@@ -369,6 +438,7 @@ def _corr_for_latest_year(ds_x: Dataset, ds_y: Dataset) -> tuple[float, int]:
         .merge(df_y[df_y["time"] == yr], on="geo")
         .dropna(subset=["x", "y"])
     )
+    merged = merged[~merged["geo"].isin(EXCLUDE_COUNTRIES)]
     if len(merged) < 3:
         return float("nan"), yr
     return float(merged["x"].corr(merged["y"], method="pearson")), yr
@@ -430,7 +500,7 @@ lines = [
     r"\centering",
     r"\caption{Korelace pokrytí KV a hustoty odborů s~vybranými veličinami pracovního trhu "
     r"(Pearsonovo $r$ a Spearmanovo $\rho$, všechna dostupná geo$\times$rok; "
-    rf"$r_{{\text{{akt.}}}}$ = Pearsonovo $r$ pro rok {_year_label})." + "}",
+    rf"$r_{{\text{{akt.}}}}$ = Pearsonovo $r$ pro rok {_year_label}).\\footnote{{{_EXCL_NOTE}}}" + "}",
     r"\label{tab:coverage_correlation_table}",
     r"\begin{tabular}{lrrrrr}",
     r"\toprule",

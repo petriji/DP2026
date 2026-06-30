@@ -36,6 +36,7 @@ def to_latex(
     bold_header: bool = True,
     midrule_after: Optional[list[str]] = None,
     italic_rows: Optional[list[str]] = None,
+    long_table: bool = False,
 ) -> str:
     r"""Generate a LaTeX ``table`` + ``tabular`` environment in *booktabs* style.
 
@@ -60,7 +61,8 @@ def to_latex(
         Full LaTeX column spec, e.g. ``"lrrrrrr"``.  Auto-generated as
         ``l`` for the first column and ``r`` for the rest when omitted.
     fontsize:
-        LaTeX font size command (default ``small``).
+        LaTeX font size command (default ``small``).  Ignored when
+        ``long_table=True`` (font size commands bleed out of longtable).
     position:
         Float placement, e.g. ``"htbp"`` or ``"H"``.
     index_name:
@@ -72,6 +74,11 @@ def to_latex(
     italic_rows:
         List of row *index values* whose entire row (label + all cells) should
         be wrapped in ``\textit{}``.  Use for sub-rows and derived indicators.
+    long_table:
+        When ``True``, emit an ``xltabular`` environment (longtable + tabularx
+        combined) instead of the default ``table`` + ``tabularx`` pair.  This
+        supports page breaks, repeating headers, and continuation captions.
+        The ``position`` and ``fontsize`` parameters are ignored.
     """
     if cite_keys:
         caption = caption + " " + "".join(f"\\cite{{{k}}}" for k in cite_keys)
@@ -119,39 +126,77 @@ def to_latex(
             f"}} \\\\\n"
         )
 
-    lines = [
-        f"\\begin{{table}}[{position}]",
-        "  \\centering",
-        f"  \\{fontsize}",
-    ]
-    if caption:
-        lines.append(f"  \\caption{{{caption}}}")
-    if label:
-        lines.append(f"  \\label{{{label}}}")
+    if long_table:
+        # ── xltabular (longtable + tabularx, multi-page) ─────────────────────
+        # No \begin{table} wrapper; caption and label live inside the env.
+        cap_line = f"  \\caption{{{caption}}}"
+        if label:
+            cap_line += f"\\label{{{label}}}"
+        cap_line += r" \\"
 
-    # Use tabularx when column spec contains X columns (requires \linewidth arg)
-    use_tabularx = "X" in col_format
-    if use_tabularx:
-        tabular_begin = f"  \\begin{{tabularx}}{{\\linewidth}}{{{col_format}}}"
-        tabular_end   = "  \\end{tabularx}"
+        cont_cap_line = "  \\caption*{(pokra\u010dov\u00e1n\u00ed)} \\\\"
+        foot_line = (
+            f"  \\multicolumn{{{n_cols}}}{{r}}"
+            "{\\footnotesize(pokra\u010duje na dal\u0161\u00ed str\u00e1nce)} \\\\"
+        )
+
+        lines = [f"\\begin{{xltabular}}{{\\linewidth}}{{{col_format}}}"]
+        if caption:
+            lines.append(cap_line)
+        lines += [
+            "  \\toprule",
+            header_row,
+            "  \\midrule",
+            "  \\endfirsthead",
+            cont_cap_line,
+            "  \\toprule",
+            header_row,
+            "  \\midrule",
+            "  \\endhead",
+            "  \\midrule",
+            foot_line,
+            "  \\endfoot",
+            "  \\bottomrule",
+        ]
+        if note_block:
+            lines.append(note_block.rstrip())
+        lines.append("  \\endlastfoot")
+        lines += rows_str
+        lines.append("\\end{xltabular}")
     else:
-        tabular_begin = f"  \\begin{{tabular}}{{{col_format}}}"
-        tabular_end   = "  \\end{tabular}"
+        lines = [
+            f"\\begin{{table}}[{position}]",
+            "  \\centering",
+            f"  \\{fontsize}",
+        ]
+        if caption:
+            lines.append(f"  \\caption{{{caption}}}")
+        if label:
+            lines.append(f"  \\label{{{label}}}")
 
-    lines += [
-        tabular_begin,
-        "    \\toprule",
-        "  " + header_row,
-        "    \\midrule",
-    ]
-    lines += rows_str
-    lines.append("    \\bottomrule")
-    if note_block:
-        lines.append(note_block.rstrip())
-    lines += [
-        tabular_end,
-        "\\end{table}",
-    ]
+        # Use tabularx when column spec contains X columns (requires \linewidth arg)
+        use_tabularx = "X" in col_format
+        if use_tabularx:
+            tabular_begin = f"  \\begin{{tabularx}}{{\\linewidth}}{{{col_format}}}"
+            tabular_end   = "  \\end{tabularx}"
+        else:
+            tabular_begin = f"  \\begin{{tabular}}{{{col_format}}}"
+            tabular_end   = "  \\end{tabular}"
+
+        lines += [
+            tabular_begin,
+            "    \\toprule",
+            "  " + header_row,
+            "    \\midrule",
+        ]
+        lines += rows_str
+        lines.append("    \\bottomrule")
+        if note_block:
+            lines.append(note_block.rstrip())
+        lines += [
+            tabular_end,
+            "\\end{table}",
+        ]
     return "\n".join(lines) + "\n"
 
 

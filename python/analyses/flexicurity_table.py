@@ -16,8 +16,8 @@ Indicator set (2025 / latest available):
   7.  Gini coefficient                           – ilc_di12
   8.  Employment rate 20–64 [%]                  – lfsi_emp_a
   9.  Job vacancy rate [%, B–S excl. O]          – jvs_a_nace2  (→ -- on 404)
-  10. CB coverage [%]                            – ETUI static ≈ 2022–2024
-  11. Trade union density [%]                    – ETUI static ≈ 2022–2024
+  10. CB coverage [%]                            – OECD ICTWSS AdjCov / CBC ERB, 2022–2024
+  11. Trade union density [%]                    – OECD ICTWSS TUD, 2022–2024
   12. Active LMP spending [% GDP]                – OECD LMPEXP (→ -- on error)
   13. Old-age dependency ratio (65+) [%]         – demo_pjanind OLDDEP1
 
@@ -58,11 +58,15 @@ COUNTRY_LABELS = {
 GEO = "+".join(COUNTRIES)
 YEAR = 2025   # table reference year; falls back to nearest prior available
 
-# Static data (ETUI Working Conditions Database / OECD, approx. 2022–2024)
-_CB_COVERAGE   = {"CZ": r"32\,\%", "DK": r"80\,\%", "DE": r"52\,\%",
-                  "AT": r"98\,\%", "PL": r"15\,\%", "SK": r"35\,\%"}
-_UNION_DENSITY = {"CZ": r"11\,\%", "DK": r"67\,\%", "DE": r"16\,\%",
-                  "AT": r"26\,\%", "PL": r"12\,\%", "SK": r"13\,\%"}
+# ICTWSS ISO3 → ISO2 mapping (EU…27 subset needed here)
+_ICTWSS_ISO3 = {
+    "AUT": "AT", "BEL": "BE", "BGR": "BG", "HRV": "HR", "CYP": "CY",
+    "CZE": "CZ", "DNK": "DK", "EST": "EE", "FIN": "FI", "FRA": "FR",
+    "DEU": "DE", "GRC": "GR", "HUN": "HU", "IRL": "IE", "ITA": "IT",
+    "LVA": "LV", "LTU": "LT", "LUX": "LU", "MLT": "MT", "NLD": "NL",
+    "POL": "PL", "PRT": "PT", "ROU": "RO", "SVK": "SK", "SVN": "SI",
+    "ESP": "ES", "SWE": "SE",
+}
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -251,6 +255,85 @@ try:
 except Exception as _e:
     print(f"  WARNING: earn_ses_pub1s unavailable ({_e}) — low-wage row will show --")
 
+# CB coverage — AdjCov from ICTWSS v2 CSV (all COUNTRIES except DE)
+#               + CBC ERB from OECD API (DE only; AdjCov for DE unavailable after 1990)
+print("Downloading ICTWSS CB coverage data …")
+import csv, urllib.request
+from io import StringIO
+_ICTWSS_URL = "https://webfs.oecd.org/Els-com/ICTWSS-Database/ICTWSS_v2.csv"
+_adjcov_records: list[dict] = []
+try:
+    with urllib.request.urlopen(_ICTWSS_URL, timeout=60) as _resp:
+        _reader = csv.DictReader(StringIO(_resp.read().decode("utf-8-sig")))
+        for _row_ictwss in _reader:
+            _iso3 = _row_ictwss.get("iso3", "").strip().upper()
+            _iso2 = _ICTWSS_ISO3.get(_iso3)
+            if not _iso2 or _iso2 == "DE":
+                continue
+            _val = _row_ictwss.get("AdjCov", "").strip()
+            _yr  = _row_ictwss.get("year", "").strip()
+            if _val and _yr:
+                _adjcov_records.append({"geo": _iso2, "time": int(_yr), "value": float(_val)})
+except Exception as _e:
+    print(f"  WARNING: ICTWSS AdjCov unavailable ({_e})")
+
+ds_cba_adjcov: "Dataset | None" = None
+if _adjcov_records:
+    _df_adj = pd.DataFrame(_adjcov_records)
+    ds_cba_adjcov = Dataset(_df_adj, name="Pokrytí KV (AdjCov)", unit="%",
+                            source_url="OECD AIAS ICTWSS / AdjCov")
+    print(f"  AdjCov: {_df_adj['geo'].nunique()} countries, "
+          f"years {_df_adj['time'].min()}–{_df_adj['time'].max()}")
+
+# CBC ERB (OECD API) — DE only
+ds_cba_erb: "Dataset | None" = None
+try:
+    from stattool.dataset import _OECD_ISO3_TO_ISO2 as _O3
+    _path_cbc = fetch_oecd("CBC", start_period=YEAR - 10)
+    _df_cbc = pd.read_csv(_path_cbc)
+    _df_cbc = _df_cbc[_df_cbc.get("MEASURE", _df_cbc.get("INDICATOR", "")) == "ERB"].copy() \
+        if "MEASURE" in _df_cbc.columns or "INDICATOR" in _df_cbc.columns \
+        else _df_cbc.copy()
+    # normalise column names
+    _df_cbc = _df_cbc.rename(columns={
+        "REF_AREA": "geo", "TIME_PERIOD": "time", "OBS_VALUE": "value",
+    })
+    _df_cbc["geo"] = _df_cbc["geo"].map(lambda x: _O3.get(str(x).upper(), str(x)))
+    # DE: AdjCov unavailable after 1990; SK: AdjCov last available 2015 → use ERB for both
+    _df_cbc = _df_cbc[_df_cbc["geo"].isin(["DE", "SK"])][["geo", "time", "value"]].dropna(subset=["value"])
+    if not _df_cbc.empty:
+        ds_cba_erb = Dataset(_df_cbc, name="Pokrytí KV ERB (DE)", unit="%",
+                             source_url="OECD CBC / ERB")
+        print(f"  CBC ERB/DE: years {_df_cbc['time'].min()}–{_df_cbc['time'].max()}")
+except Exception as _e:
+    print(f"  WARNING: OECD CBC ERB unavailable ({_e}) — DE CBA will show --")
+
+# Merge AdjCov + ERB into one Dataset for CB coverage
+_cba_parts = [ds.df for ds in (ds_cba_adjcov, ds_cba_erb) if ds is not None]
+if _cba_parts:
+    ds_cba = Dataset(pd.concat(_cba_parts, ignore_index=True),
+                     name="Pokrytí KV", unit="%",
+                     source_url="OECD AIAS ICTWSS / AdjCov+ERB")
+else:
+    ds_cba = None
+    print("  WARNING: CB coverage data entirely unavailable")
+
+# Trade union density — OECD TUD
+print("Downloading OECD TUD (union density) data …")
+ds_density: "Dataset | None" = None
+try:
+    _path_tud = fetch_oecd("TUD", start_period=YEAR - 10)
+    ds_density = Dataset.from_oecd_csv(
+        _path_tud,
+        name="Hustota odborů", unit="%",
+        source_url="OECD AIAS ICTWSS / TUD",
+        filters={"INDICATOR": "TUD"},
+    )
+    ds_density.df = ds_density.df[ds_density.df["geo"] != "OECD"].copy()
+    print(f"  TUD: years {ds_density.years[0]}–{ds_density.years[-1]}")
+except Exception as _e:
+    print(f"  WARNING: TUD unavailable ({_e}) — union density row will show --")
+
 print("Downloads complete.")
 
 # ── 2. Extract values for reference year ─────────────────────────────────────
@@ -263,8 +346,10 @@ v_gini, _yr_gini = _latest_by_geo(ds_gini, YEAR)
 v_emp,  _yr_emp  = _latest_by_geo(ds_emp,  YEAR)
 v_dep,  _yr_dep  = _latest_by_geo(ds_dep,  YEAR)
 v_jvr,  _yr_jvr  = _latest_by_geo(ds_jvr, YEAR) if ds_jvr else ({}, {})
-v_apz,  _yr_apz  = _latest_by_geo(ds_apz, YEAR) if ds_apz else ({}, {})
+v_apz,     _yr_apz     = _latest_by_geo(ds_apz,    YEAR) if ds_apz    else ({}, {})
 v_lowwage, _yr_lowwage = _latest_by_geo(ds_lowwage, YEAR) if ds_lowwage else ({}, {})
+v_cba,     _yr_cba     = _latest_by_geo(ds_cba,     YEAR) if ds_cba    else ({}, {})
+v_density, _yr_density = _latest_by_geo(ds_density, YEAR) if ds_density else ({}, {})
 
 # Labour cost EUR/h → PPS/h  (÷ PLI/100)
 if ds_lc_eur is not None:
@@ -303,6 +388,8 @@ _year_map: dict[str, dict[str, int]] = {
     "Věk. závislost":    _yr_dep,
     "APZ výdaje":        _yr_apz,
     "Nízkopříjm. zaměst.": _yr_lowwage,
+    "Pokrytí KV":        _yr_cba,
+    "Hustota odborů":    _yr_density,
 }
 
 _deviations: list[tuple[str, str, int]] = [
@@ -348,7 +435,7 @@ def _m(label: str, ind_key: str) -> str:
 
 # ── 3. Row label strings ──────────────────────────────────────────────────────
 
-_SUB = r"\hspace{1.5em}↳ (ČR\,=\,100\,\%)"
+_SUB = r"\hspace{1.5em} (ČR\,=\,100\,\%)"
 
 L_GDP      = _m(r"HDP [\ac{PPS}/os./rok]~\cite{eurostat_nama_10_pc}", "HDP/obyvatele")
 L_GDP_IDX  = _SUB
@@ -363,8 +450,8 @@ L_LOWWAGE  = _m(r"Nízkopříjmoví zaměstnanci (2/3 mediánu)\,\%~\cite{eurost
 L_GINI     = _m(r"Giniho koeficient~\cite{eurostat_ilc_di12}", "Gini")
 L_EMP      = _m(r"Zaměstnanost (20--64 let)\,\%~\cite{eurostat_lfsi_emp_a}", "Zaměstnanost")
 L_JVR      = _m(r"Volná prac. místa~\cite{eurostat_jvs_a_nace2}", "JVR")
-L_CBA      = r"Pokrytí \ac{KS}\,\%~\cite{etui_cba}"
-L_DENSITY  = r"Hustota odborů\,\%~\cite{etui_density}"
+L_CBA      = _m(r"Pokrytí \ac{KS}\,\%~\cite{oecd_aias_ictwss_CBC_ERB_pct}", "Pokrytí KV")
+L_DENSITY  = _m(r"Hustota odborů\,\%~\cite{oecd_aias_ictwss_TUD_pct}", "Hustota odborů")
 L_APZ      = _m(r"Výdaje na \ac{APZ}\,[\%\,\ac{HDP}]~\cite{oecd_lmpexp}", "APZ výdaje")
 L_DEP      = _m(r"Index závislosti seniorů (65+)~\cite{eurostat_demo_pjanind}", "Věk. závislost")
 
@@ -392,9 +479,9 @@ rows = [
     # ── Employment ────────────────────────────────────────────────────────────
     _row(L_EMP,      v_emp,      fmt="{:.1f}",  suffix=r"\,\%"),
     _row(L_JVR,      v_jvr,      fmt="{:.1f}",  suffix=r"\,\%"),
-    # ── Social dialogue (static ETUI) ─────────────────────────────────────────
-    _row_str(L_CBA,     _CB_COVERAGE),
-    _row_str(L_DENSITY, _UNION_DENSITY),
+    # ── Social dialogue (OECD AIAS ICTWSS) ─────────────────────────────────────────
+    _row(L_CBA,     v_cba,     fmt="{:.0f}", suffix=r"\,\%"),
+    _row(L_DENSITY, v_density, fmt="{:.0f}", suffix=r"\,\%"),
     # ── Policy / demographics ─────────────────────────────────────────────────
     _row(L_APZ,      v_apz,      fmt="{:.2f}",  suffix=r"\,\%"),
     _row(L_DEP,      v_dep,      fmt="{:.1f}",  suffix=r"\,\%"),
@@ -441,15 +528,19 @@ save_table_tex(
     ),
     label="tab:flexicurity",
     note=(
-        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,\div\,(\ac{PLI}/100). "
+        r"Náklady práce v \ac{PPS}/h\,=\,EUR/h\,$\div$\,(\ac{PLI}/100). "
         r"Disponibilní příjem\,=\,náklady práce\,$\times$\,$(1-\text{daňový klín}/100)$. "
         r"Daňový klín pro bezdětnou svobodnou osobu (single, 0~dětí). "
-        r"Zdroj statických dat (pokrytí \ac{KS}, hustota odborů): ETUI, cca 2022--2024."
+        r"Pokrytí \ac{KS}: OECD / AIAS ICTWSS \textit{AdjCov} (CZ, DK, AT, PL), "
+        r"DE a SK: ERB (\textit{AdjCov} $\neq$ ERB). "
+        r"Hustota odborů: ICTWSS \textit{TUD}."
         + _deviation_note
     ),
     col_format="Xrrrrrr",
+    col_headers=COUNTRIES,
     index_name="Indikátor",
     midrule_after=midrule_after,
     italic_rows=italic_rows,
+    long_table=True,
 )
 print("Done.")
