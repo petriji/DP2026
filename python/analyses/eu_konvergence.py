@@ -33,7 +33,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf
@@ -172,7 +172,7 @@ for geo in COUNTRIES:
             ax.annotate(geo, xy=(s_lp.index[-1], s_lp.iloc[-1]),
                         xytext=(4, 5) if geo == "SK" else (4, 0),
                         textcoords="offset points",
-                        fontsize=FONT_SIZE, color=color, va="center")
+                        fontsize=FIGURE_LABEL_SIZE, color=color, va="center")
     if geo in net_pivot.columns:
         s_net = net_pivot[geo].dropna()
         ax.plot(s_net.index, s_net.values,
@@ -181,7 +181,7 @@ for geo in COUNTRIES:
 # EU27=100 reference line
 ax.axhline(100, color="#555555", linewidth=0.8, linestyle=":", alpha=0.7, zorder=2)
 ax.text(START_YEAR + 0.3, 101.5, "EU27\u00a0=\u00a0100",
-        fontsize=FONT_SIZE - 1, color="#555555", alpha=0.8, va="bottom")
+        fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#555555", alpha=0.8, va="bottom")
 
 # ── 6. Axes styling ───────────────────────────────────────────────────────────
 STRINGS = {

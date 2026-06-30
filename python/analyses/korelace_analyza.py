@@ -46,10 +46,9 @@ import pandas as pd
 
 from config import (
     COUNTRY_COLORS,
+    FIGURE_TEXT_SIZE,
     FIGURE_COMPACT_TEXT_SIZE,
-    FONT_SIZE,
     LATEX_PICS_DIR,
-    LATEX_TEXPARTS_DIR,
 )
 from stattool.data_quality import warn_non_target_year
 from stattool.fetch import fetch_eurostat
@@ -254,7 +253,7 @@ _scatter_angle_nudges_by_panel = {
 fig_all, axes = plt.subplots(2, 2, figsize=cm2in(16, 16), sharex=True)
 fig_all.suptitle(
     STRINGS["title"],
-    fontsize=FIGURE_COMPACT_TEXT_SIZE,
+    fontsize=FIGURE_TEXT_SIZE,
 )
 for idx, (spec, ax) in enumerate(zip(_SCATTER_SPECS, axes.flat)):
     panel_key = PANEL_KEYS[idx]

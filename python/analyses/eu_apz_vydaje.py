@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import FONT_SIZE, LATEX_PICS_DIR
+from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.style import apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
 from statout.timeline import timeline, EU27 as _EU27
 from analyses._shared_data import load_lmp_active
@@ -92,7 +92,7 @@ if YLIM is not None:
 # subsidies. DK 'Lønkompensation' covered 75% of wages --- hence the highest spike.
 _ax = fig.axes[0]
 _ax.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
-_ax.text(2020.2, 1.9, "COVID-19", fontsize=FONT_SIZE - 1,
+_ax.text(2020.2, 1.9, "COVID-19", fontsize=FIGURE_COMPACT_LABEL_SIZE,
          color="#CC4444", alpha=0.85, va="top")
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
@@ -154,7 +154,7 @@ if YLIM2 is not None:
 
 _ax2 = fig2.axes[0]
 _ax2.axvline(2020, color="#CC4444", linewidth=0.8, linestyle="--", alpha=0.7, zorder=2)
-_ax2.text(2020.2, 1.7, "COVID-19", fontsize=FONT_SIZE - 1, color="#CC4444", alpha=0.85, va="top")
+_ax2.text(2020.2, 1.7, "COVID-19", fontsize=FIGURE_COMPACT_LABEL_SIZE, color="#CC4444", alpha=0.85, va="top")
 
 # ── PGF tooltips & geo labels ─────────────────────────────────────────────────
 _pivot_fg2 = (

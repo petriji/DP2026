@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import FONT_SIZE, PALETTE
+from config import PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch_ipp
 from stattool.style import (
     add_pgf_tooltips,
@@ -158,7 +158,7 @@ for label, data, color, ls in SERIES:
         xy=(LAST_YEAR, last_v),
         xytext=(-2, 4),
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         ha="right",
         va="bottom",
         color=color,
@@ -179,7 +179,7 @@ for yr, label in _EVENTS:
         xy=(yr, 0),
         xytext=(2, 4),
         textcoords="offset points",
-        fontsize=FONT_SIZE - 1,
+        fontsize=FIGURE_COMPACT_LABEL_SIZE,
         color="grey",
         ha="left",
         va="bottom",

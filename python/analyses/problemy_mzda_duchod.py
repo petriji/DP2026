@@ -54,7 +54,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch, fetch_ispv
 from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.style import (
@@ -585,7 +585,7 @@ def _tooltip(ax, x, y, text):
     ax.text(
         x, y,
         r"\pdftooltip{\phantom{\rule{3pt}{3pt}}}{" + text + r"}",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         ha="center", va="center", clip_on=True, zorder=10,
     )
 
@@ -671,7 +671,7 @@ _ann_w = ax.annotate(
     xycoords=("data", "axes fraction"),
     xytext=(0, 8),
     textcoords="offset points",
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
     color=_COLOR_WAGE,
     va="bottom",
     ha="center",
@@ -684,7 +684,7 @@ _ann_p = ax.annotate(
     xycoords=("data", "axes fraction"),
     xytext=(0, 8),
     textcoords="offset points",
-    fontsize=FONT_SIZE,
+    fontsize=FIGURE_LABEL_SIZE,
     color=_COLOR_PENSION,
     va="bottom",
     ha="center",
@@ -704,26 +704,26 @@ ax.annotate(
     "starobní důchody",
     xy=(_pension_label_x / 1_000, y_pension_at),
     xytext=(2, 4), textcoords="offset points",
-    fontsize=FONT_SIZE, color=_COLOR_PENSION,
+    fontsize=FIGURE_LABEL_SIZE, color=_COLOR_PENSION,
     ha="left", va="bottom", zorder=5,
 )
 ax.annotate(
     "čistá mzda (podnikatelská sféra)",
     xy=(_wage_label_x / 1_000, y_wage_at),
     xytext=(2, 4), textcoords="offset points",
-    fontsize=FONT_SIZE, color=_COLOR_WAGE,
+    fontsize=FIGURE_LABEL_SIZE, color=_COLOR_WAGE,
     ha="left", va="bottom", zorder=5,
 )
 
 # ── Axis styling ──────────────────────────────────────────────────────────────
-ax.set_xlabel(STRINGS["xlabel"], fontsize=FONT_SIZE + 1)
-ax.set_ylabel(STRINGS["ylabel"], fontsize=FONT_SIZE + 1)
+ax.set_xlabel(STRINGS["xlabel"], fontsize=FIGURE_LABEL_SIZE)
+ax.set_ylabel(STRINGS["ylabel"], fontsize=FIGURE_LABEL_SIZE)
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:.0f}"))
-ax.tick_params(axis="both", labelsize=FONT_SIZE)
+ax.tick_params(axis="both", labelsize=FIGURE_LABEL_SIZE)
 ax.set_xlim(_X_MIN / 1_000, _X_MAX / 1_000)
 ax.set_ylim(bottom=0)
-ax.set_title(STRINGS["title"], fontsize=FONT_SIZE + 2, pad=34)
+ax.set_title(STRINGS["title"], fontsize=FIGURE_TEXT_SIZE, pad=34)
 
 # Minor grid
 ax.minorticks_on()

@@ -55,7 +55,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.dataset import Dataset
 from stattool.style import apply_style_pgf, cm2in, savefig_pgf, save_figure_tex_pgf
@@ -204,13 +204,13 @@ if years_bc:
         ticker.FuncFormatter(lambda y, _: f"{y:.0f}")
     )
     ax_b.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-    ax_b.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_b.set_ylabel("index [HICP = 100]", fontsize=FONT_SIZE)
+    ax_b.set_xlabel("rok", fontsize=FIGURE_LABEL_SIZE)
+    ax_b.set_ylabel("index [HICP = 100]", fontsize=FIGURE_LABEL_SIZE)
     STRINGS_B = {
         "title": r"Kumulativní mzdový nárůst (HICP = 100), \acs{geo-CZ}",
     }
-    ax_b.set_title(STRINGS_B["title"], fontsize=FONT_SIZE)
-    ax_b.legend(frameon=False, fontsize=FONT_SIZE - 1.0, loc="upper left")
+    ax_b.set_title(STRINGS_B["title"], fontsize=FIGURE_TEXT_SIZE)
+    ax_b.legend(frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE, loc="upper left")
     ax_b.set_xlim(START_YEAR, END_YEAR)
 
     savefig_pgf(fig_b, "stav_ipp_kumulativ", strings=STRINGS_B)
@@ -250,19 +250,19 @@ if years_c:
             bar.get_x() + bar.get_width() / 2,
             val + offset,
             f"{val:+.1f}",
-            ha="center", va=va, fontsize=FONT_SIZE - 1.5,
+            ha="center", va=va, fontsize=FIGURE_COMPACT_LABEL_SIZE,
         )
 
     ax_c.yaxis.set_major_formatter(
         ticker.FuncFormatter(lambda y, _: f"\\SI{{{y:+.0f}}}{{\\pp}}")
     )
     ax_c.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=8))
-    ax_c.set_xlabel("rok", fontsize=FONT_SIZE)
-    ax_c.set_ylabel(r"skutečný − sjednaný nárůst [\si{\pp}]", fontsize=FONT_SIZE)
+    ax_c.set_xlabel("rok", fontsize=FIGURE_LABEL_SIZE)
+    ax_c.set_ylabel(r"skutečný − sjednaný nárůst [\si{\pp}]", fontsize=FIGURE_LABEL_SIZE)
     STRINGS_C = {
         "title": r"Rozdíl skutečného a~sjednaného mzdového nárůstu, \acs{geo-CZ}",
     }
-    ax_c.set_title(STRINGS_C["title"], fontsize=FONT_SIZE)
+    ax_c.set_title(STRINGS_C["title"], fontsize=FIGURE_TEXT_SIZE)
 
     green_patch = mpatches.Patch(
         color="#2CA02C", alpha=0.75,
@@ -272,7 +272,7 @@ if years_c:
         color="#D62728", alpha=0.75,
         label=r"Sjednáno více, než skutečný nárůst trhu",
     )
-    ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FONT_SIZE - 1)
+    ax_c.legend(handles=[green_patch, red_patch], frameon=False, fontsize=FIGURE_COMPACT_LABEL_SIZE)
     ax_c.set_xlim(years_c[0] - 0.5, years_c[-1] + 0.5)
 
     savefig_pgf(fig_c, "stav_ipp_mezera", strings=STRINGS_C)

@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import LATEX_PICS_DIR
+from config import LATEX_PICS_DIR, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.fetch import fetch_eurostat
 from stattool.data_quality import warn_fallback
 from stattool.dataset import Dataset
@@ -242,7 +242,7 @@ def _decorate(ax, ds, fmt):
 _decorate(ax_top, ds_arope, "{:.1f}")
 _decorate(ax_bot, ds_d3, "{:.1f}")
 
-fig.suptitle(STRINGS["title"], fontsize=12, y=0.995)
+fig.suptitle(STRINGS["title"], fontsize=FIGURE_TEXT_SIZE, y=0.995)
 fig.subplots_adjust(hspace=0.08, top=0.94)
 
 # ── 5. Save ───────────────────────────────────────────────────────────────────

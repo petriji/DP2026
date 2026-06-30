@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE
+from config import COUNTRY_COLORS, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from statout.timeline import EU27
 from stattool.dataset import Dataset
 from stattool.fetch import fetch_eurostat
@@ -168,7 +168,7 @@ if not eu_traj.empty:
         xy=(eu_last["prod"], eu_last["income_pps_hour"]),
         xytext=(5, 4),
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         color="#444444",
         va="center",
     )
@@ -198,7 +198,7 @@ for geo in COUNTRIES:
         xy=(last["prod"], last["income_pps_hour"]),
         xytext=offset,
         textcoords="offset points",
-        fontsize=FONT_SIZE,
+        fontsize=FIGURE_LABEL_SIZE,
         color=color,
         fontweight="bold",
         va="center",
@@ -223,7 +223,7 @@ ax.text(
     100,
     ax.get_ylim()[1],
     r"\acs{geo-EU}27 = 100",
-    fontsize=FONT_SIZE - 1,
+    fontsize=FIGURE_COMPACT_LABEL_SIZE,
     color="#555555",
     ha="right",
     va="top",

@@ -43,7 +43,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import numpy as np
 
-from config import FONT_SIZE
+from config import FIGURE_LABEL_SIZE, FIGURE_TEXT_SIZE
 from stattool.style import GEO_LONG_NAMES
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ def _draw_grid_and_ticks(ax: plt.Axes) -> None:
                     color=_GRID_COLOR, ls=ls, lw=lw, alpha=alpha, zorder=2)
 
     T = 0.036    # tick length (data units), 200% vs original 0.018
-    _FS = FONT_SIZE
+    _FS = FIGURE_LABEL_SIZE
     v_a = np.array([1.0, 0.0])
     v_b = np.array([0.5, -_H])
     v_c = np.array([0.5, _H])
@@ -240,7 +240,7 @@ def _draw_axis_arrows(
     Cv = np.array([1.0, 0.0])
 
     _akw = dict(arrowstyle="->", color="black", lw=1.2, mutation_scale=14)
-    _FS  = FONT_SIZE       # end-marker font size (same as tick labels)
+    _FS  = FIGURE_LABEL_SIZE  # end-marker font size (harmonized with figure labels)
 
     # ── A-axis: left edge B→A, vertex_labels[0] increases toward A ───────────
     d_a = Av - Bv                     # direction B→A (unit length since |BA|=1)
@@ -255,7 +255,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_a = (s_a + e_a) / 2.0
     ax.text(*(mid_a + n_a * lbl_gap), vertex_labels[0],
-            ha="center", va="center", fontsize=FONT_SIZE - 1, weight="bold",
+            ha="center", va="center", fontsize=FIGURE_LABEL_SIZE, weight="bold",
             rotation=60, zorder=5)
 
     # ── B-axis: bottom edge C→B, vertex_labels[1] increases toward B ─────────
@@ -271,7 +271,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_b = (s_b + e_b) / 2.0
     ax.text(*(mid_b + n_b * lbl_gap), vertex_labels[1],
-            ha="center", va="top", fontsize=FONT_SIZE - 1, weight="bold", rotation=0, zorder=5)
+            ha="center", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", rotation=0, zorder=5)
 
     # ── C-axis: right edge A→C, vertex_labels[2] increases toward C ──────────
     d_c = Cv - Av                     # direction A→C
@@ -286,7 +286,7 @@ def _draw_axis_arrows(
             ha="center", va="center", fontsize=_FS, color="#333333", zorder=5)
     mid_c = (s_c + e_c) / 2.0
     ax.text(*(mid_c + n_c * lbl_gap), vertex_labels[2],
-            ha="center", va="center", fontsize=FONT_SIZE - 1, weight="bold",
+            ha="center", va="center", fontsize=FIGURE_LABEL_SIZE, weight="bold",
             rotation=-60, zorder=5)
 
     if show_corner_labels:
@@ -296,13 +296,13 @@ def _draw_axis_arrows(
         corner_down = 0.133
         corner_up_pts = 10
         ax.text(Av[0], Av[1] + corner_a_up, vertex_labels[0],
-            ha="center", va="bottom", fontsize=FONT_SIZE - 1, weight="bold", zorder=5)
+            ha="center", va="bottom", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5)
         ax.annotate(
             vertex_labels[1],
             (Bv[0] - corner_x, Bv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="right", va="top", fontsize=FONT_SIZE - 1, weight="bold", zorder=5,
+            ha="right", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5,
             annotation_clip=False,
         )
         ax.annotate(
@@ -310,7 +310,7 @@ def _draw_axis_arrows(
             (Cv[0] + corner_x, Cv[1] - corner_down),
             xytext=(0, corner_up_pts),
             textcoords="offset points",
-            ha="left", va="top", fontsize=FONT_SIZE - 1, weight="bold", zorder=5,
+            ha="left", va="top", fontsize=FIGURE_LABEL_SIZE, weight="bold", zorder=5,
             annotation_clip=False,
         )
 
@@ -342,7 +342,7 @@ def _add_ternary_tooltips(
         ax.text(
             px, py,
             r"\pdftooltip{\phantom{\rule{4pt}{4pt}}}{" + tip + r"}",
-            fontsize=FONT_SIZE,
+            fontsize=FIGURE_LABEL_SIZE,
             ha="center", va="center",
             transform=ax.transData,
             clip_on=True,
@@ -391,7 +391,7 @@ def _draw_country_points(
                 label_radius_pts * _sin,
             ),
             textcoords="offset points",
-            fontsize=FONT_SIZE - 1, ha=_ha, va=_va,
+            fontsize=FIGURE_LABEL_SIZE, ha=_ha, va=_va,
             color=color, weight="bold",
             zorder=7,
         )
@@ -528,7 +528,7 @@ def ternary_diagram(
     # ── Layout ────────────────────────────────────────────────────────────
     if title:
         # Extra title pad for corners-on so title clears the A corner label that overflows above axes.
-        ax.set_title(title, fontsize=FONT_SIZE, pad=20 if show_corner_labels else 2)
+        ax.set_title(title, fontsize=FIGURE_TEXT_SIZE, pad=20 if show_corner_labels else 2)
     # Identical limits for both variants → identical data/inch scale → identical visual appearance.
     # Corner labels that fall outside this range render via clip_on=False / annotation_clip=False.
     ax.set_xlim(-0.15, 1.15)

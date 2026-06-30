@@ -77,7 +77,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-from config import COUNTRY_COLORS, FONT_SIZE, LATEX_PICS_DIR, PALETTE
+from config import COUNTRY_COLORS, LATEX_PICS_DIR, PALETTE, FIGURE_TEXT_SIZE, FIGURE_LABEL_SIZE, FIGURE_COMPACT_LABEL_SIZE
 from stattool.data_quality import warn_fallback, warn_non_target_year
 from stattool.fetch import fetch, fetch_ispv, fetch_eurostat
 from stattool.style import cm2in, apply_style_pgf, savefig_pgf, save_figure_tex_pgf, add_pgf_tooltips
@@ -517,17 +517,17 @@ if ispv_path is not None:
             "title": rf"\acs{{geo-CZ}}: mediánová mzda podle kraje (\acs{{ISPV}} {ispv_year}/H2)",
             "xlabel": "Index (národní medián = 100)",
         }
-        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FONT_SIZE + 1)
+        ax_a.set_xlabel(STRINGS_REG["xlabel"], fontsize=FIGURE_LABEL_SIZE)
         ax_a.set_title(
             STRINGS_REG["title"],
-            fontsize=FONT_SIZE + 2,
+            fontsize=FIGURE_TEXT_SIZE,
         )
         ax_a.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE,
+        ax_a.legend(handles=[above, below], frameon=False, fontsize=FIGURE_LABEL_SIZE,
                     loc="lower right")
         savefig_pgf(fig_a, "problemy_regiony", strings=STRINGS_REG)
         save_figure_tex_pgf(
@@ -567,17 +567,17 @@ if ispv_path is not None:
             "title": r"\acs{geo-CZ}: mediánová mzda podle kraje (\acs{ISPV} 2025/H1, \acs{MPSV}/TREXIMA)",
             "xlabel": "Index (národní medián = 100)",
         }
-        ax_a2.set_xlabel(STRINGS_REG2["xlabel"], fontsize=FONT_SIZE)
+        ax_a2.set_xlabel(STRINGS_REG2["xlabel"], fontsize=FIGURE_LABEL_SIZE)
         ax_a2.set_title(
             STRINGS_REG2["title"],
-            fontsize=FONT_SIZE,
+            fontsize=FIGURE_TEXT_SIZE,
         )
         ax_a2.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: f"{x:.0f}")
         )
         above = mpatches.Patch(color=CZ_COLOR, alpha=0.82, label="Nadnárodní medián")
         below = mpatches.Patch(color="#4393C3", alpha=0.82, label="Podnárodní medián")
-        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FONT_SIZE,
+        ax_a2.legend(handles=[above, below], frameon=False, fontsize=FIGURE_LABEL_SIZE,
                      loc="lower right")
         savefig_pgf(fig_a2, "problemy_regiony", strings=STRINGS_REG2)
         save_figure_tex_pgf(
@@ -735,8 +735,8 @@ if pct_df is not None and "p50" in pct_df.columns:
             ax_c.plot([p75, p90], [i, i], color="gray", linewidth=1.0, alpha=0.7)
 
     ax_c.set_yticks(y_pos)
-    ax_c.set_yticklabels(labels, fontsize=max(FONT_SIZE, 10))
-    ax_c.tick_params(axis="x", labelsize=max(FONT_SIZE, 10))
+    ax_c.set_yticklabels(labels, fontsize=max(FIGURE_LABEL_SIZE, 10))
+    ax_c.tick_params(axis="x", labelsize=max(FIGURE_LABEL_SIZE, 10))
     ax_c.xaxis.set_major_formatter(
         ticker.FuncFormatter(lambda x, _: f"{x/1_000:.0f}\u00a0tis. Kč")
     )
@@ -750,12 +750,12 @@ if pct_df is not None and "p50" in pct_df.columns:
         "title": rf"\acs{{geo-CZ}}: rozložení mezd podle hlavních skupin CZ-ISCO (\acs{{ISPV}} {ispv_year}/H2); P25--P75 (\acs{{IQR}}) a~medián",
         "xlabel": r"hrubá měsíční mzda [\si{\czk}]",
     }
-    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=max(FONT_SIZE, 10))
+    ax_c.set_xlabel(STRINGS_PCT["xlabel"], fontsize=max(FIGURE_LABEL_SIZE, 10))
     ax_c.set_title(
         STRINGS_PCT["title"],
-        fontsize=max(FONT_SIZE, 10),
+        fontsize=max(FIGURE_LABEL_SIZE, 10),
     )
-    ax_c.legend(frameon=False, fontsize=max(FONT_SIZE, 10), loc="lower right")
+    ax_c.legend(frameon=False, fontsize=max(FIGURE_LABEL_SIZE, 10), loc="lower right")
 
     savefig_pgf(fig_c, "problemy_sektor_percentily", strings=STRINGS_PCT)
     save_figure_tex_pgf(
@@ -828,7 +828,7 @@ try:
         vmax=100 + _delta,
         colorbar_label=STRINGS_D["colorbar_label"],
         label_fmt="{:.0f}",
-        label_fontsize=FONT_SIZE + 2,
+        label_fontsize=FIGURE_TEXT_SIZE,
         label_names=_CZ_NUTS3_NAMES,
         label_tooltip_fmt="index {:.1f} (medián ČR = 100)",
     )
