@@ -28,9 +28,16 @@ Docker build required:
 
 ```bash
 docker pull ghcr.io/petriji/dp2026-thesis:latest
-docker run --rm -it -v "$PWD":/workspace/DP2026 -w /workspace/DP2026 \
+docker run --rm -it -v "$PWD":/workspace/DP2026 -v /workspace/DP2026/.venv \
+  -w /workspace/DP2026 \
   ghcr.io/petriji/dp2026-thesis:latest bash tools/docker_verify_full_build.sh
 ```
+
+The extra `-v /workspace/DP2026/.venv` creates an anonymous volume that shadows
+any host-side `.venv` at the repo root. Without it, a pre-existing host `.venv`
+leaks into the container (its `bin/python` symlink resolves to the host's own
+`/usr/bin/python3`, which does not exist inside the container), causing
+`python: command not found`.
 
 The image is built and published automatically by
 `.github/workflows/docker-ghcr.yml` on every push to `main`. Building locally
