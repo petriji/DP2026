@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vscode
+.venv
+latex/build
+latex/bakbuild
+python/.venv
+python/data
+python/figures
+pics/python
+review/*.json
+review/*.md

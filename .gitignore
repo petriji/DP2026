@@ -40,7 +40,8 @@
 /templates
 
 -- MS Office files --
-*.doc*
+*.doc
+*.docx
 *.ppt*
 *.xls*
 
